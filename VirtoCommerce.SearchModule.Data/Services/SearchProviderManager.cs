@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using VirtoCommerce.Domain.Search;
 using VirtoCommerce.Domain.Search.Services;
 
-namespace VirtoCommerce.InventoryModule.Web
+namespace VirtoCommerce.SearchModule.Data.Services
 {
     public class SearchProviderManager : ISearchProviderManager, ISearchProvider
     {
