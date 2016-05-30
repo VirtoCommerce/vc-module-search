@@ -14,18 +14,17 @@ using VirtoCommerce.CatalogModule.Web.Model;
 using VirtoCommerce.CatalogModule.Web.Security;
 using VirtoCommerce.Domain.Catalog.Model;
 using VirtoCommerce.Domain.Catalog.Services;
-using VirtoCommerce.Domain.Commerce.Model;
-using VirtoCommerce.Domain.Inventory.Model;
-using VirtoCommerce.Domain.Inventory.Services;
 using VirtoCommerce.Domain.Search.Filters;
 using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.Domain.Store.Model;
 using VirtoCommerce.Domain.Store.Services;
-using VirtoCommerce.Platform.Core.Asset;
+using VirtoCommerce.Platform.Core.Assets;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.DynamicProperties;
 using VirtoCommerce.Platform.Core.Security;
+using VirtoCommerce.Platform.Core.Web.Common;
+using VirtoCommerce.Platform.Core.Web.Security;
 using VirtoCommerce.Platform.Data.Common;
 using VirtoCommerce.SearchModule.Data.Services;
 using VirtoCommerce.SearchModule.Web.BackgroundJobs;
@@ -51,7 +50,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         private readonly IPropertyService _propertyService;
         private readonly IBrowseFilterService _browseFilterService;
         private readonly IItemBrowsingService _browseService;
-        private readonly IInventoryService _inventoryService;
         private readonly IBlobUrlResolver _blobUrlResolver;
         private readonly ICatalogSearchService _catalogSearchService;
         private readonly ICacheManager<object> _cacheManager;
@@ -59,7 +57,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         public SearchModuleController(ISearchProvider searchProvider, ISearchConnection searchConnection, SearchIndexJobsScheduler scheduler,
             IStoreService storeService, ISecurityService securityService, IPermissionScopeService permissionScopeService,
             IPropertyService propertyService, IBrowseFilterService browseFilterService, IItemBrowsingService browseService,
-            IInventoryService inventoryService, IBlobUrlResolver blobUrlResolver, ICatalogSearchService catalogSearchService, ICacheManager<object> cacheManager)
+            IBlobUrlResolver blobUrlResolver, ICatalogSearchService catalogSearchService, ICacheManager<object> cacheManager)
         {
             _searchProvider = searchProvider;
             _searchConnection = searchConnection;
@@ -70,7 +68,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             _propertyService = propertyService;
             _browseFilterService = browseFilterService;
             _browseService = browseService;
-            _inventoryService = inventoryService;
             _blobUrlResolver = blobUrlResolver;
             _catalogSearchService = catalogSearchService;
             _cacheManager = cacheManager;
@@ -365,7 +362,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                             sortObject = new SearchSort(
                                 serviceCriteria.Pricelists.Select(
                                     priceList =>
-                                        new SearchSortField(string.Format("price_{0}_{1}", serviceCriteria.Currency.ToLower(), priceList.ToLower()))
+                                        new SearchSortField(string.Format(CultureInfo.InvariantCulture, "price_{0}_{1}", serviceCriteria.Currency.ToLower(), priceList.ToLower()))
                                         {
                                             IgnoredUnmapped = true,
                                             IsDescending = isDescending,
@@ -422,14 +419,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 
             //Load ALL products 
             var searchResults = _browseService.SearchItems(serviceCriteria, responseGroup);
-
-            //// populate inventory
-            ////if ((request.ResponseGroup & ItemResponseGroup.ItemProperties) == ItemResponseGroup.ItemProperties)
-            //if ((criteria.ResponseGroup & SearchResponseGroup.WithProperties) == SearchResponseGroup.WithProperties)
-            //{
-            //    PopulateInventory(store.FulfillmentCenter, searchResults.Products);
-            //}
-
             return searchResults;
         }
 
@@ -554,21 +543,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             }
 
             return result;
-        }
-
-        private void PopulateInventory(FulfillmentCenter center, IEnumerable<CatalogProduct> products)
-        {
-            if (center == null || products == null || !products.Any())
-                return;
-
-            var inventories = _inventoryService.GetProductsInventoryInfos(products.Select(x => x.Id).ToArray()).ToList();
-
-            foreach (var product in products)
-            {
-                var productInventory = inventories.FirstOrDefault(x => x.ProductId == product.Id && x.FulfillmentCenterId == center.Id);
-                if (productInventory != null)
-                    product.Inventories = new List<InventoryInfo> { productInventory };
-            }
         }
 
         private static webModel.FilterProperty ConvertToFilterProperty(Property property, string[] selectedPropertyNames)

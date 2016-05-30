@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using VirtoCommerce.Domain.Catalog.Services;
 using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
-using VirtoCommerce.Platform.Core.Asset;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Data.Services;
 using VirtoCommerce.SearchModule.Web.Converters;
@@ -14,17 +12,15 @@ namespace VirtoCommerce.SearchModule.Web.Services
 {
     public class ItemBrowsingService : IItemBrowsingService
     {
-        private readonly IBlobUrlResolver _blobUrlResolver;
         private readonly IItemService _itemService;
         private readonly ISearchConnection _searchConnection;
         private readonly ISearchProvider _searchProvider;
 
-        public ItemBrowsingService(IItemService itemService, ISearchProvider searchService, IBlobUrlResolver blobUrlResolver = null, ISearchConnection searchConnection = null)
+        public ItemBrowsingService(IItemService itemService, ISearchProvider searchService, ISearchConnection searchConnection = null)
         {
             _searchProvider = searchService;
             _searchConnection = searchConnection;
             _itemService = itemService;
-            _blobUrlResolver = blobUrlResolver;
         }
 
         public moduleModel.SearchResult SearchItems(CatalogIndexedSearchCriteria criteria, moduleModel.ItemResponseGroup responseGroup)
@@ -105,23 +101,5 @@ namespace VirtoCommerce.SearchModule.Web.Services
 
             return items;
         }
-
-
-        private string StripCatalogFromOutline(string outline, string catalog)
-        {
-            if (String.IsNullOrEmpty(outline))
-            {
-                return null;
-            }
-
-            if (outline.Length > catalog.Length + 1)
-            {
-                return outline.Substring(catalog.Length + 1);
-            }
-
-            return String.Empty;
-        }
-
-
     }
 }
