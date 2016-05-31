@@ -150,6 +150,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\logo.png" />
     <Content Include="Scripts\widgets\storePropertiesWidget.js" />
     <Content Include="Scripts\widgets\storePropertiesWidget.tpl.html" />
     <None Include="app.config">
