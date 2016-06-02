@@ -24,6 +24,8 @@
 
     <assemblyFile>VirtoCommerce.SearchModule.Web.dll</assemblyFile>
     <moduleType>VirtoCommerce.SearchModule.Web.Module, VirtoCommerce.SearchModule.Web</moduleType>
+    <useFullTypeNameInSwagger>true</useFullTypeNameInSwagger>
+
     <scripts>
         <directory virtualPath="$/Scripts" searchPattern="*.js" searchSubdirectories="true" />
     </scripts>
