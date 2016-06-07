@@ -12,10 +12,10 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceDomainCatalogModelSearchCriteria
+    /// SearchCriteria
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceDomainCatalogModelSearchCriteria :  IEquatable<VirtoCommerceDomainCatalogModelSearchCriteria>
+    public partial class SearchCriteria :  IEquatable<SearchCriteria>
     {
         /// <summary>
         /// Gets or Sets StoreId
@@ -90,12 +90,6 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public string Sort { get; set; }
 
         /// <summary>
-        /// Gets or Sets SortInfos
-        /// </summary>
-        [DataMember(Name="sortInfos", EmitDefaultValue=false)]
-        public List<VirtoCommercePlatformCoreCommonSortInfo> SortInfos { get; set; }
-
-        /// <summary>
         /// Gets or Sets HideDirectLinkedCategories
         /// </summary>
         [DataMember(Name="hideDirectLinkedCategories", EmitDefaultValue=false)]
@@ -105,7 +99,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         /// Gets or Sets PropertyValues
         /// </summary>
         [DataMember(Name="propertyValues", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCatalogModelPropertyValue> PropertyValues { get; set; }
+        public List<PropertyValue> PropertyValues { get; set; }
 
         /// <summary>
         /// Gets or Sets Currency
@@ -216,7 +210,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceDomainCatalogModelSearchCriteria {\n");
+            sb.Append("class SearchCriteria {\n");
             sb.Append("  StoreId: ").Append(StoreId).Append("\n");
             sb.Append("  ResponseGroup: ").Append(ResponseGroup).Append("\n");
             sb.Append("  Keyword: ").Append(Keyword).Append("\n");
@@ -229,7 +223,6 @@ namespace VirtoCommerce.SearchModule.Client.Model
             sb.Append("  LanguageCode: ").Append(LanguageCode).Append("\n");
             sb.Append("  Code: ").Append(Code).Append("\n");
             sb.Append("  Sort: ").Append(Sort).Append("\n");
-            sb.Append("  SortInfos: ").Append(SortInfos).Append("\n");
             sb.Append("  HideDirectLinkedCategories: ").Append(HideDirectLinkedCategories).Append("\n");
             sb.Append("  PropertyValues: ").Append(PropertyValues).Append("\n");
             sb.Append("  Currency: ").Append(Currency).Append("\n");
@@ -270,15 +263,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceDomainCatalogModelSearchCriteria);
+            return this.Equals(obj as SearchCriteria);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceDomainCatalogModelSearchCriteria instances are equal
+        /// Returns true if SearchCriteria instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceDomainCatalogModelSearchCriteria to be compared</param>
+        /// <param name="other">Instance of SearchCriteria to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceDomainCatalogModelSearchCriteria other)
+        public bool Equals(SearchCriteria other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)
@@ -344,11 +337,6 @@ namespace VirtoCommerce.SearchModule.Client.Model
                     this.Sort == other.Sort ||
                     this.Sort != null &&
                     this.Sort.Equals(other.Sort)
-                ) && 
-                (
-                    this.SortInfos == other.SortInfos ||
-                    this.SortInfos != null &&
-                    this.SortInfos.SequenceEqual(other.SortInfos)
                 ) && 
                 (
                     this.HideDirectLinkedCategories == other.HideDirectLinkedCategories ||
@@ -494,9 +482,6 @@ namespace VirtoCommerce.SearchModule.Client.Model
 
                 if (this.Sort != null)
                     hash = hash * 59 + this.Sort.GetHashCode();
-
-                if (this.SortInfos != null)
-                    hash = hash * 59 + this.SortInfos.GetHashCode();
 
                 if (this.HideDirectLinkedCategories != null)
                     hash = hash * 59 + this.HideDirectLinkedCategories.GetHashCode();

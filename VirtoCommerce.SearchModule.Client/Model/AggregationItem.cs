@@ -12,10 +12,10 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceCatalogModuleWebModelAggregationItem
+    /// AggregationItem
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceCatalogModuleWebModelAggregationItem :  IEquatable<VirtoCommerceCatalogModuleWebModelAggregationItem>
+    public partial class AggregationItem :  IEquatable<AggregationItem>
     {
         /// <summary>
         /// Gets or Sets Value
@@ -39,7 +39,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         /// Gets or Sets Labels
         /// </summary>
         [DataMember(Name="labels", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelAggregationLabel> Labels { get; set; }
+        public List<AggregationLabel> Labels { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -48,7 +48,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceCatalogModuleWebModelAggregationItem {\n");
+            sb.Append("class AggregationItem {\n");
             sb.Append("  Value: ").Append(Value).Append("\n");
             sb.Append("  Count: ").Append(Count).Append("\n");
             sb.Append("  IsApplied: ").Append(IsApplied).Append("\n");
@@ -74,15 +74,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceCatalogModuleWebModelAggregationItem);
+            return this.Equals(obj as AggregationItem);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceCatalogModuleWebModelAggregationItem instances are equal
+        /// Returns true if AggregationItem instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceCatalogModuleWebModelAggregationItem to be compared</param>
+        /// <param name="other">Instance of AggregationItem to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceCatalogModuleWebModelAggregationItem other)
+        public bool Equals(AggregationItem other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)

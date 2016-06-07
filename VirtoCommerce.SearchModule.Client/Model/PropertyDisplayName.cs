@@ -12,10 +12,10 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceDomainCatalogModelPropertyDisplayName
+    /// PropertyDisplayName
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceDomainCatalogModelPropertyDisplayName :  IEquatable<VirtoCommerceDomainCatalogModelPropertyDisplayName>
+    public partial class PropertyDisplayName :  IEquatable<PropertyDisplayName>
     {
         /// <summary>
         /// Gets or Sets Name
@@ -36,7 +36,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceDomainCatalogModelPropertyDisplayName {\n");
+            sb.Append("class PropertyDisplayName {\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("  LanguageCode: ").Append(LanguageCode).Append("\n");
             sb.Append("}\n");
@@ -60,15 +60,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceDomainCatalogModelPropertyDisplayName);
+            return this.Equals(obj as PropertyDisplayName);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceDomainCatalogModelPropertyDisplayName instances are equal
+        /// Returns true if PropertyDisplayName instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceDomainCatalogModelPropertyDisplayName to be compared</param>
+        /// <param name="other">Instance of PropertyDisplayName to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceDomainCatalogModelPropertyDisplayName other)
+        public bool Equals(PropertyDisplayName other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)

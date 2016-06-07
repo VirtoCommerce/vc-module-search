@@ -12,10 +12,10 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceSearchModuleWebModelFilterProperty
+    /// FilterProperty
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceSearchModuleWebModelFilterProperty :  IEquatable<VirtoCommerceSearchModuleWebModelFilterProperty>
+    public partial class FilterProperty :  IEquatable<FilterProperty>
     {
         /// <summary>
         /// Gets or Sets Name
@@ -36,7 +36,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceSearchModuleWebModelFilterProperty {\n");
+            sb.Append("class FilterProperty {\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("  IsSelected: ").Append(IsSelected).Append("\n");
             sb.Append("}\n");
@@ -60,15 +60,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceSearchModuleWebModelFilterProperty);
+            return this.Equals(obj as FilterProperty);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceSearchModuleWebModelFilterProperty instances are equal
+        /// Returns true if FilterProperty instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceSearchModuleWebModelFilterProperty to be compared</param>
+        /// <param name="other">Instance of FilterProperty to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceSearchModuleWebModelFilterProperty other)
+        public bool Equals(FilterProperty other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)

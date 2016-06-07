@@ -12,28 +12,22 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceDomainCatalogModelCategory
+    /// Category
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceDomainCatalogModelCategory :  IEquatable<VirtoCommerceDomainCatalogModelCategory>
+    public partial class Category :  IEquatable<Category>
     {
-        /// <summary>
-        /// Gets or Sets CatalogId
-        /// </summary>
-        [DataMember(Name="catalogId", EmitDefaultValue=false)]
-        public string CatalogId { get; set; }
-
-        /// <summary>
-        /// Gets or Sets Catalog
-        /// </summary>
-        [DataMember(Name="catalog", EmitDefaultValue=false)]
-        public VirtoCommerceDomainCatalogModelCatalog Catalog { get; set; }
-
         /// <summary>
         /// Gets or Sets ParentId
         /// </summary>
         [DataMember(Name="parentId", EmitDefaultValue=false)]
         public string ParentId { get; set; }
+
+        /// <summary>
+        /// Gets or Sets IsVirtual
+        /// </summary>
+        [DataMember(Name="isVirtual", EmitDefaultValue=false)]
+        public bool? IsVirtual { get; set; }
 
         /// <summary>
         /// Gets or Sets Code
@@ -48,6 +42,18 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public string TaxType { get; set; }
 
         /// <summary>
+        /// Gets or Sets Catalog
+        /// </summary>
+        [DataMember(Name="catalog", EmitDefaultValue=false)]
+        public Catalog Catalog { get; set; }
+
+        /// <summary>
+        /// Gets or Sets CatalogId
+        /// </summary>
+        [DataMember(Name="catalogId", EmitDefaultValue=false)]
+        public string CatalogId { get; set; }
+
+        /// <summary>
         /// Gets or Sets Name
         /// </summary>
         [DataMember(Name="name", EmitDefaultValue=false)]
@@ -60,58 +66,46 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public string Path { get; set; }
 
         /// <summary>
-        /// Gets or Sets IsVirtual
-        /// </summary>
-        [DataMember(Name="isVirtual", EmitDefaultValue=false)]
-        public bool? IsVirtual { get; set; }
-
-        /// <summary>
-        /// Gets or Sets Level
-        /// </summary>
-        [DataMember(Name="level", EmitDefaultValue=false)]
-        public int? Level { get; set; }
-
-        /// <summary>
-        /// Gets or Sets Parents
-        /// </summary>
-        [DataMember(Name="parents", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCatalogModelCategory> Parents { get; set; }
-
-        /// <summary>
-        /// Gets or Sets Priority
-        /// </summary>
-        [DataMember(Name="priority", EmitDefaultValue=false)]
-        public int? Priority { get; set; }
-
-        /// <summary>
         /// Gets or Sets IsActive
         /// </summary>
         [DataMember(Name="isActive", EmitDefaultValue=false)]
         public bool? IsActive { get; set; }
 
         /// <summary>
+        /// Gets or Sets Parents
+        /// </summary>
+        [DataMember(Name="parents", EmitDefaultValue=false)]
+        public List<Category> Parents { get; set; }
+
+        /// <summary>
         /// Gets or Sets Children
         /// </summary>
         [DataMember(Name="children", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCatalogModelCategory> Children { get; set; }
+        public List<Category> Children { get; set; }
 
         /// <summary>
         /// Gets or Sets Properties
         /// </summary>
         [DataMember(Name="properties", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCatalogModelProperty> Properties { get; set; }
-
-        /// <summary>
-        /// Gets or Sets PropertyValues
-        /// </summary>
-        [DataMember(Name="propertyValues", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCatalogModelPropertyValue> PropertyValues { get; set; }
+        public List<Property> Properties { get; set; }
 
         /// <summary>
         /// Gets or Sets Links
         /// </summary>
         [DataMember(Name="links", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCatalogModelCategoryLink> Links { get; set; }
+        public List<CategoryLink> Links { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Images
+        /// </summary>
+        [DataMember(Name="images", EmitDefaultValue=false)]
+        public List<Image> Images { get; set; }
+
+        /// <summary>
+        /// Gets or Sets SecurityScopes
+        /// </summary>
+        [DataMember(Name="securityScopes", EmitDefaultValue=false)]
+        public List<string> SecurityScopes { get; set; }
 
         /// <summary>
         /// Gets or Sets SeoObjectType
@@ -123,19 +117,13 @@ namespace VirtoCommerce.SearchModule.Client.Model
         /// Gets or Sets SeoInfos
         /// </summary>
         [DataMember(Name="seoInfos", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCommerceModelSeoInfo> SeoInfos { get; set; }
-
-        /// <summary>
-        /// Gets or Sets Images
-        /// </summary>
-        [DataMember(Name="images", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCatalogModelImage> Images { get; set; }
+        public List<SeoInfo> SeoInfos { get; set; }
 
         /// <summary>
         /// Gets or Sets Outlines
         /// </summary>
         [DataMember(Name="outlines", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCatalogModelOutline> Outlines { get; set; }
+        public List<Outline> Outlines { get; set; }
 
         /// <summary>
         /// Gets or Sets CreatedDate
@@ -174,26 +162,24 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceDomainCatalogModelCategory {\n");
-            sb.Append("  CatalogId: ").Append(CatalogId).Append("\n");
-            sb.Append("  Catalog: ").Append(Catalog).Append("\n");
+            sb.Append("class Category {\n");
             sb.Append("  ParentId: ").Append(ParentId).Append("\n");
+            sb.Append("  IsVirtual: ").Append(IsVirtual).Append("\n");
             sb.Append("  Code: ").Append(Code).Append("\n");
             sb.Append("  TaxType: ").Append(TaxType).Append("\n");
+            sb.Append("  Catalog: ").Append(Catalog).Append("\n");
+            sb.Append("  CatalogId: ").Append(CatalogId).Append("\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("  Path: ").Append(Path).Append("\n");
-            sb.Append("  IsVirtual: ").Append(IsVirtual).Append("\n");
-            sb.Append("  Level: ").Append(Level).Append("\n");
-            sb.Append("  Parents: ").Append(Parents).Append("\n");
-            sb.Append("  Priority: ").Append(Priority).Append("\n");
             sb.Append("  IsActive: ").Append(IsActive).Append("\n");
+            sb.Append("  Parents: ").Append(Parents).Append("\n");
             sb.Append("  Children: ").Append(Children).Append("\n");
             sb.Append("  Properties: ").Append(Properties).Append("\n");
-            sb.Append("  PropertyValues: ").Append(PropertyValues).Append("\n");
             sb.Append("  Links: ").Append(Links).Append("\n");
+            sb.Append("  Images: ").Append(Images).Append("\n");
+            sb.Append("  SecurityScopes: ").Append(SecurityScopes).Append("\n");
             sb.Append("  SeoObjectType: ").Append(SeoObjectType).Append("\n");
             sb.Append("  SeoInfos: ").Append(SeoInfos).Append("\n");
-            sb.Append("  Images: ").Append(Images).Append("\n");
             sb.Append("  Outlines: ").Append(Outlines).Append("\n");
             sb.Append("  CreatedDate: ").Append(CreatedDate).Append("\n");
             sb.Append("  ModifiedDate: ").Append(ModifiedDate).Append("\n");
@@ -221,15 +207,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceDomainCatalogModelCategory);
+            return this.Equals(obj as Category);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceDomainCatalogModelCategory instances are equal
+        /// Returns true if Category instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceDomainCatalogModelCategory to be compared</param>
+        /// <param name="other">Instance of Category to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceDomainCatalogModelCategory other)
+        public bool Equals(Category other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)
@@ -237,19 +223,14 @@ namespace VirtoCommerce.SearchModule.Client.Model
 
             return 
                 (
-                    this.CatalogId == other.CatalogId ||
-                    this.CatalogId != null &&
-                    this.CatalogId.Equals(other.CatalogId)
-                ) && 
-                (
-                    this.Catalog == other.Catalog ||
-                    this.Catalog != null &&
-                    this.Catalog.Equals(other.Catalog)
-                ) && 
-                (
                     this.ParentId == other.ParentId ||
                     this.ParentId != null &&
                     this.ParentId.Equals(other.ParentId)
+                ) && 
+                (
+                    this.IsVirtual == other.IsVirtual ||
+                    this.IsVirtual != null &&
+                    this.IsVirtual.Equals(other.IsVirtual)
                 ) && 
                 (
                     this.Code == other.Code ||
@@ -262,6 +243,16 @@ namespace VirtoCommerce.SearchModule.Client.Model
                     this.TaxType.Equals(other.TaxType)
                 ) && 
                 (
+                    this.Catalog == other.Catalog ||
+                    this.Catalog != null &&
+                    this.Catalog.Equals(other.Catalog)
+                ) && 
+                (
+                    this.CatalogId == other.CatalogId ||
+                    this.CatalogId != null &&
+                    this.CatalogId.Equals(other.CatalogId)
+                ) && 
+                (
                     this.Name == other.Name ||
                     this.Name != null &&
                     this.Name.Equals(other.Name)
@@ -272,29 +263,14 @@ namespace VirtoCommerce.SearchModule.Client.Model
                     this.Path.Equals(other.Path)
                 ) && 
                 (
-                    this.IsVirtual == other.IsVirtual ||
-                    this.IsVirtual != null &&
-                    this.IsVirtual.Equals(other.IsVirtual)
-                ) && 
-                (
-                    this.Level == other.Level ||
-                    this.Level != null &&
-                    this.Level.Equals(other.Level)
+                    this.IsActive == other.IsActive ||
+                    this.IsActive != null &&
+                    this.IsActive.Equals(other.IsActive)
                 ) && 
                 (
                     this.Parents == other.Parents ||
                     this.Parents != null &&
                     this.Parents.SequenceEqual(other.Parents)
-                ) && 
-                (
-                    this.Priority == other.Priority ||
-                    this.Priority != null &&
-                    this.Priority.Equals(other.Priority)
-                ) && 
-                (
-                    this.IsActive == other.IsActive ||
-                    this.IsActive != null &&
-                    this.IsActive.Equals(other.IsActive)
                 ) && 
                 (
                     this.Children == other.Children ||
@@ -307,14 +283,19 @@ namespace VirtoCommerce.SearchModule.Client.Model
                     this.Properties.SequenceEqual(other.Properties)
                 ) && 
                 (
-                    this.PropertyValues == other.PropertyValues ||
-                    this.PropertyValues != null &&
-                    this.PropertyValues.SequenceEqual(other.PropertyValues)
-                ) && 
-                (
                     this.Links == other.Links ||
                     this.Links != null &&
                     this.Links.SequenceEqual(other.Links)
+                ) && 
+                (
+                    this.Images == other.Images ||
+                    this.Images != null &&
+                    this.Images.SequenceEqual(other.Images)
+                ) && 
+                (
+                    this.SecurityScopes == other.SecurityScopes ||
+                    this.SecurityScopes != null &&
+                    this.SecurityScopes.SequenceEqual(other.SecurityScopes)
                 ) && 
                 (
                     this.SeoObjectType == other.SeoObjectType ||
@@ -325,11 +306,6 @@ namespace VirtoCommerce.SearchModule.Client.Model
                     this.SeoInfos == other.SeoInfos ||
                     this.SeoInfos != null &&
                     this.SeoInfos.SequenceEqual(other.SeoInfos)
-                ) && 
-                (
-                    this.Images == other.Images ||
-                    this.Images != null &&
-                    this.Images.SequenceEqual(other.Images)
                 ) && 
                 (
                     this.Outlines == other.Outlines ||
@@ -375,14 +351,11 @@ namespace VirtoCommerce.SearchModule.Client.Model
                 int hash = 41;
                 // Suitable nullity checks etc, of course :)
 
-                if (this.CatalogId != null)
-                    hash = hash * 59 + this.CatalogId.GetHashCode();
-
-                if (this.Catalog != null)
-                    hash = hash * 59 + this.Catalog.GetHashCode();
-
                 if (this.ParentId != null)
                     hash = hash * 59 + this.ParentId.GetHashCode();
+
+                if (this.IsVirtual != null)
+                    hash = hash * 59 + this.IsVirtual.GetHashCode();
 
                 if (this.Code != null)
                     hash = hash * 59 + this.Code.GetHashCode();
@@ -390,26 +363,23 @@ namespace VirtoCommerce.SearchModule.Client.Model
                 if (this.TaxType != null)
                     hash = hash * 59 + this.TaxType.GetHashCode();
 
+                if (this.Catalog != null)
+                    hash = hash * 59 + this.Catalog.GetHashCode();
+
+                if (this.CatalogId != null)
+                    hash = hash * 59 + this.CatalogId.GetHashCode();
+
                 if (this.Name != null)
                     hash = hash * 59 + this.Name.GetHashCode();
 
                 if (this.Path != null)
                     hash = hash * 59 + this.Path.GetHashCode();
 
-                if (this.IsVirtual != null)
-                    hash = hash * 59 + this.IsVirtual.GetHashCode();
-
-                if (this.Level != null)
-                    hash = hash * 59 + this.Level.GetHashCode();
+                if (this.IsActive != null)
+                    hash = hash * 59 + this.IsActive.GetHashCode();
 
                 if (this.Parents != null)
                     hash = hash * 59 + this.Parents.GetHashCode();
-
-                if (this.Priority != null)
-                    hash = hash * 59 + this.Priority.GetHashCode();
-
-                if (this.IsActive != null)
-                    hash = hash * 59 + this.IsActive.GetHashCode();
 
                 if (this.Children != null)
                     hash = hash * 59 + this.Children.GetHashCode();
@@ -417,20 +387,20 @@ namespace VirtoCommerce.SearchModule.Client.Model
                 if (this.Properties != null)
                     hash = hash * 59 + this.Properties.GetHashCode();
 
-                if (this.PropertyValues != null)
-                    hash = hash * 59 + this.PropertyValues.GetHashCode();
-
                 if (this.Links != null)
                     hash = hash * 59 + this.Links.GetHashCode();
+
+                if (this.Images != null)
+                    hash = hash * 59 + this.Images.GetHashCode();
+
+                if (this.SecurityScopes != null)
+                    hash = hash * 59 + this.SecurityScopes.GetHashCode();
 
                 if (this.SeoObjectType != null)
                     hash = hash * 59 + this.SeoObjectType.GetHashCode();
 
                 if (this.SeoInfos != null)
                     hash = hash * 59 + this.SeoInfos.GetHashCode();
-
-                if (this.Images != null)
-                    hash = hash * 59 + this.Images.GetHashCode();
 
                 if (this.Outlines != null)
                     hash = hash * 59 + this.Outlines.GetHashCode();

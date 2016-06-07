@@ -12,16 +12,22 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceDomainCatalogModelOutline
+    /// AggregationLabel
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceDomainCatalogModelOutline :  IEquatable<VirtoCommerceDomainCatalogModelOutline>
+    public partial class AggregationLabel :  IEquatable<AggregationLabel>
     {
         /// <summary>
-        /// Gets or Sets Items
+        /// Gets or Sets Language
         /// </summary>
-        [DataMember(Name="items", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCatalogModelOutlineItem> Items { get; set; }
+        [DataMember(Name="language", EmitDefaultValue=false)]
+        public string Language { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Label
+        /// </summary>
+        [DataMember(Name="label", EmitDefaultValue=false)]
+        public string Label { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -30,8 +36,9 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceDomainCatalogModelOutline {\n");
-            sb.Append("  Items: ").Append(Items).Append("\n");
+            sb.Append("class AggregationLabel {\n");
+            sb.Append("  Language: ").Append(Language).Append("\n");
+            sb.Append("  Label: ").Append(Label).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -53,15 +60,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceDomainCatalogModelOutline);
+            return this.Equals(obj as AggregationLabel);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceDomainCatalogModelOutline instances are equal
+        /// Returns true if AggregationLabel instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceDomainCatalogModelOutline to be compared</param>
+        /// <param name="other">Instance of AggregationLabel to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceDomainCatalogModelOutline other)
+        public bool Equals(AggregationLabel other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)
@@ -69,9 +76,14 @@ namespace VirtoCommerce.SearchModule.Client.Model
 
             return 
                 (
-                    this.Items == other.Items ||
-                    this.Items != null &&
-                    this.Items.SequenceEqual(other.Items)
+                    this.Language == other.Language ||
+                    this.Language != null &&
+                    this.Language.Equals(other.Language)
+                ) && 
+                (
+                    this.Label == other.Label ||
+                    this.Label != null &&
+                    this.Label.Equals(other.Label)
                 );
         }
 
@@ -87,8 +99,11 @@ namespace VirtoCommerce.SearchModule.Client.Model
                 int hash = 41;
                 // Suitable nullity checks etc, of course :)
 
-                if (this.Items != null)
-                    hash = hash * 59 + this.Items.GetHashCode();
+                if (this.Language != null)
+                    hash = hash * 59 + this.Language.GetHashCode();
+
+                if (this.Label != null)
+                    hash = hash * 59 + this.Label.GetHashCode();
 
                 return hash;
             }

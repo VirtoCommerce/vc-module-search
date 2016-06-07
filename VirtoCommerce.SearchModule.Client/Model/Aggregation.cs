@@ -12,10 +12,10 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceCatalogModuleWebModelAggregation
+    /// Aggregation
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceCatalogModuleWebModelAggregation :  IEquatable<VirtoCommerceCatalogModuleWebModelAggregation>
+    public partial class Aggregation :  IEquatable<Aggregation>
     {
         /// <summary>
         /// Gets or Sets AggregationType
@@ -33,13 +33,13 @@ namespace VirtoCommerce.SearchModule.Client.Model
         /// Gets or Sets Labels
         /// </summary>
         [DataMember(Name="labels", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelAggregationLabel> Labels { get; set; }
+        public List<AggregationLabel> Labels { get; set; }
 
         /// <summary>
         /// Gets or Sets Items
         /// </summary>
         [DataMember(Name="items", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelAggregationItem> Items { get; set; }
+        public List<AggregationItem> Items { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -48,7 +48,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceCatalogModuleWebModelAggregation {\n");
+            sb.Append("class Aggregation {\n");
             sb.Append("  AggregationType: ").Append(AggregationType).Append("\n");
             sb.Append("  Field: ").Append(Field).Append("\n");
             sb.Append("  Labels: ").Append(Labels).Append("\n");
@@ -74,15 +74,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceCatalogModuleWebModelAggregation);
+            return this.Equals(obj as Aggregation);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceCatalogModuleWebModelAggregation instances are equal
+        /// Returns true if Aggregation instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceCatalogModuleWebModelAggregation to be compared</param>
+        /// <param name="other">Instance of Aggregation to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceCatalogModuleWebModelAggregation other)
+        public bool Equals(Aggregation other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)

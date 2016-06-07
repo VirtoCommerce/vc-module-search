@@ -12,10 +12,10 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceCatalogModuleWebModelProduct
+    /// Product
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceCatalogModuleWebModelProduct :  IEquatable<VirtoCommerceCatalogModuleWebModelProduct>
+    public partial class Product :  IEquatable<Product>
     {
         /// <summary>
         /// Gets or Sets ManufacturerPartNumber
@@ -51,7 +51,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         /// Gets or Sets Catalog
         /// </summary>
         [DataMember(Name="catalog", EmitDefaultValue=false)]
-        public VirtoCommerceCatalogModuleWebModelCatalog Catalog { get; set; }
+        public Catalog Catalog { get; set; }
 
         /// <summary>
         /// Gets or Sets CategoryId
@@ -63,7 +63,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         /// Gets or Sets Category
         /// </summary>
         [DataMember(Name="category", EmitDefaultValue=false)]
-        public VirtoCommerceCatalogModuleWebModelCategory Category { get; set; }
+        public Category Category { get; set; }
 
         /// <summary>
         /// Gets or Sets Outline
@@ -75,7 +75,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         /// Gets or Sets Parents
         /// </summary>
         [DataMember(Name="parents", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelCategory> Parents { get; set; }
+        public List<Category> Parents { get; set; }
 
         /// <summary>
         /// Gets or Sets IndexingDate
@@ -219,43 +219,43 @@ namespace VirtoCommerce.SearchModule.Client.Model
         /// Gets or Sets Properties
         /// </summary>
         [DataMember(Name="properties", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelProperty> Properties { get; set; }
+        public List<Property> Properties { get; set; }
 
         /// <summary>
         /// Gets or Sets Images
         /// </summary>
         [DataMember(Name="images", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelImage> Images { get; set; }
+        public List<Image> Images { get; set; }
 
         /// <summary>
         /// Gets or Sets Assets
         /// </summary>
         [DataMember(Name="assets", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelAsset> Assets { get; set; }
+        public List<Asset> Assets { get; set; }
 
         /// <summary>
         /// Gets or Sets Variations
         /// </summary>
         [DataMember(Name="variations", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelProduct> Variations { get; set; }
+        public List<Product> Variations { get; set; }
 
         /// <summary>
         /// Gets or Sets Links
         /// </summary>
         [DataMember(Name="links", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelCategoryLink> Links { get; set; }
+        public List<CategoryLink> Links { get; set; }
 
         /// <summary>
         /// Gets or Sets Reviews
         /// </summary>
         [DataMember(Name="reviews", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelEditorialReview> Reviews { get; set; }
+        public List<EditorialReview> Reviews { get; set; }
 
         /// <summary>
         /// Gets or Sets Associations
         /// </summary>
         [DataMember(Name="associations", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelProductAssociation> Associations { get; set; }
+        public List<ProductAssociation> Associations { get; set; }
 
         /// <summary>
         /// Gets or Sets SecurityScopes
@@ -273,13 +273,13 @@ namespace VirtoCommerce.SearchModule.Client.Model
         /// Gets or Sets SeoInfos
         /// </summary>
         [DataMember(Name="seoInfos", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCommerceModelSeoInfo> SeoInfos { get; set; }
+        public List<SeoInfo> SeoInfos { get; set; }
 
         /// <summary>
         /// Gets or Sets Outlines
         /// </summary>
         [DataMember(Name="outlines", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCatalogModelOutline> Outlines { get; set; }
+        public List<Outline> Outlines { get; set; }
 
         /// <summary>
         /// Gets or Sets CreatedDate
@@ -318,7 +318,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceCatalogModuleWebModelProduct {\n");
+            sb.Append("class Product {\n");
             sb.Append("  ManufacturerPartNumber: ").Append(ManufacturerPartNumber).Append("\n");
             sb.Append("  Gtin: ").Append(Gtin).Append("\n");
             sb.Append("  Code: ").Append(Code).Append("\n");
@@ -389,15 +389,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceCatalogModuleWebModelProduct);
+            return this.Equals(obj as Product);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceCatalogModuleWebModelProduct instances are equal
+        /// Returns true if Product instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceCatalogModuleWebModelProduct to be compared</param>
+        /// <param name="other">Instance of Product to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceCatalogModuleWebModelProduct other)
+        public bool Equals(Product other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)

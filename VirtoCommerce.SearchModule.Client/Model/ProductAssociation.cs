@@ -12,10 +12,10 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceCatalogModuleWebModelProductAssociation
+    /// ProductAssociation
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceCatalogModuleWebModelProductAssociation :  IEquatable<VirtoCommerceCatalogModuleWebModelProductAssociation>
+    public partial class ProductAssociation :  IEquatable<ProductAssociation>
     {
         /// <summary>
         /// Gets or Sets Name
@@ -66,7 +66,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceCatalogModuleWebModelProductAssociation {\n");
+            sb.Append("class ProductAssociation {\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("  Description: ").Append(Description).Append("\n");
             sb.Append("  Priority: ").Append(Priority).Append("\n");
@@ -95,15 +95,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceCatalogModuleWebModelProductAssociation);
+            return this.Equals(obj as ProductAssociation);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceCatalogModuleWebModelProductAssociation instances are equal
+        /// Returns true if ProductAssociation instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceCatalogModuleWebModelProductAssociation to be compared</param>
+        /// <param name="other">Instance of ProductAssociation to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceCatalogModuleWebModelProductAssociation other)
+        public bool Equals(ProductAssociation other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)

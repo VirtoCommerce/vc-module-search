@@ -12,11 +12,17 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceDomainCatalogModelCatalog
+    /// Catalog
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceDomainCatalogModelCatalog :  IEquatable<VirtoCommerceDomainCatalogModelCatalog>
+    public partial class Catalog :  IEquatable<Catalog>
     {
+        /// <summary>
+        /// Gets or Sets Id
+        /// </summary>
+        [DataMember(Name="id", EmitDefaultValue=false)]
+        public string Id { get; set; }
+
         /// <summary>
         /// Gets or Sets Name
         /// </summary>
@@ -33,31 +39,25 @@ namespace VirtoCommerce.SearchModule.Client.Model
         /// Gets or Sets DefaultLanguage
         /// </summary>
         [DataMember(Name="defaultLanguage", EmitDefaultValue=false)]
-        public VirtoCommerceDomainCatalogModelCatalogLanguage DefaultLanguage { get; set; }
+        public CatalogLanguage DefaultLanguage { get; set; }
 
         /// <summary>
         /// Gets or Sets Languages
         /// </summary>
         [DataMember(Name="languages", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCatalogModelCatalogLanguage> Languages { get; set; }
+        public List<CatalogLanguage> Languages { get; set; }
 
         /// <summary>
         /// Gets or Sets Properties
         /// </summary>
         [DataMember(Name="properties", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCatalogModelProperty> Properties { get; set; }
+        public List<Property> Properties { get; set; }
 
         /// <summary>
-        /// Gets or Sets PropertyValues
+        /// Gets or Sets SecurityScopes
         /// </summary>
-        [DataMember(Name="propertyValues", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCatalogModelPropertyValue> PropertyValues { get; set; }
-
-        /// <summary>
-        /// Gets or Sets Id
-        /// </summary>
-        [DataMember(Name="id", EmitDefaultValue=false)]
-        public string Id { get; set; }
+        [DataMember(Name="securityScopes", EmitDefaultValue=false)]
+        public List<string> SecurityScopes { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -66,14 +66,14 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceDomainCatalogModelCatalog {\n");
+            sb.Append("class Catalog {\n");
+            sb.Append("  Id: ").Append(Id).Append("\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("  IsVirtual: ").Append(IsVirtual).Append("\n");
             sb.Append("  DefaultLanguage: ").Append(DefaultLanguage).Append("\n");
             sb.Append("  Languages: ").Append(Languages).Append("\n");
             sb.Append("  Properties: ").Append(Properties).Append("\n");
-            sb.Append("  PropertyValues: ").Append(PropertyValues).Append("\n");
-            sb.Append("  Id: ").Append(Id).Append("\n");
+            sb.Append("  SecurityScopes: ").Append(SecurityScopes).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -95,21 +95,26 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceDomainCatalogModelCatalog);
+            return this.Equals(obj as Catalog);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceDomainCatalogModelCatalog instances are equal
+        /// Returns true if Catalog instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceDomainCatalogModelCatalog to be compared</param>
+        /// <param name="other">Instance of Catalog to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceDomainCatalogModelCatalog other)
+        public bool Equals(Catalog other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)
                 return false;
 
             return 
+                (
+                    this.Id == other.Id ||
+                    this.Id != null &&
+                    this.Id.Equals(other.Id)
+                ) && 
                 (
                     this.Name == other.Name ||
                     this.Name != null &&
@@ -136,14 +141,9 @@ namespace VirtoCommerce.SearchModule.Client.Model
                     this.Properties.SequenceEqual(other.Properties)
                 ) && 
                 (
-                    this.PropertyValues == other.PropertyValues ||
-                    this.PropertyValues != null &&
-                    this.PropertyValues.SequenceEqual(other.PropertyValues)
-                ) && 
-                (
-                    this.Id == other.Id ||
-                    this.Id != null &&
-                    this.Id.Equals(other.Id)
+                    this.SecurityScopes == other.SecurityScopes ||
+                    this.SecurityScopes != null &&
+                    this.SecurityScopes.SequenceEqual(other.SecurityScopes)
                 );
         }
 
@@ -158,6 +158,9 @@ namespace VirtoCommerce.SearchModule.Client.Model
             {
                 int hash = 41;
                 // Suitable nullity checks etc, of course :)
+
+                if (this.Id != null)
+                    hash = hash * 59 + this.Id.GetHashCode();
 
                 if (this.Name != null)
                     hash = hash * 59 + this.Name.GetHashCode();
@@ -174,11 +177,8 @@ namespace VirtoCommerce.SearchModule.Client.Model
                 if (this.Properties != null)
                     hash = hash * 59 + this.Properties.GetHashCode();
 
-                if (this.PropertyValues != null)
-                    hash = hash * 59 + this.PropertyValues.GetHashCode();
-
-                if (this.Id != null)
-                    hash = hash * 59 + this.Id.GetHashCode();
+                if (this.SecurityScopes != null)
+                    hash = hash * 59 + this.SecurityScopes.GetHashCode();
 
                 return hash;
             }

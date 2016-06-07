@@ -12,10 +12,10 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceCatalogModuleWebModelAsset
+    /// Asset
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceCatalogModuleWebModelAsset :  IEquatable<VirtoCommerceCatalogModuleWebModelAsset>
+    public partial class Asset :  IEquatable<Asset>
     {
         /// <summary>
         /// Gets or Sets Size
@@ -84,7 +84,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceCatalogModuleWebModelAsset {\n");
+            sb.Append("class Asset {\n");
             sb.Append("  Size: ").Append(Size).Append("\n");
             sb.Append("  MimeType: ").Append(MimeType).Append("\n");
             sb.Append("  Id: ").Append(Id).Append("\n");
@@ -116,15 +116,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceCatalogModuleWebModelAsset);
+            return this.Equals(obj as Asset);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceCatalogModuleWebModelAsset instances are equal
+        /// Returns true if Asset instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceCatalogModuleWebModelAsset to be compared</param>
+        /// <param name="other">Instance of Asset to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceCatalogModuleWebModelAsset other)
+        public bool Equals(Asset other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)

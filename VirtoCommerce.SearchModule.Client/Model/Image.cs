@@ -12,10 +12,10 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceCatalogModuleWebModelImage
+    /// Image
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceCatalogModuleWebModelImage :  IEquatable<VirtoCommerceCatalogModuleWebModelImage>
+    public partial class Image :  IEquatable<Image>
     {
         /// <summary>
         /// Gets or Sets Id
@@ -72,7 +72,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceCatalogModuleWebModelImage {\n");
+            sb.Append("class Image {\n");
             sb.Append("  Id: ").Append(Id).Append("\n");
             sb.Append("  RelativeUrl: ").Append(RelativeUrl).Append("\n");
             sb.Append("  Url: ").Append(Url).Append("\n");
@@ -102,15 +102,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceCatalogModuleWebModelImage);
+            return this.Equals(obj as Image);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceCatalogModuleWebModelImage instances are equal
+        /// Returns true if Image instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceCatalogModuleWebModelImage to be compared</param>
+        /// <param name="other">Instance of Image to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceCatalogModuleWebModelImage other)
+        public bool Equals(Image other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)

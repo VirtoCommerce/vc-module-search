@@ -22,8 +22,8 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </remarks>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="storeId">Store ID</param>
-        /// <returns>List&lt;VirtoCommerceSearchModuleWebModelFilterProperty&gt;</returns>
-        List<VirtoCommerceSearchModuleWebModelFilterProperty> SearchModuleGetFilterProperties(string storeId);
+        /// <returns>List&lt;FilterProperty&gt;</returns>
+        List<FilterProperty> SearchModuleGetFilterProperties(string storeId);
 
         /// <summary>
         /// Get filter properties for store
@@ -33,8 +33,8 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </remarks>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="storeId">Store ID</param>
-        /// <returns>ApiResponse of List&lt;VirtoCommerceSearchModuleWebModelFilterProperty&gt;</returns>
-        ApiResponse<List<VirtoCommerceSearchModuleWebModelFilterProperty>> SearchModuleGetFilterPropertiesWithHttpInfo(string storeId);
+        /// <returns>ApiResponse of List&lt;FilterProperty&gt;</returns>
+        ApiResponse<List<FilterProperty>> SearchModuleGetFilterPropertiesWithHttpInfo(string storeId);
         /// <summary>
         /// Search for products and categories
         /// </summary>
@@ -43,8 +43,8 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </remarks>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="criteria">Search parameters</param>
-        /// <returns>VirtoCommerceCatalogModuleWebModelCatalogSearchResult</returns>
-        VirtoCommerceCatalogModuleWebModelCatalogSearchResult SearchModuleSearch(VirtoCommerceDomainCatalogModelSearchCriteria criteria);
+        /// <returns>CatalogSearchResult</returns>
+        CatalogSearchResult SearchModuleSearch(SearchCriteria criteria);
 
         /// <summary>
         /// Search for products and categories
@@ -54,8 +54,8 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </remarks>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="criteria">Search parameters</param>
-        /// <returns>ApiResponse of VirtoCommerceCatalogModuleWebModelCatalogSearchResult</returns>
-        ApiResponse<VirtoCommerceCatalogModuleWebModelCatalogSearchResult> SearchModuleSearchWithHttpInfo(VirtoCommerceDomainCatalogModelSearchCriteria criteria);
+        /// <returns>ApiResponse of CatalogSearchResult</returns>
+        ApiResponse<CatalogSearchResult> SearchModuleSearchWithHttpInfo(SearchCriteria criteria);
         /// <summary>
         /// Set filter properties for store
         /// </summary>
@@ -66,7 +66,7 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// <param name="storeId">Store ID</param>
         /// <param name="filterProperties"></param>
         /// <returns></returns>
-        void SearchModuleSetFilterProperties(string storeId, List<VirtoCommerceSearchModuleWebModelFilterProperty> filterProperties);
+        void SearchModuleSetFilterProperties(string storeId, List<FilterProperty> filterProperties);
 
         /// <summary>
         /// Set filter properties for store
@@ -78,7 +78,7 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// <param name="storeId">Store ID</param>
         /// <param name="filterProperties"></param>
         /// <returns>ApiResponse of Object(void)</returns>
-        ApiResponse<Object> SearchModuleSetFilterPropertiesWithHttpInfo(string storeId, List<VirtoCommerceSearchModuleWebModelFilterProperty> filterProperties);
+        ApiResponse<Object> SearchModuleSetFilterPropertiesWithHttpInfo(string storeId, List<FilterProperty> filterProperties);
         #endregion Synchronous Operations
         #region Asynchronous Operations
         /// <summary>
@@ -89,8 +89,8 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </remarks>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="storeId">Store ID</param>
-        /// <returns>Task of List&lt;VirtoCommerceSearchModuleWebModelFilterProperty&gt;</returns>
-        System.Threading.Tasks.Task<List<VirtoCommerceSearchModuleWebModelFilterProperty>> SearchModuleGetFilterPropertiesAsync(string storeId);
+        /// <returns>Task of List&lt;FilterProperty&gt;</returns>
+        System.Threading.Tasks.Task<List<FilterProperty>> SearchModuleGetFilterPropertiesAsync(string storeId);
 
         /// <summary>
         /// Get filter properties for store
@@ -100,8 +100,8 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </remarks>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="storeId">Store ID</param>
-        /// <returns>Task of ApiResponse (List&lt;VirtoCommerceSearchModuleWebModelFilterProperty&gt;)</returns>
-        System.Threading.Tasks.Task<ApiResponse<List<VirtoCommerceSearchModuleWebModelFilterProperty>>> SearchModuleGetFilterPropertiesAsyncWithHttpInfo(string storeId);
+        /// <returns>Task of ApiResponse (List&lt;FilterProperty&gt;)</returns>
+        System.Threading.Tasks.Task<ApiResponse<List<FilterProperty>>> SearchModuleGetFilterPropertiesAsyncWithHttpInfo(string storeId);
         /// <summary>
         /// Search for products and categories
         /// </summary>
@@ -110,8 +110,8 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </remarks>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="criteria">Search parameters</param>
-        /// <returns>Task of VirtoCommerceCatalogModuleWebModelCatalogSearchResult</returns>
-        System.Threading.Tasks.Task<VirtoCommerceCatalogModuleWebModelCatalogSearchResult> SearchModuleSearchAsync(VirtoCommerceDomainCatalogModelSearchCriteria criteria);
+        /// <returns>Task of CatalogSearchResult</returns>
+        System.Threading.Tasks.Task<CatalogSearchResult> SearchModuleSearchAsync(SearchCriteria criteria);
 
         /// <summary>
         /// Search for products and categories
@@ -121,8 +121,8 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </remarks>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="criteria">Search parameters</param>
-        /// <returns>Task of ApiResponse (VirtoCommerceCatalogModuleWebModelCatalogSearchResult)</returns>
-        System.Threading.Tasks.Task<ApiResponse<VirtoCommerceCatalogModuleWebModelCatalogSearchResult>> SearchModuleSearchAsyncWithHttpInfo(VirtoCommerceDomainCatalogModelSearchCriteria criteria);
+        /// <returns>Task of ApiResponse (CatalogSearchResult)</returns>
+        System.Threading.Tasks.Task<ApiResponse<CatalogSearchResult>> SearchModuleSearchAsyncWithHttpInfo(SearchCriteria criteria);
         /// <summary>
         /// Set filter properties for store
         /// </summary>
@@ -133,7 +133,7 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// <param name="storeId">Store ID</param>
         /// <param name="filterProperties"></param>
         /// <returns>Task of void</returns>
-        System.Threading.Tasks.Task SearchModuleSetFilterPropertiesAsync(string storeId, List<VirtoCommerceSearchModuleWebModelFilterProperty> filterProperties);
+        System.Threading.Tasks.Task SearchModuleSetFilterPropertiesAsync(string storeId, List<FilterProperty> filterProperties);
 
         /// <summary>
         /// Set filter properties for store
@@ -145,7 +145,7 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// <param name="storeId">Store ID</param>
         /// <param name="filterProperties"></param>
         /// <returns>Task of ApiResponse</returns>
-        System.Threading.Tasks.Task<ApiResponse<object>> SearchModuleSetFilterPropertiesAsyncWithHttpInfo(string storeId, List<VirtoCommerceSearchModuleWebModelFilterProperty> filterProperties);
+        System.Threading.Tasks.Task<ApiResponse<object>> SearchModuleSetFilterPropertiesAsyncWithHttpInfo(string storeId, List<FilterProperty> filterProperties);
         #endregion Asynchronous Operations
     }
 
@@ -192,10 +192,10 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </summary>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="storeId">Store ID</param>
-        /// <returns>List&lt;VirtoCommerceSearchModuleWebModelFilterProperty&gt;</returns>
-        public List<VirtoCommerceSearchModuleWebModelFilterProperty> SearchModuleGetFilterProperties(string storeId)
+        /// <returns>List&lt;FilterProperty&gt;</returns>
+        public List<FilterProperty> SearchModuleGetFilterProperties(string storeId)
         {
-             ApiResponse<List<VirtoCommerceSearchModuleWebModelFilterProperty>> localVarResponse = SearchModuleGetFilterPropertiesWithHttpInfo(storeId);
+             ApiResponse<List<FilterProperty>> localVarResponse = SearchModuleGetFilterPropertiesWithHttpInfo(storeId);
              return localVarResponse.Data;
         }
 
@@ -204,8 +204,8 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </summary>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="storeId">Store ID</param>
-        /// <returns>ApiResponse of List&lt;VirtoCommerceSearchModuleWebModelFilterProperty&gt;</returns>
-        public ApiResponse<List<VirtoCommerceSearchModuleWebModelFilterProperty>> SearchModuleGetFilterPropertiesWithHttpInfo(string storeId)
+        /// <returns>ApiResponse of List&lt;FilterProperty&gt;</returns>
+        public ApiResponse<List<FilterProperty>> SearchModuleGetFilterPropertiesWithHttpInfo(string storeId)
         {
             // verify the required parameter 'storeId' is set
             if (storeId == null)
@@ -253,9 +253,9 @@ namespace VirtoCommerce.SearchModule.Client.Api
             else if (localVarStatusCode == 0)
                 throw new ApiException(localVarStatusCode, "Error calling SearchModuleGetFilterProperties: " + localVarResponse.ErrorMessage, localVarResponse.ErrorMessage);
 
-            return new ApiResponse<List<VirtoCommerceSearchModuleWebModelFilterProperty>>(localVarStatusCode,
+            return new ApiResponse<List<FilterProperty>>(localVarStatusCode,
                 localVarResponse.Headers.ToDictionary(x => x.Name, x => x.Value.ToString()),
-                (List<VirtoCommerceSearchModuleWebModelFilterProperty>)ApiClient.Deserialize(localVarResponse, typeof(List<VirtoCommerceSearchModuleWebModelFilterProperty>)));
+                (List<FilterProperty>)ApiClient.Deserialize(localVarResponse, typeof(List<FilterProperty>)));
             
         }
 
@@ -264,10 +264,10 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </summary>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="storeId">Store ID</param>
-        /// <returns>Task of List&lt;VirtoCommerceSearchModuleWebModelFilterProperty&gt;</returns>
-        public async System.Threading.Tasks.Task<List<VirtoCommerceSearchModuleWebModelFilterProperty>> SearchModuleGetFilterPropertiesAsync(string storeId)
+        /// <returns>Task of List&lt;FilterProperty&gt;</returns>
+        public async System.Threading.Tasks.Task<List<FilterProperty>> SearchModuleGetFilterPropertiesAsync(string storeId)
         {
-             ApiResponse<List<VirtoCommerceSearchModuleWebModelFilterProperty>> localVarResponse = await SearchModuleGetFilterPropertiesAsyncWithHttpInfo(storeId);
+             ApiResponse<List<FilterProperty>> localVarResponse = await SearchModuleGetFilterPropertiesAsyncWithHttpInfo(storeId);
              return localVarResponse.Data;
 
         }
@@ -277,8 +277,8 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </summary>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="storeId">Store ID</param>
-        /// <returns>Task of ApiResponse (List&lt;VirtoCommerceSearchModuleWebModelFilterProperty&gt;)</returns>
-        public async System.Threading.Tasks.Task<ApiResponse<List<VirtoCommerceSearchModuleWebModelFilterProperty>>> SearchModuleGetFilterPropertiesAsyncWithHttpInfo(string storeId)
+        /// <returns>Task of ApiResponse (List&lt;FilterProperty&gt;)</returns>
+        public async System.Threading.Tasks.Task<ApiResponse<List<FilterProperty>>> SearchModuleGetFilterPropertiesAsyncWithHttpInfo(string storeId)
         {
             // verify the required parameter 'storeId' is set
             if (storeId == null)
@@ -326,9 +326,9 @@ namespace VirtoCommerce.SearchModule.Client.Api
             else if (localVarStatusCode == 0)
                 throw new ApiException(localVarStatusCode, "Error calling SearchModuleGetFilterProperties: " + localVarResponse.ErrorMessage, localVarResponse.ErrorMessage);
 
-            return new ApiResponse<List<VirtoCommerceSearchModuleWebModelFilterProperty>>(localVarStatusCode,
+            return new ApiResponse<List<FilterProperty>>(localVarStatusCode,
                 localVarResponse.Headers.ToDictionary(x => x.Name, x => x.Value.ToString()),
-                (List<VirtoCommerceSearchModuleWebModelFilterProperty>)ApiClient.Deserialize(localVarResponse, typeof(List<VirtoCommerceSearchModuleWebModelFilterProperty>)));
+                (List<FilterProperty>)ApiClient.Deserialize(localVarResponse, typeof(List<FilterProperty>)));
             
         }
         /// <summary>
@@ -336,10 +336,10 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </summary>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="criteria">Search parameters</param>
-        /// <returns>VirtoCommerceCatalogModuleWebModelCatalogSearchResult</returns>
-        public VirtoCommerceCatalogModuleWebModelCatalogSearchResult SearchModuleSearch(VirtoCommerceDomainCatalogModelSearchCriteria criteria)
+        /// <returns>CatalogSearchResult</returns>
+        public CatalogSearchResult SearchModuleSearch(SearchCriteria criteria)
         {
-             ApiResponse<VirtoCommerceCatalogModuleWebModelCatalogSearchResult> localVarResponse = SearchModuleSearchWithHttpInfo(criteria);
+             ApiResponse<CatalogSearchResult> localVarResponse = SearchModuleSearchWithHttpInfo(criteria);
              return localVarResponse.Data;
         }
 
@@ -348,8 +348,8 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </summary>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="criteria">Search parameters</param>
-        /// <returns>ApiResponse of VirtoCommerceCatalogModuleWebModelCatalogSearchResult</returns>
-        public ApiResponse<VirtoCommerceCatalogModuleWebModelCatalogSearchResult> SearchModuleSearchWithHttpInfo(VirtoCommerceDomainCatalogModelSearchCriteria criteria)
+        /// <returns>ApiResponse of CatalogSearchResult</returns>
+        public ApiResponse<CatalogSearchResult> SearchModuleSearchWithHttpInfo(SearchCriteria criteria)
         {
             // verify the required parameter 'criteria' is set
             if (criteria == null)
@@ -409,9 +409,9 @@ namespace VirtoCommerce.SearchModule.Client.Api
             else if (localVarStatusCode == 0)
                 throw new ApiException(localVarStatusCode, "Error calling SearchModuleSearch: " + localVarResponse.ErrorMessage, localVarResponse.ErrorMessage);
 
-            return new ApiResponse<VirtoCommerceCatalogModuleWebModelCatalogSearchResult>(localVarStatusCode,
+            return new ApiResponse<CatalogSearchResult>(localVarStatusCode,
                 localVarResponse.Headers.ToDictionary(x => x.Name, x => x.Value.ToString()),
-                (VirtoCommerceCatalogModuleWebModelCatalogSearchResult)ApiClient.Deserialize(localVarResponse, typeof(VirtoCommerceCatalogModuleWebModelCatalogSearchResult)));
+                (CatalogSearchResult)ApiClient.Deserialize(localVarResponse, typeof(CatalogSearchResult)));
             
         }
 
@@ -420,10 +420,10 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </summary>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="criteria">Search parameters</param>
-        /// <returns>Task of VirtoCommerceCatalogModuleWebModelCatalogSearchResult</returns>
-        public async System.Threading.Tasks.Task<VirtoCommerceCatalogModuleWebModelCatalogSearchResult> SearchModuleSearchAsync(VirtoCommerceDomainCatalogModelSearchCriteria criteria)
+        /// <returns>Task of CatalogSearchResult</returns>
+        public async System.Threading.Tasks.Task<CatalogSearchResult> SearchModuleSearchAsync(SearchCriteria criteria)
         {
-             ApiResponse<VirtoCommerceCatalogModuleWebModelCatalogSearchResult> localVarResponse = await SearchModuleSearchAsyncWithHttpInfo(criteria);
+             ApiResponse<CatalogSearchResult> localVarResponse = await SearchModuleSearchAsyncWithHttpInfo(criteria);
              return localVarResponse.Data;
 
         }
@@ -433,8 +433,8 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// </summary>
         /// <exception cref="VirtoCommerce.SearchModule.Client.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="criteria">Search parameters</param>
-        /// <returns>Task of ApiResponse (VirtoCommerceCatalogModuleWebModelCatalogSearchResult)</returns>
-        public async System.Threading.Tasks.Task<ApiResponse<VirtoCommerceCatalogModuleWebModelCatalogSearchResult>> SearchModuleSearchAsyncWithHttpInfo(VirtoCommerceDomainCatalogModelSearchCriteria criteria)
+        /// <returns>Task of ApiResponse (CatalogSearchResult)</returns>
+        public async System.Threading.Tasks.Task<ApiResponse<CatalogSearchResult>> SearchModuleSearchAsyncWithHttpInfo(SearchCriteria criteria)
         {
             // verify the required parameter 'criteria' is set
             if (criteria == null)
@@ -494,9 +494,9 @@ namespace VirtoCommerce.SearchModule.Client.Api
             else if (localVarStatusCode == 0)
                 throw new ApiException(localVarStatusCode, "Error calling SearchModuleSearch: " + localVarResponse.ErrorMessage, localVarResponse.ErrorMessage);
 
-            return new ApiResponse<VirtoCommerceCatalogModuleWebModelCatalogSearchResult>(localVarStatusCode,
+            return new ApiResponse<CatalogSearchResult>(localVarStatusCode,
                 localVarResponse.Headers.ToDictionary(x => x.Name, x => x.Value.ToString()),
-                (VirtoCommerceCatalogModuleWebModelCatalogSearchResult)ApiClient.Deserialize(localVarResponse, typeof(VirtoCommerceCatalogModuleWebModelCatalogSearchResult)));
+                (CatalogSearchResult)ApiClient.Deserialize(localVarResponse, typeof(CatalogSearchResult)));
             
         }
         /// <summary>
@@ -506,7 +506,7 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// <param name="storeId">Store ID</param>
         /// <param name="filterProperties"></param>
         /// <returns></returns>
-        public void SearchModuleSetFilterProperties(string storeId, List<VirtoCommerceSearchModuleWebModelFilterProperty> filterProperties)
+        public void SearchModuleSetFilterProperties(string storeId, List<FilterProperty> filterProperties)
         {
              SearchModuleSetFilterPropertiesWithHttpInfo(storeId, filterProperties);
         }
@@ -518,7 +518,7 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// <param name="storeId">Store ID</param>
         /// <param name="filterProperties"></param>
         /// <returns>ApiResponse of Object(void)</returns>
-        public ApiResponse<object> SearchModuleSetFilterPropertiesWithHttpInfo(string storeId, List<VirtoCommerceSearchModuleWebModelFilterProperty> filterProperties)
+        public ApiResponse<object> SearchModuleSetFilterPropertiesWithHttpInfo(string storeId, List<FilterProperty> filterProperties)
         {
             // verify the required parameter 'storeId' is set
             if (storeId == null)
@@ -591,7 +591,7 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// <param name="storeId">Store ID</param>
         /// <param name="filterProperties"></param>
         /// <returns>Task of void</returns>
-        public async System.Threading.Tasks.Task SearchModuleSetFilterPropertiesAsync(string storeId, List<VirtoCommerceSearchModuleWebModelFilterProperty> filterProperties)
+        public async System.Threading.Tasks.Task SearchModuleSetFilterPropertiesAsync(string storeId, List<FilterProperty> filterProperties)
         {
              await SearchModuleSetFilterPropertiesAsyncWithHttpInfo(storeId, filterProperties);
 
@@ -604,7 +604,7 @@ namespace VirtoCommerce.SearchModule.Client.Api
         /// <param name="storeId">Store ID</param>
         /// <param name="filterProperties"></param>
         /// <returns>Task of ApiResponse</returns>
-        public async System.Threading.Tasks.Task<ApiResponse<object>> SearchModuleSetFilterPropertiesAsyncWithHttpInfo(string storeId, List<VirtoCommerceSearchModuleWebModelFilterProperty> filterProperties)
+        public async System.Threading.Tasks.Task<ApiResponse<object>> SearchModuleSetFilterPropertiesAsyncWithHttpInfo(string storeId, List<FilterProperty> filterProperties)
         {
             // verify the required parameter 'storeId' is set
             if (storeId == null)

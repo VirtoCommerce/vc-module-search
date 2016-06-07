@@ -12,10 +12,10 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceCatalogModuleWebModelCategoryLink
+    /// CategoryLink
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceCatalogModuleWebModelCategoryLink :  IEquatable<VirtoCommerceCatalogModuleWebModelCategoryLink>
+    public partial class CategoryLink :  IEquatable<CategoryLink>
     {
         /// <summary>
         /// Gets or Sets SourceItemId
@@ -48,7 +48,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceCatalogModuleWebModelCategoryLink {\n");
+            sb.Append("class CategoryLink {\n");
             sb.Append("  SourceItemId: ").Append(SourceItemId).Append("\n");
             sb.Append("  SourceCategoryId: ").Append(SourceCategoryId).Append("\n");
             sb.Append("  CatalogId: ").Append(CatalogId).Append("\n");
@@ -74,15 +74,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceCatalogModuleWebModelCategoryLink);
+            return this.Equals(obj as CategoryLink);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceCatalogModuleWebModelCategoryLink instances are equal
+        /// Returns true if CategoryLink instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceCatalogModuleWebModelCategoryLink to be compared</param>
+        /// <param name="other">Instance of CategoryLink to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceCatalogModuleWebModelCategoryLink other)
+        public bool Equals(CategoryLink other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)

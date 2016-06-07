@@ -12,22 +12,22 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceDomainCatalogModelPropertyDictionaryValue
+    /// PropertyDictionaryValue
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceDomainCatalogModelPropertyDictionaryValue :  IEquatable<VirtoCommerceDomainCatalogModelPropertyDictionaryValue>
+    public partial class PropertyDictionaryValue :  IEquatable<PropertyDictionaryValue>
     {
+        /// <summary>
+        /// Gets or Sets Id
+        /// </summary>
+        [DataMember(Name="id", EmitDefaultValue=false)]
+        public string Id { get; set; }
+
         /// <summary>
         /// Gets or Sets PropertyId
         /// </summary>
         [DataMember(Name="propertyId", EmitDefaultValue=false)]
         public string PropertyId { get; set; }
-
-        /// <summary>
-        /// Gets or Sets Property
-        /// </summary>
-        [DataMember(Name="property", EmitDefaultValue=false)]
-        public VirtoCommerceDomainCatalogModelProperty Property { get; set; }
 
         /// <summary>
         /// Gets or Sets Alias
@@ -48,25 +48,18 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public string Value { get; set; }
 
         /// <summary>
-        /// Gets or Sets Id
-        /// </summary>
-        [DataMember(Name="id", EmitDefaultValue=false)]
-        public string Id { get; set; }
-
-        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceDomainCatalogModelPropertyDictionaryValue {\n");
+            sb.Append("class PropertyDictionaryValue {\n");
+            sb.Append("  Id: ").Append(Id).Append("\n");
             sb.Append("  PropertyId: ").Append(PropertyId).Append("\n");
-            sb.Append("  Property: ").Append(Property).Append("\n");
             sb.Append("  Alias: ").Append(Alias).Append("\n");
             sb.Append("  LanguageCode: ").Append(LanguageCode).Append("\n");
             sb.Append("  Value: ").Append(Value).Append("\n");
-            sb.Append("  Id: ").Append(Id).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -88,15 +81,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceDomainCatalogModelPropertyDictionaryValue);
+            return this.Equals(obj as PropertyDictionaryValue);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceDomainCatalogModelPropertyDictionaryValue instances are equal
+        /// Returns true if PropertyDictionaryValue instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceDomainCatalogModelPropertyDictionaryValue to be compared</param>
+        /// <param name="other">Instance of PropertyDictionaryValue to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceDomainCatalogModelPropertyDictionaryValue other)
+        public bool Equals(PropertyDictionaryValue other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)
@@ -104,14 +97,14 @@ namespace VirtoCommerce.SearchModule.Client.Model
 
             return 
                 (
+                    this.Id == other.Id ||
+                    this.Id != null &&
+                    this.Id.Equals(other.Id)
+                ) && 
+                (
                     this.PropertyId == other.PropertyId ||
                     this.PropertyId != null &&
                     this.PropertyId.Equals(other.PropertyId)
-                ) && 
-                (
-                    this.Property == other.Property ||
-                    this.Property != null &&
-                    this.Property.Equals(other.Property)
                 ) && 
                 (
                     this.Alias == other.Alias ||
@@ -127,11 +120,6 @@ namespace VirtoCommerce.SearchModule.Client.Model
                     this.Value == other.Value ||
                     this.Value != null &&
                     this.Value.Equals(other.Value)
-                ) && 
-                (
-                    this.Id == other.Id ||
-                    this.Id != null &&
-                    this.Id.Equals(other.Id)
                 );
         }
 
@@ -147,11 +135,11 @@ namespace VirtoCommerce.SearchModule.Client.Model
                 int hash = 41;
                 // Suitable nullity checks etc, of course :)
 
+                if (this.Id != null)
+                    hash = hash * 59 + this.Id.GetHashCode();
+
                 if (this.PropertyId != null)
                     hash = hash * 59 + this.PropertyId.GetHashCode();
-
-                if (this.Property != null)
-                    hash = hash * 59 + this.Property.GetHashCode();
 
                 if (this.Alias != null)
                     hash = hash * 59 + this.Alias.GetHashCode();
@@ -161,9 +149,6 @@ namespace VirtoCommerce.SearchModule.Client.Model
 
                 if (this.Value != null)
                     hash = hash * 59 + this.Value.GetHashCode();
-
-                if (this.Id != null)
-                    hash = hash * 59 + this.Id.GetHashCode();
 
                 return hash;
             }

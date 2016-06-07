@@ -12,28 +12,22 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceCatalogModuleWebModelPropertyDictionaryValue
+    /// CatalogLanguage
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceCatalogModuleWebModelPropertyDictionaryValue :  IEquatable<VirtoCommerceCatalogModuleWebModelPropertyDictionaryValue>
+    public partial class CatalogLanguage :  IEquatable<CatalogLanguage>
     {
         /// <summary>
-        /// Gets or Sets Id
+        /// Gets or Sets CatalogId
         /// </summary>
-        [DataMember(Name="id", EmitDefaultValue=false)]
-        public string Id { get; set; }
+        [DataMember(Name="catalogId", EmitDefaultValue=false)]
+        public string CatalogId { get; set; }
 
         /// <summary>
-        /// Gets or Sets PropertyId
+        /// Gets or Sets IsDefault
         /// </summary>
-        [DataMember(Name="propertyId", EmitDefaultValue=false)]
-        public string PropertyId { get; set; }
-
-        /// <summary>
-        /// Gets or Sets Alias
-        /// </summary>
-        [DataMember(Name="alias", EmitDefaultValue=false)]
-        public string Alias { get; set; }
+        [DataMember(Name="isDefault", EmitDefaultValue=false)]
+        public bool? IsDefault { get; set; }
 
         /// <summary>
         /// Gets or Sets LanguageCode
@@ -42,10 +36,10 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public string LanguageCode { get; set; }
 
         /// <summary>
-        /// Gets or Sets Value
+        /// Gets or Sets DisplayName
         /// </summary>
-        [DataMember(Name="value", EmitDefaultValue=false)]
-        public string Value { get; set; }
+        [DataMember(Name="displayName", EmitDefaultValue=false)]
+        public string DisplayName { get; private set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -54,12 +48,11 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceCatalogModuleWebModelPropertyDictionaryValue {\n");
-            sb.Append("  Id: ").Append(Id).Append("\n");
-            sb.Append("  PropertyId: ").Append(PropertyId).Append("\n");
-            sb.Append("  Alias: ").Append(Alias).Append("\n");
+            sb.Append("class CatalogLanguage {\n");
+            sb.Append("  CatalogId: ").Append(CatalogId).Append("\n");
+            sb.Append("  IsDefault: ").Append(IsDefault).Append("\n");
             sb.Append("  LanguageCode: ").Append(LanguageCode).Append("\n");
-            sb.Append("  Value: ").Append(Value).Append("\n");
+            sb.Append("  DisplayName: ").Append(DisplayName).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -81,15 +74,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceCatalogModuleWebModelPropertyDictionaryValue);
+            return this.Equals(obj as CatalogLanguage);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceCatalogModuleWebModelPropertyDictionaryValue instances are equal
+        /// Returns true if CatalogLanguage instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceCatalogModuleWebModelPropertyDictionaryValue to be compared</param>
+        /// <param name="other">Instance of CatalogLanguage to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceCatalogModuleWebModelPropertyDictionaryValue other)
+        public bool Equals(CatalogLanguage other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)
@@ -97,19 +90,14 @@ namespace VirtoCommerce.SearchModule.Client.Model
 
             return 
                 (
-                    this.Id == other.Id ||
-                    this.Id != null &&
-                    this.Id.Equals(other.Id)
+                    this.CatalogId == other.CatalogId ||
+                    this.CatalogId != null &&
+                    this.CatalogId.Equals(other.CatalogId)
                 ) && 
                 (
-                    this.PropertyId == other.PropertyId ||
-                    this.PropertyId != null &&
-                    this.PropertyId.Equals(other.PropertyId)
-                ) && 
-                (
-                    this.Alias == other.Alias ||
-                    this.Alias != null &&
-                    this.Alias.Equals(other.Alias)
+                    this.IsDefault == other.IsDefault ||
+                    this.IsDefault != null &&
+                    this.IsDefault.Equals(other.IsDefault)
                 ) && 
                 (
                     this.LanguageCode == other.LanguageCode ||
@@ -117,9 +105,9 @@ namespace VirtoCommerce.SearchModule.Client.Model
                     this.LanguageCode.Equals(other.LanguageCode)
                 ) && 
                 (
-                    this.Value == other.Value ||
-                    this.Value != null &&
-                    this.Value.Equals(other.Value)
+                    this.DisplayName == other.DisplayName ||
+                    this.DisplayName != null &&
+                    this.DisplayName.Equals(other.DisplayName)
                 );
         }
 
@@ -135,20 +123,17 @@ namespace VirtoCommerce.SearchModule.Client.Model
                 int hash = 41;
                 // Suitable nullity checks etc, of course :)
 
-                if (this.Id != null)
-                    hash = hash * 59 + this.Id.GetHashCode();
+                if (this.CatalogId != null)
+                    hash = hash * 59 + this.CatalogId.GetHashCode();
 
-                if (this.PropertyId != null)
-                    hash = hash * 59 + this.PropertyId.GetHashCode();
-
-                if (this.Alias != null)
-                    hash = hash * 59 + this.Alias.GetHashCode();
+                if (this.IsDefault != null)
+                    hash = hash * 59 + this.IsDefault.GetHashCode();
 
                 if (this.LanguageCode != null)
                     hash = hash * 59 + this.LanguageCode.GetHashCode();
 
-                if (this.Value != null)
-                    hash = hash * 59 + this.Value.GetHashCode();
+                if (this.DisplayName != null)
+                    hash = hash * 59 + this.DisplayName.GetHashCode();
 
                 return hash;
             }

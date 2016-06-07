@@ -12,10 +12,10 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceCatalogModuleWebModelCatalogSearchResult
+    /// CatalogSearchResult
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceCatalogModuleWebModelCatalogSearchResult :  IEquatable<VirtoCommerceCatalogModuleWebModelCatalogSearchResult>
+    public partial class CatalogSearchResult :  IEquatable<CatalogSearchResult>
     {
         /// <summary>
         /// Gets or Sets ProductsTotalCount
@@ -27,25 +27,25 @@ namespace VirtoCommerce.SearchModule.Client.Model
         /// Gets or Sets Products
         /// </summary>
         [DataMember(Name="products", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelProduct> Products { get; set; }
+        public List<Product> Products { get; set; }
 
         /// <summary>
         /// Gets or Sets Categories
         /// </summary>
         [DataMember(Name="categories", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelCategory> Categories { get; set; }
+        public List<Category> Categories { get; set; }
 
         /// <summary>
         /// Gets or Sets Catalogs
         /// </summary>
         [DataMember(Name="catalogs", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelCatalog> Catalogs { get; set; }
+        public List<Catalog> Catalogs { get; set; }
 
         /// <summary>
         /// Gets or Sets Aggregations
         /// </summary>
         [DataMember(Name="aggregations", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelAggregation> Aggregations { get; set; }
+        public List<Aggregation> Aggregations { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -54,7 +54,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceCatalogModuleWebModelCatalogSearchResult {\n");
+            sb.Append("class CatalogSearchResult {\n");
             sb.Append("  ProductsTotalCount: ").Append(ProductsTotalCount).Append("\n");
             sb.Append("  Products: ").Append(Products).Append("\n");
             sb.Append("  Categories: ").Append(Categories).Append("\n");
@@ -81,15 +81,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceCatalogModuleWebModelCatalogSearchResult);
+            return this.Equals(obj as CatalogSearchResult);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceCatalogModuleWebModelCatalogSearchResult instances are equal
+        /// Returns true if CatalogSearchResult instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceCatalogModuleWebModelCatalogSearchResult to be compared</param>
+        /// <param name="other">Instance of CatalogSearchResult to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceCatalogModuleWebModelCatalogSearchResult other)
+        public bool Equals(CatalogSearchResult other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)

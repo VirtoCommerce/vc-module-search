@@ -12,10 +12,10 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceCatalogModuleWebModelPropertyAttribute
+    /// OutlineItem
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceCatalogModuleWebModelPropertyAttribute :  IEquatable<VirtoCommerceCatalogModuleWebModelPropertyAttribute>
+    public partial class OutlineItem :  IEquatable<OutlineItem>
     {
         /// <summary>
         /// Gets or Sets Id
@@ -24,22 +24,22 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public string Id { get; set; }
 
         /// <summary>
-        /// Gets or Sets Property
+        /// Gets or Sets SeoObjectType
         /// </summary>
-        [DataMember(Name="property", EmitDefaultValue=false)]
-        public VirtoCommerceCatalogModuleWebModelProperty Property { get; set; }
+        [DataMember(Name="seoObjectType", EmitDefaultValue=false)]
+        public string SeoObjectType { get; set; }
 
         /// <summary>
-        /// Gets or Sets Value
+        /// Gets or Sets SeoInfos
         /// </summary>
-        [DataMember(Name="value", EmitDefaultValue=false)]
-        public string Value { get; set; }
+        [DataMember(Name="seoInfos", EmitDefaultValue=false)]
+        public List<SeoInfo> SeoInfos { get; set; }
 
         /// <summary>
-        /// Gets or Sets Name
+        /// Gets or Sets HasVirtualParent
         /// </summary>
-        [DataMember(Name="name", EmitDefaultValue=false)]
-        public string Name { get; set; }
+        [DataMember(Name="hasVirtualParent", EmitDefaultValue=false)]
+        public bool? HasVirtualParent { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -48,11 +48,11 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceCatalogModuleWebModelPropertyAttribute {\n");
+            sb.Append("class OutlineItem {\n");
             sb.Append("  Id: ").Append(Id).Append("\n");
-            sb.Append("  Property: ").Append(Property).Append("\n");
-            sb.Append("  Value: ").Append(Value).Append("\n");
-            sb.Append("  Name: ").Append(Name).Append("\n");
+            sb.Append("  SeoObjectType: ").Append(SeoObjectType).Append("\n");
+            sb.Append("  SeoInfos: ").Append(SeoInfos).Append("\n");
+            sb.Append("  HasVirtualParent: ").Append(HasVirtualParent).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -74,15 +74,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceCatalogModuleWebModelPropertyAttribute);
+            return this.Equals(obj as OutlineItem);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceCatalogModuleWebModelPropertyAttribute instances are equal
+        /// Returns true if OutlineItem instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceCatalogModuleWebModelPropertyAttribute to be compared</param>
+        /// <param name="other">Instance of OutlineItem to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceCatalogModuleWebModelPropertyAttribute other)
+        public bool Equals(OutlineItem other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)
@@ -95,19 +95,19 @@ namespace VirtoCommerce.SearchModule.Client.Model
                     this.Id.Equals(other.Id)
                 ) && 
                 (
-                    this.Property == other.Property ||
-                    this.Property != null &&
-                    this.Property.Equals(other.Property)
+                    this.SeoObjectType == other.SeoObjectType ||
+                    this.SeoObjectType != null &&
+                    this.SeoObjectType.Equals(other.SeoObjectType)
                 ) && 
                 (
-                    this.Value == other.Value ||
-                    this.Value != null &&
-                    this.Value.Equals(other.Value)
+                    this.SeoInfos == other.SeoInfos ||
+                    this.SeoInfos != null &&
+                    this.SeoInfos.SequenceEqual(other.SeoInfos)
                 ) && 
                 (
-                    this.Name == other.Name ||
-                    this.Name != null &&
-                    this.Name.Equals(other.Name)
+                    this.HasVirtualParent == other.HasVirtualParent ||
+                    this.HasVirtualParent != null &&
+                    this.HasVirtualParent.Equals(other.HasVirtualParent)
                 );
         }
 
@@ -126,14 +126,14 @@ namespace VirtoCommerce.SearchModule.Client.Model
                 if (this.Id != null)
                     hash = hash * 59 + this.Id.GetHashCode();
 
-                if (this.Property != null)
-                    hash = hash * 59 + this.Property.GetHashCode();
+                if (this.SeoObjectType != null)
+                    hash = hash * 59 + this.SeoObjectType.GetHashCode();
 
-                if (this.Value != null)
-                    hash = hash * 59 + this.Value.GetHashCode();
+                if (this.SeoInfos != null)
+                    hash = hash * 59 + this.SeoInfos.GetHashCode();
 
-                if (this.Name != null)
-                    hash = hash * 59 + this.Name.GetHashCode();
+                if (this.HasVirtualParent != null)
+                    hash = hash * 59 + this.HasVirtualParent.GetHashCode();
 
                 return hash;
             }

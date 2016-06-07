@@ -12,64 +12,76 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceDomainCatalogModelPropertyValue
+    /// SeoInfo
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceDomainCatalogModelPropertyValue :  IEquatable<VirtoCommerceDomainCatalogModelPropertyValue>
+    public partial class SeoInfo :  IEquatable<SeoInfo>
     {
         /// <summary>
-        /// Gets or Sets PropertyId
+        /// Gets or Sets Name
         /// </summary>
-        [DataMember(Name="propertyId", EmitDefaultValue=false)]
-        public string PropertyId { get; set; }
+        [DataMember(Name="name", EmitDefaultValue=false)]
+        public string Name { get; set; }
 
         /// <summary>
-        /// Gets or Sets PropertyName
+        /// Gets or Sets SemanticUrl
         /// </summary>
-        [DataMember(Name="propertyName", EmitDefaultValue=false)]
-        public string PropertyName { get; set; }
+        [DataMember(Name="semanticUrl", EmitDefaultValue=false)]
+        public string SemanticUrl { get; set; }
 
         /// <summary>
-        /// Gets or Sets Property
+        /// Gets or Sets PageTitle
         /// </summary>
-        [DataMember(Name="property", EmitDefaultValue=false)]
-        public VirtoCommerceDomainCatalogModelProperty Property { get; set; }
+        [DataMember(Name="pageTitle", EmitDefaultValue=false)]
+        public string PageTitle { get; set; }
 
         /// <summary>
-        /// Gets or Sets Alias
+        /// Gets or Sets MetaDescription
         /// </summary>
-        [DataMember(Name="alias", EmitDefaultValue=false)]
-        public string Alias { get; set; }
+        [DataMember(Name="metaDescription", EmitDefaultValue=false)]
+        public string MetaDescription { get; set; }
 
         /// <summary>
-        /// Gets or Sets ValueId
+        /// Gets or Sets ImageAltDescription
         /// </summary>
-        [DataMember(Name="valueId", EmitDefaultValue=false)]
-        public string ValueId { get; set; }
+        [DataMember(Name="imageAltDescription", EmitDefaultValue=false)]
+        public string ImageAltDescription { get; set; }
 
         /// <summary>
-        /// Gets or Sets Value
+        /// Gets or Sets MetaKeywords
         /// </summary>
-        [DataMember(Name="value", EmitDefaultValue=false)]
-        public Object Value { get; set; }
+        [DataMember(Name="metaKeywords", EmitDefaultValue=false)]
+        public string MetaKeywords { get; set; }
 
         /// <summary>
-        /// Gets or Sets ValueType
+        /// Gets or Sets StoreId
         /// </summary>
-        [DataMember(Name="valueType", EmitDefaultValue=false)]
-        public string ValueType { get; set; }
+        [DataMember(Name="storeId", EmitDefaultValue=false)]
+        public string StoreId { get; set; }
+
+        /// <summary>
+        /// Gets or Sets ObjectId
+        /// </summary>
+        [DataMember(Name="objectId", EmitDefaultValue=false)]
+        public string ObjectId { get; set; }
+
+        /// <summary>
+        /// Gets or Sets ObjectType
+        /// </summary>
+        [DataMember(Name="objectType", EmitDefaultValue=false)]
+        public string ObjectType { get; set; }
+
+        /// <summary>
+        /// Gets or Sets IsActive
+        /// </summary>
+        [DataMember(Name="isActive", EmitDefaultValue=false)]
+        public bool? IsActive { get; set; }
 
         /// <summary>
         /// Gets or Sets LanguageCode
         /// </summary>
         [DataMember(Name="languageCode", EmitDefaultValue=false)]
         public string LanguageCode { get; set; }
-
-        /// <summary>
-        /// Gets or Sets IsInherited
-        /// </summary>
-        [DataMember(Name="isInherited", EmitDefaultValue=false)]
-        public bool? IsInherited { get; set; }
 
         /// <summary>
         /// Gets or Sets CreatedDate
@@ -108,16 +120,18 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceDomainCatalogModelPropertyValue {\n");
-            sb.Append("  PropertyId: ").Append(PropertyId).Append("\n");
-            sb.Append("  PropertyName: ").Append(PropertyName).Append("\n");
-            sb.Append("  Property: ").Append(Property).Append("\n");
-            sb.Append("  Alias: ").Append(Alias).Append("\n");
-            sb.Append("  ValueId: ").Append(ValueId).Append("\n");
-            sb.Append("  Value: ").Append(Value).Append("\n");
-            sb.Append("  ValueType: ").Append(ValueType).Append("\n");
+            sb.Append("class SeoInfo {\n");
+            sb.Append("  Name: ").Append(Name).Append("\n");
+            sb.Append("  SemanticUrl: ").Append(SemanticUrl).Append("\n");
+            sb.Append("  PageTitle: ").Append(PageTitle).Append("\n");
+            sb.Append("  MetaDescription: ").Append(MetaDescription).Append("\n");
+            sb.Append("  ImageAltDescription: ").Append(ImageAltDescription).Append("\n");
+            sb.Append("  MetaKeywords: ").Append(MetaKeywords).Append("\n");
+            sb.Append("  StoreId: ").Append(StoreId).Append("\n");
+            sb.Append("  ObjectId: ").Append(ObjectId).Append("\n");
+            sb.Append("  ObjectType: ").Append(ObjectType).Append("\n");
+            sb.Append("  IsActive: ").Append(IsActive).Append("\n");
             sb.Append("  LanguageCode: ").Append(LanguageCode).Append("\n");
-            sb.Append("  IsInherited: ").Append(IsInherited).Append("\n");
             sb.Append("  CreatedDate: ").Append(CreatedDate).Append("\n");
             sb.Append("  ModifiedDate: ").Append(ModifiedDate).Append("\n");
             sb.Append("  CreatedBy: ").Append(CreatedBy).Append("\n");
@@ -144,15 +158,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceDomainCatalogModelPropertyValue);
+            return this.Equals(obj as SeoInfo);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceDomainCatalogModelPropertyValue instances are equal
+        /// Returns true if SeoInfo instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceDomainCatalogModelPropertyValue to be compared</param>
+        /// <param name="other">Instance of SeoInfo to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceDomainCatalogModelPropertyValue other)
+        public bool Equals(SeoInfo other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)
@@ -160,49 +174,59 @@ namespace VirtoCommerce.SearchModule.Client.Model
 
             return 
                 (
-                    this.PropertyId == other.PropertyId ||
-                    this.PropertyId != null &&
-                    this.PropertyId.Equals(other.PropertyId)
+                    this.Name == other.Name ||
+                    this.Name != null &&
+                    this.Name.Equals(other.Name)
                 ) && 
                 (
-                    this.PropertyName == other.PropertyName ||
-                    this.PropertyName != null &&
-                    this.PropertyName.Equals(other.PropertyName)
+                    this.SemanticUrl == other.SemanticUrl ||
+                    this.SemanticUrl != null &&
+                    this.SemanticUrl.Equals(other.SemanticUrl)
                 ) && 
                 (
-                    this.Property == other.Property ||
-                    this.Property != null &&
-                    this.Property.Equals(other.Property)
+                    this.PageTitle == other.PageTitle ||
+                    this.PageTitle != null &&
+                    this.PageTitle.Equals(other.PageTitle)
                 ) && 
                 (
-                    this.Alias == other.Alias ||
-                    this.Alias != null &&
-                    this.Alias.Equals(other.Alias)
+                    this.MetaDescription == other.MetaDescription ||
+                    this.MetaDescription != null &&
+                    this.MetaDescription.Equals(other.MetaDescription)
                 ) && 
                 (
-                    this.ValueId == other.ValueId ||
-                    this.ValueId != null &&
-                    this.ValueId.Equals(other.ValueId)
+                    this.ImageAltDescription == other.ImageAltDescription ||
+                    this.ImageAltDescription != null &&
+                    this.ImageAltDescription.Equals(other.ImageAltDescription)
                 ) && 
                 (
-                    this.Value == other.Value ||
-                    this.Value != null &&
-                    this.Value.Equals(other.Value)
+                    this.MetaKeywords == other.MetaKeywords ||
+                    this.MetaKeywords != null &&
+                    this.MetaKeywords.Equals(other.MetaKeywords)
                 ) && 
                 (
-                    this.ValueType == other.ValueType ||
-                    this.ValueType != null &&
-                    this.ValueType.Equals(other.ValueType)
+                    this.StoreId == other.StoreId ||
+                    this.StoreId != null &&
+                    this.StoreId.Equals(other.StoreId)
+                ) && 
+                (
+                    this.ObjectId == other.ObjectId ||
+                    this.ObjectId != null &&
+                    this.ObjectId.Equals(other.ObjectId)
+                ) && 
+                (
+                    this.ObjectType == other.ObjectType ||
+                    this.ObjectType != null &&
+                    this.ObjectType.Equals(other.ObjectType)
+                ) && 
+                (
+                    this.IsActive == other.IsActive ||
+                    this.IsActive != null &&
+                    this.IsActive.Equals(other.IsActive)
                 ) && 
                 (
                     this.LanguageCode == other.LanguageCode ||
                     this.LanguageCode != null &&
                     this.LanguageCode.Equals(other.LanguageCode)
-                ) && 
-                (
-                    this.IsInherited == other.IsInherited ||
-                    this.IsInherited != null &&
-                    this.IsInherited.Equals(other.IsInherited)
                 ) && 
                 (
                     this.CreatedDate == other.CreatedDate ||
@@ -243,32 +267,38 @@ namespace VirtoCommerce.SearchModule.Client.Model
                 int hash = 41;
                 // Suitable nullity checks etc, of course :)
 
-                if (this.PropertyId != null)
-                    hash = hash * 59 + this.PropertyId.GetHashCode();
+                if (this.Name != null)
+                    hash = hash * 59 + this.Name.GetHashCode();
 
-                if (this.PropertyName != null)
-                    hash = hash * 59 + this.PropertyName.GetHashCode();
+                if (this.SemanticUrl != null)
+                    hash = hash * 59 + this.SemanticUrl.GetHashCode();
 
-                if (this.Property != null)
-                    hash = hash * 59 + this.Property.GetHashCode();
+                if (this.PageTitle != null)
+                    hash = hash * 59 + this.PageTitle.GetHashCode();
 
-                if (this.Alias != null)
-                    hash = hash * 59 + this.Alias.GetHashCode();
+                if (this.MetaDescription != null)
+                    hash = hash * 59 + this.MetaDescription.GetHashCode();
 
-                if (this.ValueId != null)
-                    hash = hash * 59 + this.ValueId.GetHashCode();
+                if (this.ImageAltDescription != null)
+                    hash = hash * 59 + this.ImageAltDescription.GetHashCode();
 
-                if (this.Value != null)
-                    hash = hash * 59 + this.Value.GetHashCode();
+                if (this.MetaKeywords != null)
+                    hash = hash * 59 + this.MetaKeywords.GetHashCode();
 
-                if (this.ValueType != null)
-                    hash = hash * 59 + this.ValueType.GetHashCode();
+                if (this.StoreId != null)
+                    hash = hash * 59 + this.StoreId.GetHashCode();
+
+                if (this.ObjectId != null)
+                    hash = hash * 59 + this.ObjectId.GetHashCode();
+
+                if (this.ObjectType != null)
+                    hash = hash * 59 + this.ObjectType.GetHashCode();
+
+                if (this.IsActive != null)
+                    hash = hash * 59 + this.IsActive.GetHashCode();
 
                 if (this.LanguageCode != null)
                     hash = hash * 59 + this.LanguageCode.GetHashCode();
-
-                if (this.IsInherited != null)
-                    hash = hash * 59 + this.IsInherited.GetHashCode();
 
                 if (this.CreatedDate != null)
                     hash = hash * 59 + this.CreatedDate.GetHashCode();

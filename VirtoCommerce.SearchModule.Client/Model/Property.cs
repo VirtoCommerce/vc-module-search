@@ -12,10 +12,10 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceCatalogModuleWebModelProperty
+    /// Property
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceCatalogModuleWebModelProperty :  IEquatable<VirtoCommerceCatalogModuleWebModelProperty>
+    public partial class Property :  IEquatable<Property>
     {
         /// <summary>
         /// Gets or Sets IsReadOnly
@@ -51,7 +51,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         /// Gets or Sets Catalog
         /// </summary>
         [DataMember(Name="catalog", EmitDefaultValue=false)]
-        public VirtoCommerceCatalogModuleWebModelCatalog Catalog { get; set; }
+        public Catalog Catalog { get; set; }
 
         /// <summary>
         /// Gets or Sets CategoryId
@@ -63,7 +63,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         /// Gets or Sets Category
         /// </summary>
         [DataMember(Name="category", EmitDefaultValue=false)]
-        public VirtoCommerceCatalogModuleWebModelCategory Category { get; set; }
+        public Category Category { get; set; }
 
         /// <summary>
         /// Gets or Sets Name
@@ -111,25 +111,25 @@ namespace VirtoCommerce.SearchModule.Client.Model
         /// Gets or Sets Values
         /// </summary>
         [DataMember(Name="values", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelPropertyValue> Values { get; set; }
+        public List<PropertyValue> Values { get; set; }
 
         /// <summary>
         /// Gets or Sets DictionaryValues
         /// </summary>
         [DataMember(Name="dictionaryValues", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelPropertyDictionaryValue> DictionaryValues { get; set; }
+        public List<PropertyDictionaryValue> DictionaryValues { get; set; }
 
         /// <summary>
         /// Gets or Sets Attributes
         /// </summary>
         [DataMember(Name="attributes", EmitDefaultValue=false)]
-        public List<VirtoCommerceCatalogModuleWebModelPropertyAttribute> Attributes { get; set; }
+        public List<PropertyAttribute> Attributes { get; set; }
 
         /// <summary>
         /// Gets or Sets DisplayNames
         /// </summary>
         [DataMember(Name="displayNames", EmitDefaultValue=false)]
-        public List<VirtoCommerceDomainCatalogModelPropertyDisplayName> DisplayNames { get; set; }
+        public List<PropertyDisplayName> DisplayNames { get; set; }
 
         /// <summary>
         /// Gets or Sets IsInherited
@@ -144,7 +144,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceCatalogModuleWebModelProperty {\n");
+            sb.Append("class Property {\n");
             sb.Append("  IsReadOnly: ").Append(IsReadOnly).Append("\n");
             sb.Append("  IsManageable: ").Append(IsManageable).Append("\n");
             sb.Append("  IsNew: ").Append(IsNew).Append("\n");
@@ -186,15 +186,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceCatalogModuleWebModelProperty);
+            return this.Equals(obj as Property);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceCatalogModuleWebModelProperty instances are equal
+        /// Returns true if Property instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceCatalogModuleWebModelProperty to be compared</param>
+        /// <param name="other">Instance of Property to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceCatalogModuleWebModelProperty other)
+        public bool Equals(Property other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)

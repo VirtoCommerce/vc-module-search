@@ -12,10 +12,10 @@ using Newtonsoft.Json.Converters;
 namespace VirtoCommerce.SearchModule.Client.Model
 {
     /// <summary>
-    /// VirtoCommerceCatalogModuleWebModelEditorialReview
+    /// PropertyValue
     /// </summary>
     [DataContract]
-    public partial class VirtoCommerceCatalogModuleWebModelEditorialReview :  IEquatable<VirtoCommerceCatalogModuleWebModelEditorialReview>
+    public partial class PropertyValue :  IEquatable<PropertyValue>
     {
         /// <summary>
         /// Gets or Sets Id
@@ -24,22 +24,46 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public string Id { get; set; }
 
         /// <summary>
-        /// Gets or Sets Content
+        /// Gets or Sets PropertyName
         /// </summary>
-        [DataMember(Name="content", EmitDefaultValue=false)]
-        public string Content { get; set; }
+        [DataMember(Name="propertyName", EmitDefaultValue=false)]
+        public string PropertyName { get; set; }
 
         /// <summary>
-        /// Gets or Sets ReviewType
+        /// Gets or Sets PropertyId
         /// </summary>
-        [DataMember(Name="reviewType", EmitDefaultValue=false)]
-        public string ReviewType { get; set; }
+        [DataMember(Name="propertyId", EmitDefaultValue=false)]
+        public string PropertyId { get; set; }
 
         /// <summary>
         /// Gets or Sets LanguageCode
         /// </summary>
         [DataMember(Name="languageCode", EmitDefaultValue=false)]
         public string LanguageCode { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Alias
+        /// </summary>
+        [DataMember(Name="alias", EmitDefaultValue=false)]
+        public string Alias { get; set; }
+
+        /// <summary>
+        /// Gets or Sets ValueType
+        /// </summary>
+        [DataMember(Name="valueType", EmitDefaultValue=false)]
+        public string ValueType { get; set; }
+
+        /// <summary>
+        /// Gets or Sets ValueId
+        /// </summary>
+        [DataMember(Name="valueId", EmitDefaultValue=false)]
+        public string ValueId { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Value
+        /// </summary>
+        [DataMember(Name="value", EmitDefaultValue=false)]
+        public string Value { get; set; }
 
         /// <summary>
         /// Gets or Sets IsInherited
@@ -54,11 +78,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class VirtoCommerceCatalogModuleWebModelEditorialReview {\n");
+            sb.Append("class PropertyValue {\n");
             sb.Append("  Id: ").Append(Id).Append("\n");
-            sb.Append("  Content: ").Append(Content).Append("\n");
-            sb.Append("  ReviewType: ").Append(ReviewType).Append("\n");
+            sb.Append("  PropertyName: ").Append(PropertyName).Append("\n");
+            sb.Append("  PropertyId: ").Append(PropertyId).Append("\n");
             sb.Append("  LanguageCode: ").Append(LanguageCode).Append("\n");
+            sb.Append("  Alias: ").Append(Alias).Append("\n");
+            sb.Append("  ValueType: ").Append(ValueType).Append("\n");
+            sb.Append("  ValueId: ").Append(ValueId).Append("\n");
+            sb.Append("  Value: ").Append(Value).Append("\n");
             sb.Append("  IsInherited: ").Append(IsInherited).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -81,15 +109,15 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public override bool Equals(object obj)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
-            return this.Equals(obj as VirtoCommerceCatalogModuleWebModelEditorialReview);
+            return this.Equals(obj as PropertyValue);
         }
 
         /// <summary>
-        /// Returns true if VirtoCommerceCatalogModuleWebModelEditorialReview instances are equal
+        /// Returns true if PropertyValue instances are equal
         /// </summary>
-        /// <param name="other">Instance of VirtoCommerceCatalogModuleWebModelEditorialReview to be compared</param>
+        /// <param name="other">Instance of PropertyValue to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(VirtoCommerceCatalogModuleWebModelEditorialReview other)
+        public bool Equals(PropertyValue other)
         {
             // credit: http://stackoverflow.com/a/10454552/677735
             if (other == null)
@@ -102,19 +130,39 @@ namespace VirtoCommerce.SearchModule.Client.Model
                     this.Id.Equals(other.Id)
                 ) && 
                 (
-                    this.Content == other.Content ||
-                    this.Content != null &&
-                    this.Content.Equals(other.Content)
+                    this.PropertyName == other.PropertyName ||
+                    this.PropertyName != null &&
+                    this.PropertyName.Equals(other.PropertyName)
                 ) && 
                 (
-                    this.ReviewType == other.ReviewType ||
-                    this.ReviewType != null &&
-                    this.ReviewType.Equals(other.ReviewType)
+                    this.PropertyId == other.PropertyId ||
+                    this.PropertyId != null &&
+                    this.PropertyId.Equals(other.PropertyId)
                 ) && 
                 (
                     this.LanguageCode == other.LanguageCode ||
                     this.LanguageCode != null &&
                     this.LanguageCode.Equals(other.LanguageCode)
+                ) && 
+                (
+                    this.Alias == other.Alias ||
+                    this.Alias != null &&
+                    this.Alias.Equals(other.Alias)
+                ) && 
+                (
+                    this.ValueType == other.ValueType ||
+                    this.ValueType != null &&
+                    this.ValueType.Equals(other.ValueType)
+                ) && 
+                (
+                    this.ValueId == other.ValueId ||
+                    this.ValueId != null &&
+                    this.ValueId.Equals(other.ValueId)
+                ) && 
+                (
+                    this.Value == other.Value ||
+                    this.Value != null &&
+                    this.Value.Equals(other.Value)
                 ) && 
                 (
                     this.IsInherited == other.IsInherited ||
@@ -138,14 +186,26 @@ namespace VirtoCommerce.SearchModule.Client.Model
                 if (this.Id != null)
                     hash = hash * 59 + this.Id.GetHashCode();
 
-                if (this.Content != null)
-                    hash = hash * 59 + this.Content.GetHashCode();
+                if (this.PropertyName != null)
+                    hash = hash * 59 + this.PropertyName.GetHashCode();
 
-                if (this.ReviewType != null)
-                    hash = hash * 59 + this.ReviewType.GetHashCode();
+                if (this.PropertyId != null)
+                    hash = hash * 59 + this.PropertyId.GetHashCode();
 
                 if (this.LanguageCode != null)
                     hash = hash * 59 + this.LanguageCode.GetHashCode();
+
+                if (this.Alias != null)
+                    hash = hash * 59 + this.Alias.GetHashCode();
+
+                if (this.ValueType != null)
+                    hash = hash * 59 + this.ValueType.GetHashCode();
+
+                if (this.ValueId != null)
+                    hash = hash * 59 + this.ValueId.GetHashCode();
+
+                if (this.Value != null)
+                    hash = hash * 59 + this.Value.GetHashCode();
 
                 if (this.IsInherited != null)
                     hash = hash * 59 + this.IsInherited.GetHashCode();
