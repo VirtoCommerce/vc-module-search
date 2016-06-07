@@ -196,25 +196,25 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         [Route("")]
         [ResponseType(typeof(CatalogSearchResult))]
         [ClientCache(Duration = 30)]
-        public IHttpActionResult Search(Domain.Catalog.Model.SearchCriteria criteria)
+        public IHttpActionResult Search(CatalogModule.Web.Model.SearchCriteria criteria)
         {
-            criteria = criteria ?? new Domain.Catalog.Model.SearchCriteria();
-            criteria.Normalize();
-            criteria.ApplyRestrictionsForUser(User.Identity.Name, _securityService);
+            var searchCriteria = (criteria ?? new CatalogModule.Web.Model.SearchCriteria()).ToCoreModel();
+            searchCriteria.Normalize();
+            searchCriteria.ApplyRestrictionsForUser(User.Identity.Name, _securityService);
 
             var result = new Domain.Catalog.Model.SearchResult();
 
-            if ((criteria.ResponseGroup & SearchResponseGroup.WithProducts) == SearchResponseGroup.WithProducts)
+            if ((searchCriteria.ResponseGroup & SearchResponseGroup.WithProducts) == SearchResponseGroup.WithProducts)
             {
-                result = SearchProducts(criteria);
+                result = SearchProducts(searchCriteria);
             }
 
-            var catalogResponseGroup = criteria.ResponseGroup & (SearchResponseGroup.WithCatalogs | SearchResponseGroup.WithCategories);
+            var catalogResponseGroup = searchCriteria.ResponseGroup & (SearchResponseGroup.WithCatalogs | SearchResponseGroup.WithCategories);
 
             if (catalogResponseGroup != SearchResponseGroup.None)
             {
-                criteria.ResponseGroup = catalogResponseGroup;
-                var catalogResult = _catalogSearchService.Search(criteria);
+                searchCriteria.ResponseGroup = catalogResponseGroup;
+                var catalogResult = _catalogSearchService.Search(searchCriteria);
                 result.Catalogs = catalogResult.Catalogs;
                 result.Categories = catalogResult.Categories;
             }

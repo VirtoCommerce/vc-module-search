@@ -24,14 +24,13 @@
 
     <assemblyFile>VirtoCommerce.SearchModule.Web.dll</assemblyFile>
     <moduleType>VirtoCommerce.SearchModule.Web.Module, VirtoCommerce.SearchModule.Web</moduleType>
-    <useFullTypeNameInSwagger>true</useFullTypeNameInSwagger>
 
     <scripts>
         <directory virtualPath="$/Scripts" searchPattern="*.js" searchSubdirectories="true" />
     </scripts>
-    
+
     <settings>
-        <group name="Search|General">           
+        <group name="Search|General">
             <setting>
                 <name>VirtoCommerce.Search.SearchConnectionString</name>
                 <valueType>string</valueType>
