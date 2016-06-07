@@ -6,6 +6,7 @@ using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.Domain.Store.Model;
 using VirtoCommerce.Platform.Core.DynamicProperties;
 using VirtoCommerce.Platform.Core.Modularity;
+using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.SearchModule.Data.Model;
 using VirtoCommerce.SearchModule.Data.Providers.Azure;
 using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch;
@@ -33,8 +34,15 @@ namespace VirtoCommerce.SearchModule.Web
 
             _container.RegisterType<ISearchIndexBuilder, CatalogItemIndexBuilder>(CatalogIndexedSearchCriteria.DocType);
             _container.RegisterType<ISearchIndexController, SearchIndexController>();
+            var settingManager = _container.Resolve<ISettingsManager>();
 
-            var searchConnection = new SearchConnection(ConfigurationManager.ConnectionStrings["SearchConnectionString"].ConnectionString);
+            var connectionString = settingManager.GetValue("VirtoCommerce.Search.SearchConnectionString", string.Empty);
+            var configConnectionString = ConfigurationManager.ConnectionStrings["SearchConnectionString"];
+            if (configConnectionString != null && !string.IsNullOrEmpty(configConnectionString.ConnectionString))
+            {
+                connectionString = configConnectionString.ConnectionString;
+            }            
+            var searchConnection = new SearchConnection(connectionString);
             _container.RegisterInstance<ISearchConnection>(searchConnection);
 
             var searchProviderManager = new SearchProviderManager(searchConnection);

@@ -29,7 +29,24 @@
     <scripts>
         <directory virtualPath="$/Scripts" searchPattern="*.js" searchSubdirectories="true" />
     </scripts>
+    
+    <settings>
+        <group name="Search|General">           
+            <setting>
+                <name>VirtoCommerce.Search.SearchConnectionString</name>
+                <valueType>string</valueType>
+                <defaultValue>provider=Lucene;server=~/App_Data/Lucene;scope=default</defaultValue>
+                <title>CMS content connection string</title>
+                <description>
+                    <![CDATA[ 
+                    provider=Elasticsearch;server=localhost:9200;scope=default
+                    provider=Lucene;server=~/App_Data/Lucene;scope=default
+                    ]]>
+                </description>
+            </setting>
+        </group>
 
+    </settings>
     <permissions>
         <group name="Search">
             <permission id="VirtoCommerce.Search:Debug" name="Debug search providers" description="Allows to use low level search API."/>
