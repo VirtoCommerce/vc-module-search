@@ -7,6 +7,7 @@ using VirtoCommerce.Domain.Search.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
+    [CLSCompliant(false)]
     public class ElasticQueryHelper
     {
         public static BoolFilter<ESDocument> CreateQuery(ISearchCriteria criteria, ISearchFilter filter)

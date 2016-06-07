@@ -10,6 +10,7 @@ using VirtoCommerce.Domain.Search.Services;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
+    [CLSCompliant(false)]
     public class ElasticSearchQueryBuilder : ISearchQueryBuilder
     {
         #region ISearchQueryBuilder Members

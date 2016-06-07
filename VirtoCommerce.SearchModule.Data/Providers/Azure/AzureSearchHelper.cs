@@ -35,6 +35,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             original.Append(target);
         }
 
+        [CLSCompliant(false)]
         public static string FormatSearchException(IApiResponse response)
         {
             return String.Format(

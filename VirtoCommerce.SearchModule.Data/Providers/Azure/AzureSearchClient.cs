@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using RedDog.Search;
@@ -7,6 +8,7 @@ using RedDog.Search.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 {
+    [CLSCompliant(false)]
     public class AzureSearchClient
     {
         private ApiConnection _connection = null;

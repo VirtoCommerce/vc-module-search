@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using PlainElastic.Net;
 using PlainElastic.Net.Queries;
 using PlainElastic.Net.Serialization;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
+    [CLSCompliant(false)]
     public class ElasticClient<T>
     {
         private readonly IElasticConnection connection;
@@ -74,8 +76,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                 new BulkBuilder(serializer)
                    .BuildCollection(documents,
                         (builder, document) => builder.Index(data: document, id: document.Id.ToString())
-                // You can apply any custom logic here
-                // to generate Indexes, Creates or Deletes.
+            // You can apply any custom logic here
+            // to generate Indexes, Creates or Deletes.
             );
 
             string result = connection.Post(bulkCommand, bulkJson);
