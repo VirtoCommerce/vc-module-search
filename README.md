@@ -10,14 +10,33 @@ Key features:
 # Documentation
 User guide: trigger manual search index rebuild form Catalogs list in Manager.
 
-Developer guide:
-* <a href="http://docs.virtocommerce.com/display/vc2devguide/Platform+settings#Platformsettings-SearchConnectionString" target="_blank">Configuring SearchConnectionString setting</a>
-* <a href="http://docs.virtocommerce.com/x/FADl" target="_blank">Deploy Elasticsearch to dedicated server</a>
+Developer guide: <a href="http://docs.virtocommerce.com/x/FADl" target="_blank">Deploy Elasticsearch to dedicated server</a>
 
 # Installation
 Installing the module:
 * Automatically: in VC Manager go to Configuration -> Modules -> Search module -> Install
 * Manually: download module zip package from https://github.com/VirtoCommerce/vc-module-search/releases. In VC Manager go to Configuration -> Modules -> Advanced -> upload module package -> Install.
+
+# Settings
+## VirtoCommerce.Search.SearchConnectionString
+Search configuration string. The string consists of two parts. First part is provider=XXXX, which specifies which provider to use for search. The remainder of the string is passed to provider's constructor. Currently 2 search providers supported: Elasticsearch and Lucene.
+
+### Elasticsearch
+```
+provider=Elasticsearch;server=localhost:9200;scope=default
+```
+This provider stores documents on a standalone <a href="https://www.elastic.co/products/elasticsearch" target="_blank">Elasticsearch</a> server.
+* **server** is a network address of the server.
+* **scope** is a name of the index. One server can serve multiple indexes.
+
+### Lucene
+```
+provider=Lucene;server=~/App_Data/Lucene;scope=default
+```
+
+This provider stores documents in a local file system.
+* **server** is a virtual or physical path to the root directory where indexed documents are stored.
+* **scope** is a name of the index. In fact, this is the name of a subdirectory inside the root directory which can contain multiple indexes.
 
 # Available resources
 * Module related service implementations as a <a href="https://www.nuget.org/packages/VirtoCommerce.SearchModule.Data" target="_blank">NuGet package</a>
