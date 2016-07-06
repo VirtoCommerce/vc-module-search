@@ -400,7 +400,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 
             #endregion
 
-            var responseGroup = ItemResponseGroup.ItemInfo | ItemResponseGroup.ItemAssets | ItemResponseGroup.Seo;
+            var responseGroup = ItemResponseGroup.ItemInfo | ItemResponseGroup.ItemAssets | ItemResponseGroup.Seo | ItemResponseGroup.ItemEditorialReviews;
 
             if ((criteria.ResponseGroup & SearchResponseGroup.WithProperties) == SearchResponseGroup.WithProperties)
             {
