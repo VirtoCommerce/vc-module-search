@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <module>
     <id>VirtoCommerce.Search</id>
     <version>2.11.2</version>
@@ -11,13 +11,15 @@
     <title>Search module</title>
     <description>Indexed search functionality with Lucene and ElasticSearch engines</description>
     <authors>
-        <author>Virto Commerce</author>
+        <author>Alexander Siniouguine</author>
+        <author>Eugeny Tatarincev</author>
+        <author>Artem Dudarev</author>
     </authors>
     <owners>
         <owner>Virto Commerce</owner>
     </owners>
-    <projectUrl>http://virtocommerce.com/</projectUrl>
-    <iconUrl>Modules/$(VirtoCommerce.Core)/Content/logoVC.png</iconUrl>
+    <projectUrl>https://github.com/VirtoCommerce/vc-module-search</projectUrl>
+    <iconUrl>https://github.com/VirtoCommerce/vc-module-search/raw/master/VirtoCommerce.SearchModule.Web/Content/logo.png</iconUrl>
     <releaseNotes>First version.</releaseNotes>
     <copyright>Copyright © 2011-2016 Virto Commerce. All rights reserved</copyright>
     <tags>order system</tags>
