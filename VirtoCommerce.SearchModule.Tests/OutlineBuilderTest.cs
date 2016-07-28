@@ -8,7 +8,8 @@ using Xunit;
 
 namespace VirtoCommerce.SearchModule.Tests
 {
-	public class OutlineBuilderTest
+    [Trait("Category", "CI")]
+    public class OutlineBuilderTest
 	{
 		[Fact]
 		public void LinkParentToCatalog()
