@@ -32,7 +32,7 @@ namespace VirtoCommerce.SearchModule.Tests
         }
 
         [Fact]
-        public void SearchCatalogBuilderTest()
+        public void Can_index_demo_data_and_search()
         {
             var scope = "test";
             var provider = GetSearchProvider("Lucene", scope);
