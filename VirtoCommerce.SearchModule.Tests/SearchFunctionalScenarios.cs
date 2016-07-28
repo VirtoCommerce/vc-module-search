@@ -17,8 +17,11 @@ using VirtoCommerce.Platform.Data.Repositories;
 using VirtoCommerce.PricingModule.Data.Repositories;
 using VirtoCommerce.PricingModule.Data.Services;
 using VirtoCommerce.SearchModule.Data.Services;
+using VirtoCommerce.SearchModule.Web.Services;
 using Xunit;
 using Xunit.Abstractions;
+using System.Linq;
+using VirtoCommerce.Domain.Search.Filters;
 
 namespace VirtoCommerce.SearchModule.Tests
 {
@@ -38,9 +41,63 @@ namespace VirtoCommerce.SearchModule.Tests
             var provider = GetSearchProvider("Lucene", scope);
             var controller = GetSearchIndexController(provider);
             controller.Process(scope, CatalogIndexedSearchCriteria.DocType, true);
-            var results = provider.Search(scope, new CatalogIndexedSearchCriteria() { Catalog = "b61aa9d1d0024bc4be12d79bf5786e9f" });
-            _output.WriteLine(String.Format("Found {0} documents", results.DocCount));
-            Assert.True(results.DocCount > 0);
+
+            // get catalog id by name
+            var catalogRepo = GetCatalogRepository();
+            var catalog = catalogRepo.Catalogs.SingleOrDefault(x => x.Name.Equals("electronics", StringComparison.OrdinalIgnoreCase));
+
+            // find all prodducts in the category
+            var catalogCriteria = new CatalogIndexedSearchCriteria() { Catalog = catalog.Id, Currency = "USD" };
+
+            // Add all filters
+            var filter = new AttributeFilter { Key = "color", IsLocalized = true };
+            filter.Values = new[]
+                                {
+                                    new AttributeFilterValue { Id = "Red", Value = "Red" },
+                                    new AttributeFilterValue { Id = "Gray", Value = "Gray" },
+                                    new AttributeFilterValue { Id = "Black", Value = "Black" }
+                                };
+
+            var rangefilter = new RangeFilter { Key = "size" };
+            rangefilter.Values = new[]
+                                     {
+                                         new RangeFilterValue { Id = "0_to_5", Lower = "0", Upper = "5" },
+                                         new RangeFilterValue { Id = "5_to_10", Lower = "5", Upper = "10" }
+                                     };
+
+            var priceRangefilter = new PriceRangeFilter { Currency = "USD" };
+            priceRangefilter.Values = new[]
+                                          {
+                                              new RangeFilterValue { Id = "under-100", Upper = "100" },
+                                              new RangeFilterValue { Id = "200-600", Lower = "200", Upper = "600" }
+                                          };
+
+            catalogCriteria.Add(filter);
+            //catalogCriteria.Add(rangefilter);
+            catalogCriteria.Add(priceRangefilter);
+
+            var ibs = GetItemBrowsingService(provider);
+            var searchResults = ibs.SearchItems(scope, catalogCriteria, Domain.Catalog.Model.ItemResponseGroup.ItemLarge);
+
+            Assert.True(searchResults.ProductsTotalCount > 0);
+            var colorAggregation = searchResults.Aggregations.SingleOrDefault(a => a.Field.Equals("color", StringComparison.OrdinalIgnoreCase));
+            Assert.True(colorAggregation.Items.Where(x => x.Value.ToString().Equals("Red", StringComparison.OrdinalIgnoreCase)).SingleOrDefault().Count == 6);
+            Assert.True(colorAggregation.Items.Where(x => x.Value.ToString().Equals("Gray", StringComparison.OrdinalIgnoreCase)).SingleOrDefault().Count == 3);
+            Assert.True(colorAggregation.Items.Where(x => x.Value.ToString().Equals("Black", StringComparison.OrdinalIgnoreCase)).SingleOrDefault().Count == 13);
+
+            //var results = provider.Search(scope, catalogCriteria);
+            //_output.WriteLine(String.Format("Found {0} documents", results.DocCount));
+            //Assert.True(results.DocCount > 0);            
+
+            var keywordSearchCriteria = new KeywordSearchCriteria(CatalogIndexedSearchCriteria.DocType) { Currency = "USD", Locale = "en-us", SearchPhrase = "sony" };
+            searchResults = ibs.SearchItems(scope, keywordSearchCriteria, Domain.Catalog.Model.ItemResponseGroup.ItemLarge);
+            Assert.True(searchResults.ProductsTotalCount > 0);
+        }
+
+        private ItemBrowsingService GetItemBrowsingService(ISearchProvider provider)
+        {
+            var service = new ItemBrowsingService(GetItemService(), provider);
+            return service;
         }
 
         private SearchIndexController GetSearchIndexController(ISearchProvider provider)
@@ -68,7 +125,7 @@ namespace VirtoCommerce.SearchModule.Tests
         private IPricingService GetPricingService()
         {
             var cacheManager = new Moq.Mock<ICacheManager<object>>();
-            return new PricingServiceImpl(GetPricingRepository, null, null, cacheManager.Object, null);
+            return new PricingServiceImpl(GetPricingRepository, GetItemService(), null, cacheManager.Object, null);
         }
 
         private IPropertyService GetPropertyService()

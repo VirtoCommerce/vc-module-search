@@ -143,6 +143,10 @@
       <Project>{e5c50d57-9f69-4ba2-b1c5-f9fd7473dfff}</Project>
       <Name>VirtoCommerce.SearchModule.Data</Name>
     </ProjectReference>
+    <ProjectReference Include="..\VirtoCommerce.SearchModule.Web\VirtoCommerce.SearchModule.Web.csproj">
+      <Project>{223F3538-A20A-47C0-87A5-AEA187513203}</Project>
+      <Name>VirtoCommerce.SearchModule.Web</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />

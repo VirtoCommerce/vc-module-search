@@ -29,7 +29,7 @@ namespace VirtoCommerce.SearchModule.Tests
         {
             try
             {
-                Directory.Delete(_LuceneStorageDir, true);
+                //Directory.Delete(_LuceneStorageDir, true);
             }
             finally
             {

@@ -256,6 +256,22 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         protected virtual void IndexItemPrices(ref ResultDocument doc, CatalogProduct item)
         {
+            /*
+            var priceLists = _pricingService.GetPriceLists();
+            if (_prices != null)
+            {
+                var prices = (from p in _prices where p.ItemId.Equals(item.Id, StringComparison.OrdinalIgnoreCase) select p).ToArray();
+
+                foreach (var price in prices)
+                {
+                    //var priceList = price.Pricelist;
+                    var priceList = (from p in _priceLists where p.PricelistId == price.PricelistId select p).SingleOrDefault();
+                    doc.Add(new DocumentField(string.Format("price_{0}_{1}", priceList.Currency, priceList.PricelistId), price.Sale ?? price.List, new[] { IndexStore.NO, IndexType.NOT_ANALYZED }));
+                    doc.Add(new DocumentField(string.Format("price_{0}_{1}_value", priceList.Currency, priceList.PricelistId), price.Sale == null ? price.List.ToString() : price.Sale.ToString(), new[] { IndexStore.YES, IndexType.NOT_ANALYZED }));
+                }
+            }
+            */
+
             var evalContext = new Domain.Pricing.Model.PriceEvaluationContext
             {
                 ProductIds = new[] { item.Id }

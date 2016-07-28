@@ -5,6 +5,6 @@ namespace VirtoCommerce.SearchModule.Web.Services
 {
     public interface IItemBrowsingService
     {
-        SearchResult SearchItems(CatalogIndexedSearchCriteria criteria, ItemResponseGroup responseGroup);
+        SearchResult SearchItems(string scope, ISearchCriteria criteria, ItemResponseGroup responseGroup);
     }
 }

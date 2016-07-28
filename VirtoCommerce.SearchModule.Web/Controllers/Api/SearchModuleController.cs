@@ -418,7 +418,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             }
 
             //Load ALL products 
-            var searchResults = _browseService.SearchItems(serviceCriteria, responseGroup);
+            var searchResults = _browseService.SearchItems(_searchConnection.Scope, serviceCriteria, responseGroup);
             return searchResults;
         }
 
