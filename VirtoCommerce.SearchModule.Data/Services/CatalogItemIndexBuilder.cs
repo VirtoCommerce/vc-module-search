@@ -69,7 +69,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 if (key != null)
                 {
                     var doc = new ResultDocument();
-                    IndexItem(ref doc, key);
+                    IndexItem(doc, key);
                     documents.Add(doc);
                 }
             });
@@ -104,25 +104,35 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         #endregion
 
-        protected virtual void IndexItem(ref ResultDocument doc, string productId)
+        protected virtual void IndexItem(ResultDocument doc, string productId)
         {
             var item = _itemService.GetById(productId, ItemResponseGroup.ItemProperties | ItemResponseGroup.Variations | ItemResponseGroup.Outlines);
             if (item == null)
                 return;
 
-            doc.Add(new DocumentField("__key", item.Id.ToLower(), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            //doc.Add(new DocumentField("__loc", "en-us", new[] { IndexStore.YES, IndexType.NOT_ANALYZED }));
-            doc.Add(new DocumentField("__type", item.GetType().Name, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("__sort", item.Name, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("__hidden", (item.IsActive != true || item.MainProductId != null).ToString().ToLower(), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("code", item.Code, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("name", item.Name, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("startdate", item.StartDate, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("enddate", item.EndDate.HasValue ? item.EndDate : DateTime.MaxValue, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("createddate", item.CreatedDate, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("lastmodifieddate", item.ModifiedDate ?? DateTime.MaxValue, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-
+            var indexStoreNotAnalyzed = new[] { IndexStore.Yes, IndexType.NotAnalyzed };
             var indexStoreNotAnalyzedStringCollection = new[] { IndexStore.Yes, IndexType.NotAnalyzed, IndexDataType.StringCollection };
+            var indexStoreAnalyzedStringCollection = new[] { IndexStore.Yes, IndexType.Analyzed, IndexDataType.StringCollection };
+
+            doc.Add(new DocumentField("__key", item.Id.ToLower(), indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("__type", item.GetType().Name, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("__sort", item.Name, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("__hidden", (item.IsActive != true || item.MainProductId != null).ToString().ToLower(), indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("code", item.Code, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("name", item.Name, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("startdate", item.StartDate, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("enddate", item.EndDate.HasValue ? item.EndDate : DateTime.MaxValue, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("createddate", item.CreatedDate, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("lastmodifieddate", item.ModifiedDate ?? DateTime.MaxValue, indexStoreNotAnalyzed));
+
+            // Add priority in physical category to search index
+            doc.Add(new DocumentField(string.Format(CultureInfo.InvariantCulture, "priority_{0}_{1}", item.CatalogId, item.CategoryId), item.Priority, indexStoreNotAnalyzed));
+
+            // Add priority in virtual categories to search index
+            foreach (var link in item.Links)
+            {
+                doc.Add(new DocumentField(string.Format(CultureInfo.InvariantCulture, "priority_{0}_{1}", link.CatalogId, link.CategoryId), link.Priority, indexStoreNotAnalyzed));
+            }
 
             // Add catalogs to search index
             var catalogs = item.Outlines
@@ -143,7 +153,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             }
 
             // Index custom properties
-            IndexItemCustomProperties(ref doc, item);
+            IndexItemCustomProperties(doc, item);
 
             if (item.Variations != null)
             {
@@ -159,19 +169,19 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
                 foreach (var variation in item.Variations)
                 {
-                    IndexItemCustomProperties(ref doc, variation);
+                    IndexItemCustomProperties(doc, variation);
                 }
             }
 
             // Index item prices
-            IndexItemPrices(ref doc, item);
+            IndexItemPrices(doc, item);
 
             //Index item reviews
-            //IndexReviews(ref doc, item);
+            //IndexReviews(doc, item);
 
             // add to content
-            doc.Add(new DocumentField("__content", item.Name, new[] { IndexStore.Yes, IndexType.Analyzed, IndexDataType.StringCollection }));
-            doc.Add(new DocumentField("__content", item.Code, new[] { IndexStore.Yes, IndexType.Analyzed, IndexDataType.StringCollection }));
+            doc.Add(new DocumentField("__content", item.Name, indexStoreAnalyzedStringCollection));
+            doc.Add(new DocumentField("__content", item.Code, indexStoreAnalyzedStringCollection));
         }
 
         protected virtual string[] GetOutlineStrings(IEnumerable<Outline> outlines)
@@ -210,7 +220,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             return result;
         }
 
-        protected virtual void IndexItemCustomProperties(ref ResultDocument doc, CatalogProduct item)
+        protected virtual void IndexItemCustomProperties(ResultDocument doc, CatalogProduct item)
         {
             var properties = item.Properties;
 
@@ -254,7 +264,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         #region Price Lists Indexing
 
-        protected virtual void IndexItemPrices(ref ResultDocument doc, CatalogProduct item)
+        protected virtual void IndexItemPrices(ResultDocument doc, CatalogProduct item)
         {
             /*
             var priceLists = _pricingService.GetPriceLists();
@@ -282,14 +292,14 @@ namespace VirtoCommerce.SearchModule.Data.Services
             foreach (var price in prices)
             {
                 //var priceList = price.Pricelist;
-                doc.Add(new DocumentField(string.Format("price_{0}_{1}", price.Currency, price.PricelistId).ToLower(), price.EffectiveValue, new[] { IndexStore.No, IndexType.NotAnalyzed }));
-                doc.Add(new DocumentField(string.Format("price_{0}_{1}_value", price.Currency, price.PricelistId).ToLower(), (price.EffectiveValue).ToString(CultureInfo.InvariantCulture), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+                doc.Add(new DocumentField(string.Format(CultureInfo.InvariantCulture, "price_{0}_{1}", price.Currency, price.PricelistId).ToLower(), price.EffectiveValue, new[] { IndexStore.No, IndexType.NotAnalyzed }));
+                doc.Add(new DocumentField(string.Format(CultureInfo.InvariantCulture, "price_{0}_{1}_value", price.Currency, price.PricelistId).ToLower(), (price.EffectiveValue).ToString(CultureInfo.InvariantCulture), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             }
         }
 
         #endregion
 
-        //protected virtual void IndexReviews(ref ResultDocument doc, CatalogProduct item)
+        //protected virtual void IndexReviews(ResultDocument doc, CatalogProduct item)
         //{
         //	var reviews = ReviewRepository.Reviews.Where(r => r.ItemId == item.ItemId).ToArray();
         //	var count = reviews.Count();
