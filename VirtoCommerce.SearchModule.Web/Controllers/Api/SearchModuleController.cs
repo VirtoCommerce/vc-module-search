@@ -259,6 +259,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             }
 
             #region Filters
+
             // Now fill in filters
             var filters = _cacheManager.Get("GetFilters-" + criteria.StoreId, "SearchProducts", TimeSpan.FromMinutes(5), () => _browseFilterService.GetFilters(context));
 
@@ -321,9 +322,11 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                     }
                 }
             }
+
             #endregion
 
             #region Facets
+
             // apply facet filters
             var facets = ParseKeyValues(criteria.Facets);
             foreach (var facet in facets)
@@ -336,6 +339,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                 var appliedFilter = _browseFilterService.Convert(filter, facet.Values);
                 serviceCriteria.Apply(appliedFilter);
             }
+
             #endregion
 
             //criteria.ClassTypes.Add("Product");
@@ -346,57 +350,65 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             serviceCriteria.StartDateFrom = criteria.StartDateFrom;
             serviceCriteria.SearchPhrase = criteria.Keyword;
 
-            #region sorting
+            #region Sorting
+
+            var sortFields = new List<SearchSortField>();
+            var priorityFieldName = string.Format(CultureInfo.InvariantCulture, "priority_{0}_{1}", catalog, categoryId).ToLower();
 
             if (!criteria.SortInfos.IsNullOrEmpty())
             {
-                var sortInfo = criteria.SortInfos.FirstOrDefault();
-                var isDescending = sortInfo.SortDirection == SortDirection.Descending;
-                SearchSort sortObject = null;
 
-                switch (sortInfo.SortColumn.ToLowerInvariant())
+                foreach (var sortInfo in criteria.SortInfos)
                 {
-                    case "price":
-                        if (serviceCriteria.Pricelists != null)
-                        {
-                            sortObject = new SearchSort(
-                                serviceCriteria.Pricelists.Select(
-                                    priceList =>
-                                        new SearchSortField(string.Format(CultureInfo.InvariantCulture, "price_{0}_{1}", serviceCriteria.Currency.ToLower(), priceList.ToLower()))
-                                        {
-                                            IgnoredUnmapped = true,
-                                            IsDescending = isDescending,
-                                            DataType = SearchSortField.DOUBLE
-                                        })
-                                    .ToArray());
-                        }
-                        break;
-                    case "position":
-                        sortObject =
-                            new SearchSort(
-                                new SearchSortField(string.Concat("sort", catalog, categoryId).ToLower())
-                                {
-                                    IgnoredUnmapped = true,
-                                    IsDescending = isDescending
-                                });
-                        break;
-                    case "name":
-                    case "title":
-                        sortObject = new SearchSort("name", isDescending);
-                        break;
-                    case "rating":
-                        sortObject = new SearchSort(serviceCriteria.ReviewsAverageField, isDescending);
-                        break;
-                    case "reviews":
-                        sortObject = new SearchSort(serviceCriteria.ReviewsTotalField, isDescending);
-                        break;
-                    default:
-                        sortObject = CatalogIndexedSearchCriteria.DefaultSortOrder;
-                        break;
-                }
+                    var fieldName = sortInfo.SortColumn.ToLowerInvariant();
+                    var isDescending = sortInfo.SortDirection == SortDirection.Descending;
 
-                serviceCriteria.Sort = sortObject;
+                    switch (fieldName)
+                    {
+                        case "price":
+                            if (serviceCriteria.Pricelists != null)
+                            {
+                                sortFields.AddRange(
+                                    serviceCriteria.Pricelists.Select(
+                                        priceList =>
+                                            new SearchSortField(string.Format(CultureInfo.InvariantCulture, "price_{0}_{1}", serviceCriteria.Currency.ToLower(), priceList.ToLower()))
+                                            {
+                                                IgnoredUnmapped = true,
+                                                IsDescending = isDescending,
+                                                DataType = SearchSortField.DOUBLE
+                                            })
+                                        .ToArray());
+                            }
+                            break;
+                        case "priority":
+                            sortFields.Add(new SearchSortField(priorityFieldName, isDescending) { IgnoredUnmapped = true });
+                            sortFields.Add(new SearchSortField("priority", isDescending));
+                            break;
+                        case "name":
+                        case "title":
+                            sortFields.Add(new SearchSortField("name", isDescending));
+                            break;
+                        case "rating":
+                            sortFields.Add(new SearchSortField(serviceCriteria.ReviewsAverageField, isDescending));
+                            break;
+                        case "reviews":
+                            sortFields.Add(new SearchSortField(serviceCriteria.ReviewsTotalField, isDescending));
+                            break;
+                        default:
+                            sortFields.Add(new SearchSortField(fieldName, isDescending));
+                            break;
+                    }
+                }
             }
+
+            if (!sortFields.Any())
+            {
+                sortFields.Add(new SearchSortField(priorityFieldName, true) { IgnoredUnmapped = true });
+                sortFields.Add(new SearchSortField("priority", true));
+                sortFields.AddRange(CatalogIndexedSearchCriteria.DefaultSortOrder.GetSort());
+            }
+
+            serviceCriteria.Sort = new SearchSort(sortFields.ToArray());
 
             #endregion
 
