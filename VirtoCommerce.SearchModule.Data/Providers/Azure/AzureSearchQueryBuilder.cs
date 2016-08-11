@@ -5,6 +5,7 @@ using RedDog.Search.Model;
 using VirtoCommerce.Domain.Search;
 using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
+using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 {

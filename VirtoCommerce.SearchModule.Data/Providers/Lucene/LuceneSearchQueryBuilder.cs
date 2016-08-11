@@ -11,6 +11,7 @@ using Lucene.Net.Search;
 using VirtoCommerce.Domain.Search;
 using VirtoCommerce.Domain.Search.Model;
 using u = Lucene.Net.Util;
+using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {

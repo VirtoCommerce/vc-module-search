@@ -33,6 +33,7 @@ using VirtoCommerce.SearchModule.Web.Services;
 using Property = VirtoCommerce.Domain.Catalog.Model.Property;
 using PropertyDictionaryValue = VirtoCommerce.Domain.Catalog.Model.PropertyDictionaryValue;
 using webModel = VirtoCommerce.SearchModule.Web.Model;
+using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 {

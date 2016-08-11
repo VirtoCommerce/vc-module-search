@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using VirtoCommerce.Domain.Search;
 using VirtoCommerce.Domain.Search.Model;
+using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {

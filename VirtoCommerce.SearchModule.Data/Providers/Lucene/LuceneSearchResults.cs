@@ -8,6 +8,7 @@ using SpellChecker.Net.Search.Spell;
 using VirtoCommerce.Domain.Search.Filters;
 using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.SearchModule.Data.Services;
+using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {

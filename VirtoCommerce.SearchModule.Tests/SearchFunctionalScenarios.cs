@@ -7,7 +7,6 @@ using VirtoCommerce.CoreModule.Data.Services;
 using VirtoCommerce.Domain.Catalog.Services;
 using VirtoCommerce.Domain.Commerce.Services;
 using VirtoCommerce.Domain.Pricing.Services;
-using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.Platform.Core.ChangeLog;
 using VirtoCommerce.Platform.Core.Settings;
@@ -22,6 +21,7 @@ using Xunit;
 using Xunit.Abstractions;
 using System.Linq;
 using VirtoCommerce.Domain.Search.Filters;
+using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Tests
 {
@@ -33,22 +33,7 @@ namespace VirtoCommerce.SearchModule.Tests
         {
             _output = output;
         }
-
-        [Fact]
-        public void Can_return_pricelists()
-        {
-            var evalContext = new Domain.Pricing.Model.PriceEvaluationContext
-            {
-                ProductIds = new[] { "4ed55441810a47da88a483e5a1ee4e94" }
-            };
-
-            var pricingService = GetPricingService();
-            var priceLists = pricingService.EvaluatePriceLists(evalContext);
-            Assert.True(priceLists.Count() > 0);
-            var prices = pricingService.EvaluateProductPrices(evalContext);
-            Assert.True(prices.Count() > 0);
-        }
-    
+  
         [Fact]
         public void Can_index_demo_data_and_search()
         {

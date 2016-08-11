@@ -26,20 +26,20 @@ namespace VirtoCommerce.SearchModule.Data.Services
         /// <param name="scope"></param>
         /// <param name="documentType"></param>
         /// <param name="rebuild"></param>
-        public void Process(string scope, string documentType, bool rebuild)
+        public void Process(string scope, string documentType = "", bool rebuild = false)
         {
             if (scope == null)
             {
                 throw new ArgumentNullException("scope");
             }
 
-            var validBulders = _indexBuilders.Where(x => String.Equals(x.DocumentType, documentType, StringComparison.InvariantCultureIgnoreCase));
+            var validBuilders = _indexBuilders.Where(x => string.Equals(x.DocumentType, documentType, StringComparison.InvariantCultureIgnoreCase) || string.IsNullOrEmpty(x.DocumentType));
 
             var lastBuildTimeName = string.Format(CultureInfo.InvariantCulture, "VirtoCommerce.Search.LastBuildTime_{0}_{1}", scope, documentType);
             var lastBuildTime = _settingManager.GetValue(lastBuildTimeName, DateTime.MinValue);
             var nowUtc = DateTime.UtcNow;
 
-            foreach (var indexBuilder in validBulders)
+            foreach (var indexBuilder in validBuilders)
             {
                 if (rebuild)
                 {

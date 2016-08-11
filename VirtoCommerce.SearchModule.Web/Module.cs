@@ -1,7 +1,6 @@
 ﻿using System.Configuration;
 using Microsoft.Practices.Unity;
 using VirtoCommerce.Domain.Search;
-using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.Domain.Store.Model;
 using VirtoCommerce.Platform.Core.DynamicProperties;
@@ -14,6 +13,7 @@ using VirtoCommerce.SearchModule.Data.Providers.Lucene;
 using VirtoCommerce.SearchModule.Data.Services;
 using VirtoCommerce.SearchModule.Web.BackgroundJobs;
 using VirtoCommerce.SearchModule.Web.Services;
+using VirtoCommerce.Domain.Search.Model;
 
 namespace VirtoCommerce.SearchModule.Web
 {
