@@ -36,9 +36,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             #endregion
 
             #region CatalogItemSearchCriteria
-            if (criteria is CatalogIndexedSearchCriteria)
+            if (criteria is Model.CatalogIndexedSearchCriteria)
             {
-                var c = criteria as CatalogIndexedSearchCriteria;
+                var c = criteria as Model.CatalogIndexedSearchCriteria;
 
                 if (!String.IsNullOrEmpty(c.SearchPhrase))
                 {

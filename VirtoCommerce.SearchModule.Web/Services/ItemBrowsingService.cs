@@ -80,9 +80,9 @@ namespace VirtoCommerce.SearchModule.Web.Services
 
                 // if we can determine catalog, pass it to the service
                 string catalog = null;
-                if(criteria is CatalogIndexedSearchCriteria)
+                if(criteria is Data.Model.CatalogIndexedSearchCriteria)
                 {
-                    catalog = (criteria as CatalogIndexedSearchCriteria).Catalog;
+                    catalog = (criteria as Data.Model.CatalogIndexedSearchCriteria).Catalog;
                 }
 
                 // Now load items from repository

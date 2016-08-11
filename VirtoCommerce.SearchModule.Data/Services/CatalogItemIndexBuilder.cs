@@ -42,7 +42,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
         {
             get
             {
-                return CatalogIndexedSearchCriteria.DocType;
+                return Model.CatalogIndexedSearchCriteria.DocType;
             }
         }
 

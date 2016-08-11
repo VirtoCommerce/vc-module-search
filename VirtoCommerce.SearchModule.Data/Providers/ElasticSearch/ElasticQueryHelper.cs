@@ -103,9 +103,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
             // format is "fieldname_store_currency_pricelist"
             string[] pls = null;
-            if (criteria is CatalogIndexedSearchCriteria)
+            if (criteria is Model.CatalogIndexedSearchCriteria)
             {
-                pls = ((CatalogIndexedSearchCriteria)criteria).Pricelists;
+                pls = ((Model.CatalogIndexedSearchCriteria)criteria).Pricelists;
             }
 
             var parentPriceList = String.Empty;

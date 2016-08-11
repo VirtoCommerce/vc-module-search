@@ -5,9 +5,9 @@ using System.Linq;
 using PlainElastic.Net;
 using PlainElastic.Net.Queries;
 using VirtoCommerce.Domain.Search.Filters;
-using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.SearchModule.Data.Model;
+using VirtoCommerce.Domain.Search.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
@@ -68,9 +68,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             #endregion
 
             #region CatalogItemSearchCriteria
-            if (criteria is CatalogIndexedSearchCriteria)
+            if (criteria is Model.CatalogIndexedSearchCriteria)
             {
-                var c = criteria as CatalogIndexedSearchCriteria;
+                var c = criteria as Model.CatalogIndexedSearchCriteria;
 
                 mainQuery.Must(m => m
                     .Range(r => r.Field("startdate").To(c.StartDate.ToString("s")))
@@ -163,7 +163,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             query.Must(q => q.Custom("{{\"wildcard\" : {{ \"{0}\" : \"{1}\" }}}}", fieldName.ToLower(), lowerCase ? filter.ToLower() : filter));
         }
 
-        protected void AddQueryString(BoolQuery<ESDocument> query, CatalogIndexedSearchCriteria filter, params string[] fields)
+        protected void AddQueryString(BoolQuery<ESDocument> query, Model.CatalogIndexedSearchCriteria filter, params string[] fields)
         {
             var searchPhrase = filter.SearchPhrase;
             if (filter.IsFuzzySearch)

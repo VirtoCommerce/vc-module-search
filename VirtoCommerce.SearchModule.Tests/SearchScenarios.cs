@@ -33,7 +33,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var provider = GetSearchProvider(providerType, scope);
             SearchHelper.CreateSampleIndex(provider, scope);
 
-            var criteria = new CatalogIndexedSearchCriteria
+            var criteria = new Data.Model.CatalogIndexedSearchCriteria
             {
                 SearchPhrase = "product",
                 IsFuzzySearch = true,
@@ -48,7 +48,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
             Assert.True(results.DocCount == 1, String.Format("Returns {0} instead of 1", results.DocCount));
 
-            criteria = new CatalogIndexedSearchCriteria
+            criteria = new Data.Model.CatalogIndexedSearchCriteria
             {
                 SearchPhrase = "sample product ",
                 IsFuzzySearch = true,
@@ -75,7 +75,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
             SearchHelper.CreateSampleIndex(provider, scope);
 
-            var criteria = new CatalogIndexedSearchCriteria
+            var criteria = new Data.Model.CatalogIndexedSearchCriteria
             {
                 SearchPhrase = "",
                 IsFuzzySearch = true,
@@ -145,7 +145,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var provider = GetSearchProvider(providerType, scope);
             SearchHelper.CreateSampleIndex(provider, scope);
 
-            var criteria = new CatalogIndexedSearchCriteria
+            var criteria = new Data.Model.CatalogIndexedSearchCriteria
             {
                 SearchPhrase = "",
                 IsFuzzySearch = true,

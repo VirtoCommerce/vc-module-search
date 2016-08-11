@@ -32,7 +32,7 @@ namespace VirtoCommerce.SearchModule.Web
         {
             base.Initialize();
 
-            _container.RegisterType<ISearchIndexBuilder, CatalogItemIndexBuilder>(CatalogIndexedSearchCriteria.DocType);
+            _container.RegisterType<ISearchIndexBuilder, CatalogItemIndexBuilder>(Data.Model.CatalogIndexedSearchCriteria.DocType);
             _container.RegisterType<ISearchIndexController, SearchIndexController>();
             var settingManager = _container.Resolve<ISettingsManager>();
 

@@ -193,7 +193,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
             // format is "fieldname_store_currency_pricelist"
             string[] pls = null;
-            var searchCriteria = criteria as CatalogIndexedSearchCriteria;
+            var searchCriteria = criteria as Model.CatalogIndexedSearchCriteria;
             if (searchCriteria != null)
             {
                 pls = searchCriteria.Pricelists;
