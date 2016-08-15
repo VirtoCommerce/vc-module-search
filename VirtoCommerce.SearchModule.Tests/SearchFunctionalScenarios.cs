@@ -140,7 +140,7 @@ namespace VirtoCommerce.SearchModule.Tests
         private IPricingService GetPricingService()
         {
             var cacheManager = new Moq.Mock<ICacheManager<object>>();
-            return new PricingServiceImpl(GetPricingRepository, GetItemService(), null, cacheManager.Object, null);
+            return new PricingServiceImpl(GetPricingRepository, GetItemService(), null, cacheManager.Object, null, null, null);
         }
 
         private IPropertyService GetPropertyService()
