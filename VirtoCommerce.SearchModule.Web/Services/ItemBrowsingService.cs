@@ -13,20 +13,18 @@ namespace VirtoCommerce.SearchModule.Web.Services
     public class ItemBrowsingService : IItemBrowsingService
     {
         private readonly IItemService _itemService;
-        private readonly ISearchConnection _searchConnection;
         private readonly ISearchProvider _searchProvider;
 
-        public ItemBrowsingService(IItemService itemService, ISearchProvider searchService, ISearchConnection searchConnection = null)
+        public ItemBrowsingService(IItemService itemService, ISearchProvider searchService)
         {
             _searchProvider = searchService;
-            _searchConnection = searchConnection;
             _itemService = itemService;
         }
 
-        public moduleModel.SearchResult SearchItems(CatalogIndexedSearchCriteria criteria, moduleModel.ItemResponseGroup responseGroup)
+        public moduleModel.SearchResult SearchItems(string scope, ISearchCriteria criteria, moduleModel.ItemResponseGroup responseGroup)
         {
             CatalogItemSearchResults results;
-            var items = Search(criteria, out results, responseGroup);
+            var items = Search(scope, criteria, out results, responseGroup);
 
             var response = new moduleModel.SearchResult();
 
@@ -42,9 +40,7 @@ namespace VirtoCommerce.SearchModule.Web.Services
             return response;
         }
 
-
-
-        private IEnumerable<moduleModel.CatalogProduct> Search(CatalogIndexedSearchCriteria criteria, out CatalogItemSearchResults results, moduleModel.ItemResponseGroup responseGroup)
+        private IEnumerable<moduleModel.CatalogProduct> Search(string scope, ISearchCriteria criteria, out CatalogItemSearchResults results, moduleModel.ItemResponseGroup responseGroup)
         {
             var items = new List<moduleModel.CatalogProduct>();
             var itemsOrderedList = new List<string>();
@@ -59,7 +55,6 @@ namespace VirtoCommerce.SearchModule.Web.Services
             do
             {
                 // Search using criteria, it will only return IDs of the items
-                var scope = _searchConnection.Scope;
                 var searchResults = _searchProvider.Search(scope, criteria) as SearchResults;
                 var itemKeyValues = searchResults.GetKeyAndOutlineFieldValueMap<string>();
                 results = new CatalogItemSearchResults(myCriteria, itemKeyValues, searchResults);
@@ -82,8 +77,15 @@ namespace VirtoCommerce.SearchModule.Web.Services
 
                 itemsOrderedList.AddRange(uniqueKeys);
 
+                // if we can determine catalog, pass it to the service
+                string catalog = null;
+                if(criteria is CatalogIndexedSearchCriteria)
+                {
+                    catalog = (criteria as CatalogIndexedSearchCriteria).Catalog;
+                }
+
                 // Now load items from repository
-                var currentItems = _itemService.GetByIds(uniqueKeys.ToArray(), responseGroup, criteria.Catalog);
+                var currentItems = _itemService.GetByIds(uniqueKeys.ToArray(), responseGroup, catalog);
 
                 var orderedList = currentItems.OrderBy(i => itemsOrderedList.IndexOf(i.Id));
                 items.AddRange(orderedList);

@@ -1,46 +1,35 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VirtoCommerce.Domain.Search.Filters;
 using VirtoCommerce.Domain.Search.Model;
-using VirtoCommerce.SearchModule.Data.Model;
-using VirtoCommerce.SearchModule.Data.Providers.Lucene;
 using Xunit;
 
 namespace VirtoCommerce.SearchModule.Tests
 {
-    public class LuceneScenarios
+    [CLSCompliant(false)]
+    public class SearchScenarios : SearchTestsBase
     {
-        private string _LuceneStorageDir = Path.Combine(Path.GetTempPath(), "lucene");
+        private string _DefaultScope = "test";
 
-        [Fact, Trait("type", "lucene"), Trait("Category", "CI")]
-        public void Can_create_lucene_index()
+        [Theory, 
+            InlineData("Lucene")
+        ]
+        [Trait("Category", "CI")]
+        public void Can_create_search_index(string providerType)
         {
-            var scope = "default";
-            var queryBuilder = new LuceneSearchQueryBuilder();
-            var conn = new SearchConnection(_LuceneStorageDir, scope);
-            var provider = new LuceneSearchProvider(queryBuilder, conn);
+            var scope = _DefaultScope;
+            var provider = GetSearchProvider(providerType, scope);
             SearchHelper.CreateSampleIndex(provider, scope);
-            Directory.Delete(_LuceneStorageDir, true);
         }
 
-        [Fact, Trait("type", "lucene"), Trait("Category", "CI")]
-        public void Can_find_item_lucene()
+        [Theory,
+            InlineData("Lucene")
+        ]
+        [Trait("Category", "CI")]
+        public void Can_find_item_using_search(string providerType)
         {
-            var scope = "default";
-            var queryBuilder = new LuceneSearchQueryBuilder();
-            var conn = new SearchConnection(_LuceneStorageDir, scope);
-            var provider = new LuceneSearchProvider(queryBuilder, conn);
-
-            if (Directory.Exists(_LuceneStorageDir))
-            {
-                Directory.Delete(_LuceneStorageDir, true);
-            }
-
+            var scope = _DefaultScope;
+            var provider = GetSearchProvider(providerType, scope);
             SearchHelper.CreateSampleIndex(provider, scope);
 
             var criteria = new CatalogIndexedSearchCriteria
@@ -72,23 +61,16 @@ namespace VirtoCommerce.SearchModule.Tests
             results = provider.Search(scope, criteria);
 
             Assert.True(results.DocCount == 1, String.Format("\"Sample Product\" search returns {0} instead of 1", results.DocCount));
-
-            Directory.Delete(_LuceneStorageDir, true);
         }
 
-        [Fact, Trait("type", "lucene"), Trait("Category", "CI")]
-        public void Can_get_item_facets_lucene()
+        [Theory,
+            InlineData("Lucene")
+        ]
+        [Trait("Category", "CI")]
+        public void Can_get_item_facets(string providerType)
         {
-            var scope = "default";
-            var queryBuilder = new LuceneSearchQueryBuilder();
-            var conn = new SearchConnection(_LuceneStorageDir, scope);
-            var provider = new LuceneSearchProvider(queryBuilder, conn);
-            Debug.WriteLine("Lucene connection: {0}", conn.ToString());
-
-            if (Directory.Exists(_LuceneStorageDir))
-            {
-                Directory.Delete(_LuceneStorageDir, true);
-            }
+            var scope = _DefaultScope;
+            var provider = GetSearchProvider(providerType, scope);
 
             SearchHelper.CreateSampleIndex(provider, scope);
 
@@ -150,24 +132,16 @@ namespace VirtoCommerce.SearchModule.Tests
 
             var outlineCount = results.Documents[0].Documents[0]["__outline"].Values.Count();
             Assert.True(outlineCount == 2, String.Format("Returns {0} outlines instead of 2", outlineCount));
-
-            Directory.Delete(_LuceneStorageDir, true);
         }
 
-        [Fact, Trait("type", "lucene"), Trait("Category", "CI")]
-        public void Can_get_item_multiple_filters_lucene()
+        [Theory,
+            InlineData("Lucene")
+        ]
+        [Trait("Category", "CI")]
+        public void Can_get_item_multiple_filters(string providerType)
         {
-            var scope = "default";
-            var queryBuilder = new LuceneSearchQueryBuilder();
-            var conn = new SearchConnection(_LuceneStorageDir, scope);
-            var provider = new LuceneSearchProvider(queryBuilder, conn);
-            Debug.WriteLine("Lucene connection: {0}", conn.ToString());
-
-            if (Directory.Exists(_LuceneStorageDir))
-            {
-                Directory.Delete(_LuceneStorageDir, true);
-            }
-
+            var scope = _DefaultScope;
+            var provider = GetSearchProvider(providerType, scope);
             SearchHelper.CreateSampleIndex(provider, scope);
 
             var criteria = new CatalogIndexedSearchCriteria
@@ -222,8 +196,6 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.True(blackCount == 1, String.Format("Returns {0} facets of black instead of 2", blackCount));
 
             //Assert.True(results.DocCount == 1, String.Format("Returns {0} instead of 1", results.DocCount));
-
-            Directory.Delete(_LuceneStorageDir, true);
         }
 
         private int GetFacetCount(ISearchResults results, string fieldName, string facetKey)

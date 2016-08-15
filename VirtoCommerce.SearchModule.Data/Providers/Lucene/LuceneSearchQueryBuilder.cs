@@ -23,11 +23,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <returns></returns>
         public override object BuildQuery(ISearchCriteria criteria)
         {
-
             var builder = base.BuildQuery(criteria) as QueryBuilder;
             var query = builder.Query as BooleanQuery;
             var analyzer = new StandardAnalyzer(u.Version.LUCENE_30);
 
+            var fuzzyMinSimilarity = 0.7f;
+            var isFuzzySearch = false;
             if (criteria is CatalogIndexedSearchCriteria)
             {
                 var c = criteria as CatalogIndexedSearchCriteria;
@@ -59,11 +60,19 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                     AddQuery("catalog", query, c.Catalog);
                 }
 
+                fuzzyMinSimilarity = c.FuzzyMinSimilarity;
+                isFuzzySearch = c.IsFuzzySearch;
+            }
+
+            // add standard keyword search
+            if (criteria is KeywordSearchCriteria)
+            {
+                var c = criteria as KeywordSearchCriteria;
                 // Add search
                 if (!String.IsNullOrEmpty(c.SearchPhrase))
                 {
                     var searchPhrase = c.SearchPhrase;
-                    if (c.IsFuzzySearch)
+                    if (isFuzzySearch)
                     {
 
                         var keywords = c.SearchPhrase.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
@@ -71,7 +80,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                         searchPhrase = keywords.Aggregate(
                             searchPhrase,
                             (current, keyword) =>
-                                current + String.Format("{0}~{1}", keyword.Replace("~", ""), c.FuzzyMinSimilarity.ToString(CultureInfo.InvariantCulture)));
+                                current + String.Format("{0}~{1}", keyword.Replace("~", ""), fuzzyMinSimilarity.ToString(CultureInfo.InvariantCulture)));
                     }
 
                     var fields = new List<string> { "__content" };
@@ -82,15 +91,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                     }
 
                     var parser = new MultiFieldQueryParser(u.Version.LUCENE_30, fields.ToArray(), analyzer)
-                                     {
-                                         DefaultOperator =
-                                             QueryParser
-                                             .Operator.OR
-                                     };
+                    {
+                        DefaultOperator = QueryParser.Operator.OR
+                    };
 
                     var searchQuery = parser.Parse(searchPhrase);
                     query.Add(searchQuery, Occur.MUST);
-
                 }
             }
             //else if (criteria is OrderSearchCriteria)
