@@ -354,7 +354,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var allProductChanges = _changeLogService.FindChangeHistory("Item", startDate, endDate).ToList();
             var allPriceChanges = _changeLogService.FindChangeHistory("Price", startDate, endDate).ToList();
 
-            var priceIds = allPriceChanges.Select(c => c.ObjectId).ToList();
+            var priceIds = allPriceChanges.Select(c => c.ObjectId).ToArray();
             var prices = _pricingService.GetPricesById(priceIds).ToList();
 
             // TODO: How to get product for deleted price?
