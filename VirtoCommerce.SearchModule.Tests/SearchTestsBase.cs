@@ -2,6 +2,7 @@
 using System.IO;
 using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.SearchModule.Data.Model;
+using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch;
 using VirtoCommerce.SearchModule.Data.Providers.Lucene;
 
 namespace VirtoCommerce.SearchModule.Tests
@@ -22,6 +23,16 @@ namespace VirtoCommerce.SearchModule.Tests
                 return provider;
             }
 
+            if (searchProvider == "Elastic")
+            {
+                var queryBuilder = new ElasticSearchQueryBuilder();
+
+                var conn = new SearchConnection("localhost:9200", scope);
+                var provider = new ElasticSearchProvider(queryBuilder, conn);
+
+                return provider;
+            }
+
             throw new NullReferenceException(string.Format("{0} is not supported", searchProvider));
         }
 
@@ -29,7 +40,8 @@ namespace VirtoCommerce.SearchModule.Tests
         {
             try
             {
-                Directory.Delete(_LuceneStorageDir, true);
+                if(Directory.Exists(_LuceneStorageDir))
+                    Directory.Delete(_LuceneStorageDir, true);
             }
             finally
             {

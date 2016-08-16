@@ -12,9 +12,9 @@ namespace VirtoCommerce.SearchModule.Tests
     {
         private string _DefaultScope = "test";
 
-        [Theory, 
-            InlineData("Lucene")
-        ]
+        [Theory]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [Trait("Category", "CI")]
         public void Can_create_search_index(string providerType)
         {
@@ -23,9 +23,9 @@ namespace VirtoCommerce.SearchModule.Tests
             SearchHelper.CreateSampleIndex(provider, scope);
         }
 
-        [Theory,
-            InlineData("Lucene")
-        ]
+        [Theory]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [Trait("Category", "CI")]
         public void Can_find_item_using_search(string providerType)
         {
@@ -64,9 +64,9 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.True(results.DocCount == 1, String.Format("\"Sample Product\" search returns {0} instead of 1", results.DocCount));
         }
 
-        [Theory,
-            InlineData("Lucene")
-        ]
+        [Theory]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [Trait("Category", "CI")]
         public void Can_get_item_facets(string providerType)
         {
@@ -135,9 +135,9 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.True(outlineCount == 2, String.Format("Returns {0} outlines instead of 2", outlineCount));
         }
 
-        [Theory,
-            InlineData("Lucene")
-        ]
+        [Theory]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [Trait("Category", "CI")]
         public void Can_get_item_multiple_filters(string providerType)
         {

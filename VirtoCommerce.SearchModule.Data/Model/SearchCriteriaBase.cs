@@ -83,7 +83,10 @@ namespace VirtoCommerce.SearchModule.Data.Model
 
         public virtual SearchSort Sort { get; set; }
 
-        public virtual string Locale { get; set; }
+        public virtual string Locale
+        {
+            get; set;
+        }
 
         public virtual string Currency { get; set; }
 

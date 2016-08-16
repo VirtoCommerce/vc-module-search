@@ -98,8 +98,15 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
                 if (!String.IsNullOrEmpty(c.SearchPhrase))
                 {
-                    var contentField = string.Format("__content_{0}", c.Locale.ToLower());
-                    AddQueryString(mainQuery, c, "__content", contentField);
+                    var searchFields = new List<string>();
+
+                    searchFields.Add("__content");
+                    if (!string.IsNullOrEmpty(c.Locale))
+                    {
+                        searchFields.Add(string.Format("__content_{0}", c.Locale.ToLower()));
+                    }
+
+                    AddQueryString(mainQuery, c, searchFields.ToArray());
                 }
 
                 if (!String.IsNullOrEmpty(c.Catalog))

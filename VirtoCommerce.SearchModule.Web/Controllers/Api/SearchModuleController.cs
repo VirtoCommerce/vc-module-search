@@ -223,6 +223,23 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             return Ok(result.ToWebModel(_blobUrlResolver));
         }
 
+        /*
+        /// <summary>
+        /// Search for products and categories
+        /// </summary>
+        /// <param name="criteria">Search parameters</param>
+        [HttpPost]
+        [Route("2")]
+        [ResponseType(typeof(ISearchResults))]
+        [ClientCache(Duration = 30)]
+        public IHttpActionResult Search2(ISearchCriteria criteria)
+        {
+            var result = new Domain.Catalog.Model.SearchResult();
+            result = SearchProducts(criteria);
+            return Ok(result.ToWebModel(_blobUrlResolver));
+        }
+        */
+
 
         private Domain.Catalog.Model.SearchResult SearchProducts(Domain.Catalog.Model.SearchCriteria criteria)
         {
