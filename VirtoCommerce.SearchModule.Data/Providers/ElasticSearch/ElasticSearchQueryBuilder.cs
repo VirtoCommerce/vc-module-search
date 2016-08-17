@@ -133,6 +133,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             // Add search facets
             var facets = GetFacets(criteria);
             builder.Facets(f => facets);
+            //var aggregations = GetAggregations(criteria);
+            //builder.Aggregations(aggregations);
 
             return builder;
         }
@@ -145,7 +147,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             {
                 if (filter.Count == 1)
                 {
-                    if (!String.IsNullOrEmpty(filter[0]))
+                    if (!string.IsNullOrEmpty(filter[0]))
                     {
                         AddQuery(fieldName, query, filter[0], lowerCase);
                     }
@@ -190,6 +192,52 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                         x.Fields(fields).Operator(Operator.AND).Query(searchPhrase).Analyzer(ElasticSearchProvider.SearchAnalyzer)));
             }
         }
+
+        #region Aggregations
+        protected virtual Aggregations<ESDocument> GetAggregations(ISearchCriteria criteria)
+        {
+            // Now add aggregations
+            var aggregationParams = new Aggregations<ESDocument>();
+            foreach (var filter in criteria.Filters)
+            {
+                if (filter is AttributeFilter)
+                {
+                    AddAggregationQueries(aggregationParams, filter.Key, criteria);
+                }
+            }
+
+            return aggregationParams;
+        }
+
+        private void AddAggregationQueries(Aggregations<ESDocument> param, string fieldName, ISearchCriteria criteria)
+        {
+            var ffilter = new BoolFilter<ESDocument>();
+            foreach (var f in criteria.CurrentFilters)
+            {
+                if (!f.Key.Equals(fieldName))
+                {
+                    var q = ElasticQueryHelper.CreateQuery(criteria, f);
+                    ffilter.Must(ff => ff.Bool(bb => q));
+                }
+            }
+
+            var facetFilter = new FacetFilter<ESDocument>();
+            facetFilter.Bool(f => ffilter);
+
+            //param.Terms(t => t.AggregationName(fieldName.ToLower()).Field(fieldName.ToLower()).FacetFilter(ff => facetFilter));
+        }
+
+        private void AddAggregationQueries(Aggregations<ESDocument> param, string fieldName, IEnumerable<CategoryFilterValue> values)
+        {
+            foreach (var val in values)
+            {
+                var facetName = string.Format("{0}-{1}", fieldName.ToLower(), val.Id.ToLower());
+                param.Filter(ff =>
+                    ff.AggregationName(facetName).Filter(f => f.Query(q => q.Bool(bf => bf.Must(bfm =>
+                    bfm.Custom("{{\"wildcard\" : {{ \"{0}\" : \"{1}\" }}}}", fieldName.ToLower(), val.Outline.ToLower()))))));
+            }
+        }
+        #endregion
 
         #region Facet Query
         /// <summary>
@@ -297,9 +345,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             foreach (var value in values)
             {
                 var filter = new FacetFilter<ESDocument>();
-                filter.Range(r => r.IncludeLower(false).IncludeUpper().From(value.Lower).To(value.Upper));
+                var range = filter.Range(r => r.Field(fieldName));
+
+                filter.Range(r => r.Field(fieldName).Gte(value.Lower).Lt(value.Upper));
                 filter.And(b => ffilter);
-                param.FilterFacets(ff => ff.FacetName(String.Format("{0}-{1}", fieldName, value.Id)).Filter(f => filter));
+                param.Terms(t => t.FacetName(String.Format("{0}-{1}", fieldName, value.Id)).Field(fieldName.ToLower()).FacetFilter(ff => filter));
             }
         }
 

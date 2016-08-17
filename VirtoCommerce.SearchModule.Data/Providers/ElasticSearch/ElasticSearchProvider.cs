@@ -12,6 +12,7 @@ using VirtoCommerce.Domain.Search.Filters;
 using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.SearchModule.Data.Services;
+using Newtonsoft.Json.Linq;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
@@ -176,7 +177,18 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             {
                 var document = new ResultDocument();
                 foreach (var field in indexDoc.Keys)
-                    document.Add(new DocumentField(field, indexDoc[field]));
+                {
+                    var fieldValue = indexDoc[field];
+                    if (fieldValue is JArray)
+                    {
+                        var fieldArrayValue = fieldValue as JArray;
+                        document.Add(new DocumentField(field, fieldArrayValue.ToArray()));
+                    }
+                    else
+                    {
+                        document.Add(new DocumentField(field, indexDoc[field]));
+                    }
+                }
 
                 docList.Add(document);
             }
@@ -527,14 +539,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                             {
                                 facetGroup.FacetType = FacetTypes.Range;
 
-                                var key = filter.Key.ToLower();
+                                var key = string.Format(CultureInfo.InvariantCulture, "{0}-{1}", filter.Key, group.Key).ToLower();
                                 if (facets.ContainsKey(key))
                                 {
-                                    var facet = facets[key] as FilterFacetResult;
-                                    if (facet != null && facet.count > 0)
+                                    var facet = facets[key] as TermsFacetResult;
+                                    if (facet != null && facet.total > 0)
                                     {
 
-                                        var newFacet = new Facet(facetGroup, group.Key, facet.count, valueLabels);
+                                        var newFacet = new Facet(facetGroup, group.Key, facet.total, valueLabels);
                                         facetGroup.Facets.Add(newFacet);
                                     }
                                 }

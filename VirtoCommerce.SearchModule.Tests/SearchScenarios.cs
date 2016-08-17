@@ -65,7 +65,7 @@ namespace VirtoCommerce.SearchModule.Tests
         }
 
         [Theory]
-        [InlineData("Lucene")]
+        //[InlineData("Lucene")]
         [InlineData("Elastic")]
         [Trait("Category", "CI")]
         public void Can_get_item_facets(string providerType)

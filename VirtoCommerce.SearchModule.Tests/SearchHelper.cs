@@ -18,7 +18,7 @@ namespace VirtoCommerce.SearchModule.Tests
             provider.Close(scope, "catalogitem");
 
             // sleep for index to be commited
-            Thread.Sleep(5000);
+            Thread.Sleep(1000);
         }
 
         private static ResultDocument CreateDocument(string key, string name, string color, decimal price, int size, string[] outlines)
@@ -31,7 +31,7 @@ namespace VirtoCommerce.SearchModule.Tests
             doc.Add(new DocumentField("__hidden", "false", new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             doc.Add(new DocumentField("code", "prd12321", new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             doc.Add(new DocumentField("name", name, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("startdate", DateTime.UtcNow, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+            doc.Add(new DocumentField("startdate", DateTime.UtcNow.AddDays(-1), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             doc.Add(new DocumentField("enddate", DateTime.MaxValue, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             doc.Add(new DocumentField("price_usd_default", price, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             doc.Add(new DocumentField("price_usd_default_value", price.ToString(), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
