@@ -19,7 +19,7 @@ namespace VirtoCommerce.SearchModule.Tests
             provider.Close(scope, "catalogitem");
 
             // sleep for index to be commited
-            Thread.Sleep(1000);
+            Thread.Sleep(2000);
         }
 
         private static ResultDocument CreateDocument(string key, string name, string color, decimal price, int size, string[] outlines)
