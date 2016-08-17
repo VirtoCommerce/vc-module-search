@@ -81,14 +81,14 @@ namespace VirtoCommerce.SearchModule.Tests
                                           };
 
             catalogCriteria.Add(filter);
-            //catalogCriteria.Add(rangefilter);
+            catalogCriteria.Add(rangefilter);
             catalogCriteria.Add(priceRangefilter);
 
             var ibs = GetItemBrowsingService(provider);
             var searchResults = ibs.SearchItems(scope, catalogCriteria, Domain.Catalog.Model.ItemResponseGroup.ItemLarge);
 
-            Assert.True(searchResults.ProductsTotalCount > 0, String.Format("Didn't find any products using {0} search", providerType));
-            Assert.True(searchResults.Aggregations.Count() > 0, String.Format("Didn't find any aggregations using {0} search", providerType));
+            Assert.True(searchResults.ProductsTotalCount > 0, string.Format("Didn't find any products using {0} search", providerType));
+            Assert.True(searchResults.Aggregations.Count() > 0, string.Format("Didn't find any aggregations using {0} search", providerType));
 
             var colorAggregation = searchResults.Aggregations.SingleOrDefault(a => a.Field.Equals("color", StringComparison.OrdinalIgnoreCase));
             Assert.True(colorAggregation.Items.Where(x => x.Value.ToString().Equals("Red", StringComparison.OrdinalIgnoreCase)).SingleOrDefault().Count == 6);

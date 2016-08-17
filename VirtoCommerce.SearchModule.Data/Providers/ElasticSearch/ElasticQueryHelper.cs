@@ -148,7 +148,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             if (index == priceLists.Count() - 1) // last element
             {
                 var filter2 = new RangeFilter<ESDocument>();
-                filter2.Field(String.Format("{0}_{1}_{2}", field, currency, priceLists[index].ToLower())).From(lowerbound).To(upperbound).IncludeLower(lowerboundincluded).IncludeUpper(upperboundincluded);
+                filter2.Field(string.Format("{0}_{1}_{2}", field, currency, priceLists[index].ToLower())).From(lowerbound).To(upperbound).IncludeLower(lowerboundincluded).IncludeUpper(upperboundincluded);
                 //query.Must(q => q.ConstantScore(c => c.Filter(f => f.Range(r => filter2))));
                 query.Must(q => q.Range(r => filter2));
             }
@@ -160,14 +160,4 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             return query;
         }
     }
-
-    /*
-    public static class ElasticQueryExtensions
-    {
-        public static TQuery Greater(this TQuery query, bool include)
-        {
-
-        }
-    }
-    */
 }
