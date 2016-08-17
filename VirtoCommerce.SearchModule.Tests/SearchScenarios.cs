@@ -188,14 +188,19 @@ namespace VirtoCommerce.SearchModule.Tests
             // add applied filters
             criteria.Apply(filter);
             //criteria.Apply(rangefilter);
-            //criteria.Apply(priceRangefilter);
+            criteria.Apply(priceRangefilter);
 
             var results = provider.Search(scope, criteria);
 
             var blackCount = GetFacetCount(results, "Color", "black");
             Assert.True(blackCount == 1, string.Format("Returns {0} facets of black instead of 1", blackCount));
+
             var redCount = GetFacetCount(results, "Color", "red");
             Assert.True(redCount == 2, string.Format("Returns {0} facets of black instead of 2", redCount));
+
+            var priceCount = GetFacetCount(results, "Price", "100_to_700");
+            Assert.True(priceCount == 1, string.Format("Returns {0} facets of 100_to_700 instead of 1", priceCount));
+
             Assert.True(results.DocCount == 1, string.Format("Returns {0} instead of 1", results.DocCount));
         }
 
