@@ -33,7 +33,6 @@ using VirtoCommerce.SearchModule.Web.Services;
 using Property = VirtoCommerce.Domain.Catalog.Model.Property;
 using PropertyDictionaryValue = VirtoCommerce.Domain.Catalog.Model.PropertyDictionaryValue;
 using webModel = VirtoCommerce.SearchModule.Web.Model;
-using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 {
@@ -236,9 +235,13 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             var serviceCriteria = new Data.Model.CatalogIndexedSearchCriteria
             {
                 Locale = criteria.LanguageCode,
-                Catalog = catalog.ToLowerInvariant(),
                 IsFuzzySearch = true,
             };
+
+            if (!string.IsNullOrWhiteSpace(catalog))
+            {
+                serviceCriteria.Catalog = catalog.ToLowerInvariant();
+            }
 
             if (!string.IsNullOrWhiteSpace(criteria.Outline))
             {
