@@ -272,7 +272,8 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                 serviceCriteria.Add(filter);
             }
 
-            // apply terms
+            #region apply terms
+
             var terms = ParseKeyValues(criteria.Terms);
             if (terms.Any())
             {
@@ -308,22 +309,33 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                         var attributeFilter = filter as AttributeFilter;
                         if (attributeFilter != null && attributeFilter.Values == null)
                         {
-                            var dynamicValues = new List<AttributeFilterValue>();
-                            foreach (var value in term.Values)
+                            filter = new AttributeFilter
                             {
-                                dynamicValues.Add(new AttributeFilterValue()
-                                {
-                                    Id = value,
-                                    Value = value
-                                });
-                            }
-                            attributeFilter.Values = dynamicValues.ToArray();
+                                Key = attributeFilter.Key,
+                                Values = CreateAttributeFilterValues(term.Values),
+                                IsLocalized = attributeFilter.IsLocalized,
+                                DisplayNames = attributeFilter.DisplayNames,
+                            };
                         }
 
                         var appliedFilter = _browseFilterService.Convert(filter, term.Values);
                         serviceCriteria.Apply(appliedFilter);
                     }
                 }
+            }
+
+            #endregion
+
+            // Filter by vendor
+            var vendorIds = GetDistinctValues(criteria.VendorId, criteria.VendorIds);
+            if (vendorIds.Any())
+            {
+                var vendorFilter = new AttributeFilter
+                {
+                    Key = "vendor",
+                    Values = CreateAttributeFilterValues(vendorIds),
+                };
+                serviceCriteria.Apply(vendorFilter);
             }
 
             #endregion
@@ -537,6 +549,33 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                 .ThenBy(v => v.Language)
                 .ThenBy(v => v.Value)
                 .ToArray();
+        }
+
+        private static List<string> GetDistinctValues(string value, string[] values)
+        {
+            var result = new List<string>();
+
+            if (!string.IsNullOrEmpty(value))
+            {
+                result.Add(value);
+            }
+
+            if (values != null)
+            {
+                result.AddDistinct(StringComparer.OrdinalIgnoreCase, values);
+            }
+
+            return result;
+        }
+
+        private static AttributeFilterValue[] CreateAttributeFilterValues(IEnumerable<string> values)
+        {
+            return values.Select(v => new AttributeFilterValue
+            {
+                Id = v,
+                Value = v
+            })
+            .ToArray();
         }
 
         private static List<StringKeyValues> ParseKeyValues(string[] items)
