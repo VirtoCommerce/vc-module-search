@@ -6,12 +6,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using VirtoCommerce.Domain.Catalog.Model;
 using VirtoCommerce.Domain.Catalog.Services;
+using VirtoCommerce.Domain.Pricing.Model;
 using VirtoCommerce.Domain.Pricing.Services;
 using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.Platform.Core.ChangeLog;
 using VirtoCommerce.Platform.Core.Common;
-using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Services
 {
@@ -281,7 +281,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             }
             */
 
-            var evalContext = new Domain.Pricing.Model.PriceEvaluationContext
+            var evalContext = new PriceEvaluationContext
             {
                 ProductIds = new[] { item.Id }
             };
@@ -355,11 +355,11 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var allPriceChanges = _changeLogService.FindChangeHistory("Price", startDate, endDate).ToList();
 
             var priceIds = allPriceChanges.Select(c => c.ObjectId).ToArray();
-            var prices = _pricingService.GetPricesById(priceIds).ToList();
+            var prices = GetPrices(priceIds);
 
             // TODO: How to get product for deleted price?
             var productsWithChangedPrice = allPriceChanges
-                .Select(c => new { c.ModifiedDate, Price = prices.FirstOrDefault(p => p.Id == c.ObjectId) })
+                .Select(c => new { c.ModifiedDate, Price = prices.ContainsKey(c.ObjectId) ? prices[c.ObjectId] : null })
                 .Where(x => x.Price != null)
                 .Select(x => new OperationLog { ObjectId = x.Price.ProductId, ModifiedDate = x.ModifiedDate, OperationType = EntryState.Modified })
                 .ToList();
@@ -371,6 +371,54 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 .GroupBy(c => c.ObjectId)
                 .Select(g => new OperationLog { ObjectId = g.Key, OperationType = g.OrderByDescending(c => c.ModifiedDate).Select(c => c.OperationType).First() })
                 .ToList();
+
+            return result;
+        }
+
+        private IDictionary<string, Price> GetPrices(ICollection<string> priceIds)
+        {
+            // TODO: Get pageSize and degreeOfParallelism from settings
+            return GetPricesWithPagingAndParallelism(priceIds, 1000, 10);
+        }
+
+        private IDictionary<string, Price> GetPricesWithPagingAndParallelism(ICollection<string> priceIds, int pageSize, int degreeOfParallelism)
+        {
+            IDictionary<string, Price> result;
+
+            if (degreeOfParallelism > 1)
+            {
+                var dictionary = new ConcurrentDictionary<string, Price>();
+
+                var pages = new List<string[]>();
+                priceIds.ProcessWithPaging(pageSize, (ids, skipCount, totalCount) => pages.Add(ids.ToArray()));
+
+                var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = degreeOfParallelism };
+
+                Parallel.ForEach(pages, parallelOptions, ids =>
+                {
+                    var prices = _pricingService.GetPricesById(ids);
+                    foreach (var price in prices)
+                    {
+                        dictionary.AddOrUpdate(price.Id, price, (key, oldValue) => price);
+                    }
+                });
+
+                result = dictionary;
+            }
+            else
+            {
+                var dictionary = new Dictionary<string, Price>();
+
+                priceIds.ProcessWithPaging(pageSize, (ids, skipCount, totalCount) =>
+                {
+                    foreach (var price in _pricingService.GetPricesById(ids.ToArray()))
+                    {
+                        dictionary[price.Id] = price;
+                    }
+                });
+
+                result = dictionary;
+            }
 
             return result;
         }
