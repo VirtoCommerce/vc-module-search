@@ -131,10 +131,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             builder.Filter(f => mainFilter);
 
             // Add search facets
-            //var facets = GetFacets(criteria);
-            //builder.Facets(f => facets);
-            var aggregations = GetAggregations(criteria);
-            builder.Aggregations(x=> aggregations);
+            var facets = GetFacets(criteria);
+            builder.Facets(f => facets);
+            //var aggregations = GetAggregations(criteria);
+            //builder.Aggregations(x=> aggregations);
 
             return builder;
         }
