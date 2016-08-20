@@ -64,6 +64,78 @@ namespace VirtoCommerce.SearchModule.Tests
         }
 
         [Theory]
+        [InlineData("Elastic")]
+        [Trait("Category", "CI")]
+        public void Can_get_item_aggregations(string providerType)
+        {
+            var scope = _DefaultScope;
+            var provider = GetSearchProvider(providerType, scope);
+
+            SearchHelper.CreateSampleIndex(provider, scope);
+
+            var criteria = new Data.Model.CatalogIndexedSearchCriteria
+            {
+                SearchPhrase = "",
+                IsFuzzySearch = true,
+                Catalog = "goods",
+                RecordsToRetrieve = 10,
+                StartingRecord = 0,
+                Currency = "USD",
+                Pricelists = new[] { "default" }
+            };
+
+            var filter = new AttributeFilter { Key = "Color" };
+            filter.Values = new[]
+                                {
+                                    new AttributeFilterValue { Id = "red", Value = "red" },
+                                    new AttributeFilterValue { Id = "blue", Value = "blue" },
+                                    new AttributeFilterValue { Id = "black", Value = "black" }
+                                };
+
+            var rangefilter = new RangeFilter { Key = "size" };
+            rangefilter.Values = new[]
+                                     {
+                                         new RangeFilterValue { Id = "0_to_5", Lower = "0", Upper = "5" },
+                                         new RangeFilterValue { Id = "5_to_10", Lower = "5", Upper = "10" }
+                                     };
+
+            var priceRangefilter = new PriceRangeFilter { Currency = "usd" };
+            priceRangefilter.Values = new[]
+                                          {
+                                              new RangeFilterValue { Id = "0_to_100", Lower = "0", Upper = "100" },
+                                              new RangeFilterValue { Id = "100_to_700", Lower = "100", Upper = "700" }
+                                          };
+
+            criteria.Add(filter);
+            //criteria.Add(rangefilter);
+            //criteria.Add(priceRangefilter);
+
+            var results = provider.Search(scope, criteria);
+
+            Assert.True(results.DocCount == 5, string.Format("Returns {0} instead of 5", results.DocCount));
+
+            /*
+            var redCount = GetFacetCount(results, "Color", "red");
+            Assert.True(redCount == 3, string.Format("Returns {0} facets of red instead of 3", redCount));
+
+            var priceCount = GetFacetCount(results, "Price", "0_to_100");
+            Assert.True(priceCount == 2, string.Format("Returns {0} facets of 0_to_100 prices instead of 2", priceCount));
+
+            var priceCount2 = GetFacetCount(results, "Price", "100_to_700");
+            Assert.True(priceCount2 == 3, string.Format("Returns {0} facets of 100_to_700 prices instead of 3", priceCount2));
+
+            var sizeCount = GetFacetCount(results, "size", "0_to_5");
+            Assert.True(sizeCount == 3, string.Format("Returns {0} facets of 0_to_5 size instead of 3", sizeCount));
+
+            var sizeCount2 = GetFacetCount(results, "size", "5_to_10");
+            Assert.True(sizeCount2 == 1, string.Format("Returns {0} facets of 5_to_10 size instead of 1", sizeCount2)); // only 1 result because upper bound is not included
+
+            var outlineCount = results.Documents[0].Documents[0]["__outline"].Values.Count();
+            Assert.True(outlineCount == 2, string.Format("Returns {0} outlines instead of 2", outlineCount));
+            */
+        }
+
+        [Theory]
         [InlineData("Lucene")]
         [InlineData("Elastic")]
         [Trait("Category", "CI")]
