@@ -458,6 +458,133 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             throw new ElasticSearchException(string.Format(CultureInfo.InvariantCulture, "{0}. URL:{1}", message, ElasticServerUrl), innerException);
         }
 
+        private static FacetGroup[] CreateFacets(ISearchCriteria criteria, SearchResult<ESDocument>.SearchAggregations aggregations)
+        {
+            var result = new List<FacetGroup>();
+
+            if (aggregations != null)
+            {
+                foreach (var filter in criteria.Filters)
+                {
+                    var groupLabels = filter.GetLabels();
+                    var facetGroup = new FacetGroup(filter.Key, groupLabels);
+
+                    var values = filter.GetValues();
+
+                    // Return all facet terms for attribute filter if values are not defined
+                    if (values == null && filter is AttributeFilter)
+                    {
+                        facetGroup.FacetType = FacetTypes.Attribute;
+
+                        var key = filter.Key.ToLower();
+                        if (aggregations.ContainsKey(key))
+                        {
+                            if (aggregations[key] is BucketAggregationResult)
+                            {
+                                var facet = aggregations[key] as BucketAggregationResult;
+                                if (facet != null)
+                                {
+                                    foreach (var bucket in facet.buckets.Select(x => x as BucketAggregationResult.KeyedBucket))
+                                    {
+                                        var newFacet = new Facet(facetGroup, bucket.key, bucket.doc_count, null);
+                                        facetGroup.Facets.Add(newFacet);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (values != null)
+                    {
+                        foreach (var group in values.GroupBy(v => v.Id))
+                        {
+                            var valueLabels = group.GetValueLabels();
+
+                            if (filter is AttributeFilter)
+                            {
+                                facetGroup.FacetType = FacetTypes.Attribute;
+
+                                var key = filter.Key.ToLower();
+                                if (aggregations.ContainsKey(key))
+                                {
+                                    var facet = aggregations[key] as BucketAggregationResult;
+                                    if (facet != null)
+                                    {
+                                        var term = facet.buckets.Select(x=>x as BucketAggregationResult.KeyedBucket).FirstOrDefault(t => t.key.Equals(group.Key, StringComparison.OrdinalIgnoreCase));
+                                        if (term != null)
+                                        {
+                                            var newFacet = new Facet(facetGroup, group.Key, term.doc_count, valueLabels);
+                                            facetGroup.Facets.Add(newFacet);
+                                        }
+                                    }
+                                }
+                            }
+                            /*
+                            else if (filter is PriceRangeFilter)
+                            {
+                                facetGroup.FacetType = FacetTypes.PriceRange;
+
+                                var rangeFilter = filter as PriceRangeFilter;
+                                if (rangeFilter.Currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    var key = string.Format(CultureInfo.InvariantCulture, "{0}-{1}", filter.Key, group.Key).ToLower();
+                                    if (aggregations.ContainsKey(key))
+                                    {
+                                        var facet = aggregations[key] as FilterFacetResult;
+                                        if (facet != null && facet.count > 0)
+                                        {
+                                            var newFacet = new Facet(facetGroup, group.Key, facet.count, valueLabels);
+                                            facetGroup.Facets.Add(newFacet);
+                                        }
+                                    }
+                                }
+                            }
+                            else if (filter is RangeFilter)
+                            {
+                                facetGroup.FacetType = FacetTypes.Range;
+
+                                var key = string.Format(CultureInfo.InvariantCulture, "{0}-{1}", filter.Key, group.Key).ToLower();
+                                if (aggregations.ContainsKey(key))
+                                {
+                                    var facet = aggregations[key] as TermsFacetResult;
+                                    if (facet != null && facet.total > 0)
+                                    {
+
+                                        var newFacet = new Facet(facetGroup, group.Key, facet.total, valueLabels);
+                                        facetGroup.Facets.Add(newFacet);
+                                    }
+                                }
+                            }
+                            else if (filter is CategoryFilter)
+                            {
+                                facetGroup.FacetType = FacetTypes.Category;
+
+                                var key = string.Format(CultureInfo.InvariantCulture, "{0}-{1}", filter.Key, group.Key).ToLower();
+                                if (aggregations.ContainsKey(key))
+                                {
+                                    var facet = aggregations[key] as FilterFacetResult;
+                                    if (facet != null && facet.count > 0)
+                                    {
+                                        var newFacet = new Facet(facetGroup, group.Key, facet.count, valueLabels);
+                                        facetGroup.Facets.Add(newFacet);
+                                    }
+                                }
+                            }
+                            */
+                        }
+                    }
+
+                    // Add facet group only if has items
+                    if (facetGroup.Facets.Any())
+                    {
+                        result.Add(facetGroup);
+                    }
+                }
+            }
+
+            return result.ToArray();
+        }
+
         private static FacetGroup[] CreateFacets(ISearchCriteria criteria, SearchResult<ESDocument>.SearchFacets facets)
         {
             var result = new List<FacetGroup>();
