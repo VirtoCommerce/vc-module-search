@@ -4,6 +4,7 @@ using VirtoCommerce.Domain.Catalog.Services;
 using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.SearchModule.Data.Model;
 using VirtoCommerce.SearchModule.Data.Services;
 using VirtoCommerce.SearchModule.Web.Converters;
 using moduleModel = VirtoCommerce.Domain.Catalog.Model;
@@ -79,9 +80,9 @@ namespace VirtoCommerce.SearchModule.Web.Services
 
                 // if we can determine catalog, pass it to the service
                 string catalog = null;
-                if(criteria is CatalogIndexedSearchCriteria)
+                if(criteria is Data.Model.CatalogIndexedSearchCriteria)
                 {
-                    catalog = (criteria as CatalogIndexedSearchCriteria).Catalog;
+                    catalog = (criteria as Data.Model.CatalogIndexedSearchCriteria).Catalog;
                 }
 
                 // Now load items from repository

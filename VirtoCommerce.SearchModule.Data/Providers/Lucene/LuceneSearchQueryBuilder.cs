@@ -11,6 +11,7 @@ using Lucene.Net.Search;
 using VirtoCommerce.Domain.Search;
 using VirtoCommerce.Domain.Search.Model;
 using u = Lucene.Net.Util;
+using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
@@ -29,9 +30,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
             var fuzzyMinSimilarity = 0.7f;
             var isFuzzySearch = false;
-            if (criteria is CatalogIndexedSearchCriteria)
+            if (criteria is Model.CatalogIndexedSearchCriteria)
             {
-                var c = criteria as CatalogIndexedSearchCriteria;
+                var c = criteria as Model.CatalogIndexedSearchCriteria;
                 var datesFilterStart = new TermRangeQuery(
                     "startdate", c.StartDateFrom.HasValue ? DateTools.DateToString(c.StartDateFrom.Value, DateTools.Resolution.SECOND) : null, DateTools.DateToString(c.StartDate, DateTools.Resolution.SECOND), false, true);
                 query.Add(datesFilterStart, Occur.MUST);
@@ -65,9 +66,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             }
 
             // add standard keyword search
-            if (criteria is KeywordSearchCriteria)
+            if (criteria is Model.KeywordSearchCriteria)
             {
-                var c = criteria as KeywordSearchCriteria;
+                var c = criteria as Model.KeywordSearchCriteria;
                 // Add search
                 if (!String.IsNullOrEmpty(c.SearchPhrase))
                 {

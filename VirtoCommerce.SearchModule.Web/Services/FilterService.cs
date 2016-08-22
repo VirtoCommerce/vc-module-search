@@ -4,7 +4,6 @@ using System.Xml.Serialization;
 using VirtoCommerce.Domain.Search.Filters;
 using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
-using VirtoCommerce.Domain.Store.Model;
 using VirtoCommerce.Domain.Store.Services;
 using VirtoCommerce.Platform.Core.DynamicProperties;
 
@@ -29,24 +28,29 @@ namespace VirtoCommerce.SearchModule.Web.Services
 
             var filters = new List<ISearchFilter>();
 
-            if (context.ContainsKey("StoreId")) // include store filters
+            var storeId = GetStringValue(context, "StoreId");
+            if (!string.IsNullOrEmpty(storeId)) // include store filters
             {
-                var store = _storeService.GetById(context["StoreId"].ToString());
-
-                var browsing = GetFilteredBrowsing(store);
-                if (browsing != null)
+                var store = _storeService.GetById(storeId);
+                if (store != null)
                 {
-                    if (browsing.Attributes != null)
+                    var browsing = GetFilteredBrowsing(store);
+                    if (browsing != null)
                     {
-                        filters.AddRange(browsing.Attributes);
-                    }
-                    if (browsing.AttributeRanges != null)
-                    {
-                        filters.AddRange(browsing.AttributeRanges);
-                    }
-                    if (browsing.Prices != null)
-                    {
-                        filters.AddRange(browsing.Prices);
+                        if (browsing.Attributes != null)
+                        {
+                            filters.AddRange(browsing.Attributes);
+                        }
+
+                        if (browsing.AttributeRanges != null)
+                        {
+                            filters.AddRange(browsing.AttributeRanges);
+                        }
+
+                        if (browsing.Prices != null)
+                        {
+                            filters.AddRange(browsing.Prices);
+                        }
                     }
                 }
             }
@@ -56,7 +60,24 @@ namespace VirtoCommerce.SearchModule.Web.Services
         }
 
 
-        private static FilteredBrowsing GetFilteredBrowsing(Store store)
+        private static string GetStringValue(IDictionary<string, object> context, string key)
+        {
+            string result = null;
+
+            if (context.ContainsKey(key))
+            {
+                var value = context[key];
+
+                if (value != null)
+                {
+                    result = value.ToString();
+                }
+            }
+
+            return result;
+        }
+
+        private static FilteredBrowsing GetFilteredBrowsing(IHasDynamicProperties store)
         {
             FilteredBrowsing result = null;
 

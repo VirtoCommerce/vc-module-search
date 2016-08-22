@@ -7,7 +7,6 @@ using VirtoCommerce.CoreModule.Data.Services;
 using VirtoCommerce.Domain.Catalog.Services;
 using VirtoCommerce.Domain.Commerce.Services;
 using VirtoCommerce.Domain.Pricing.Services;
-using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.Platform.Core.ChangeLog;
 using VirtoCommerce.Platform.Core.Settings;
@@ -22,9 +21,12 @@ using Xunit;
 using Xunit.Abstractions;
 using System.Linq;
 using VirtoCommerce.Domain.Search.Filters;
+using VirtoCommerce.SearchModule.Data.Model;
+using System.Threading;
 
 namespace VirtoCommerce.SearchModule.Tests
 {
+    [CLSCompliant(false)]
     public class SearchFunctionalScenarios : SearchTestsBase
     {
         private readonly ITestOutputHelper _output;
@@ -34,28 +36,19 @@ namespace VirtoCommerce.SearchModule.Tests
             _output = output;
         }
 
-        [Fact]
-        public void Can_return_pricelists()
-        {
-            var evalContext = new Domain.Pricing.Model.PriceEvaluationContext
-            {
-                ProductIds = new[] { "4ed55441810a47da88a483e5a1ee4e94" }
-            };
-
-            var pricingService = GetPricingService();
-            var priceLists = pricingService.EvaluatePriceLists(evalContext);
-            Assert.True(priceLists.Count() > 0);
-            var prices = pricingService.EvaluateProductPrices(evalContext);
-            Assert.True(prices.Count() > 0);
-        }
-    
-        [Fact]
-        public void Can_index_demo_data_and_search()
+        [Theory]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
+        public void Can_index_demo_data_and_search(string providerType)
         {
             var scope = "test";
-            var provider = GetSearchProvider("Lucene", scope);
+            var provider = GetSearchProvider(providerType, scope);
+            provider.RemoveAll(scope, "catalogitem");
             var controller = GetSearchIndexController(provider);
             controller.Process(scope, CatalogIndexedSearchCriteria.DocType, true);
+
+            // sleep for index to be commited
+            Thread.Sleep(5000);
 
             // get catalog id by name
             var catalogRepo = GetCatalogRepository();
@@ -88,13 +81,15 @@ namespace VirtoCommerce.SearchModule.Tests
                                           };
 
             catalogCriteria.Add(filter);
-            //catalogCriteria.Add(rangefilter);
+            catalogCriteria.Add(rangefilter);
             catalogCriteria.Add(priceRangefilter);
 
             var ibs = GetItemBrowsingService(provider);
             var searchResults = ibs.SearchItems(scope, catalogCriteria, Domain.Catalog.Model.ItemResponseGroup.ItemLarge);
 
-            Assert.True(searchResults.ProductsTotalCount > 0);
+            Assert.True(searchResults.ProductsTotalCount > 0, string.Format("Didn't find any products using {0} search", providerType));
+            Assert.True(searchResults.Aggregations.Count() > 0, string.Format("Didn't find any aggregations using {0} search", providerType));
+
             var colorAggregation = searchResults.Aggregations.SingleOrDefault(a => a.Field.Equals("color", StringComparison.OrdinalIgnoreCase));
             Assert.True(colorAggregation.Items.Where(x => x.Value.ToString().Equals("Red", StringComparison.OrdinalIgnoreCase)).SingleOrDefault().Count == 6);
             Assert.True(colorAggregation.Items.Where(x => x.Value.ToString().Equals("Gray", StringComparison.OrdinalIgnoreCase)).SingleOrDefault().Count == 3);

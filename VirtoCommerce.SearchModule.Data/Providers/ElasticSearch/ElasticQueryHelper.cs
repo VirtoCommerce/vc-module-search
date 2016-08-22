@@ -4,6 +4,7 @@ using PlainElastic.Net.Queries;
 using VirtoCommerce.Domain.Search;
 using VirtoCommerce.Domain.Search.Filters;
 using VirtoCommerce.Domain.Search.Model;
+using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
@@ -50,7 +51,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                 {
                     var tempValue = value as RangeFilterValue;
                     var tempFilter = new RangeFilter<ESDocument>();
-                    tempFilter.Field(field).From(tempValue.Lower).To(tempValue.Upper).IncludeLower(true).IncludeUpper(false);
+                    tempFilter.Field(field).Gte(tempValue.Lower).Lt(tempValue.Upper);
                     query.Should(q => q.Range(r => tempFilter));
                 }
             }
@@ -102,9 +103,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
             // format is "fieldname_store_currency_pricelist"
             string[] pls = null;
-            if (criteria is CatalogIndexedSearchCriteria)
+            if (criteria is Model.CatalogIndexedSearchCriteria)
             {
-                pls = ((CatalogIndexedSearchCriteria)criteria).Pricelists;
+                pls = ((Model.CatalogIndexedSearchCriteria)criteria).Pricelists;
             }
 
             var parentPriceList = String.Empty;
@@ -118,7 +119,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             var priceListId = pls[0].ToLower();
 
             var filter = new RangeFilter<ESDocument>();
-            filter.Field(String.Format("{0}_{1}_{2}", field, currency, priceListId)).From(lowerbound).To(upperbound).IncludeLower(lowerboundincluded).IncludeUpper(upperboundincluded);
+            filter.Field(string.Format("{0}_{1}_{2}", field, currency, priceListId)).From(lowerbound).To(upperbound).IncludeLower(lowerboundincluded).IncludeUpper(upperboundincluded);
 
             //query.Should(q => q.ConstantScore(c => c.Filter(f => f.Range(r => filter))));
             query.Should(q => q.Range(r => filter));
@@ -139,7 +140,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
             // create left part
             var filter = new RangeFilter<ESDocument>();
-            filter.Field(String.Format("{0}_{1}_{2}", field, currency, priceLists[index - 1].ToLower()))/*.From("*").To("*")*/.IncludeLower(lowerboundincluded).IncludeUpper(upperboundincluded);
+            filter.Field(string.Format("{0}_{1}_{2}", field, currency, priceLists[index - 1].ToLower()))/*.From("*").To("*")*/.IncludeLower(lowerboundincluded).IncludeUpper(upperboundincluded);
             //query.MustNot(q => q.ConstantScore(c => c.Filter(f => f.Range(r => filter))));
             query.MustNot(q => q.Range(r => filter));
 
@@ -147,7 +148,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             if (index == priceLists.Count() - 1) // last element
             {
                 var filter2 = new RangeFilter<ESDocument>();
-                filter2.Field(String.Format("{0}_{1}_{2}", field, currency, priceLists[index].ToLower())).From(lowerbound).To(upperbound).IncludeLower(lowerboundincluded).IncludeUpper(upperboundincluded);
+                filter2.Field(string.Format("{0}_{1}_{2}", field, currency, priceLists[index].ToLower())).From(lowerbound).To(upperbound).IncludeLower(lowerboundincluded).IncludeUpper(upperboundincluded);
                 //query.Must(q => q.ConstantScore(c => c.Filter(f => f.Range(r => filter2))));
                 query.Must(q => q.Range(r => filter2));
             }

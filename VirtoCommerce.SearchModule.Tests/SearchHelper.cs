@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
 
@@ -8,12 +9,17 @@ namespace VirtoCommerce.SearchModule.Tests
     {
         public static void CreateSampleIndex(ISearchProvider provider, string scope)
         {
+            provider.RemoveAll(scope, "catalogitem");
             provider.Index(scope, "catalogitem", CreateDocument("12345", "sample product", "red", 123.23m, 2, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
+            provider.Index(scope, "catalogitem", CreateDocument("red3", "red shirt 2", "red", 200m, 4, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
             provider.Index(scope, "catalogitem", CreateDocument("sad121", "red shirt", "red", 10m, 3, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
             provider.Index(scope, "catalogitem", CreateDocument("jdashf", "blue shirt", "blue", 23.12m, 8, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
             provider.Index(scope, "catalogitem", CreateDocument("32894hjf", "black sox", "black", 243.12m, 10, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
             provider.Commit(scope);
             provider.Close(scope, "catalogitem");
+
+            // sleep for index to be commited
+            Thread.Sleep(1000);
         }
 
         private static ResultDocument CreateDocument(string key, string name, string color, decimal price, int size, string[] outlines)
@@ -26,7 +32,7 @@ namespace VirtoCommerce.SearchModule.Tests
             doc.Add(new DocumentField("__hidden", "false", new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             doc.Add(new DocumentField("code", "prd12321", new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             doc.Add(new DocumentField("name", name, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("startdate", DateTime.UtcNow, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+            doc.Add(new DocumentField("startdate", DateTime.UtcNow.AddDays(-1), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             doc.Add(new DocumentField("enddate", DateTime.MaxValue, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             doc.Add(new DocumentField("price_usd_default", price, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             doc.Add(new DocumentField("price_usd_default_value", price.ToString(), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));

@@ -11,9 +11,9 @@ namespace VirtoCommerce.SearchModule.Tests
     {
         private string _DefaultScope = "test";
 
-        [Theory, 
-            InlineData("Lucene")
-        ]
+        [Theory]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [Trait("Category", "CI")]
         public void Can_create_search_index(string providerType)
         {
@@ -22,9 +22,9 @@ namespace VirtoCommerce.SearchModule.Tests
             SearchHelper.CreateSampleIndex(provider, scope);
         }
 
-        [Theory,
-            InlineData("Lucene")
-        ]
+        [Theory]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [Trait("Category", "CI")]
         public void Can_find_item_using_search(string providerType)
         {
@@ -32,7 +32,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var provider = GetSearchProvider(providerType, scope);
             SearchHelper.CreateSampleIndex(provider, scope);
 
-            var criteria = new CatalogIndexedSearchCriteria
+            var criteria = new Data.Model.CatalogIndexedSearchCriteria
             {
                 SearchPhrase = "product",
                 IsFuzzySearch = true,
@@ -45,9 +45,9 @@ namespace VirtoCommerce.SearchModule.Tests
 
             var results = provider.Search(scope, criteria);
 
-            Assert.True(results.DocCount == 1, String.Format("Returns {0} instead of 1", results.DocCount));
+            Assert.True(results.DocCount == 1, string.Format("Returns {0} instead of 1", results.DocCount));
 
-            criteria = new CatalogIndexedSearchCriteria
+            criteria = new Data.Model.CatalogIndexedSearchCriteria
             {
                 SearchPhrase = "sample product ",
                 IsFuzzySearch = true,
@@ -60,12 +60,12 @@ namespace VirtoCommerce.SearchModule.Tests
 
             results = provider.Search(scope, criteria);
 
-            Assert.True(results.DocCount == 1, String.Format("\"Sample Product\" search returns {0} instead of 1", results.DocCount));
+            Assert.True(results.DocCount == 1, string.Format("\"Sample Product\" search returns {0} instead of 1", results.DocCount));
         }
 
-        [Theory,
-            InlineData("Lucene")
-        ]
+        [Theory]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [Trait("Category", "CI")]
         public void Can_get_item_facets(string providerType)
         {
@@ -74,7 +74,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
             SearchHelper.CreateSampleIndex(provider, scope);
 
-            var criteria = new CatalogIndexedSearchCriteria
+            var criteria = new Data.Model.CatalogIndexedSearchCriteria
             {
                 SearchPhrase = "",
                 IsFuzzySearch = true,
@@ -113,30 +113,30 @@ namespace VirtoCommerce.SearchModule.Tests
 
             var results = provider.Search(scope, criteria);
 
-            Assert.True(results.DocCount == 4, String.Format("Returns {0} instead of 4", results.DocCount));
+            Assert.True(results.DocCount == 5, string.Format("Returns {0} instead of 5", results.DocCount));
 
             var redCount = GetFacetCount(results, "Color", "red");
-            Assert.True(redCount == 2, String.Format("Returns {0} facets of red instead of 2", redCount));
+            Assert.True(redCount == 3, string.Format("Returns {0} facets of red instead of 3", redCount));
 
             var priceCount = GetFacetCount(results, "Price", "0_to_100");
-            Assert.True(priceCount == 2, String.Format("Returns {0} facets of 0_to_100 prices instead of 2", priceCount));
+            Assert.True(priceCount == 2, string.Format("Returns {0} facets of 0_to_100 prices instead of 2", priceCount));
 
             var priceCount2 = GetFacetCount(results, "Price", "100_to_700");
-            Assert.True(priceCount2 == 2, String.Format("Returns {0} facets of 100_to_700 prices instead of 2", priceCount2));
+            Assert.True(priceCount2 == 3, string.Format("Returns {0} facets of 100_to_700 prices instead of 3", priceCount2));
 
             var sizeCount = GetFacetCount(results, "size", "0_to_5");
-            Assert.True(sizeCount == 2, String.Format("Returns {0} facets of 0_to_5 size instead of 2", sizeCount));
+            Assert.True(sizeCount == 3, string.Format("Returns {0} facets of 0_to_5 size instead of 3", sizeCount));
 
             var sizeCount2 = GetFacetCount(results, "size", "5_to_10");
-            Assert.True(sizeCount2 == 1, String.Format("Returns {0} facets of 5_to_10 size instead of 1", sizeCount2)); // only 1 result because upper bound is not included
+            Assert.True(sizeCount2 == 1, string.Format("Returns {0} facets of 5_to_10 size instead of 1", sizeCount2)); // only 1 result because upper bound is not included
 
             var outlineCount = results.Documents[0].Documents[0]["__outline"].Values.Count();
-            Assert.True(outlineCount == 2, String.Format("Returns {0} outlines instead of 2", outlineCount));
+            Assert.True(outlineCount == 2, string.Format("Returns {0} outlines instead of 2", outlineCount));
         }
 
-        [Theory,
-            InlineData("Lucene")
-        ]
+        [Theory]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [Trait("Category", "CI")]
         public void Can_get_item_multiple_filters(string providerType)
         {
@@ -144,7 +144,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var provider = GetSearchProvider(providerType, scope);
             SearchHelper.CreateSampleIndex(provider, scope);
 
-            var criteria = new CatalogIndexedSearchCriteria
+            var criteria = new Data.Model.CatalogIndexedSearchCriteria
             {
                 SearchPhrase = "",
                 IsFuzzySearch = true,
@@ -188,14 +188,20 @@ namespace VirtoCommerce.SearchModule.Tests
             // add applied filters
             criteria.Apply(filter);
             //criteria.Apply(rangefilter);
-            //criteria.Apply(priceRangefilter);
+            criteria.Apply(priceRangefilter);
 
             var results = provider.Search(scope, criteria);
 
             var blackCount = GetFacetCount(results, "Color", "black");
-            Assert.True(blackCount == 1, String.Format("Returns {0} facets of black instead of 2", blackCount));
+            Assert.True(blackCount == 1, string.Format("Returns {0} facets of black instead of 1", blackCount));
 
-            //Assert.True(results.DocCount == 1, String.Format("Returns {0} instead of 1", results.DocCount));
+            var redCount = GetFacetCount(results, "Color", "red");
+            Assert.True(redCount == 2, string.Format("Returns {0} facets of black instead of 2", redCount));
+
+            var priceCount = GetFacetCount(results, "Price", "100_to_700");
+            Assert.True(priceCount == 1, string.Format("Returns {0} facets of 100_to_700 instead of 1", priceCount));
+
+            Assert.True(results.DocCount == 1, string.Format("Returns {0} instead of 1", results.DocCount));
         }
 
         private int GetFacetCount(ISearchResults results, string fieldName, string facetKey)

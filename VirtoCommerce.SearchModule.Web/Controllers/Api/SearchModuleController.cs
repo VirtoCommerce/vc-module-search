@@ -78,9 +78,9 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         [ResponseType(typeof(ISearchResults))]
         [CheckPermission(Permission = SearchPredefinedPermissions.Debug)]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public IHttpActionResult Debug([FromUri]CatalogIndexedSearchCriteria criteria)
+        public IHttpActionResult Debug([FromUri]Data.Model.CatalogIndexedSearchCriteria criteria)
         {
-            criteria = criteria ?? new CatalogIndexedSearchCriteria();
+            criteria = criteria ?? new Data.Model.CatalogIndexedSearchCriteria();
             var scope = _searchConnection.Scope;
             var searchResults = _searchProvider.Search(scope, criteria);
             return Ok(searchResults);
@@ -222,7 +222,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             return Ok(result.ToWebModel(_blobUrlResolver));
         }
 
-
         private Domain.Catalog.Model.SearchResult SearchProducts(Domain.Catalog.Model.SearchCriteria criteria)
         {
             var context = new Dictionary<string, object>
@@ -233,12 +232,16 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             var catalog = criteria.CatalogId;
             var categoryId = criteria.CategoryId;
 
-            var serviceCriteria = new CatalogIndexedSearchCriteria
+            var serviceCriteria = new Data.Model.CatalogIndexedSearchCriteria
             {
                 Locale = criteria.LanguageCode,
-                Catalog = catalog.ToLowerInvariant(),
                 IsFuzzySearch = true,
             };
+
+            if (!string.IsNullOrWhiteSpace(catalog))
+            {
+                serviceCriteria.Catalog = catalog.ToLowerInvariant();
+            }
 
             if (!string.IsNullOrWhiteSpace(criteria.Outline))
             {
@@ -269,7 +272,8 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                 serviceCriteria.Add(filter);
             }
 
-            // apply terms
+            #region apply terms
+
             var terms = ParseKeyValues(criteria.Terms);
             if (terms.Any())
             {
@@ -305,22 +309,33 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                         var attributeFilter = filter as AttributeFilter;
                         if (attributeFilter != null && attributeFilter.Values == null)
                         {
-                            var dynamicValues = new List<AttributeFilterValue>();
-                            foreach (var value in term.Values)
+                            filter = new AttributeFilter
                             {
-                                dynamicValues.Add(new AttributeFilterValue()
-                                {
-                                    Id = value,
-                                    Value = value
-                                });
-                            }
-                            attributeFilter.Values = dynamicValues.ToArray();
+                                Key = attributeFilter.Key,
+                                Values = CreateAttributeFilterValues(term.Values),
+                                IsLocalized = attributeFilter.IsLocalized,
+                                DisplayNames = attributeFilter.DisplayNames,
+                            };
                         }
 
                         var appliedFilter = _browseFilterService.Convert(filter, term.Values);
                         serviceCriteria.Apply(appliedFilter);
                     }
                 }
+            }
+
+            #endregion
+
+            // Filter by vendor
+            var vendorIds = GetDistinctValues(criteria.VendorId, criteria.VendorIds);
+            if (vendorIds.Any())
+            {
+                var vendorFilter = new AttributeFilter
+                {
+                    Key = "vendor",
+                    Values = CreateAttributeFilterValues(vendorIds),
+                };
+                serviceCriteria.Apply(vendorFilter);
             }
 
             #endregion
@@ -405,7 +420,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             {
                 sortFields.Add(new SearchSortField(priorityFieldName, true) { IgnoredUnmapped = true });
                 sortFields.Add(new SearchSortField("priority", true));
-                sortFields.AddRange(CatalogIndexedSearchCriteria.DefaultSortOrder.GetSort());
+                sortFields.AddRange(Data.Model.CatalogIndexedSearchCriteria.DefaultSortOrder.GetSort());
             }
 
             serviceCriteria.Sort = new SearchSort(sortFields.ToArray());
@@ -534,6 +549,33 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                 .ThenBy(v => v.Language)
                 .ThenBy(v => v.Value)
                 .ToArray();
+        }
+
+        private static List<string> GetDistinctValues(string value, string[] values)
+        {
+            var result = new List<string>();
+
+            if (!string.IsNullOrEmpty(value))
+            {
+                result.Add(value);
+            }
+
+            if (values != null)
+            {
+                result.AddDistinct(StringComparer.OrdinalIgnoreCase, values);
+            }
+
+            return result;
+        }
+
+        private static AttributeFilterValue[] CreateAttributeFilterValues(IEnumerable<string> values)
+        {
+            return values.Select(v => new AttributeFilterValue
+            {
+                Id = v,
+                Value = v
+            })
+            .ToArray();
         }
 
         private static List<StringKeyValues> ParseKeyValues(string[] items)
