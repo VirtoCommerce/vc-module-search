@@ -200,10 +200,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             };
 
             // Create search results object
-            var results = new SearchResults(criteria, new[] { documents })
-            {
-                FacetGroups = CreateFacets(criteria, resultDocs.facets)
-            };
+            var results = new SearchResults(criteria, new[] { documents }){};
+
+            if (resultDocs.aggregations == null)
+                results.FacetGroups = CreateFacets(criteria, resultDocs.facets);
+            else
+                results.FacetGroups = CreateFacets(criteria, resultDocs.aggregations);
 
             return results;
         }
@@ -519,7 +521,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                                     }
                                 }
                             }
-                            /*
                             else if (filter is PriceRangeFilter)
                             {
                                 facetGroup.FacetType = FacetTypes.PriceRange;
@@ -530,10 +531,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                                     var key = string.Format(CultureInfo.InvariantCulture, "{0}-{1}", filter.Key, group.Key).ToLower();
                                     if (aggregations.ContainsKey(key))
                                     {
-                                        var facet = aggregations[key] as FilterFacetResult;
-                                        if (facet != null && facet.count > 0)
+                                        var facet = aggregations[key] as SingleAggregationResult;
+                                        if (facet != null)
                                         {
-                                            var newFacet = new Facet(facetGroup, group.Key, facet.count, valueLabels);
+                                            var newFacet = new Facet(facetGroup, group.Key, facet.doc_count, valueLabels);
                                             facetGroup.Facets.Add(newFacet);
                                         }
                                     }
@@ -546,15 +547,16 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                                 var key = string.Format(CultureInfo.InvariantCulture, "{0}-{1}", filter.Key, group.Key).ToLower();
                                 if (aggregations.ContainsKey(key))
                                 {
-                                    var facet = aggregations[key] as TermsFacetResult;
-                                    if (facet != null && facet.total > 0)
+                                    var facet = aggregations[key] as SingleAggregationResult;
+                                    if (facet != null && facet.doc_count > 0)
                                     {
 
-                                        var newFacet = new Facet(facetGroup, group.Key, facet.total, valueLabels);
+                                        var newFacet = new Facet(facetGroup, group.Key, facet.doc_count, valueLabels);
                                         facetGroup.Facets.Add(newFacet);
                                     }
                                 }
                             }
+                            /*
                             else if (filter is CategoryFilter)
                             {
                                 facetGroup.FacetType = FacetTypes.Category;
@@ -585,6 +587,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             return result.ToArray();
         }
 
+        [Obsolete("Use aggregations instead")]
         private static FacetGroup[] CreateFacets(ISearchCriteria criteria, SearchResult<ESDocument>.SearchFacets facets)
         {
             var result = new List<FacetGroup>();

@@ -1,0 +1,65 @@
+{
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "range": {
+                        "startdate": {
+                            "to": "2016-08-17T05:30:32"
+                        }
+                    }
+                }
+            ],
+            "must": [
+                {
+                    "term": {
+                        "__hidden": {
+                            "value": "false"
+                        }
+                    }
+                }
+            ],
+            "must": [
+                {
+                    "wildcard": {
+                        "catalog": "goods"
+                    }
+                }
+            ]
+        }
+    },
+    "facets": {
+        "price-0_to_100": {
+            "filter": {
+                "bool": {
+                    "should": [
+                        {
+                            "range": {
+                                "price_usd_default": {
+                                    "gte": "0",
+                                    "lt": "100"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "price-100_to_700": {
+            "filter": {
+                "bool": {
+                    "should": [
+                        {
+                            "range": {
+                                "price_usd_default": {
+                                    "gte": "100",
+                                    "lt": "700"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

@@ -204,6 +204,18 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                 {
                     AddAggregationQueries(aggregationParams, filter.Key, criteria);
                 }
+                else if (filter is PriceRangeFilter)
+                {
+                    var currency = ((PriceRangeFilter)filter).Currency;
+                    if (currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase))
+                    {
+                        AddAggregationPriceQueries(aggregationParams, filter.Key, ((PriceRangeFilter)filter).Values, criteria);
+                    }
+                }
+                else if (filter is RangeFilter)
+                {
+                    AddAggregationQueries(aggregationParams, filter.Key, ((RangeFilter)filter).Values, criteria);
+                }
             }
 
             return aggregationParams;
@@ -211,27 +223,98 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
         private void AddAggregationQueries(Aggregations<ESDocument> param, string fieldName, ISearchCriteria criteria)
         {
-            var ffilter = new BoolFilter<ESDocument>();
+            var existing_filters = new BoolFilter<ESDocument>();
             foreach (var f in criteria.CurrentFilters)
             {
+                // don't filter within the same keyfield
                 if (!f.Key.Equals(fieldName))
                 {
                     var q = ElasticQueryHelper.CreateQuery(criteria, f);
-                    ffilter.Must(ff => ff.Bool(bb => q));
+                    existing_filters.Must(ff => ff.Bool(bb => q));
+                }
+            }
+            
+            var facet_filters = new FilterAggregation<ESDocument>();
+
+            facet_filters
+                .Filter(f => f.Bool(a => existing_filters))
+                .Aggregations(a =>
+                    a.Terms(af => af.AggregationName(fieldName.ToLower()).Field(fieldName.ToLower())));
+
+            param.Filter(filter => facet_filters.AggregationName(fieldName.ToLower()));
+        }
+
+        //"aggs": {
+        //    "size-0_to_5": {
+        //      "aggregations": {
+        //          "myfilter": {
+        //        "filter": {
+        //            "range": {
+        //                "size": {
+        //                    "from": "5",
+        //                    "to": "11"
+        //                }
+        //            }
+        //        }
+        //           }
+        //          }
+        //        "filter": {
+        //            "range": {
+        //                "size": {
+        //                    "gte": "0",
+        //                    "lt": "5"
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
+        private void AddAggregationQueries(Aggregations<ESDocument> param, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria)
+        {
+            if (values == null)
+                return;
+
+            var existing_filters = new MustFilter<ESDocument>();
+            foreach (var f in criteria.CurrentFilters)
+            {
+                // don't filter within same key field
+                if (!f.Key.Equals(fieldName))
+                {
+                    var q = ElasticQueryHelper.CreateQuery(criteria, f);
+                    existing_filters.Bool(bb=>q);
                 }
             }
 
-            
-            var facetFilter = new FilterAggregation<ESDocument>();
-            facetFilter.Filter(f => f.Bool(a=>ffilter));
-            /*
-            facetFilter.Filter(f => ffilter);
+            foreach (var value in values)
+            {
+                var facet_filters = new FilterAggregation<ESDocument>();
 
-            param.Filter(ff => facetFilter).Terms(t => t.AggregationName(fieldName.ToLower()).Field(fieldName.ToLower()));
-            */
+                var boolQuery = new BoolFilter<ESDocument>();
+                var rangeQuery = new RangeFilter<ESDocument>();
+                rangeQuery.Field(fieldName).Gte(value.Lower).Lt(value.Upper);
+                boolQuery
+                    .Must(a => a.Range(r=>rangeQuery))
+                    .Must(f=>existing_filters);
 
-            param.Filter(filter => facetFilter).Terms(t => t.AggregationName(fieldName.ToLower()).Field(fieldName.ToLower()));
-            //param.Terms(t => t.AggregationName(fieldName.ToLower()).Field(fieldName.ToLower()));
+                param.Filter(
+                        ff => ff.AggregationName(string.Format("{0}-{1}", fieldName, value.Id))
+                        .Filter(f => f.Bool(b => boolQuery)));
+
+                /* working version using sub agg */
+                /*
+                var facet_filters = new FilterAggregation<ESDocument>();
+                facet_filters
+                    .Filter(f => f.Bool(a => existing_filters))
+                    .Aggregations(a =>
+                        a.Filter(af => af.AggregationName("main")
+                            .Filter(af2 => af2.Range(r=>r.Field(fieldName).From(value.Lower).To(value.Upper)))));
+
+                param.Filter(filter=>facet_filters.AggregationName(string.Format("{0}-{1}", fieldName, value.Id)))
+                    .Filter(f1=>
+                        f1.Aggregations(x => x.Terms(agg => agg.AggregationName(fieldName.ToLower()).Field(fieldName.ToLower())))
+                        );
+
+                */
+            }
         }
 
         private void AddAggregationQueries(Aggregations<ESDocument> param, string fieldName, IEnumerable<CategoryFilterValue> values)
@@ -244,11 +327,107 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                     bfm.Custom("{{\"wildcard\" : {{ \"{0}\" : \"{1}\" }}}}", fieldName.ToLower(), val.Outline.ToLower()))))));
             }
         }
+
+        ///     "aggs": {
+        //        "price-0_to_100": {
+        //            "filter": {
+        //                "bool": {
+        //                    "should": [
+        //                        {
+        //                            "range": {
+        //                                "price_usd_default": {
+        //                                    "gte": "0",
+        //                                    "lt": "100"
+        //                                }
+        //}
+        //                        }
+        //                    ]
+        //                }
+        //            }
+        //        },
+        //        "price-100_to_700": {
+        //            "filter": {
+        //                "bool": {
+        //                    "should": [
+        //                        {
+        //                            "range": {
+        //                                "price_usd_default": {
+        //                                    "gte": "100",
+        //                                    "lt": "700"
+        //                                }
+        //                            }
+        //                        }
+        //                    ]
+        //                }
+        //            }
+        //        }
+        //    }
+        private void AddAggregationPriceQueries(Aggregations<ESDocument> param, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria)
+        {
+            if (values == null)
+                return;
+
+            var ffilter = new MustFilter<ESDocument>();
+            foreach (var f in criteria.CurrentFilters)
+            {
+                if (!f.Key.Equals(fieldName))
+                {
+                    var q = ElasticQueryHelper.CreateQuery(criteria, f);
+                    ffilter.Bool(ff => q);
+                }
+            }
+
+            foreach (var value in values)
+            {
+                var query = ElasticQueryHelper.CreatePriceRangeFilter(criteria, fieldName, value);
+
+                if (query != null)
+                {
+                    query.Must(b => ffilter);
+                    param.Filter(
+                        ff => ff.AggregationName(string.Format("{0}-{1}", fieldName, value.Id)).Filter(f => f.Bool(b => query)));
+                }
+            }
+        }
         #endregion
 
         #region Facet Query
         /// <summary>
-        /// Gets the facet parameters.
+        /// Gets the facet parameters. Generates request similar to the one below.
+        ///     "facets": {
+        //        "price-0_to_100": {
+        //            "filter": {
+        //                "bool": {
+        //                    "should": [
+        //                        {
+        //                            "range": {
+        //                                "price_usd_default": {
+        //                                    "gte": "0",
+        //                                    "lt": "100"
+        //                                }
+        //}
+        //                        }
+        //                    ]
+        //                }
+        //            }
+        //        },
+        //        "price-100_to_700": {
+        //            "filter": {
+        //                "bool": {
+        //                    "should": [
+        //                        {
+        //                            "range": {
+        //                                "price_usd_default": {
+        //                                    "gte": "100",
+        //                                    "lt": "700"
+        //                                }
+        //                            }
+        //                        }
+        //                    ]
+        //                }
+        //            }
+        //        }
+        //    }
         /// </summary>
         /// <param name="criteria">The criteria.</param>
         /// <returns></returns>

@@ -90,7 +90,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="PlainElastic.Net, Version=1.1.55.0, Culture=neutral, PublicKeyToken=0930e76dfc03b7ac, processorArchitecture=MSIL">
-      <HintPath>..\packages\VirtoCommerce.PlainElastic.Net.1.1.56-beta\lib\Net40\PlainElastic.Net.dll</HintPath>
+      <HintPath>..\packages\VirtoCommerce.PlainElastic.Net.1.1.56.1-beta\lib\Net40\PlainElastic.Net.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="RedDog.Search, Version=0.5.2.0, Culture=neutral, processorArchitecture=MSIL">

@@ -1,0 +1,94 @@
+{
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "range": {
+                        "startdate": {
+                            "to": "2016-08-23T05:33:50"
+                        }
+                    }
+                }
+            ],
+            "must": [
+                {
+                    "term": {
+                        "__hidden": {
+                            "value": "false"
+                        }
+                    }
+                }
+            ],
+            "must": [
+                {
+                    "wildcard": {
+                        "catalog": "goods"
+                    }
+                }
+            ]
+        }
+    },
+    "aggregations": {
+        "color": {
+            "terms": {
+                "field": "color"
+            }
+        },
+        "size-0_to_5": {
+            "filter": {
+                "range": {
+                    "size": {
+                        "gte": "0",
+                        "lt": "5"
+                    }
+                }
+            }
+        },
+        "size-5_to_10": {
+            "filter": {
+                "range": {
+                    "size": {
+                        "gte": "5",
+                        "lt": "10"
+                    }
+                }
+            }
+        },
+        "price-0_to_100": {
+            "filter": {
+                "bool": {
+                    "should": [
+                        {
+                            "range": {
+                                "price_usd_default": {
+                                    "from": "0",
+                                    "to": "100",
+                                    "include_lower": true,
+                                    "include_upper": false
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "price-100_to_700": {
+            "filter": {
+                "bool": {
+                    "should": [
+                        {
+                            "range": {
+                                "price_usd_default": {
+                                    "from": "100",
+                                    "to": "700",
+                                    "include_lower": true,
+                                    "include_upper": false
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

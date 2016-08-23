@@ -1,0 +1,501 @@
+{
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "range": {
+                        "startdate": {
+                            "to": "2014-05-21T22:21:07"
+                        }
+                    }
+                }
+            ],
+            "must": [
+                {
+                    "term": {
+                        "__hidden": {
+                            "value": "false"
+                        }
+                    }
+                }
+            ],
+            "must": [
+                {
+                    "wildcard": {
+                        "__outline": "vendorvirtual/c66d63a0-38c2-4f5c-8336-28a3c0c57636*"
+                    }
+                }
+            ],
+            "must": [
+                {
+                    "wildcard": {
+                        "catalog": "vendorvirtual"
+                    }
+                }
+            ]
+        }
+    },
+    "filter": {
+        "bool": {
+            "must": [
+                {
+                    "bool": {
+                        "should": [
+                            {
+                                "bool": {
+                                    "must": [
+                                        {
+                                            "term": {
+                                                "brand": "apple"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ],
+            "must": [
+                {
+                    "bool": {
+                        "should": [
+                            {
+                                "bool": {
+                                    "must": [
+                                        {
+                                            "bool": {
+                                                "should": [
+                                                    {
+                                                        "range": {
+                                                            "price_usd_saleusd": {
+                                                                "from": "100",
+                                                                "to": "200",
+                                                                "include_lower": true,
+                                                                "include_upper": false
+                                                            }
+                                                        }
+                                                    }
+                                                ],
+                                                "should": [
+                                                    {
+                                                        "bool": {
+                                                            "must": [
+                                                                {
+                                                                    "range": {
+                                                                        "price_usd_defaultusd": {
+                                                                            "from": "100",
+                                                                            "to": "200",
+                                                                            "include_lower": true,
+                                                                            "include_upper": false
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    },
+    "facets": {
+        "brand": {
+            "terms": {
+                "field": "brand"
+            },
+            "facet_filter": {
+                "bool": {
+                    "should": [
+                        {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "bool": {
+                                            "should": [
+                                                {
+                                                    "range": {
+                                                        "price_usd_saleusd": {
+                                                            "from": "100",
+                                                            "to": "200",
+                                                            "include_lower": true,
+                                                            "include_upper": false
+                                                        }
+                                                    }
+                                                }
+                                            ],
+                                            "should": [
+                                                {
+                                                    "bool": {
+                                                        "must": [
+                                                            {
+                                                                "range": {
+                                                                    "price_usd_defaultusd": {
+                                                                        "from": "100",
+                                                                        "to": "200",
+                                                                        "include_lower": true,
+                                                                        "include_upper": false
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "color": {
+            "terms": {
+                "field": "color"
+            },
+            "facet_filter": {
+                "bool": {
+                    "should": [
+                        {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "term": {
+                                            "brand": "apple"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "bool": {
+                    "should": [
+                        {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "bool": {
+                                            "should": [
+                                                {
+                                                    "range": {
+                                                        "price_usd_saleusd": {
+                                                            "from": "100",
+                                                            "to": "200",
+                                                            "include_lower": true,
+                                                            "include_upper": false
+                                                        }
+                                                    }
+                                                }
+                                            ],
+                                            "should": [
+                                                {
+                                                    "bool": {
+                                                        "must": [
+                                                            {
+                                                                "range": {
+                                                                    "price_usd_defaultusd": {
+                                                                        "from": "100",
+                                                                        "to": "200",
+                                                                        "include_lower": true,
+                                                                        "include_upper": false
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "price-under-100": {
+            "filter": {
+                "bool": {
+                    "should": [
+                        {
+                            "range": {
+                                "price_usd_saleusd": {
+                                    "to": "100",
+                                    "include_lower": true,
+                                    "include_upper": false
+                                }
+                            }
+                        }
+                    ],
+                    "should": [
+                        {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "range": {
+                                            "price_usd_defaultusd": {
+                                                "to": "100",
+                                                "include_lower": true,
+                                                "include_upper": false
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "must": [
+                        {
+                            "bool": {
+                                "should": [
+                                    {
+                                        "bool": {
+                                            "must": [
+                                                {
+                                                    "term": {
+                                                        "brand": "apple"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "price-100-200": {
+            "filter": {
+                "bool": {
+                    "should": [
+                        {
+                            "range": {
+                                "price_usd_saleusd": {
+                                    "from": "100",
+                                    "to": "200",
+                                    "include_lower": true,
+                                    "include_upper": false
+                                }
+                            }
+                        }
+                    ],
+                    "should": [
+                        {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "range": {
+                                            "price_usd_defaultusd": {
+                                                "from": "100",
+                                                "to": "200",
+                                                "include_lower": true,
+                                                "include_upper": false
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "must": [
+                        {
+                            "bool": {
+                                "should": [
+                                    {
+                                        "bool": {
+                                            "must": [
+                                                {
+                                                    "term": {
+                                                        "brand": "apple"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "price-200-600": {
+            "filter": {
+                "bool": {
+                    "should": [
+                        {
+                            "range": {
+                                "price_usd_saleusd": {
+                                    "from": "200",
+                                    "to": "600",
+                                    "include_lower": true,
+                                    "include_upper": false
+                                }
+                            }
+                        }
+                    ],
+                    "should": [
+                        {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "range": {
+                                            "price_usd_defaultusd": {
+                                                "from": "200",
+                                                "to": "600",
+                                                "include_lower": true,
+                                                "include_upper": false
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "must": [
+                        {
+                            "bool": {
+                                "should": [
+                                    {
+                                        "bool": {
+                                            "must": [
+                                                {
+                                                    "term": {
+                                                        "brand": "apple"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "price-600-1000": {
+            "filter": {
+                "bool": {
+                    "should": [
+                        {
+                            "range": {
+                                "price_usd_saleusd": {
+                                    "from": "600",
+                                    "to": "1000",
+                                    "include_lower": true,
+                                    "include_upper": false
+                                }
+                            }
+                        }
+                    ],
+                    "should": [
+                        {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "range": {
+                                            "price_usd_defaultusd": {
+                                                "from": "600",
+                                                "to": "1000",
+                                                "include_lower": true,
+                                                "include_upper": false
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "must": [
+                        {
+                            "bool": {
+                                "should": [
+                                    {
+                                        "bool": {
+                                            "must": [
+                                                {
+                                                    "term": {
+                                                        "brand": "apple"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "price-over-1000": {
+            "filter": {
+                "bool": {
+                    "should": [
+                        {
+                            "range": {
+                                "price_usd_saleusd": {
+                                    "from": "1000",
+                                    "include_lower": true,
+                                    "include_upper": false
+                                }
+                            }
+                        }
+                    ],
+                    "should": [
+                        {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "range": {
+                                            "price_usd_defaultusd": {
+                                                "from": "1000",
+                                                "include_lower": true,
+                                                "include_upper": false
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "must": [
+                        {
+                            "bool": {
+                                "should": [
+                                    {
+                                        "bool": {
+                                            "must": [
+                                                {
+                                                    "term": {
+                                                        "brand": "apple"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}
