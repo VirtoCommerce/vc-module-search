@@ -1,0 +1,36 @@
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "range": {
+            "startdate": {
+              "gt": "2016-08-24T05:25:25.8311364Z"
+            }
+          }
+        },
+        {
+          "term": {
+            "__hidden": {
+              "value": false
+            }
+          }
+        },
+        {
+          "wildcard": {
+            "catalog": {
+              "value": "goods"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "Color": {
+      "terms": {
+        "field": "color"
+      }
+    }
+  }
+}

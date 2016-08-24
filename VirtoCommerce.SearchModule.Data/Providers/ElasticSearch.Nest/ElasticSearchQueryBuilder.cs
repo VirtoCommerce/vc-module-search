@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using VirtoCommerce.Domain.Search.Filters;
 using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.SearchModule.Data.Model;
 
@@ -94,7 +95,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             {
                 var c = criteria as Model.CatalogIndexedSearchCriteria;
 
-                mainQuery.Add(new DateRangeQuery() { Field = "startdate", GreaterThan = c.StartDate });
+                mainQuery.Add(new DateRangeQuery() { Field = "startdate", LessThanOrEqualTo = c.StartDate });
 
 
                 if (c.StartDateFrom.HasValue)
@@ -146,13 +147,75 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             // Add search facets
             //var facets = GetFacets(criteria);
             //builder.Facets(f => facets);
-            //var aggregations = GetAggregations(criteria);
-            //builder.Aggregations(x=> aggregations);
+            var aggregations = GetAggregations<T>(criteria);
+            builder.Aggregations = aggregations;
 
             return builder;
         }
         #endregion
 
+        #region Aggregations
+        protected virtual AggregationDictionary GetAggregations<T>(ISearchCriteria criteria) where T:class
+        {
+            // Now add aggregations
+            var container = new Dictionary<string, AggregationContainer>();
+            foreach (var filter in criteria.Filters)
+            {
+                if (filter is AttributeFilter)
+                {
+                    AddAggregationQueries<T>(container, filter.Key, criteria);
+                }
+                /*
+                else if (filter is PriceRangeFilter)
+                {
+                    var currency = ((PriceRangeFilter)filter).Currency;
+                    if (currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase))
+                    {
+                        AddAggregationPriceQueries(aggregations, filter.Key, ((PriceRangeFilter)filter).Values, criteria);
+                    }
+                }
+                else if (filter is RangeFilter)
+                {
+                    AddAggregationQueries(aggregations, filter.Key, ((RangeFilter)filter).Values, criteria);
+                }
+                */
+            }
+
+            return container;
+        }
+
+        private void AddAggregationQueries<T>(Dictionary<string, AggregationContainer> container, string field, ISearchCriteria criteria) where T:class
+        {
+            var agg = new TermsAggregation(field) { Field = field.ToLower() };
+            container.Add(field, agg);
+
+            /*
+            var existing_filters = new BoolFilter<DocumentDictionary>();
+            foreach (var f in criteria.CurrentFilters)
+            {
+                // don't filter within the same keyfield
+                if (!f.Key.Equals(field))
+                {
+                    var q = ElasticQueryHelper.CreateQuery(criteria, f);
+                    existing_filters.Must(ff => ff.Bool(bb => q));
+                }
+            }
+
+
+            aggs.Aggregate
+            var facet_filters = new FilterAggregation<DocumentDictionary>();
+
+            facet_filters
+                .Filter(f => f.Bool(a => existing_filters))
+                .Aggregations(a =>
+                    a.Terms(af => af.AggregationName(field.ToLower()).Field(field.ToLower())));
+
+            aggs.Filter(filter => facet_filters.AggregationName(field.ToLower()));
+            */
+        }
+        #endregion
+
+        #region Helper Query Methods
         protected void AddQuery(string fieldName, List<QueryContainer> query, StringCollection filter, bool lowerCase = true)
         {
             fieldName = fieldName.ToLower();
@@ -218,5 +281,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
             query.Add(multiMatch);
         }
+        #endregion
     }
 }

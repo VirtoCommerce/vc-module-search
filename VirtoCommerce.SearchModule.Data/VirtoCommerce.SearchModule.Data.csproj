@@ -140,6 +140,7 @@
     <Compile Include="Model\KeywordSearchCriteria.cs" />
     <Compile Include="Model\SearchConnection.cs" />
     <Compile Include="Model\SearchCriteriaBase.cs" />
+    <Compile Include="Providers\ElasticSearch.Nest\ElasticQueryHelper.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\PropertyHelper.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\SearchResults.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

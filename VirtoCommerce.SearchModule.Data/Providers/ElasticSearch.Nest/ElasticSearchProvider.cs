@@ -385,7 +385,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                     }
                 }
             }
-
             
             // submit mapping
             if (submitMapping)
@@ -406,7 +405,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             }
 
             _pendingDocuments[core].Add(localDocument);
-            //_pendingDocuments[core].Index<DocumentDictionary>(op=>op.Index(scope).Type(documentType).Document(localDocument).Id(localDocument.Id.ToString()));
 
             // Auto commit changes when limit is reached
             if (AutoCommit && _pendingDocuments[core].Count > AutoCommitCount)
@@ -426,8 +424,5 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             throw new ElasticSearchException(string.Format(CultureInfo.InvariantCulture, "{0}. URL:{1}", message, ElasticServerUrl), innerException);
         }
         #endregion
-
-
-
     }
 }
