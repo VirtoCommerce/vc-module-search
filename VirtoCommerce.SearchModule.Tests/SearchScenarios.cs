@@ -36,7 +36,6 @@ namespace VirtoCommerce.SearchModule.Tests
 
             var criteria = new Data.Model.CatalogIndexedSearchCriteria
             {
-                StartDate = DateTime.UtcNow.AddYears(-1),
                 SearchPhrase = "product",
                 IsFuzzySearch = true,
                 Catalog = "goods",
@@ -51,7 +50,6 @@ namespace VirtoCommerce.SearchModule.Tests
 
             criteria = new Data.Model.CatalogIndexedSearchCriteria
             {
-                StartDate = DateTime.UtcNow.AddYears(-1),
                 SearchPhrase = "sample product ",
                 IsFuzzySearch = true,
                 Catalog = "goods",
