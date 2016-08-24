@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using VirtoCommerce.SearchModule.Data.Model;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
+namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.PlainElastic
 {
     public class ElasticSearchCriteria : SearchCriteriaBase
     {

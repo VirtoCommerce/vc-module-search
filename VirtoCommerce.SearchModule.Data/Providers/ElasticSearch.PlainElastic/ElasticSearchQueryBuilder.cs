@@ -6,20 +6,20 @@ using PlainElastic.Net;
 using PlainElastic.Net.Queries;
 using VirtoCommerce.Domain.Search.Filters;
 using VirtoCommerce.Domain.Search.Services;
-using VirtoCommerce.SearchModule.Data.Model;
 using VirtoCommerce.Domain.Search.Model;
+using VirtoCommerce.SearchModule.Data.Model;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
+namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.PlainElastic
 {
     [CLSCompliant(false)]
-    public class ElasticSearchQueryBuilder : ISearchQueryBuilder
+    public class ElasticSearchQueryBuilder : Domain.Search.Services.ISearchQueryBuilder
     {
         #region ISearchQueryBuilder Members
         public object BuildQuery(ISearchCriteria criteria)
         {
-            var builder = new QueryBuilder<ESDocument>();
-            var mainFilter = new Filter<ESDocument>();
-            var mainQuery = new BoolQuery<ESDocument>();
+            var builder = new QueryBuilder<DocumentDictionary>();
+            var mainFilter = new Filter<DocumentDictionary>();
+            var mainQuery = new BoolQuery<DocumentDictionary>();
 
             #region Sorting
 
@@ -39,7 +39,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             // Perform facet filters
             if (criteria.CurrentFilters != null && criteria.CurrentFilters.Any())
             {
-                var combinedFilter = new BoolFilter<ESDocument>();
+                var combinedFilter = new BoolFilter<DocumentDictionary>();
                 // group filters
                 foreach (var filter in criteria.CurrentFilters)
                 {
@@ -140,7 +140,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         }
         #endregion
 
-        protected void AddQuery(string fieldName, BoolQuery<ESDocument> query, StringCollection filter, bool lowerCase = true)
+        protected void AddQuery(string fieldName, BoolQuery<DocumentDictionary> query, StringCollection filter, bool lowerCase = true)
         {
             fieldName = fieldName.ToLower();
             if (filter.Count > 0)
@@ -154,7 +154,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                 }
                 else
                 {
-                    var booleanQuery = new BoolQuery<ESDocument>();
+                    var booleanQuery = new BoolQuery<DocumentDictionary>();
                     var containsFilter = false;
                     foreach (var index in filter.Cast<string>().Where(index => !String.IsNullOrEmpty(index)))
                     {
@@ -167,12 +167,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             }
         }
 
-        protected void AddQuery(string fieldName, BoolQuery<ESDocument> query, string filter, bool lowerCase = true)
+        protected void AddQuery(string fieldName, BoolQuery<DocumentDictionary> query, string filter, bool lowerCase = true)
         {
             query.Must(q => q.Custom("{{\"wildcard\" : {{ \"{0}\" : \"{1}\" }}}}", fieldName.ToLower(), lowerCase ? filter.ToLower() : filter));
         }
 
-        protected void AddQueryString(BoolQuery<ESDocument> query, Model.CatalogIndexedSearchCriteria filter, params string[] fields)
+        protected void AddQueryString(BoolQuery<DocumentDictionary> query, Model.CatalogIndexedSearchCriteria filter, params string[] fields)
         {
             var searchPhrase = filter.SearchPhrase;
             if (filter.IsFuzzySearch)
@@ -194,10 +194,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         }
 
         #region Aggregations
-        protected virtual Aggregations<ESDocument> GetAggregations(ISearchCriteria criteria)
+        protected virtual Aggregations<DocumentDictionary> GetAggregations(ISearchCriteria criteria)
         {
             // Now add aggregations
-            var aggregationParams = new Aggregations<ESDocument>();
+            var aggregationParams = new Aggregations<DocumentDictionary>();
             foreach (var filter in criteria.Filters)
             {
                 if (filter is AttributeFilter)
@@ -221,9 +221,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             return aggregationParams;
         }
 
-        private void AddAggregationQueries(Aggregations<ESDocument> param, string fieldName, ISearchCriteria criteria)
+        private void AddAggregationQueries(Aggregations<DocumentDictionary> param, string fieldName, ISearchCriteria criteria)
         {
-            var existing_filters = new BoolFilter<ESDocument>();
+            var existing_filters = new BoolFilter<DocumentDictionary>();
             foreach (var f in criteria.CurrentFilters)
             {
                 // don't filter within the same keyfield
@@ -234,7 +234,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                 }
             }
             
-            var facet_filters = new FilterAggregation<ESDocument>();
+            var facet_filters = new FilterAggregation<DocumentDictionary>();
 
             facet_filters
                 .Filter(f => f.Bool(a => existing_filters))
@@ -268,12 +268,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         //        }
         //    }
         //}
-        private void AddAggregationQueries(Aggregations<ESDocument> param, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria)
+        private void AddAggregationQueries(Aggregations<DocumentDictionary> param, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria)
         {
             if (values == null)
                 return;
 
-            var existing_filters = new MustFilter<ESDocument>();
+            var existing_filters = new MustFilter<DocumentDictionary>();
             foreach (var f in criteria.CurrentFilters)
             {
                 // don't filter within same key field
@@ -286,10 +286,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
             foreach (var value in values)
             {
-                var facet_filters = new FilterAggregation<ESDocument>();
+                var facet_filters = new FilterAggregation<DocumentDictionary>();
 
-                var boolQuery = new BoolFilter<ESDocument>();
-                var rangeQuery = new RangeFilter<ESDocument>();
+                var boolQuery = new BoolFilter<DocumentDictionary>();
+                var rangeQuery = new RangeFilter<DocumentDictionary>();
                 rangeQuery.Field(fieldName).Gte(value.Lower).Lt(value.Upper);
                 boolQuery
                     .Must(a => a.Range(r=>rangeQuery))
@@ -317,7 +317,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             }
         }
 
-        private void AddAggregationQueries(Aggregations<ESDocument> param, string fieldName, IEnumerable<CategoryFilterValue> values)
+        private void AddAggregationQueries(Aggregations<DocumentDictionary> param, string fieldName, IEnumerable<CategoryFilterValue> values)
         {
             foreach (var val in values)
             {
@@ -362,12 +362,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         //            }
         //        }
         //    }
-        private void AddAggregationPriceQueries(Aggregations<ESDocument> param, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria)
+        private void AddAggregationPriceQueries(Aggregations<DocumentDictionary> param, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria)
         {
             if (values == null)
                 return;
 
-            var ffilter = new MustFilter<ESDocument>();
+            var ffilter = new MustFilter<DocumentDictionary>();
             foreach (var f in criteria.CurrentFilters)
             {
                 if (!f.Key.Equals(fieldName))
@@ -431,10 +431,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         /// </summary>
         /// <param name="criteria">The criteria.</param>
         /// <returns></returns>
-        protected virtual Facets<ESDocument> GetFacets(ISearchCriteria criteria)
+        protected virtual Facets<DocumentDictionary> GetFacets(ISearchCriteria criteria)
         {
             // Now add facets
-            var facetParams = new Facets<ESDocument>();
+            var facetParams = new Facets<DocumentDictionary>();
             foreach (var filter in criteria.Filters)
             {
                 if (filter is AttributeFilter)
@@ -471,7 +471,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             return facetParams;
         }
 
-        private void AddFacetQueries(Facets<ESDocument> param, string fieldName, IEnumerable<CategoryFilterValue> values)
+        private void AddFacetQueries(Facets<DocumentDictionary> param, string fieldName, IEnumerable<CategoryFilterValue> values)
         {
             foreach (var val in values)
             {
@@ -488,9 +488,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         /// <param name="param">The param.</param>
         /// <param name="fieldName">Name of the field.</param>
         /// <param name="criteria">Search criteria.</param>
-        private void AddFacetQueries(Facets<ESDocument> param, string fieldName, ISearchCriteria criteria)
+        private void AddFacetQueries(Facets<DocumentDictionary> param, string fieldName, ISearchCriteria criteria)
         {
-            var ffilter = new BoolFilter<ESDocument>();
+            var ffilter = new BoolFilter<DocumentDictionary>();
             foreach (var f in criteria.CurrentFilters)
             {
                 if (!f.Key.Equals(fieldName))
@@ -500,7 +500,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                 }
             }
 
-            var facetFilter = new FacetFilter<ESDocument>();
+            var facetFilter = new FacetFilter<DocumentDictionary>();
             facetFilter.Bool(f => ffilter);
 
             param.Terms(t => t.FacetName(fieldName.ToLower()).Field(fieldName.ToLower()).FacetFilter(ff => facetFilter));
@@ -513,12 +513,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         /// <param name="fieldName">Name of the field.</param>
         /// <param name="values">The values.</param>
         /// <param name="criteria">Search criteria.</param>
-        private void AddFacetQueries(Facets<ESDocument> param, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria)
+        private void AddFacetQueries(Facets<DocumentDictionary> param, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria)
         {
             if (values == null)
                 return;
 
-            var ffilter = new Filter<ESDocument>();
+            var ffilter = new Filter<DocumentDictionary>();
             foreach (var f in criteria.CurrentFilters)
             {
                 if (!f.Key.Equals(fieldName))
@@ -530,7 +530,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
             foreach (var value in values)
             {
-                var filter = new FacetFilter<ESDocument>();
+                var filter = new FacetFilter<DocumentDictionary>();
                 var range = filter.Range(r => r.Field(fieldName));
 
                 filter.Range(r => r.Field(fieldName).Gte(value.Lower).Lt(value.Upper));
@@ -546,12 +546,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         /// <param name="fieldName">Name of the field.</param>
         /// <param name="values">The values.</param>
         /// <param name="criteria">Search criteria.</param>
-        private void AddFacetPriceQueries(Facets<ESDocument> param, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria)
+        private void AddFacetPriceQueries(Facets<DocumentDictionary> param, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria)
         {
             if (values == null)
                 return;
 
-            var ffilter = new MustFilter<ESDocument>();
+            var ffilter = new MustFilter<DocumentDictionary>();
             foreach (var f in criteria.CurrentFilters)
             {
                 if (!f.Key.Equals(fieldName))

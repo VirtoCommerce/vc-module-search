@@ -47,7 +47,7 @@ namespace VirtoCommerce.SearchModule.Web
 
             var searchProviderManager = new SearchProviderManager(searchConnection);
             _container.RegisterInstance<ISearchProviderManager>(searchProviderManager);
-            _container.RegisterInstance<ISearchProvider>(searchProviderManager);
+            //_container.RegisterInstance<ISearchProvider>(searchProviderManager);
 
             _container.RegisterType<IBrowseFilterService, FilterService>();
             _container.RegisterType<IItemBrowsingService, ItemBrowsingService>();
@@ -62,7 +62,7 @@ namespace VirtoCommerce.SearchModule.Web
 
             var searchProviderManager = _container.Resolve<ISearchProviderManager>();
 
-            searchProviderManager.RegisterSearchProvider(SearchProviders.Elasticsearch.ToString(), connection => new ElasticSearchProvider(new ElasticSearchQueryBuilder(), connection));
+            //searchProviderManager.RegisterSearchProvider(SearchProviders.Elasticsearch.ToString(), connection => new ElasticSearchProvider(new ElasticSearchQueryBuilder(), connection));
             searchProviderManager.RegisterSearchProvider(SearchProviders.Lucene.ToString(), connection => new LuceneSearchProvider(new LuceneSearchQueryBuilder(), connection));
             searchProviderManager.RegisterSearchProvider(SearchProviders.AzureSearch.ToString(), connection => new AzureSearchProvider(new AzureSearchQueryBuilder(), connection));
 

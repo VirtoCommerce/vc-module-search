@@ -1,0 +1,27 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using VirtoCommerce.Domain.Search.Model;
+
+namespace VirtoCommerce.SearchModule.Data.Model
+{
+    public interface ISearchProvider
+    {
+        ISearchQueryBuilder QueryBuilder { get; }
+
+        void Close(string scope, string documentType);
+
+        void Commit(string scope);
+
+        void Index<T>(string scope, string documentType, T document);
+
+        int Remove(string scope, string documentType, string key, string value);
+
+        void RemoveAll(string scope, string documentType);
+
+        ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria) where T : class;
+    }
+
+}

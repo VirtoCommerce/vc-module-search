@@ -1,0 +1,33 @@
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "__hidden": {
+              "value": false
+            }
+          }
+        },
+        {
+          "multi_match": {
+            "query": "product",
+            "analyzer": "standard",
+            "fuzziness": "AUTO",
+            "operator": "and",
+            "fields": [
+              "__content"
+            ]
+          }
+        },
+        {
+          "wildcard": {
+            "catalog": {
+              "value": "goods"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

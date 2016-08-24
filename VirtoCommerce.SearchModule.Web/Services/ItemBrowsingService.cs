@@ -14,9 +14,9 @@ namespace VirtoCommerce.SearchModule.Web.Services
     public class ItemBrowsingService : IItemBrowsingService
     {
         private readonly IItemService _itemService;
-        private readonly ISearchProvider _searchProvider;
+        private readonly Data.Model.ISearchProvider _searchProvider;
 
-        public ItemBrowsingService(IItemService itemService, ISearchProvider searchService)
+        public ItemBrowsingService(IItemService itemService, Data.Model.ISearchProvider searchService)
         {
             _searchProvider = searchService;
             _itemService = itemService;
@@ -43,66 +43,68 @@ namespace VirtoCommerce.SearchModule.Web.Services
 
         private IEnumerable<moduleModel.CatalogProduct> Search(string scope, ISearchCriteria criteria, out CatalogItemSearchResults results, moduleModel.ItemResponseGroup responseGroup)
         {
-            var items = new List<moduleModel.CatalogProduct>();
-            var itemsOrderedList = new List<string>();
+            results = null;
+            return null;
+            //var items = new List<moduleModel.CatalogProduct>();
+            //var itemsOrderedList = new List<string>();
 
-            var foundItemCount = 0;
-            var dbItemCount = 0;
-            var searchRetry = 0;
+            //var foundItemCount = 0;
+            //var dbItemCount = 0;
+            //var searchRetry = 0;
 
-            //var myCriteria = criteria.Clone();
-            var myCriteria = criteria;
+            ////var myCriteria = criteria.Clone();
+            //var myCriteria = criteria;
 
-            do
-            {
-                // Search using criteria, it will only return IDs of the items
-                var searchResults = _searchProvider.Search(scope, criteria) as SearchResults;
-                var itemKeyValues = searchResults.GetKeyAndOutlineFieldValueMap<string>();
-                results = new CatalogItemSearchResults(myCriteria, itemKeyValues, searchResults);
+            //do
+            //{
+            //    // Search using criteria, it will only return IDs of the items
+            //    var searchResults = _searchProvider.Search(scope, criteria) as SearchResults;
+            //    var itemKeyValues = searchResults.GetKeyAndOutlineFieldValueMap<string>();
+            //    results = new CatalogItemSearchResults(myCriteria, itemKeyValues, searchResults);
 
-                searchRetry++;
+            //    searchRetry++;
 
-                if (results.Items == null)
-                {
-                    continue;
-                }
+            //    if (results.Items == null)
+            //    {
+            //        continue;
+            //    }
 
-                //Get only new found itemIds
-                var uniqueKeys = results.Items.Keys.Except(itemsOrderedList).ToArray();
-                foundItemCount = uniqueKeys.Length;
+            //    //Get only new found itemIds
+            //    var uniqueKeys = results.Items.Keys.Except(itemsOrderedList).ToArray();
+            //    foundItemCount = uniqueKeys.Length;
 
-                if (!results.Items.Any())
-                {
-                    continue;
-                }
+            //    if (!results.Items.Any())
+            //    {
+            //        continue;
+            //    }
 
-                itemsOrderedList.AddRange(uniqueKeys);
+            //    itemsOrderedList.AddRange(uniqueKeys);
 
-                // if we can determine catalog, pass it to the service
-                string catalog = null;
-                if(criteria is Data.Model.CatalogIndexedSearchCriteria)
-                {
-                    catalog = (criteria as Data.Model.CatalogIndexedSearchCriteria).Catalog;
-                }
+            //    // if we can determine catalog, pass it to the service
+            //    string catalog = null;
+            //    if(criteria is Data.Model.CatalogIndexedSearchCriteria)
+            //    {
+            //        catalog = (criteria as Data.Model.CatalogIndexedSearchCriteria).Catalog;
+            //    }
 
-                // Now load items from repository
-                var currentItems = _itemService.GetByIds(uniqueKeys.ToArray(), responseGroup, catalog);
+            //    // Now load items from repository
+            //    var currentItems = _itemService.GetByIds(uniqueKeys.ToArray(), responseGroup, catalog);
 
-                var orderedList = currentItems.OrderBy(i => itemsOrderedList.IndexOf(i.Id));
-                items.AddRange(orderedList);
-                dbItemCount = currentItems.Length;
+            //    var orderedList = currentItems.OrderBy(i => itemsOrderedList.IndexOf(i.Id));
+            //    items.AddRange(orderedList);
+            //    dbItemCount = currentItems.Length;
 
-                //If some items where removed and search is out of sync try getting extra items
-                if (foundItemCount > dbItemCount)
-                {
-                    //Retrieve more items to fill missing gap
-                    myCriteria.RecordsToRetrieve += (foundItemCount - dbItemCount);
-                }
-            }
-            while (foundItemCount > dbItemCount && results.Items.Any() && searchRetry <= 3 &&
-                (myCriteria.RecordsToRetrieve + myCriteria.StartingRecord) < results.TotalCount);
+            //    //If some items where removed and search is out of sync try getting extra items
+            //    if (foundItemCount > dbItemCount)
+            //    {
+            //        //Retrieve more items to fill missing gap
+            //        myCriteria.RecordsToRetrieve += (foundItemCount - dbItemCount);
+            //    }
+            //}
+            //while (foundItemCount > dbItemCount && results.Items.Any() && searchRetry <= 3 &&
+            //    (myCriteria.RecordsToRetrieve + myCriteria.StartingRecord) < results.TotalCount);
 
-            return items;
+            //return items;
         }
     }
 }

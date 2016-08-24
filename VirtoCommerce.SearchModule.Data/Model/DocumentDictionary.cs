@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
+namespace VirtoCommerce.SearchModule.Data.Model
 {
-    public class ESDocument : Dictionary<string, object>
+    public class DocumentDictionary : Dictionary<string, object>
     {
         public object Id
         {

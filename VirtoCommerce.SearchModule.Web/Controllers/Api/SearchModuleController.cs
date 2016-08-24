@@ -42,7 +42,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
     {
         private const string _filteredBrowsingPropertyName = "FilteredBrowsing";
 
-        private readonly ISearchProvider _searchProvider;
+        private readonly Data.Model.ISearchProvider _searchProvider;
         private readonly ISearchConnection _searchConnection;
         private readonly SearchIndexJobsScheduler _scheduler;
         private readonly IStoreService _storeService;
@@ -55,7 +55,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         private readonly ICatalogSearchService _catalogSearchService;
         private readonly ICacheManager<object> _cacheManager;
 
-        public SearchModuleController(ISearchProvider searchProvider, ISearchConnection searchConnection, SearchIndexJobsScheduler scheduler,
+        public SearchModuleController(Data.Model.ISearchProvider searchProvider, ISearchConnection searchConnection, SearchIndexJobsScheduler scheduler,
             IStoreService storeService, ISecurityService securityService, IPermissionScopeService permissionScopeService,
             IPropertyService propertyService, IBrowseFilterService browseFilterService, IItemBrowsingService browseService,
             IBlobUrlResolver blobUrlResolver, ICatalogSearchService catalogSearchService, ICacheManager<object> cacheManager)
@@ -83,8 +83,9 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         {
             criteria = criteria ?? new Data.Model.CatalogIndexedSearchCriteria();
             var scope = _searchConnection.Scope;
-            var searchResults = _searchProvider.Search(scope, criteria);
-            return Ok(searchResults);
+            //var searchResults = _searchProvider.Search(scope, criteria);
+            //return Ok(searchResults);
+            return null;
         }
 
         [HttpGet]

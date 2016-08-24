@@ -13,23 +13,24 @@ using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.SearchModule.Data.Services;
 using Newtonsoft.Json.Linq;
+using VirtoCommerce.SearchModule.Data.Model;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
+namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.PlainElastic
 {
-    public class ElasticSearchProvider : ISearchProvider
+    public class ElasticSearchProvider : Domain.Search.Services.ISearchProvider
     {
         public const string SearchAnalyzer = "search_analyzer";
         private const string _indexAnalyzer = "index_analyzer";
 
         private readonly ISearchConnection _connection;
-        private readonly Dictionary<string, List<ESDocument>> _pendingDocuments = new Dictionary<string, List<ESDocument>>();
+        private readonly Dictionary<string, List<DocumentDictionary>> _pendingDocuments = new Dictionary<string, List<DocumentDictionary>>();
         private readonly Dictionary<string, string> _mappings = new Dictionary<string, string>();
 
         private bool _settingsUpdated;
 
         #region Private Properties
-        ElasticClient<ESDocument> _client;
-        private ElasticClient<ESDocument> Client
+        ElasticClient<DocumentDictionary> _client;
+        private ElasticClient<DocumentDictionary> Client
         {
             get
             {
@@ -58,7 +59,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                     if (arr.Length > 1)
                         port = arr[1];
 
-                    _client = new ElasticClient<ESDocument>(host, int.Parse(port));
+                    _client = new ElasticClient<DocumentDictionary>(host, int.Parse(port));
                 }
 
                 return _client;
@@ -69,9 +70,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         #region Public Properties
         public string DefaultIndex { get; set; }
 
-        private ISearchQueryBuilder _queryBuilder = new ElasticSearchQueryBuilder();
+        private Domain.Search.Services.ISearchQueryBuilder _queryBuilder = new ElasticSearchQueryBuilder();
 
-        public ISearchQueryBuilder QueryBuilder
+        public Domain.Search.Services.ISearchQueryBuilder QueryBuilder
         {
             get { return _queryBuilder; }
             set { _queryBuilder = value; }
@@ -120,7 +121,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             Init();
         }
 
-        public ElasticSearchProvider(ISearchQueryBuilder queryBuilder, ISearchConnection connection)
+        public ElasticSearchProvider(Domain.Search.Services.ISearchQueryBuilder queryBuilder, ISearchConnection connection)
         {
             _queryBuilder = queryBuilder;
             _connection = connection;
@@ -156,9 +157,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             // TODO: options.SpellCheck = new SpellCheckingParameters { Collate = true };
 
             // Build query
-            var builder = (QueryBuilder<ESDocument>)_queryBuilder.BuildQuery(criteria);
+            var builder = (QueryBuilder<DocumentDictionary>)_queryBuilder.BuildQuery(criteria);
 
-            SearchResult<ESDocument> resultDocs;
+            SearchResult<DocumentDictionary> resultDocs;
 
             // Add some error handling
             try
@@ -215,7 +216,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             var core = GetCoreName(scope, documentType);
             if (!_pendingDocuments.ContainsKey(core))
             {
-                _pendingDocuments.Add(core, new List<ESDocument>());
+                _pendingDocuments.Add(core, new List<DocumentDictionary>());
             }
 
             string mapping = null;
@@ -234,8 +235,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
             var submitMapping = false;
 
-            var properties = new Properties<ESDocument>();
-            var localDocument = new ESDocument();
+            var properties = new Properties<DocumentDictionary>();
+            var localDocument = new DocumentDictionary();
 
             for (var index = 0; index < document.FieldCount; index++)
             {
@@ -275,7 +276,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
                         var elasticType = ElasticCoreTypeMapper.GetElasticType(type);
 
-                        var propertyMap = new CustomPropertyMap<ESDocument>(field.Name, elasticType)
+                        var propertyMap = new CustomPropertyMap<DocumentDictionary>(field.Name, elasticType)
                         .Store(field.ContainsAttribute(IndexStore.Yes))
                         .When(field.ContainsAttribute(IndexType.NotAnalyzed), p => p.Index(IndexState.not_analyzed))
                         .When(field.Name.StartsWith("__content", StringComparison.OrdinalIgnoreCase), p => p.Analyzer(_indexAnalyzer))
@@ -336,7 +337,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                     _settingsUpdated = true;
                 }
 
-                var mapBuilder = new MapBuilder<ESDocument>();
+                var mapBuilder = new MapBuilder<DocumentDictionary>();
                 var mappingNew = mapBuilder.RootObject(documentType, d => d.Properties(p => properties)).Build();
 
                 var result = Client.PutMapping(new PutMappingCommand(scope, documentType), mappingNew);
@@ -460,7 +461,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             throw new ElasticSearchException(string.Format(CultureInfo.InvariantCulture, "{0}. URL:{1}", message, ElasticServerUrl), innerException);
         }
 
-        private static FacetGroup[] CreateFacets(ISearchCriteria criteria, SearchResult<ESDocument>.SearchAggregations aggregations)
+        private static FacetGroup[] CreateFacets(ISearchCriteria criteria, SearchResult<DocumentDictionary>.SearchAggregations aggregations)
         {
             var result = new List<FacetGroup>();
 
@@ -588,7 +589,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         }
 
         [Obsolete("Use aggregations instead")]
-        private static FacetGroup[] CreateFacets(ISearchCriteria criteria, SearchResult<ESDocument>.SearchFacets facets)
+        private static FacetGroup[] CreateFacets(ISearchCriteria criteria, SearchResult<DocumentDictionary>.SearchFacets facets)
         {
             var result = new List<FacetGroup>();
 

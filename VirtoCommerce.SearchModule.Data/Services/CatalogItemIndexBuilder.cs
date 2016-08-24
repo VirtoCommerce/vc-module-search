@@ -11,7 +11,6 @@ using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.Platform.Core.ChangeLog;
 using VirtoCommerce.Platform.Core.Common;
-using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Services
 {
@@ -19,13 +18,13 @@ namespace VirtoCommerce.SearchModule.Data.Services
     {
         private const int _partitionSizeCount = 100; // the maximum partition size, keep it smaller to prevent too big of the sql requests and too large messages in the queue
 
-        private readonly ISearchProvider _searchProvider;
+        private readonly Model.ISearchProvider _searchProvider;
         private readonly ICatalogSearchService _catalogSearchService;
         private readonly IPricingService _pricingService;
         private readonly IItemService _itemService;
         private readonly IChangeLogService _changeLogService;
 
-        public CatalogItemIndexBuilder(ISearchProvider searchProvider, ICatalogSearchService catalogSearchService,
+        public CatalogItemIndexBuilder(Model.ISearchProvider searchProvider, ICatalogSearchService catalogSearchService,
                                        IItemService itemService, IPricingService pricingService,
                                        IChangeLogService changeLogService)
         {

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using PlainElastic.Net;
 using PlainElastic.Net.Queries;
 using PlainElastic.Net.Serialization;
+using VirtoCommerce.SearchModule.Data.Model;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
+namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.PlainElastic
 {
     [CLSCompliant(false)]
     public class ElasticClient<T>
@@ -70,7 +71,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             return Serializer.ToIndexResult(result);
         }
 
-        public BulkResult IndexBulk(BulkCommand bulkCommand, IEnumerable<ESDocument> documents = null)
+        public BulkResult IndexBulk(BulkCommand bulkCommand, IEnumerable<DocumentDictionary> documents = null)
         {
             string bulkJson =
                 new BulkBuilder(serializer)

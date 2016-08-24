@@ -104,13 +104,13 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.True(searchResults.ProductsTotalCount > 0);
         }
 
-        private ItemBrowsingService GetItemBrowsingService(ISearchProvider provider)
+        private ItemBrowsingService GetItemBrowsingService(Data.Model.ISearchProvider provider)
         {
             var service = new ItemBrowsingService(GetItemService(), provider);
             return service;
         }
 
-        private SearchIndexController GetSearchIndexController(ISearchProvider provider)
+        private SearchIndexController GetSearchIndexController(Data.Model.ISearchProvider provider)
         {
             var settings = new Moq.Mock<ISettingsManager>();
             var builder = new CatalogItemIndexBuilder(provider, GetSearchService(), GetItemService(), GetPricingService(), GetChangeLogService());

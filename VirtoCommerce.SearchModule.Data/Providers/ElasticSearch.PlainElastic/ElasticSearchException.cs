@@ -2,7 +2,7 @@
 using VirtoCommerce.Domain.Search;
 using VirtoCommerce.Domain.Search.Model;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
+namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.PlainElastic
 {
     /// <summary>
     /// General Elastic Search Exception
