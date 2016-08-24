@@ -12,7 +12,7 @@ using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
-    public class LuceneSearchResults
+    public class LuceneSearchResults<T> : Model.ISearchResults<DocumentDictionary> where T : class
     {
         /// <summary>
         ///     Initializes a new instance of the <see cref="SearchResults" /> class.
@@ -24,19 +24,42 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <param name="query">The query.</param>
         public LuceneSearchResults(Searcher searcher, IndexReader reader, TopDocs docs, ISearchCriteria criteria, Query query)
         {
-            Results = new SearchResults(criteria, null);
+            this.SearchCriteria = criteria;
             CreateDocuments(searcher, docs);
             CreateFacets(reader, query);
             CreateSuggestions(reader, criteria);
         }
 
-        /// <summary>
-        ///     Gets or sets the results.
-        /// </summary>
-        /// <value>
-        ///     The results.
-        /// </value>
-        public SearchResults Results { get; set; }
+        public FacetGroup[] Facets
+        {
+            get;
+            private set;
+        }
+
+        public long DocCount
+        {
+            get;
+            private set;
+        }
+
+        public IEnumerable<DocumentDictionary> Documents
+        {
+            get;
+            private set;
+        }
+
+        public ISearchCriteria SearchCriteria
+        {
+            get;
+            private set;
+        }
+
+        public long TotalCount
+        {
+            get;
+            private set;
+        }
+        public string[] Suggestions { get; private set; }
 
 
         /// <summary>
@@ -50,12 +73,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             if (topDocs == null)
                 return;
 
-            var entries = new List<ResultDocument>();
+            var entries = new List<DocumentDictionary>();
 
             // get total hits
             var totalCount = topDocs.TotalHits;
-            var recordsToRetrieve = Results.SearchCriteria.RecordsToRetrieve;
-            var startIndex = Results.SearchCriteria.StartingRecord;
+            var recordsToRetrieve = this.SearchCriteria.RecordsToRetrieve;
+            var startIndex = this.SearchCriteria.StartingRecord;
             if (recordsToRetrieve > totalCount)
                 recordsToRetrieve = totalCount;
 
@@ -65,7 +88,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                     break;
 
                 var document = searcher.Doc(topDocs.ScoreDocs[index].Doc);
-                var doc = new ResultDocument();
+                var doc = new DocumentDictionary();
 
                 var documentFields = document.GetFields();
                 using (var fi = documentFields.GetEnumerator())
@@ -75,7 +98,29 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                         if (fi.Current != null)
                         {
                             var field = fi.Current;
-                            doc.Add(new DocumentField(field.Name, field.StringValue));
+                            if (doc.ContainsKey(field.Name)) // convert to array
+                            {
+                                var newValues = new List<object>();
+
+                                var currentValue = doc[field.Name];
+                                var currentValues = currentValue as object[];
+
+                                if (currentValues != null)
+                                {
+                                    newValues.AddRange(currentValues);
+                                }
+                                else
+                                {
+                                    newValues.Add(currentValue);
+                                }
+
+                                newValues.Add(field.StringValue);
+                                doc[field.Name] = newValues.ToArray();
+                            }
+                            else
+                            {
+                                doc.Add(field.Name, field.StringValue);
+                            }
                         }
                     }
                 }
@@ -83,14 +128,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 entries.Add(doc);
             }
 
-            var searchDocuments = new ResultDocumentSet
-            {
-                Name = "Items",
-                Documents = entries.OfType<IDocument>().ToArray(),
-                TotalCount = totalCount
-            };
-
-            Results.Documents = new[] { searchDocuments };
+            this.TotalCount = totalCount;
+            this.DocCount = entries.Count;
+            this.Documents = entries.ToArray();
         }
 
         /// <summary>
@@ -140,21 +180,21 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
             #endregion
 
-            if (Results.SearchCriteria.Filters != null && Results.SearchCriteria.Filters.Length > 0)
+            if (SearchCriteria.Filters != null && SearchCriteria.Filters.Length > 0)
             {
-                foreach (var filter in Results.SearchCriteria.Filters)
+                foreach (var filter in SearchCriteria.Filters)
                 {
 
-                    if (!string.IsNullOrEmpty(Results.SearchCriteria.Currency) && filter is PriceRangeFilter)
+                    if (!string.IsNullOrEmpty(SearchCriteria.Currency) && filter is PriceRangeFilter)
                     {
                         var valCurrency = ((PriceRangeFilter)filter).Currency;
-                        if (!valCurrency.Equals(Results.SearchCriteria.Currency, StringComparison.OrdinalIgnoreCase))
+                        if (!valCurrency.Equals(SearchCriteria.Currency, StringComparison.OrdinalIgnoreCase))
                         {
                             continue;
                         }
                     }
 
-                    var facetGroup = CalculateResultCount(reader, baseDocIdSet, filter, Results.SearchCriteria);
+                    var facetGroup = CalculateResultCount(reader, baseDocIdSet, filter, SearchCriteria);
                     if (facetGroup != null)
                     {
                         groups.Add(facetGroup);
@@ -162,7 +202,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 }
             }
 
-            Results.FacetGroups = groups.ToArray();
+            Facets = groups.ToArray();
         }
 
         private FacetGroup CalculateResultCount(IndexReader reader, DocIdSet baseDocIdSet, ISearchFilter filter, ISearchCriteria criteria)
@@ -191,7 +231,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 foreach (var group in values.GroupBy(v => v.Id))
                 {
                     var value = group.FirstOrDefault();
-                    var valueFilter = LuceneQueryHelper.CreateQueryForValue(Results.SearchCriteria, filter, value);
+                    var valueFilter = LuceneQueryHelper.CreateQueryForValue(SearchCriteria, filter, value);
 
                     if (valueFilter != null)
                     {
@@ -244,7 +284,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 var phrase = c.SearchPhrase;
                 if (!string.IsNullOrEmpty(phrase))
                 {
-                    Results.Suggestions = SuggestSimilar(reader, "_content", phrase);
+                    Suggestions = SuggestSimilar(reader, "_content", phrase);
                 }
             }
         }

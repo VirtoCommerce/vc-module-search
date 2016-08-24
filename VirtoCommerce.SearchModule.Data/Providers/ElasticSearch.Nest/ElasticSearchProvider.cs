@@ -10,6 +10,9 @@ using System.Linq;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 {
+    /// <summary>
+    /// NEST based elastic search provider.
+    /// </summary>
     public class ElasticSearchProvider : ISearchProvider
     {
         public const string SearchAnalyzer = "search_analyzer";
@@ -44,9 +47,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                         url = url.Remove(url.LastIndexOf("/", StringComparison.Ordinal));
                     }
 
-                    var settings = new ConnectionSettings(new Uri("http://" + url))
-                        .DisableDirectStreaming()
-                        .OnRequestCompleted(details =>
+                    var settings = new ConnectionSettings(new Uri("http://" + url));
+
+                    if (EnableTrace)
+                    {
+                        settings.DisableDirectStreaming().OnRequestCompleted(details =>
                         {
                             Debug.WriteLine("### ES REQEUST ###");
                             if (details.RequestBodyInBytes != null) Debug.WriteLine(Encoding.UTF8.GetString(details.RequestBodyInBytes));
@@ -54,6 +59,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                             if (details.ResponseBodyInBytes != null) Debug.WriteLine(Encoding.UTF8.GetString(details.ResponseBodyInBytes));
                         })
                         .PrettyJson();
+                    }
 
                     _client = new ElasticClient(settings);
                 }
@@ -96,6 +102,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         {
             get { return _autoCommitCount; }
             set { _autoCommitCount = value; }
+        }
+
+        /// <summary>
+        /// Tells provider to run in debug mode outputting all requests to console.
+        /// </summary>
+        public bool EnableTrace
+        {
+            get;set;
         }
 
         private string _elasticServerUrl = string.Empty;
@@ -142,7 +156,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             }
         }
 
-        public ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria) where T : class
+        public virtual ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria) where T : class
         {
             // Build query
             var command = QueryBuilder.BuildQuery<T>(scope, criteria) as SearchRequest;
@@ -158,12 +172,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                 throw new ElasticSearchException("Search using Elastic Search NEST provider failed, check logs for more details.", ex);
             }
 
-            var results = new SearchResults<T>(criteria, searchResponse);
+            if (!searchResponse.IsValid)
+                ThrowException(searchResponse.DebugInformation, null);
 
+            var results = new SearchResults<T>(criteria, searchResponse);
             return results;
         }
 
-        public void Index<T>(string scope, string documentType, T document)
+        public virtual void Index<T>(string scope, string documentType, T document)
         {
             // process mapping
             if(document is IDocument) // older case scenario
@@ -189,15 +205,15 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                 {
                     var result = Client.DeleteByQuery(new DeleteByQueryRequest(scope, documentType) { Query = new MatchAllQuery() });
 
-                    if (!result.IsValid)
-                        throw new IndexBuildException(result.ServerError.ToString());
+                    if (!result.IsValid && !(result.ApiCall.HttpStatusCode == 404))
+                        throw new IndexBuildException(result.DebugInformation);
                 }
                 else
                 {
                     var result = Client.DeleteIndex(scope);
 
-                    if (!result.IsValid)
-                        throw new IndexBuildException(result.ServerError.ToString());
+                    if (!result.IsValid && !(result.ApiCall.HttpStatusCode == 404))
+                        throw new IndexBuildException(result.DebugInformation);
                 }
 
                 var core = GetCoreName(scope, documentType);
@@ -205,16 +221,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             }
             catch (Exception ex)
             {
-                /*
-                if (ex.HttpStatusCode == 404 && (ex.Message.Contains("TypeMissingException") || ex.Message.Contains("IndexMissingException")))
-                {
-
-                }
-                else
-                {
-                    ThrowException("Failed to remove indexes", ex);
-                }
-                */
+                ThrowException("Failed to remove indexes", ex);
             }
         }
 
@@ -259,7 +266,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         }
 
         #region Helper Methods
-        private void Index(string scope, string documentType, IDocument document)
+        protected virtual void Index(string scope, string documentType, IDocument document)
         {
             var core = GetCoreName(scope, documentType);
             if (!_pendingDocuments.ContainsKey(core))

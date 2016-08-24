@@ -22,7 +22,7 @@ namespace VirtoCommerce.SearchModule.Tests
             Thread.Sleep(2000);
         }
 
-        private static ResultDocument CreateDocument(string key, string name, string color, decimal price, int size, string[] outlines, bool extraProperties = false)
+        public static ResultDocument CreateDocument(string key, string name, string color, decimal price, int size, string[] outlines, bool extraProperties = false)
         {
             var doc = new ResultDocument();
 

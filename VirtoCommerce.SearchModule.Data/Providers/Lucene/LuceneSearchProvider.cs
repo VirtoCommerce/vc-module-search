@@ -10,16 +10,17 @@ using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
-using VirtoCommerce.Domain.Search.Model;
+using VirtoCommerce.SearchModule.Data.Model;
 using VirtoCommerce.Domain.Search.Services;
 using u = Lucene.Net.Util;
+using VirtoCommerce.Domain.Search.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
     /// <summary>
     ///     File based search provider based on Lucene.
     /// </summary>
-    public class LuceneSearchProvider : ISearchProvider
+    public class LuceneSearchProvider : Model.ISearchProvider
     {
         private static readonly Dictionary<string, IndexWriter> _indexFolders = new Dictionary<string, IndexWriter>();
         private static readonly object _providerlock = new object();
@@ -34,7 +35,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// </summary>
         /// <param name="queryBuilder">The query builder.</param>
         /// <param name="connection">The connection.</param>
-        public LuceneSearchProvider(ISearchQueryBuilder queryBuilder, ISearchConnection connection)
+        public LuceneSearchProvider(Model.ISearchQueryBuilder queryBuilder, ISearchConnection connection)
         {
             AutoCommit = true;
             AutoCommitCount = 100;
@@ -64,7 +65,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <value>
         ///     The query builder.
         /// </value>
-        public ISearchQueryBuilder QueryBuilder { get; set; }
+        public Model.ISearchQueryBuilder QueryBuilder { get; set; }
 
         /// <summary>
         ///     Closes the specified provider.
@@ -118,13 +119,26 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             }
         }
 
+        public virtual void Index<T>(string scope, string documentType, T document)
+        {
+            // process mapping
+            if (document is IDocument) // older case scenario
+            {
+                Index(scope, documentType, document as IDocument);
+            }
+            else
+            {
+                new NotImplementedException(string.Format("Document of type {0} not supported", typeof(T).Name));
+            }
+        }
+
         /// <summary>
         ///     Adds the document to the index. Depending on the provider, the document will be commited only after commit is called.
         /// </summary>
         /// <param name="scope">The scope of the document, used to seperate indexes for different applications.</param>
         /// <param name="documentType">The type of the document, typically simply the name associated with an indexer like catalog, order or catalogitem.</param>
         /// <param name="document">The document.</param>
-        public virtual void Index(string scope, string documentType, IDocument document)
+        protected virtual void Index(string scope, string documentType, IDocument document)
         {
             var folderName = GetFolderName(scope, documentType);
             if (!_pendingDocuments.ContainsKey(folderName))
@@ -203,9 +217,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <param name="criteria">The criteria.</param>
         /// <returns></returns>
         /// <exception cref="VirtoCommerce.SearchModule.Data.Providers.Lucene.LuceneSearchException"></exception>
-        public virtual ISearchResults Search(string scope, ISearchCriteria criteria)
+        public virtual ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria) where T : class
         {
-            ISearchResults result;
+            ISearchResults<T> result;
 
             var directoryInfo = new DirectoryInfo(GetDirectoryPath(GetFolderName(scope, criteria.DocumentType)));
 
@@ -214,7 +228,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 var dir = FSDirectory.Open(directoryInfo);
                 var searcher = new IndexSearcher(dir);
 
-                var q = (QueryBuilder)QueryBuilder.BuildQuery(criteria);
+                var q = (QueryBuilder)QueryBuilder.BuildQuery<T>(scope, criteria);
 
                 // filter out empty value
                 var filter = q.Filter.ToString().Equals("BooleanFilter()") ? null : q.Filter;
@@ -250,16 +264,15 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                     throw new LuceneSearchException("Search exception", ex);
                 }
 
-                var results = new LuceneSearchResults(searcher, searcher.IndexReader, docs, criteria, q.Query);
+                result = new LuceneSearchResults<T>(searcher, searcher.IndexReader, docs, criteria, q.Query) as ISearchResults<T>;
 
                 // Cleanup here
                 searcher.IndexReader.Dispose();
                 searcher.Dispose();
-                result = results.Results;
             }
             else
             {
-                result = new SearchResults(criteria, null);
+                result = null;
             }
 
             return result;

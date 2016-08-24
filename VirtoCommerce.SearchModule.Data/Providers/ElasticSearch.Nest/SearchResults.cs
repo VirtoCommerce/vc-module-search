@@ -57,6 +57,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             private set;
         }
 
+        public string[] Suggestions
+        {
+            get; private set;
+        }
+
         private static FacetGroup[] CreateFacets(ISearchCriteria criteria, IDictionary<string, IAggregate> facets)
         {
             var result = new List<FacetGroup>();

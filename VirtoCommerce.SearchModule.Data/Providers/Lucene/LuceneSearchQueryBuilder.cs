@@ -8,10 +8,8 @@ using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
-using VirtoCommerce.Domain.Search;
 using VirtoCommerce.Domain.Search.Model;
 using u = Lucene.Net.Util;
-using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
@@ -22,9 +20,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// </summary>
         /// <param name="criteria">The criteria.</param>
         /// <returns></returns>
-        public override object BuildQuery(ISearchCriteria criteria)
+        public override object BuildQuery<T>(string scope, ISearchCriteria criteria)
         {
-            var builder = base.BuildQuery(criteria) as QueryBuilder;
+            var builder = base.BuildQuery<T>(scope, criteria) as QueryBuilder;
             var query = builder.Query as BooleanQuery;
             var analyzer = new StandardAnalyzer(u.Version.LUCENE_30);
 

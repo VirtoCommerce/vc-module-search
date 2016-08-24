@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Linq;
 using VirtoCommerce.Domain.Search.Filters;
 using VirtoCommerce.Domain.Search.Model;
@@ -9,24 +10,65 @@ using Xunit;
 
 namespace VirtoCommerce.SearchModule.Tests
 {
-        [CLSCompliant(false)]
-        public class SearchScenarios : SearchTestsBase
-        {
-            private string _DefaultScope = "test";
+    [CLSCompliant(false)]
+    public class SearchScenarios : SearchTestsBase
+    {
+        private string _DefaultScope = "test";
 
-    //        [Theory]
-    //        [InlineData("Lucene")]
-    //        [InlineData("Elastic")]
-    //        [Trait("Category", "CI")]
-    //        public void Can_create_search_index(string providerType)
-    //        {
-    //            var scope = _DefaultScope;
-    //            var provider = GetSearchProvider(providerType, scope);
-    //            SearchHelper.CreateSampleIndex(provider, scope);
-    //        }
+        [Fact]
+        [Trait("Category", "CI")]
+        public void Throws_exceptions_elastic()
+        {
+            var providerType = "Elastic";
+            var scope = _DefaultScope;
+            var badscope = "doesntexist";
+            var baddocumenttype = "badtype";
+            var provider = GetSearchProvider(providerType, scope);
+
+            // try removing non-existing index
+            // no exception should be generated, since 404 will be just eaten when index doesn't exist
+            provider.RemoveAll(badscope, "");
+            provider.RemoveAll(badscope, baddocumenttype);
+
+            // now create an index and try removing non-existent document type
+            SearchHelper.CreateSampleIndex(provider, scope);
+            provider.RemoveAll(scope, "sometype");
+
+            // create bad connection
+            var queryBuilder = new ElasticSearchQueryBuilder();
+
+            var conn = new SearchConnection("localhost:9201", scope);
+            var bad_provider = new ElasticSearchProvider(queryBuilder, conn);
+            bad_provider.EnableTrace = true;
+
+            Assert.Throws<ElasticSearchException>(() => bad_provider.RemoveAll(badscope, ""));
+
+            var criteria = new Data.Model.CatalogIndexedSearchCriteria
+            {
+                SearchPhrase = "product",
+                IsFuzzySearch = true,
+                Catalog = "goods",
+                RecordsToRetrieve = 10,
+                StartingRecord = 0,
+                Pricelists = new string[] { }
+            };
+
+            Assert.Throws<ElasticSearchException>(() => bad_provider.Search<DocumentDictionary>(scope, criteria));
+        }
 
         [Theory]
-        //[InlineData("Lucene")]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
+        [Trait("Category", "CI")]
+        public void Can_create_search_index(string providerType)
+        {
+            var scope = _DefaultScope;
+            var provider = GetSearchProvider(providerType, scope);
+            SearchHelper.CreateSampleIndex(provider, scope);
+        }
+
+        [Theory]
+        [InlineData("Lucene")]
         [InlineData("Elastic")]
         [Trait("Category", "CI")]
         public void Can_find_item_using_search(string providerType)
@@ -65,7 +107,7 @@ namespace VirtoCommerce.SearchModule.Tests
         }
 
         [Theory]
-        //[InlineData("Lucene")]
+        [InlineData("Lucene")]
         [InlineData("Elastic")]
         [Trait("Category", "CI")]
         public void Can_get_item_facets(string providerType)
@@ -131,12 +173,18 @@ namespace VirtoCommerce.SearchModule.Tests
             var sizeCount2 = GetFacetCount(results, "size", "5_to_10");
             Assert.True(sizeCount2 == 1, string.Format("Returns {0} facets of 5_to_10 size instead of 1", sizeCount2)); // only 1 result because upper bound is not included
 
-            var outlineCount = (results.Documents.ElementAt(0)["__outline"] as JArray).Count();
+            int outlineCount = 0;
+            var outlineObject = results.Documents.ElementAt(0)["__outline"]; // can be JArray or object[] depending on provider used
+            if (outlineObject is JArray)
+                outlineCount = (outlineObject as JArray).Count;
+            else
+                outlineCount = (outlineObject as object[]).Count();
+
             Assert.True(outlineCount == 2, string.Format("Returns {0} outlines instead of 2", outlineCount));
         }
 
         [Theory]
-        //[InlineData("Lucene")]
+        [InlineData("Lucene")]
         [InlineData("Elastic")]
         [Trait("Category", "CI")]
         public void Can_get_item_multiple_filters(string providerType)

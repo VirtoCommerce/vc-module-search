@@ -13,7 +13,6 @@ namespace VirtoCommerce.SearchModule.Tests
 
         protected Data.Model.ISearchProvider GetSearchProvider(string searchProvider, string scope)
         {
-            /*
             if (searchProvider == "Lucene")
             {
                 var queryBuilder = new LuceneSearchQueryBuilder();
@@ -23,7 +22,6 @@ namespace VirtoCommerce.SearchModule.Tests
 
                 return provider;
             }
-            */
 
             if (searchProvider == "Elastic")
             {
@@ -31,6 +29,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
                 var conn = new SearchConnection("localhost:9200", scope);
                 var provider = new ElasticSearchProvider(queryBuilder, conn);
+                provider.EnableTrace = true;
 
                 return provider;
             }

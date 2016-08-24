@@ -4,19 +4,19 @@ using Lucene.Net.Index;
 using Lucene.Net.Search;
 using VirtoCommerce.Domain.Search;
 using VirtoCommerce.Domain.Search.Filters;
-using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
+using VirtoCommerce.Domain.Search.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
-    public class BaseSearchQueryBuilder : ISearchQueryBuilder
+    public class BaseSearchQueryBuilder : Model.ISearchQueryBuilder
     {
         /// <summary>
         ///     Builds the query.
         /// </summary>
         /// <param name="criteria">The criteria.</param>
         /// <returns></returns>
-        public virtual object BuildQuery(ISearchCriteria criteria)
+        public virtual object BuildQuery<T>(string scope, ISearchCriteria criteria) where T : class
         {
             var queryBuilder = new QueryBuilder();
             var queryFilter = new BooleanFilter();

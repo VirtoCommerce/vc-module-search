@@ -12,7 +12,9 @@ namespace VirtoCommerce.SearchModule.Data.Model
         long DocCount { get; }
 
         FacetGroup[] Facets { get; }
-        
+
+        string[] Suggestions { get;}
+
         long TotalCount { get; }
     }
 }
