@@ -158,50 +158,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                 throw new ElasticSearchException("Search using Elastic Search NEST provider failed, check logs for more details.", ex);
             }
 
-            // TODO: process aggregations
-            var results = new SearchResults<T>(searchResponse);
+            var results = new SearchResults<T>(criteria, searchResponse);
 
             return results;
-            // Parse documents returned
-            var docList = new List<ResultDocument>();
-
-            /*
-            foreach (var indexDoc in searchResponse.Documents)
-            {
-                var document = new ResultDocument();
-                foreach (var field in indexDoc.Keys)
-                {
-                    var fieldValue = indexDoc[field];
-                    if (fieldValue is JArray)
-                    {
-                        var fieldArrayValue = fieldValue as JArray;
-                        document.Add(new DocumentField(field, fieldArrayValue.ToArray()));
-                    }
-                    else
-                    {
-                        document.Add(new DocumentField(field, indexDoc[field]));
-                    }
-                }
-
-                docList.Add(document);
-            }
-
-            var documents = new ResultDocumentSet
-            {
-                TotalCount = searchResponse.hits.total,
-                Documents = docList.OfType<IDocument>().ToArray()
-            };
-
-            // Create search results object
-            var results = new SearchResults(criteria, new[] { documents }){};
-
-            if (searchResponse.aggregations == null)
-                results.FacetGroups = CreateFacets(criteria, searchResponse.facets);
-            else
-                results.FacetGroups = CreateFacets(criteria, searchResponse.aggregations);
-
-            return results;
-            */
         }
 
         public void Index<T>(string scope, string documentType, T document)
@@ -411,7 +370,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             {
                 Commit(scope);
             }
-
         }
 
         private static string GetCoreName(string scope, string documentType)

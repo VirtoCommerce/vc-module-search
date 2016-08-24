@@ -17,7 +17,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         {
             var builder = new SearchRequest(scope, criteria.DocumentType);
 
-            //var mainFilter = new Filter<ESDocument>();
+            var mainFilter = new BoolQuery();
             var mainQuery = new List<QueryContainer>();
 
             #region Sorting
@@ -37,31 +37,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                         });
                 }
             }
-
             #endregion
 
-            /*
-             * 
-             * new BoolQuery
-{
-    Filter = new QueryContainer[] {
-        !new TermQuery
-        {
-            IsVerbatim = true,
-            Field = "name",
-            Value = ""
-        } &&
-        new ExistsQuery
-        {
-            Field = "numberOfCommits"
-        }
-    }
-}
             #region Filters
             // Perform facet filters
             if (criteria.CurrentFilters != null && criteria.CurrentFilters.Any())
             {
-                var combinedFilter = new BoolFilter<ESDocument>();
+                var combinedFilter = new List<QueryContainer>();
                 // group filters
                 foreach (var filter in criteria.CurrentFilters)
                 {
@@ -77,18 +59,17 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                         }
                     }
 
-                    var filterQuery = ElasticQueryHelper.CreateQuery(criteria, filter);
+                    var filterQuery = ElasticQueryHelper.CreateQuery<T>(criteria, filter);
 
                     if (filterQuery != null)
                     {
-                        combinedFilter.Must(c => c.Bool(q => filterQuery));
+                        combinedFilter.Add(filterQuery);
                     }
                 }
 
-                mainFilter.Bool(bl => combinedFilter);
+                mainFilter.Must = combinedFilter;
             }
             #endregion
-            */
 
             #region CatalogItemSearchCriteria
             if (criteria is Model.CatalogIndexedSearchCriteria)
@@ -142,7 +123,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
             var boolQuery = new BoolQuery() { Must = mainQuery };
             builder.Query = boolQuery;
-            //builder.Filter(f => mainFilter);
+            builder.PostFilter = mainFilter;
 
             // Add search facets
             //var facets = GetFacets(criteria);
@@ -163,22 +144,20 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             {
                 if (filter is AttributeFilter)
                 {
-                    AddAggregationQueries<T>(container, filter.Key, criteria);
+                    AddAggregationQueries<T>(container, filter.Key.ToLower(), criteria);
                 }
-                /*
                 else if (filter is PriceRangeFilter)
                 {
                     var currency = ((PriceRangeFilter)filter).Currency;
                     if (currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase))
                     {
-                        AddAggregationPriceQueries(aggregations, filter.Key, ((PriceRangeFilter)filter).Values, criteria);
+                        AddAggregationPriceQueries<T>(container, filter.Key.ToLower(), ((PriceRangeFilter)filter).Values, criteria);
                     }
                 }
                 else if (filter is RangeFilter)
                 {
-                    AddAggregationQueries(aggregations, filter.Key, ((RangeFilter)filter).Values, criteria);
+                    AddAggregationQueries<T>(container, filter.Key.ToLower(), ((RangeFilter)filter).Values, criteria);
                 }
-                */
             }
 
             return container;
@@ -186,32 +165,60 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
         private void AddAggregationQueries<T>(Dictionary<string, AggregationContainer> container, string field, ISearchCriteria criteria) where T:class
         {
-            var agg = new TermsAggregation(field) { Field = field.ToLower() };
-            container.Add(field, agg);
+            var existing_filters = GetExistingFilters<T>(criteria, field);
 
-            /*
-            var existing_filters = new BoolFilter<DocumentDictionary>();
-            foreach (var f in criteria.CurrentFilters)
+            var termAgg = new TermsAggregation(field) { Field = field };
+            var agg = new FilterAggregation(field);
+
+            var boolQuery = new BoolQuery() { Must = existing_filters };
+            agg.Filter = boolQuery;
+            agg.Aggregations = termAgg;
+            container.Add(field, agg);
+        }
+
+        private void AddAggregationPriceQueries<T>(Dictionary<string, AggregationContainer> container, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria) where T:class
+        {
+            if (values == null)
+                return;
+
+            var existing_filters = GetExistingFilters<T>(criteria, fieldName);
+
+            foreach (var value in values)
             {
-                // don't filter within the same keyfield
-                if (!f.Key.Equals(field))
+                var query = ElasticQueryHelper.CreatePriceRangeFilter<T>(criteria, fieldName, value);
+
+                if (query != null)
                 {
-                    var q = ElasticQueryHelper.CreateQuery(criteria, f);
-                    existing_filters.Must(ff => ff.Bool(bb => q));
+                    var agg = new FilterAggregation(string.Format("{0}-{1}", fieldName, value.Id));
+                    var all_filters = new List<QueryContainer>();
+                    all_filters.AddRange(existing_filters);
+                    all_filters.Add(query);
+                    var boolQuery = new BoolQuery() { Must = all_filters };
+                    agg.Filter = boolQuery;
+                    container.Add(string.Format("{0}-{1}", fieldName, value.Id), agg);
                 }
             }
+        }
 
+        private void AddAggregationQueries<T>(Dictionary<string, AggregationContainer> container, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria) where T:class
+        {
+            if (values == null)
+                return;
 
-            aggs.Aggregate
-            var facet_filters = new FilterAggregation<DocumentDictionary>();
+            var existing_filters = GetExistingFilters<T>(criteria, fieldName);
 
-            facet_filters
-                .Filter(f => f.Bool(a => existing_filters))
-                .Aggregations(a =>
-                    a.Terms(af => af.AggregationName(field.ToLower()).Field(field.ToLower())));
+            foreach (var value in values)
+            {
+                var agg = new FilterAggregation(string.Format("{0}-{1}", fieldName, value.Id));
+                var range_query = new TermRangeQuery() { Field = fieldName, GreaterThanOrEqualTo = value.Lower, LessThan = value.Upper };
 
-            aggs.Filter(filter => facet_filters.AggregationName(field.ToLower()));
-            */
+                var all_filters = new List<QueryContainer>();
+                all_filters.AddRange(existing_filters);
+                all_filters.Add(range_query);
+                var boolQuery = new BoolQuery() { Must = all_filters };
+                agg.Filter = boolQuery;
+                container.Add(string.Format("{0}-{1}", fieldName, value.Id), agg);
+            }
         }
         #endregion
 
@@ -280,6 +287,21 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             }
 
             query.Add(multiMatch);
+        }
+
+        private List<QueryContainer> GetExistingFilters<T>(ISearchCriteria criteria, string field) where T:class
+        {
+            var existing_filters = new List<QueryContainer>();
+            foreach (var f in criteria.CurrentFilters)
+            {
+                if (!f.Key.Equals(field, StringComparison.OrdinalIgnoreCase))
+                {
+                    var q = ElasticQueryHelper.CreateQuery<T>(criteria, f);
+                    existing_filters.Add(q);
+                }
+            }
+
+            return existing_filters;
         }
         #endregion
     }

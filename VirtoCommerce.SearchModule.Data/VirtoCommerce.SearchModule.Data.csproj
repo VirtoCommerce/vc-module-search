@@ -134,6 +134,7 @@
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Model\CatalogIndexedSearchCriteria.cs" />
+    <Compile Include="Model\IAggregation.cs" />
     <Compile Include="Model\ISearchProvider.cs" />
     <Compile Include="Model\ISearchQueryBuilder.cs" />
     <Compile Include="Model\ISearchResults.cs" />

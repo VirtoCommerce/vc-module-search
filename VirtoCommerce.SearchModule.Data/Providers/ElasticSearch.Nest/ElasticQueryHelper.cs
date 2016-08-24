@@ -17,15 +17,15 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             if (values == null)
                 return null;
 
+            var valueContainer = new List<QueryContainer>();
             var query = new BoolQuery();
             foreach (var value in values)
             {
                 var valueQuery = CreateQueryForValue<T>(criteria, filter, value);
-                var valueContainer = new List<QueryContainer>();
-                valueContainer.Add(valueQuery);
-                query.Should = valueContainer;
+                valueContainer.Add(valueQuery);                
             }
 
+            query.Should = valueContainer;
             return query;
         }
 
@@ -105,7 +105,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
             double lowerboundVal, upperboundVal;
             double.TryParse(lowerbound, out lowerboundVal);
-            double.TryParse(lowerbound, out upperboundVal);
+            double.TryParse(upperbound, out upperboundVal);
 
             var lowerboundincluded = true;
             var upperboundincluded = false;

@@ -11,7 +11,7 @@ namespace VirtoCommerce.SearchModule.Data.Model
 
         long DocCount { get; }
 
-        IDictionary<string, object> Aggregations { get; }
+        FacetGroup[] Facets { get; }
         
         long TotalCount { get; }
     }
