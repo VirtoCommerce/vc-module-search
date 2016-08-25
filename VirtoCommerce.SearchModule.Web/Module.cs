@@ -45,7 +45,7 @@ namespace VirtoCommerce.SearchModule.Web
 
             var searchProviderManager = new SearchProviderManager(searchConnection);
             _container.RegisterInstance<Data.Model.ISearchProviderManager>(searchProviderManager);
-            //_container.RegisterInstance<ISearchProvider>(searchProviderManager);
+            _container.RegisterInstance<Data.Model.ISearchProvider>(searchProviderManager);
 
             _container.RegisterType<IBrowseFilterService, FilterService>();
             _container.RegisterType<IItemBrowsingService, ItemBrowsingService>();
