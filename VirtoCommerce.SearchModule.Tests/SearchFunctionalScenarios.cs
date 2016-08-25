@@ -23,6 +23,7 @@ using System.Linq;
 using VirtoCommerce.Domain.Search.Filters;
 using VirtoCommerce.SearchModule.Data.Model;
 using System.Threading;
+using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest;
 
 namespace VirtoCommerce.SearchModule.Tests
 {
@@ -37,12 +38,16 @@ namespace VirtoCommerce.SearchModule.Tests
         }
 
         [Theory]
-        [InlineData("Lucene")]
+        //[InlineData("Lucene")]
         [InlineData("Elastic")]
         public void Can_index_demo_data_and_search(string providerType)
         {
             var scope = "test";
             var provider = GetSearchProvider(providerType, scope);
+
+            if (provider is ElasticSearchProvider)
+                (provider as ElasticSearchProvider).AutoCommitCount = 1; // commit every one document
+
             provider.RemoveAll(scope, "catalogitem");
             var controller = GetSearchIndexController(provider);
             controller.Process(scope, CatalogIndexedSearchCriteria.DocType, true);

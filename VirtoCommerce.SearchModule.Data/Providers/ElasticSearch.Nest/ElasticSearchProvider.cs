@@ -7,6 +7,7 @@ using VirtoCommerce.Domain.Search.Model;
 using System.Diagnostics;
 using System.Text;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 {
@@ -181,14 +182,22 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
         public virtual void Index<T>(string scope, string documentType, T document)
         {
+            var core = GetCoreName(scope, documentType);
+
             // process mapping
-            if(document is IDocument) // older case scenario
+            if (document is IDocument) // older case scenario
             {
                 Index(scope, documentType, document as IDocument);
             }
             else
             {
                 ThrowException(string.Format("Document of type {0} not supported", typeof(T).Name), new NotImplementedException());
+            }
+
+            // Auto commit changes when limit is reached
+            if (AutoCommit && _pendingDocuments[core].Count >= AutoCommitCount)
+            {
+                Commit(scope);
             }
         }
 
@@ -337,8 +346,30 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                         }
 
                         properties.Add(field.Name, PropertyHelper.InferProperty(type));
+                        SetupProperty(properties[field.Name], field);
+
                         submitMapping = true;
                     }
+                    /* // currently can't change type of mapping for existing data
+                    else // check mapping, and update it if necessary
+                    {
+                        var type = field.Value != null ? field.Value.GetType() : typeof(object);
+
+                        var existingProperty = mapping.Properties[field.Name];
+                        var proposedType = PropertyHelper.InferProperty(type);
+
+                        // check if types match
+                        if (proposedType.Type.Name != existingProperty.Type.Name)
+                        {
+                            // we only change to string type
+                            if (existingProperty.Type.Name != "string" && existingProperty.Type.Name != "object")
+                            {
+                                properties[field.Name] = new StringProperty();
+                                submitMapping = true;
+                            }
+                        }
+                    }
+                    */
 
                     // add fields to local document
                     if (field.Values.Length > 1)
@@ -371,12 +402,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             }
 
             _pendingDocuments[core].Add(localDocument);
-
-            // Auto commit changes when limit is reached
-            if (AutoCommit && _pendingDocuments[core].Count > AutoCommitCount)
-            {
-                Commit(scope);
-            }
         }
 
         private static string GetCoreName(string scope, string documentType)
@@ -387,6 +412,48 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         private void ThrowException(string message, Exception innerException)
         {
             throw new ElasticSearchException(string.Format(CultureInfo.InvariantCulture, "{0}. URL:{1}", message, ElasticServerUrl), innerException);
+        }
+
+        private void SetupProperty(IProperty property, IDocumentField field)
+        {
+            property.Store = field.ContainsAttribute(IndexStore.Yes);
+            property.DocValues = !field.ContainsAttribute(IndexStore.No);
+
+            if(property is StringProperty)
+            {
+                var stringProperty = property as StringProperty;
+                stringProperty.Index = field.ContainsAttribute(IndexType.NotAnalyzed) ? FieldIndexOption.NotAnalyzed : field.ContainsAttribute(IndexType.Analyzed) ? FieldIndexOption.Analyzed : FieldIndexOption.No;
+
+                if(field.Name.StartsWith("__content", StringComparison.OrdinalIgnoreCase))
+                {
+                    stringProperty.Analyzer = _indexAnalyzer;
+                }
+
+                if (Regex.Match(field.Name, "__content_en.*").Success)
+                {
+                    stringProperty.Analyzer = "english";
+                }
+                else if (Regex.Match(field.Name, "__content_de.*").Success)
+                {
+                    stringProperty.Analyzer = "german";
+                }
+                else if (Regex.Match(field.Name, "__content_ru.*").Success)
+                {
+                    stringProperty.Analyzer = "russian";
+                }
+                else if (Regex.Match(field.Name, "__content_fr.*").Success)
+                {
+                    stringProperty.Analyzer = "french";
+                }
+                else if (Regex.Match(field.Name, "__content_se.*").Success)
+                {
+                    stringProperty.Analyzer = "swedish";
+                }
+                else if (Regex.Match(field.Name, "__content_no.*").Success)
+                {
+                    stringProperty.Analyzer = "norwegian";
+                }
+            }
         }
         #endregion
     }

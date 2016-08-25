@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using VirtoCommerce.Domain.Search;
 using VirtoCommerce.Domain.Search.Model;
-using VirtoCommerce.Domain.Search.Services;
+using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Services
 {
-    public class SearchProviderManager : ISearchProviderManager, ISearchProvider
+    public class SearchProviderManager : ISearchProviderManager, Model.ISearchProvider
     {
         private readonly ISearchConnection _connection;
         private readonly ConcurrentDictionary<string, Func<ISearchConnection, ISearchProvider>> _factories;
@@ -16,12 +15,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
         public SearchProviderManager(ISearchConnection connection)
         {
             _connection = connection;
-            _factories = new ConcurrentDictionary<string, Func<ISearchConnection, ISearchProvider>>(StringComparer.OrdinalIgnoreCase);
+            _factories = new ConcurrentDictionary<string, Func<ISearchConnection, Model.ISearchProvider>>(StringComparer.OrdinalIgnoreCase);
         }
 
         #region ISearchProviderManager Members
 
-        public void RegisterSearchProvider(string name, Func<ISearchConnection, ISearchProvider> factory)
+        public void RegisterSearchProvider(string name, Func<ISearchConnection, Model.ISearchProvider> factory)
         {
             _factories.AddOrUpdate(name, factory, (key, oldValue) => factory);
         }
@@ -45,19 +44,19 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         #region ISearchProvider Members
 
-        public ISearchQueryBuilder QueryBuilder
+        public Model.ISearchQueryBuilder QueryBuilder
         {
             get { return CurrentProvider.QueryBuilder; }
         }
 
-        public ISearchResults Search(string scope, ISearchCriteria criteria)
+        public ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria) where T : class
         {
-            return CurrentProvider.Search(scope, criteria);
+            return CurrentProvider.Search<T>(scope, criteria);
         }
 
-        public void Index(string scope, string documentType, IDocument document)
+        public void Index<T>(string scope, string documentType, T document)
         {
-            CurrentProvider.Index(scope, documentType, document);
+            CurrentProvider.Index<T>(scope, documentType, document);
         }
 
         public int Remove(string scope, string documentType, string key, string value)
@@ -81,7 +80,6 @@ namespace VirtoCommerce.SearchModule.Data.Services
         }
 
         #endregion
-
 
         private ISearchProvider CreateProvider()
         {

@@ -1,19 +1,17 @@
 ﻿using System.Configuration;
 using Microsoft.Practices.Unity;
-using VirtoCommerce.Domain.Search;
 using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.Domain.Store.Model;
 using VirtoCommerce.Platform.Core.DynamicProperties;
 using VirtoCommerce.Platform.Core.Modularity;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.SearchModule.Data.Model;
-using VirtoCommerce.SearchModule.Data.Providers.Azure;
-using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch;
 using VirtoCommerce.SearchModule.Data.Providers.Lucene;
 using VirtoCommerce.SearchModule.Data.Services;
 using VirtoCommerce.SearchModule.Web.BackgroundJobs;
 using VirtoCommerce.SearchModule.Web.Services;
 using VirtoCommerce.Domain.Search.Model;
+using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest;
 
 namespace VirtoCommerce.SearchModule.Web
 {
@@ -46,7 +44,7 @@ namespace VirtoCommerce.SearchModule.Web
             _container.RegisterInstance<ISearchConnection>(searchConnection);
 
             var searchProviderManager = new SearchProviderManager(searchConnection);
-            _container.RegisterInstance<ISearchProviderManager>(searchProviderManager);
+            _container.RegisterInstance<Data.Model.ISearchProviderManager>(searchProviderManager);
             //_container.RegisterInstance<ISearchProvider>(searchProviderManager);
 
             _container.RegisterType<IBrowseFilterService, FilterService>();
@@ -60,11 +58,11 @@ namespace VirtoCommerce.SearchModule.Web
             var jobScheduler = _container.Resolve<SearchIndexJobsScheduler>();
             jobScheduler.ScheduleJobs();
 
-            var searchProviderManager = _container.Resolve<ISearchProviderManager>();
+            var searchProviderManager = _container.Resolve<Data.Model.ISearchProviderManager>();
 
-            //searchProviderManager.RegisterSearchProvider(SearchProviders.Elasticsearch.ToString(), connection => new ElasticSearchProvider(new ElasticSearchQueryBuilder(), connection));
-            //searchProviderManager.RegisterSearchProvider(SearchProviders.Lucene.ToString(), connection => new LuceneSearchProvider(new LuceneSearchQueryBuilder(), connection));
-            searchProviderManager.RegisterSearchProvider(SearchProviders.AzureSearch.ToString(), connection => new AzureSearchProvider(new AzureSearchQueryBuilder(), connection));
+            searchProviderManager.RegisterSearchProvider(SearchProviders.Elasticsearch.ToString(), connection => new ElasticSearchProvider(new ElasticSearchQueryBuilder(), connection));
+            searchProviderManager.RegisterSearchProvider(SearchProviders.Lucene.ToString(), connection => new LuceneSearchProvider(new LuceneSearchQueryBuilder(), connection));
+            //searchProviderManager.RegisterSearchProvider(SearchProviders.AzureSearch.ToString(), connection => new AzureSearchProvider(new AzureSearchQueryBuilder(), connection));
 
             // Register dynamic property for storing browsing filters
             var filteredBrowsingProperty = new DynamicProperty
