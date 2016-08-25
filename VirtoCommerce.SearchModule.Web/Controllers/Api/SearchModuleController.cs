@@ -461,7 +461,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             }
         }
 
-
         private static string[] GetSelectedFilterProperties(Store store)
         {
             var result = new List<string>();
