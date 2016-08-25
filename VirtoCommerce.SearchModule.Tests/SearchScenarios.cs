@@ -15,6 +15,69 @@ namespace VirtoCommerce.SearchModule.Tests
     {
         private string _DefaultScope = "test";
 
+        [Theory]
+        //[InlineData("Lucene")]
+        [InlineData("Elastic")]
+        [Trait("Category", "CI")]
+        public void Can_find_pricelists_prices(string providerType)
+        {
+            var scope = _DefaultScope;
+            var provider = GetSearchProvider(providerType, scope);
+            SearchHelper.CreateSampleIndex(provider, scope);
+
+            var criteria = new Data.Model.CatalogIndexedSearchCriteria
+            {
+                IsFuzzySearch = true,
+                Catalog = "goods",
+                RecordsToRetrieve = 10,
+                StartingRecord = 0,
+                Currency = "usd",
+                Pricelists = new string[] { "default", "sale" }
+            };
+
+            var priceRangefilter = new PriceRangeFilter { Currency = "usd" };
+            priceRangefilter.Values = new[]
+                                          {
+                                              new RangeFilterValue { Id = "0_to_100", Lower = "0", Upper = "100" },
+                                              new RangeFilterValue { Id = "100_to_700", Lower = "100", Upper = "700" }
+                                          };
+
+            criteria.Add(priceRangefilter);
+
+            var results = provider.Search<DocumentDictionary>(scope, criteria);
+
+            Assert.True(results.DocCount == 5, string.Format("Returns {0} instead of 1", results.DocCount));
+
+            var priceCount = GetFacetCount(results, "Price", "0_to_100");
+            Assert.True(priceCount == 2, string.Format("Returns {0} facets of 0_to_100 prices instead of 2", priceCount));
+
+            var priceCount2 = GetFacetCount(results, "Price", "100_to_700");
+            Assert.True(priceCount2 == 3, string.Format("Returns {0} facets of 100_to_700 prices instead of 3", priceCount2));
+
+            criteria = new Data.Model.CatalogIndexedSearchCriteria
+            {
+                IsFuzzySearch = true,
+                Catalog = "goods",
+                RecordsToRetrieve = 10,
+                StartingRecord = 0,
+                Currency = "usd",
+                Pricelists = new string[] { "sale", "default" }
+            };
+
+            criteria.Add(priceRangefilter);
+
+            results = provider.Search<DocumentDictionary>(scope, criteria);
+
+            Assert.True(results.DocCount == 5, string.Format("\"Sample Product\" search returns {0} instead of 1", results.DocCount));
+
+            var priceSaleCount = GetFacetCount(results, "Price", "0_to_100");
+            Assert.True(priceSaleCount == 3, string.Format("Returns {0} facets of 0_to_100 prices instead of 2", priceSaleCount));
+
+            var priceSaleCount2 = GetFacetCount(results, "Price", "100_to_700");
+            Assert.True(priceSaleCount2 == 2, string.Format("Returns {0} facets of 100_to_700 prices instead of 3", priceSaleCount2));
+
+        }
+
         [Fact]
         [Trait("Category", "CI")]
         public void Throws_exceptions_elastic()

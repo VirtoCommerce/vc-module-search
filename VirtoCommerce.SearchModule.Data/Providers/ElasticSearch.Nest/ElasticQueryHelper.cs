@@ -129,7 +129,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
             var priceListId = pls[0].ToLower();
 
-            var range_query = Query<T>.Range(r=>r
+            var top_range_query = Query<T>.Range(r=>r
                     .Field(string.Format("{0}_{1}_{2}", field, currency, priceListId))
                     .GreaterThanOrEquals(lowerboundVal)
                     .LessThan(upperboundVal)
@@ -137,11 +137,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
             var queryContainer = new List<QueryContainer>();
 
-            queryContainer.Add(range_query);
+            queryContainer.Add(top_range_query);
             if (pls.Count() > 1)
             {
-                var temp = CreatePriceRangeFilter<T>(pls, 1, field, currency, lowerboundVal, upperboundVal, lowerboundincluded, upperboundincluded);
-                queryContainer.Add(temp);
+                var sub_range_query = CreatePriceRangeFilter<T>(pls, 1, field, currency, lowerboundVal, upperboundVal, lowerboundincluded, upperboundincluded);
+                var sub_range_bool_query = Query<T>.Bool(b => b.Should(sub_range_query));
+                queryContainer.Add(sub_range_bool_query);
             }
 
             var query = new BoolQuery();
@@ -155,7 +156,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
             // create left part
             var not_range_query = Query<T>.Range(r => r
-                    .Field(string.Format("{0}_{1}_{2}", field, currency, priceLists[index - 1].ToLower()))
+                    .Field(string.Format("{0}_{1}_{2}", field, currency, priceLists[index - 1].ToLower())).GreaterThan(int.MinValue)
                 );
 
             //range_query.Field(string.Format("{0}_{1}_{2}", field, currency, priceLists[index - 1].ToLower()))/*.From("*").To("*")*/.IncludeLower(lowerboundincluded).IncludeUpper(upperboundincluded);
@@ -173,13 +174,16 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                     );
 
                 var rangeQueryContainer = new List<QueryContainer>();
-                rangeQueryContainer.Add(range_query);
+                var sub_range_bool_query = Query<T>.Bool(b => b.Should(range_query));
+                rangeQueryContainer.Add(sub_range_bool_query);
                 query.Must = rangeQueryContainer;
             }
             else
             {
                 var rangeQueryContainer = new List<QueryContainer>();
                 var range_query = CreatePriceRangeFilter<T>(priceLists, index + 1, field, currency, lowerbound, upperbound, lowerboundincluded, upperboundincluded);
+                var sub_range_bool_query = Query<T>.Bool(b => b.Should(range_query));
+                rangeQueryContainer.Add(sub_range_bool_query);
                 query.Should = rangeQueryContainer;
             }
 
