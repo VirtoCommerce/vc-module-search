@@ -212,10 +212,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             {
                 if (!string.IsNullOrEmpty(documentType))
                 {
-                    var result = Client.DeleteByQuery(new DeleteByQueryRequest(scope, documentType) { Query = new MatchAllQuery() });
+                    // check if index actually exists before performing delete, since it will cause new index to be automatically created
+                    if (Client.IndexExists(Indices.Parse(scope)).Exists)
+                    {
+                        var result = Client.DeleteByQuery(new DeleteByQueryRequest(scope, documentType) { Query = new MatchAllQuery() });
 
-                    if (!result.IsValid && !(result.ApiCall.HttpStatusCode == 404))
-                        throw new IndexBuildException(result.DebugInformation);
+                        if (!result.IsValid && !(result.ApiCall.HttpStatusCode == 404))
+                            throw new IndexBuildException(result.DebugInformation);
+                    }
                 }
                 else
                 {
@@ -428,7 +432,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         private void SetupProperty(IProperty property, IDocumentField field)
         {
             property.Store = field.ContainsAttribute(IndexStore.Yes);
-            property.DocValues = !field.ContainsAttribute(IndexStore.No);
+            //property.DocValues = !field.ContainsAttribute(IndexStore.No);
 
             if(property is StringProperty)
             {

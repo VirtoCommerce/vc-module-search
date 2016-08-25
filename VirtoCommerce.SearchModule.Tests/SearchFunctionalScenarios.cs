@@ -45,8 +45,8 @@ namespace VirtoCommerce.SearchModule.Tests
             var scope = "test";
             var provider = GetSearchProvider(providerType, scope);
 
-            if (provider is ElasticSearchProvider)
-                (provider as ElasticSearchProvider).AutoCommitCount = 1; // commit every one document
+            //if (provider is ElasticSearchProvider)
+            //    (provider as ElasticSearchProvider).AutoCommitCount = 1; // commit every one document
 
             provider.RemoveAll(scope, "");
             var controller = GetSearchIndexController(provider);
