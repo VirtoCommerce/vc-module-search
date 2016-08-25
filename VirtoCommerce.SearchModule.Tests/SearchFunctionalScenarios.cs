@@ -48,7 +48,7 @@ namespace VirtoCommerce.SearchModule.Tests
             if (provider is ElasticSearchProvider)
                 (provider as ElasticSearchProvider).AutoCommitCount = 1; // commit every one document
 
-            provider.RemoveAll(scope, "catalogitem");
+            provider.RemoveAll(scope, "");
             var controller = GetSearchIndexController(provider);
             controller.Process(scope, CatalogIndexedSearchCriteria.DocType, true);
 

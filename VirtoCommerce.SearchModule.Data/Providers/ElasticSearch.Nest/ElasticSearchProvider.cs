@@ -388,7 +388,18 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             {
                 if (!Client.IndexExists(Indices.Parse(scope)).Exists)
                 {
-                    Client.CreateIndex(scope);
+                    //Use ngrams analyzer for search in the middle of word
+                    //http://www.elasticsearch.org/guide/en/elasticsearch/guide/current/ngrams-compound-words.html
+                    Client.CreateIndex(scope, x=>x.Settings(v=>v
+                        .Analysis(a=>a.TokenFilters(f=> f.NGram("trigrams_filter", ng => ng.MinGram(3).MaxGram(20)))
+                        .Analyzers(an=>an
+                            .Custom(_indexAnalyzer, custom=>custom
+                                .Tokenizer("standard")
+                                .Filters("lowercase", "trigrams_filter"))
+                            .Custom(SearchAnalyzer, custom => custom
+                                .Tokenizer("standard")
+                                .Filters("lowercase"))))));
+
                     var mappingRequest = new PutMappingRequest(scope, documentType) { Properties = properties };
                     Client.Map<DocumentDictionary>(m=>mappingRequest);
                     Client.Refresh(scope);
