@@ -16,7 +16,7 @@ namespace VirtoCommerce.SearchModule.Tests
         private string _DefaultScope = "test";
 
         [Theory]
-        //[InlineData("Lucene")]
+        [InlineData("Lucene")]
         [InlineData("Elastic")]
         [Trait("Category", "CI")]
         public void Can_find_pricelists_prices(string providerType)

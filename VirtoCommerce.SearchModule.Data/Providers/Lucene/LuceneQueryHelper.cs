@@ -268,20 +268,20 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             var filter =
                 new TermRangeFilter(
                     string.Format(CultureInfo.InvariantCulture, "{0}_{1}_{2}", field, currency, priceLists[index - 1].ToLower()),
-                    "*",
-                    "*",
+                    NumericUtils.LongToPrefixCoded(long.MinValue),
+                    NumericUtils.LongToPrefixCoded(long.MaxValue),
                     true,
                     false);
             var leftClause = new FilterClause(filter, Occur.MUST_NOT);
             query.Add(leftClause);
 
             // create right part
-            if (index == priceLists.Length) // last element
+            if (index == priceLists.Length - 1) // last element
             {
                 //var rangefilter = NumericRangeFilter.;
                 var filter2 =
                     new TermRangeFilter(
-                        string.Format(CultureInfo.InvariantCulture, "{0}_{1}_{2}", field, currency, priceLists[index - 1].ToLower()),
+                        string.Format(CultureInfo.InvariantCulture, "{0}_{1}_{2}", field, currency, priceLists[index].ToLower()),
                         lowerbound,
                         upperbound,
                         lowerboundincluded,
