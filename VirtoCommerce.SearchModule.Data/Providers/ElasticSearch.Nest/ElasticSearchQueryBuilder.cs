@@ -28,12 +28,18 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                 var fields = criteria.Sort.GetSort();
                 foreach (var field in fields)
                 {
+                    if(builder.Sort == null)
+                    {
+                        builder.Sort = new List<ISort>();
+                    }
+
                     builder.Sort.Add(
                         new SortField
                         {
                             Field = field.FieldName,
                             Order = field.IsDescending ? SortOrder.Descending : SortOrder.Ascending,
-                            Missing = "_last"
+                            Missing = "_last",
+                            IgnoreUnmappedFields = true
                         });
                 }
             }

@@ -131,7 +131,7 @@ namespace VirtoCommerce.SearchModule.Tests
         }
 
         [Theory]
-        [InlineData("Lucene")]
+        //[InlineData("Lucene")]
         [InlineData("Elastic")]
         [Trait("Category", "CI")]
         public void Can_find_item_using_search(string providerType)
@@ -147,7 +147,8 @@ namespace VirtoCommerce.SearchModule.Tests
                 Catalog = "goods",
                 RecordsToRetrieve = 10,
                 StartingRecord = 0,
-                Pricelists = new string[] { }
+                Pricelists = new string[] { },
+                Sort = new SearchSort("somefield") // specifically add non-existent field
             };
 
             var results = provider.Search<DocumentDictionary>(scope, criteria);
