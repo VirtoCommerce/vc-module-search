@@ -131,7 +131,7 @@ namespace VirtoCommerce.SearchModule.Tests
         }
 
         [Theory]
-        //[InlineData("Lucene")]
+        [InlineData("Lucene")]
         [InlineData("Elastic")]
         [Trait("Category", "CI")]
         public void Can_find_item_using_search(string providerType)

@@ -70,7 +70,7 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.True(searchResults.ProductsTotalCount > 0, string.Format("Didn't find any products using {0} search", providerType));
         }
         [Theory]
-        //[InlineData("Lucene")]
+        [InlineData("Lucene")]
         [InlineData("Elastic")]
         public void Can_index_demo_data_and_search(string providerType)
         {
