@@ -137,6 +137,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             _queryBuilder = queryBuilder;
             _connection = connection;
             Init();
+
+#if DEBUG
+            this.EnableTrace = true;
+#endif
         }
 
         private bool _isInitialized;
@@ -405,7 +409,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                                 .Filters("lowercase"))))));
 
                     var mappingRequest = new PutMappingRequest(scope, documentType) { Properties = properties };
-                    Client.Map<DocumentDictionary>(m=>mappingRequest);
+                    var response = Client.Map<DocumentDictionary>(m=>mappingRequest);
+
+                    if (!response.IsValid)
+                    {
+                        ThrowException("Failed to submit mapping. " + response.DebugInformation, response.OriginalException);
+                    }
+
                     Client.Refresh(scope);
                 }
                 else // update existing mappings
@@ -431,12 +441,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
         private void SetupProperty(IProperty property, IDocumentField field)
         {
-            property.Store = field.ContainsAttribute(IndexStore.Yes);
             //property.DocValues = !field.ContainsAttribute(IndexStore.No);
 
             if(property is StringProperty)
             {
                 var stringProperty = property as StringProperty;
+                stringProperty.Store = field.ContainsAttribute(IndexStore.Yes);
                 stringProperty.Index = field.ContainsAttribute(IndexType.NotAnalyzed) ? FieldIndexOption.NotAnalyzed : field.ContainsAttribute(IndexType.Analyzed) ? FieldIndexOption.Analyzed : FieldIndexOption.No;
 
                 if(field.Name.StartsWith("__content", StringComparison.OrdinalIgnoreCase))

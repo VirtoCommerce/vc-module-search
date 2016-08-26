@@ -40,6 +40,39 @@ namespace VirtoCommerce.SearchModule.Tests
         [Theory]
         [InlineData("Lucene")]
         [InlineData("Elastic")]
+        public void Can_index_demo_data_and_search_using_outline(string providerType)
+        {
+            var scope = "test";
+            var provider = GetSearchProvider(providerType, scope);
+
+            provider.RemoveAll(scope, "");
+            var controller = GetSearchIndexController(provider);
+            controller.Process(scope, CatalogIndexedSearchCriteria.DocType, true);
+
+            // sleep for index to be commited
+            Thread.Sleep(5000);
+
+            // get catalog id by name
+            var catalogRepo = GetCatalogRepository();
+            var catalog = catalogRepo.Catalogs.SingleOrDefault(x => x.Name.Equals("electronics", StringComparison.OrdinalIgnoreCase));
+
+            // find all prodducts in the category
+            var catalogCriteria = new CatalogIndexedSearchCriteria()
+            {
+                Catalog = catalog.Id,
+                Currency = "USD"
+            };
+
+            catalogCriteria.Outlines.Add("4974648a41df4e6ea67ef2ad76d7bbd4/c76774f9047d4f18a916b38681c50557*");
+
+            var ibs = GetItemBrowsingService(provider);
+            var searchResults = ibs.SearchItems(scope, catalogCriteria, Domain.Catalog.Model.ItemResponseGroup.ItemLarge);
+
+            Assert.True(searchResults.ProductsTotalCount > 0, string.Format("Didn't find any products using {0} search", providerType));
+        }
+        [Theory]
+        //[InlineData("Lucene")]
+        [InlineData("Elastic")]
         public void Can_index_demo_data_and_search(string providerType)
         {
             var scope = "test";
@@ -60,9 +93,14 @@ namespace VirtoCommerce.SearchModule.Tests
             var catalog = catalogRepo.Catalogs.SingleOrDefault(x => x.Name.Equals("electronics", StringComparison.OrdinalIgnoreCase));
 
             // find all prodducts in the category
-            var catalogCriteria = new CatalogIndexedSearchCriteria() { Catalog = catalog.Id, Currency = "USD" };
+            var catalogCriteria = new CatalogIndexedSearchCriteria()
+            {
+                Catalog = catalog.Id,
+                Currency = "USD"
+            };
 
             // Add all filters
+            var brandFilter = new AttributeFilter { Key = "brand" };
             var filter = new AttributeFilter { Key = "color", IsLocalized = true };
             filter.Values = new[]
                                 {
@@ -88,6 +126,7 @@ namespace VirtoCommerce.SearchModule.Tests
             catalogCriteria.Add(filter);
             catalogCriteria.Add(rangefilter);
             catalogCriteria.Add(priceRangefilter);
+            catalogCriteria.Add(brandFilter);
 
             var ibs = GetItemBrowsingService(provider);
             var searchResults = ibs.SearchItems(scope, catalogCriteria, Domain.Catalog.Model.ItemResponseGroup.ItemLarge);
@@ -99,6 +138,9 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.True(colorAggregation.Items.Where(x => x.Value.ToString().Equals("Red", StringComparison.OrdinalIgnoreCase)).SingleOrDefault().Count == 6);
             Assert.True(colorAggregation.Items.Where(x => x.Value.ToString().Equals("Gray", StringComparison.OrdinalIgnoreCase)).SingleOrDefault().Count == 3);
             Assert.True(colorAggregation.Items.Where(x => x.Value.ToString().Equals("Black", StringComparison.OrdinalIgnoreCase)).SingleOrDefault().Count == 13);
+
+            var brandAggregation = searchResults.Aggregations.SingleOrDefault(a => a.Field.Equals("brand", StringComparison.OrdinalIgnoreCase));
+            Assert.True(brandAggregation.Items.Where(x => x.Value.ToString().Equals("Beats By Dr Dre", StringComparison.OrdinalIgnoreCase)).SingleOrDefault().Count == 3);
 
             //var results = provider.Search(scope, catalogCriteria);
             //_output.WriteLine(String.Format("Found {0} documents", results.DocCount));

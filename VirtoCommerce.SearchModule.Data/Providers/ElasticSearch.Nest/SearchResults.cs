@@ -83,15 +83,15 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                         var key = filter.Key.ToLower();
                         if (facets.ContainsKey(key))
                         {
-                            var facet = facets[key] as FiltersAggregate;
+                            var facet = facets[key] as SingleBucketAggregate;
                             if (facet != null)
                             {
                                 if (facet.Aggregations != null)
                                 {
-                                    var termAgg = facet.Aggregations[key] as TermsAggregate;
+                                    var termAgg = facet.Aggregations[key] as BucketAggregate;
                                     if (termAgg != null)
                                     {
-                                        foreach (var term in termAgg.Buckets)
+                                        foreach (var term in termAgg.Items.OfType<KeyedBucket>())
                                         {
                                             var newFacet = new Facet(facetGroup, term.Key, (int)term.DocCount, null);
                                             facetGroup.Facets.Add(newFacet);
