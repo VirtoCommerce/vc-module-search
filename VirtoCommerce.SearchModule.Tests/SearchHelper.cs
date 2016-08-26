@@ -27,6 +27,7 @@ namespace VirtoCommerce.SearchModule.Tests
             provider.Index(scope, "catalogitem", CreateDocument("sad121", "red shirt", "red", new[] { new Price("price_usd_default", 10m) }, 3, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
             provider.Index(scope, "catalogitem", CreateDocument("jdashf", "blue shirt", "blue", new[] { new Price("price_usd_default", 23.12m) }, 8, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }, true));
             provider.Index(scope, "catalogitem", CreateDocument("32894hjf", "black sox", "black", new[] { new Price("price_usd_default", 243.12m) }, 10, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
+            provider.Index(scope, "catalogitem", CreateDocument("another", "black sox2", "silver", new[] { new Price("price_usd_default", 700m) }, 20, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
             provider.Commit(scope);
             provider.Close(scope, "catalogitem");
 

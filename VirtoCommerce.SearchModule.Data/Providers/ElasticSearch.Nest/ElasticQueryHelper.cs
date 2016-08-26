@@ -11,7 +11,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
     [CLSCompliant(false)]
     public class ElasticQueryHelper
     {
-        public static BoolQuery CreateQuery<T>(ISearchCriteria criteria, ISearchFilter filter) where T:class
+        public static BoolQuery CreateQuery<T>(ISearchCriteria criteria, ISearchFilter filter) where T : class
         {
             var values = GetFilterValues(filter);
             if (values == null)
@@ -22,7 +22,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             foreach (var value in values)
             {
                 var valueQuery = CreateQueryForValue<T>(criteria, filter, value);
-                valueContainer.Add(valueQuery);                
+                valueContainer.Add(valueQuery);
             }
 
             query.Should = valueContainer;
@@ -96,16 +96,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         /// <param name="field">The field.</param>
         /// <param name="value">The value.</param>
         /// <returns></returns>
-        public static BoolQuery CreatePriceRangeFilter<T>(ISearchCriteria criteria, string field, RangeFilterValue value) where T:class
+        public static BoolQuery CreatePriceRangeFilter<T>(ISearchCriteria criteria, string field, RangeFilterValue value) where T : class
         {
             //var query = new BoolQuery();
 
             var lowerbound = value.Lower;
             var upperbound = value.Upper;
-
-            double lowerboundVal, upperboundVal;
-            double.TryParse(lowerbound, out lowerboundVal);
-            double.TryParse(upperbound, out upperboundVal);
 
             var lowerboundincluded = true;
             var upperboundincluded = false;
@@ -129,10 +125,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
             var priceListId = pls[0].ToLower();
 
-            var top_range_query = Query<T>.Range(r=>r
+            var top_range_query = Query<T>.Range(r => r
                     .Field(string.Format("{0}_{1}_{2}", field, currency, priceListId))
-                    .GreaterThanOrEquals(lowerboundVal)
-                    .LessThan(upperboundVal)
+                    .GreaterThanOrEquals(lowerbound.AsDouble())
+                    .LessThan(upperbound.AsDouble())
                 );
 
             var queryContainer = new List<QueryContainer>();
@@ -140,7 +136,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             queryContainer.Add(top_range_query);
             if (pls.Count() > 1)
             {
-                var sub_range_query = CreatePriceRangeFilter<T>(pls, 1, field, currency, lowerboundVal, upperboundVal, lowerboundincluded, upperboundincluded);
+                var sub_range_query = CreatePriceRangeFilter<T>(pls, 1, field, currency, lowerbound.AsDouble(), upperbound.AsDouble(), lowerboundincluded, upperboundincluded);
                 var sub_range_bool_query = Query<T>.Bool(b => b.Should(sub_range_query));
                 queryContainer.Add(sub_range_bool_query);
             }
@@ -150,7 +146,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             return query;
         }
 
-        private static BoolQuery CreatePriceRangeFilter<T>(string[] priceLists, int index, string field, string currency, double lowerbound, double upperbound, bool lowerboundincluded, bool upperboundincluded) where T:class
+        private static BoolQuery CreatePriceRangeFilter<T>(string[] priceLists, int index, string field, string currency, double? lowerbound, double? upperbound, bool lowerboundincluded, bool upperboundincluded) where T : class
         {
             var query = new BoolQuery();
 
@@ -188,6 +184,23 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             }
 
             return query;
+        }
+    }
+
+    public static class DoubleExtensions
+    {
+        public static double? AsDouble(this string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return new double?();
+
+            double convertedValue;
+            if (double.TryParse(input, out convertedValue))
+            {
+                return new double?(convertedValue);
+            }
+
+            return new double?();
         }
     }
 }

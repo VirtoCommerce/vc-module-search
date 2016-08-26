@@ -211,7 +211,9 @@ namespace VirtoCommerce.SearchModule.Tests
             priceRangefilter.Values = new[]
                                           {
                                               new RangeFilterValue { Id = "0_to_100", Lower = "0", Upper = "100" },
-                                              new RangeFilterValue { Id = "100_to_700", Lower = "100", Upper = "700" }
+                                              new RangeFilterValue { Id = "100_to_700", Lower = "100", Upper = "700" },
+                                              new RangeFilterValue { Id = "over_700", Lower = "700" },
+                                              new RangeFilterValue { Id = "under_100", Upper = "100" },
                                           };
 
             criteria.Add(filter);
@@ -220,7 +222,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
             var results = provider.Search<DocumentDictionary>(scope, criteria);
 
-            Assert.True(results.DocCount == 5, string.Format("Returns {0} instead of 5", results.DocCount));
+            Assert.True(results.DocCount == 6, string.Format("Returns {0} instead of 5", results.DocCount));
 
             var redCount = GetFacetCount(results, "Color", "red");
             Assert.True(redCount == 3, string.Format("Returns {0} facets of red instead of 3", redCount));
@@ -230,6 +232,12 @@ namespace VirtoCommerce.SearchModule.Tests
 
             var priceCount2 = GetFacetCount(results, "Price", "100_to_700");
             Assert.True(priceCount2 == 3, string.Format("Returns {0} facets of 100_to_700 prices instead of 3", priceCount2));
+
+            var priceCount3 = GetFacetCount(results, "Price", "over_700");
+            Assert.True(priceCount3 == 1, string.Format("Returns {0} facets of over_700 prices instead of 1", priceCount3));
+
+            var priceCount4 = GetFacetCount(results, "Price", "under_100");
+            Assert.True(priceCount4 == 2, string.Format("Returns {0} facets of priceCount4 prices instead of 2", priceCount4));
 
             var sizeCount = GetFacetCount(results, "size", "0_to_5");
             Assert.True(sizeCount == 3, string.Format("Returns {0} facets of 0_to_5 size instead of 3", sizeCount));

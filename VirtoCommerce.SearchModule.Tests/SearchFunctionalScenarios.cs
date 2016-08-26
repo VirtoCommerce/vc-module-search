@@ -161,7 +161,7 @@ namespace VirtoCommerce.SearchModule.Tests
         {
             var settings = new Moq.Mock<ISettingsManager>();
             var builder = new CatalogItemIndexBuilder(provider, GetSearchService(), GetItemService(), GetPricingService(), GetChangeLogService());
-            return new SearchIndexController(settings.Object, builder);
+            return new SearchIndexController(settings.Object, provider, builder);
         }
 
         private ICommerceService GetCommerceService()
