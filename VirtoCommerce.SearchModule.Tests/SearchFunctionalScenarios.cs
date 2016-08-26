@@ -7,7 +7,6 @@ using VirtoCommerce.CoreModule.Data.Services;
 using VirtoCommerce.Domain.Catalog.Services;
 using VirtoCommerce.Domain.Commerce.Services;
 using VirtoCommerce.Domain.Pricing.Services;
-using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.Platform.Core.ChangeLog;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.Platform.Data.ChangeLog;
@@ -23,11 +22,11 @@ using System.Linq;
 using VirtoCommerce.Domain.Search.Filters;
 using VirtoCommerce.SearchModule.Data.Model;
 using System.Threading;
-using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest;
 
 namespace VirtoCommerce.SearchModule.Tests
 {
     [CLSCompliant(false)]
+    [Collection("Search")]
     public class SearchFunctionalScenarios : SearchTestsBase
     {
         private readonly ITestOutputHelper _output;

@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
-using System.Collections;
 using System.Linq;
 using VirtoCommerce.Domain.Search.Filters;
 using VirtoCommerce.Domain.Search.Model;
@@ -11,6 +10,7 @@ using Xunit;
 namespace VirtoCommerce.SearchModule.Tests
 {
     [CLSCompliant(false)]
+    [Collection("Search")]
     public class SearchScenarios : SearchTestsBase
     {
         private string _DefaultScope = "test";
@@ -46,7 +46,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
             var results = provider.Search<DocumentDictionary>(scope, criteria);
 
-            Assert.True(results.DocCount == 5, string.Format("Returns {0} instead of 1", results.DocCount));
+            Assert.True(results.DocCount == 6, string.Format("Returns {0} instead of 6", results.DocCount));
 
             var priceCount = GetFacetCount(results, "Price", "0_to_100");
             Assert.True(priceCount == 2, string.Format("Returns {0} facets of 0_to_100 prices instead of 2", priceCount));
@@ -68,7 +68,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
             results = provider.Search<DocumentDictionary>(scope, criteria);
 
-            Assert.True(results.DocCount == 5, string.Format("\"Sample Product\" search returns {0} instead of 1", results.DocCount));
+            Assert.True(results.DocCount == 6, string.Format("\"Sample Product\" search returns {0} instead of 6", results.DocCount));
 
             var priceSaleCount = GetFacetCount(results, "Price", "0_to_100");
             Assert.True(priceSaleCount == 3, string.Format("Returns {0} facets of 0_to_100 prices instead of 2", priceSaleCount));
