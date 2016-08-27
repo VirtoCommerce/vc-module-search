@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using VirtoCommerce.Domain.Search.Filters;
-using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.SearchModule.Data.Model;
+using VirtoCommerce.SearchModule.Data.Model.Filters;
+using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 {
@@ -110,9 +110,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
             // format is "fieldname_store_currency_pricelist"
             string[] pls = null;
-            if (criteria is Model.CatalogIndexedSearchCriteria)
+            if (criteria is CatalogIndexedSearchCriteria)
             {
-                pls = ((Model.CatalogIndexedSearchCriteria)criteria).Pricelists;
+                pls = ((CatalogIndexedSearchCriteria)criteria).Pricelists;
             }
 
             var parentPriceList = string.Empty;

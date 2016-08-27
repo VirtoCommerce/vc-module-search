@@ -1,4 +1,4 @@
-﻿namespace VirtoCommerce.SearchModule.Data.Model
+﻿namespace VirtoCommerce.SearchModule.Data.Model.Search.Criterias
 {
     public class KeywordSearchCriteria : SearchCriteriaBase
     {

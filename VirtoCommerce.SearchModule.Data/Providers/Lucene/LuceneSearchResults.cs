@@ -5,14 +5,16 @@ using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Util;
 using SpellChecker.Net.Search.Spell;
-using VirtoCommerce.Domain.Search.Filters;
-using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.SearchModule.Data.Services;
 using VirtoCommerce.SearchModule.Data.Model;
+using VirtoCommerce.SearchModule.Data.Model.Indexing;
+using VirtoCommerce.SearchModule.Data.Model.Search;
+using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Data.Model.Filters;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
-    public class LuceneSearchResults<T> : Model.ISearchResults<DocumentDictionary> where T : class
+    public class LuceneSearchResults<T> : ISearchResults<DocumentDictionary> where T : class
     {
         /// <summary>
         ///     Initializes a new instance of the <see cref="SearchResults" /> class.
@@ -277,7 +279,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <param name="criteria">The criteria.</param>
         private void CreateSuggestions(IndexReader reader, ISearchCriteria criteria)
         {
-            var keywordSearchCriteria = criteria as Model.KeywordSearchCriteria;
+            var keywordSearchCriteria = criteria as KeywordSearchCriteria;
             if (keywordSearchCriteria != null)
             {
                 var c = keywordSearchCriteria;

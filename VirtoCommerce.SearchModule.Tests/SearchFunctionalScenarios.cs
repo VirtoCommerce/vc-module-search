@@ -19,9 +19,9 @@ using VirtoCommerce.SearchModule.Web.Services;
 using Xunit;
 using Xunit.Abstractions;
 using System.Linq;
-using VirtoCommerce.Domain.Search.Filters;
-using VirtoCommerce.SearchModule.Data.Model;
 using System.Threading;
+using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Data.Model.Filters;
 
 namespace VirtoCommerce.SearchModule.Tests
 {

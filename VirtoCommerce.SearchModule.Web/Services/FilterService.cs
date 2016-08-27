@@ -1,11 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
-using VirtoCommerce.Domain.Search.Filters;
-using VirtoCommerce.Domain.Search.Model;
-using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.Domain.Store.Services;
 using VirtoCommerce.Platform.Core.DynamicProperties;
+using VirtoCommerce.SearchModule.Data.Model.Filters;
 
 namespace VirtoCommerce.SearchModule.Web.Services
 {

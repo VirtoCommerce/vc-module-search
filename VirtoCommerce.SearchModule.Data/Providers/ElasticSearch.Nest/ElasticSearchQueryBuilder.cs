@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using VirtoCommerce.Domain.Search.Filters;
-using VirtoCommerce.Domain.Search.Model;
-using VirtoCommerce.SearchModule.Data.Model;
+using VirtoCommerce.SearchModule.Data.Model.Filters;
+using VirtoCommerce.SearchModule.Data.Model.Search;
+using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 {
@@ -78,9 +78,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             #endregion
 
             #region CatalogItemSearchCriteria
-            if (criteria is Model.CatalogIndexedSearchCriteria)
+            if (criteria is CatalogIndexedSearchCriteria)
             {
-                var c = criteria as Model.CatalogIndexedSearchCriteria;
+                var c = criteria as CatalogIndexedSearchCriteria;
 
                 mainQuery.Add(new DateRangeQuery() { Field = "startdate", LessThanOrEqualTo = c.StartDate });
 
@@ -266,7 +266,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             query.Add(new WildcardQuery() { Field = fieldName.ToLower(), Value = lowerCase ? filter.ToLower() : filter });
         }
 
-        protected void AddQueryString(List<QueryContainer> query, Model.CatalogIndexedSearchCriteria filter, params string[] fields)
+        protected void AddQueryString(List<QueryContainer> query, CatalogIndexedSearchCriteria filter, params string[] fields)
         {
             var searchPhrase = filter.SearchPhrase;
             MultiMatchQuery multiMatch;

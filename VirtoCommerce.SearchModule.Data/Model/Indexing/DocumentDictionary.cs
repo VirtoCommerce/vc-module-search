@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
 
-namespace VirtoCommerce.SearchModule.Data.Model
+namespace VirtoCommerce.SearchModule.Data.Model.Indexing
 {
     public class DocumentDictionary : Dictionary<string, object>
     {

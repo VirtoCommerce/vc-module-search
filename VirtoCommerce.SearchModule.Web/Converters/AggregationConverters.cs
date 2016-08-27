@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Linq;
-using coreModel = VirtoCommerce.Domain.Catalog.Model;
-using searchModel = VirtoCommerce.Domain.Search.Model;
+using VirtoCommerce.Domain.Catalog.Model;
+using VirtoCommerce.SearchModule.Data.Model.Search;
 
 namespace VirtoCommerce.SearchModule.Web.Converters
 {
     public static class AggregationConverters
     {
-        public static coreModel.Aggregation ToModuleModel(this searchModel.FacetGroup facetGroup, params string[] appliedFilters)
+        public static Aggregation ToModuleModel(this FacetGroup facetGroup, params string[] appliedFilters)
         {
-            var result = new coreModel.Aggregation
+            var result = new Aggregation
             {
                 AggregationType = facetGroup.FacetType,
                 Field = facetGroup.FieldName,
@@ -24,9 +24,9 @@ namespace VirtoCommerce.SearchModule.Web.Converters
             return result;
         }
 
-        public static coreModel.AggregationItem ToModuleModel(this searchModel.Facet facet, params string[] appliedFilters)
+        public static AggregationItem ToModuleModel(this Facet facet, params string[] appliedFilters)
         {
-            var result = new coreModel.AggregationItem
+            var result = new AggregationItem
             {
                 Value = facet.Key,
                 Count = facet.Count,
@@ -41,9 +41,9 @@ namespace VirtoCommerce.SearchModule.Web.Converters
             return result;
         }
 
-        public static coreModel.AggregationLabel ToModuleModel(this searchModel.FacetLabel label)
+        public static AggregationLabel ToModuleModel(this FacetLabel label)
         {
-            return new coreModel.AggregationLabel
+            return new AggregationLabel
             {
                 Language = label.Language,
                 Label = label.Label,

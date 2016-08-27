@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using VirtoCommerce.SearchModule.Data.Model;
 using Nest;
-using VirtoCommerce.Domain.Search.Model;
 using System.Diagnostics;
 using System.Text;
 using System.Linq;
 using System.Text.RegularExpressions;
+using VirtoCommerce.SearchModule.Data.Model.Indexing;
+using VirtoCommerce.SearchModule.Data.Model.Search;
+using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 {

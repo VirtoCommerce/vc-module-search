@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using VirtoCommerce.Domain.Search.Model;
+using VirtoCommerce.SearchModule.Data.Model.Filters;
 
-namespace VirtoCommerce.SearchModule.Data.Model
+namespace VirtoCommerce.SearchModule.Data.Model.Search.Criterias
 {
     public abstract class SearchCriteriaBase : ISearchCriteria
     {

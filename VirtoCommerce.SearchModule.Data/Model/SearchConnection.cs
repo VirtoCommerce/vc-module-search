@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
-using VirtoCommerce.Domain.Search;
-using VirtoCommerce.Domain.Search.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Model
 {

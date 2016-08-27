@@ -10,17 +10,18 @@ using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
-using VirtoCommerce.SearchModule.Data.Model;
-using VirtoCommerce.Domain.Search.Services;
 using u = Lucene.Net.Util;
-using VirtoCommerce.Domain.Search.Model;
+using VirtoCommerce.SearchModule.Data.Model.Search;
+using VirtoCommerce.SearchModule.Data.Model;
+using VirtoCommerce.SearchModule.Data.Model.Indexing;
+using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
     /// <summary>
     ///     File based search provider based on Lucene.
     /// </summary>
-    public class LuceneSearchProvider : Model.ISearchProvider
+    public class LuceneSearchProvider : ISearchProvider
     {
         private static readonly Dictionary<string, IndexWriter> _indexFolders = new Dictionary<string, IndexWriter>();
         private static readonly object _providerlock = new object();
@@ -35,7 +36,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// </summary>
         /// <param name="queryBuilder">The query builder.</param>
         /// <param name="connection">The connection.</param>
-        public LuceneSearchProvider(Model.ISearchQueryBuilder queryBuilder, ISearchConnection connection)
+        public LuceneSearchProvider(ISearchQueryBuilder queryBuilder, ISearchConnection connection)
         {
             AutoCommit = true;
             AutoCommitCount = 100;
@@ -65,7 +66,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <value>
         ///     The query builder.
         /// </value>
-        public Model.ISearchQueryBuilder QueryBuilder { get; set; }
+        public ISearchQueryBuilder QueryBuilder { get; set; }
 
         /// <summary>
         ///     Closes the specified provider.

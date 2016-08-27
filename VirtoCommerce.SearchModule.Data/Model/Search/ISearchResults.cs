@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using VirtoCommerce.Domain.Search.Model;
+using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
 
-namespace VirtoCommerce.SearchModule.Data.Model
+namespace VirtoCommerce.SearchModule.Data.Model.Search
 {
     public interface ISearchResults<T> where T : class
     {

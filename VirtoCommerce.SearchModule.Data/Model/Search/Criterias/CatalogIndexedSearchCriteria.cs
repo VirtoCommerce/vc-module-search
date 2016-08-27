@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Text;
-using VirtoCommerce.Domain.Search.Model;
 
-namespace VirtoCommerce.SearchModule.Data.Model
+namespace VirtoCommerce.SearchModule.Data.Model.Search.Criterias
 {
     // TODO: move to catalog module as it is catalog specific criteria and not generic search one
 

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
-using VirtoCommerce.Domain.Search.Model;
-using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.Platform.Core.Settings;
+using VirtoCommerce.SearchModule.Data.Model.Indexing;
 
 namespace VirtoCommerce.SearchModule.Data.Services
 {

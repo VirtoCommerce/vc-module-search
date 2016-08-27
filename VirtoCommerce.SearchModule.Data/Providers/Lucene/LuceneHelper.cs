@@ -1,7 +1,6 @@
 ﻿using System;
 using Lucene.Net.Documents;
-using VirtoCommerce.Domain.Search;
-using VirtoCommerce.Domain.Search.Model;
+using VirtoCommerce.SearchModule.Data.Model.Indexing;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {

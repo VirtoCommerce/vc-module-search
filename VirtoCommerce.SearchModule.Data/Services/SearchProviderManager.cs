@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.SearchModule.Data.Model;
-using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest;
+using VirtoCommerce.SearchModule.Data.Model.Search;
+using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
 
 namespace VirtoCommerce.SearchModule.Data.Services
 {
-    public class SearchProviderManager : ISearchProviderManager, Model.ISearchProvider
+    public class SearchProviderManager : ISearchProviderManager, ISearchProvider
     {
         private readonly ISearchConnection _connection;
         private readonly ConcurrentDictionary<string, Func<ISearchConnection, ISearchProvider>> _factories;
@@ -45,7 +45,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         #region ISearchProvider Members
 
-        public Model.ISearchQueryBuilder QueryBuilder
+        public ISearchQueryBuilder QueryBuilder
         {
             get { return CurrentProvider.QueryBuilder; }
         }

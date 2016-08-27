@@ -8,10 +8,10 @@ using VirtoCommerce.Domain.Catalog.Model;
 using VirtoCommerce.Domain.Catalog.Services;
 using VirtoCommerce.Domain.Pricing.Model;
 using VirtoCommerce.Domain.Pricing.Services;
-using VirtoCommerce.Domain.Search.Model;
-using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.Platform.Core.ChangeLog;
 using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.SearchModule.Data.Model.Indexing;
+using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
 
 namespace VirtoCommerce.SearchModule.Data.Services
 {
@@ -42,7 +42,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
         {
             get
             {
-                return Model.CatalogIndexedSearchCriteria.DocType;
+                return CatalogIndexedSearchCriteria.DocType;
             }
         }
 

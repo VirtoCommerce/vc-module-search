@@ -1,12 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using VirtoCommerce.Domain.Catalog.Model;
 using VirtoCommerce.Domain.Catalog.Services;
-using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Data.Model;
+using VirtoCommerce.SearchModule.Data.Model.Indexing;
+using VirtoCommerce.SearchModule.Data.Model.Search;
+using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
 using VirtoCommerce.SearchModule.Data.Services;
 using VirtoCommerce.SearchModule.Web.Converters;
-using moduleModel = VirtoCommerce.Domain.Catalog.Model;
 
 namespace VirtoCommerce.SearchModule.Web.Services
 {
@@ -21,9 +23,9 @@ namespace VirtoCommerce.SearchModule.Web.Services
             _itemService = itemService;
         }
 
-        public moduleModel.SearchResult SearchItems(string scope, ISearchCriteria criteria, moduleModel.ItemResponseGroup responseGroup)
+        public SearchResult SearchItems(string scope, ISearchCriteria criteria, ItemResponseGroup responseGroup)
         {
-            var items = new List<moduleModel.CatalogProduct>();
+            var items = new List<CatalogProduct>();
             var itemsOrderedList = new List<string>();
 
             var foundItemCount = 0;
@@ -39,8 +41,6 @@ namespace VirtoCommerce.SearchModule.Web.Services
             {
                 // Search using criteria, it will only return IDs of the items
                 searchResults = _searchProvider.Search<DocumentDictionary>(scope, criteria);
-                //var itemKeyValues = searchResults.GetKeyAndOutlineFieldValueMap<string>();
-                //results = new CatalogItemSearchResults(myCriteria, itemKeyValues, searchResults);
 
                 searchRetry++;
 
@@ -62,9 +62,9 @@ namespace VirtoCommerce.SearchModule.Web.Services
 
                 // if we can determine catalog, pass it to the service
                 string catalog = null;
-                if (criteria is Data.Model.CatalogIndexedSearchCriteria)
+                if (criteria is CatalogIndexedSearchCriteria)
                 {
-                    catalog = (criteria as Data.Model.CatalogIndexedSearchCriteria).Catalog;
+                    catalog = (criteria as CatalogIndexedSearchCriteria).Catalog;
                 }
 
                 // Now load items from repository
@@ -84,7 +84,7 @@ namespace VirtoCommerce.SearchModule.Web.Services
             while (foundItemCount > dbItemCount && searchResults!=null && searchResults.Documents.Any() && searchRetry <= 3 &&
                 (myCriteria.RecordsToRetrieve + myCriteria.StartingRecord) < searchResults.TotalCount);
 
-            var response = new moduleModel.SearchResult();
+            var response = new SearchResult();
 
             response.Products.AddRange(items);
             response.ProductsTotalCount = (int)searchResults.TotalCount;

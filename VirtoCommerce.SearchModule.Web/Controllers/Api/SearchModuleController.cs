@@ -14,9 +14,6 @@ using VirtoCommerce.CatalogModule.Web.Model;
 using VirtoCommerce.CatalogModule.Web.Security;
 using VirtoCommerce.Domain.Catalog.Model;
 using VirtoCommerce.Domain.Catalog.Services;
-using VirtoCommerce.Domain.Search.Filters;
-using VirtoCommerce.Domain.Search.Model;
-using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.Domain.Store.Model;
 using VirtoCommerce.Domain.Store.Services;
 using VirtoCommerce.Platform.Core.Assets;
@@ -33,6 +30,10 @@ using VirtoCommerce.SearchModule.Web.Services;
 using Property = VirtoCommerce.Domain.Catalog.Model.Property;
 using PropertyDictionaryValue = VirtoCommerce.Domain.Catalog.Model.PropertyDictionaryValue;
 using webModel = VirtoCommerce.SearchModule.Web.Model;
+using VirtoCommerce.SearchModule.Data.Model;
+using VirtoCommerce.SearchModule.Data.Model.Filters;
+using VirtoCommerce.SearchModule.Data.Model.Search;
+using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
 
 namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 {
@@ -73,19 +74,21 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             _cacheManager = cacheManager;
         }
 
+        /*
         [HttpGet]
         [Route("catalogitem")]
         [ResponseType(typeof(ISearchResults))]
         [CheckPermission(Permission = SearchPredefinedPermissions.Debug)]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public IHttpActionResult Debug([FromUri]Data.Model.CatalogIndexedSearchCriteria criteria)
+        public IHttpActionResult Debug([FromUri]CatalogIndexedSearchCriteria criteria)
         {
-            criteria = criteria ?? new Data.Model.CatalogIndexedSearchCriteria();
+            criteria = criteria ?? new CatalogIndexedSearchCriteria();
             var scope = _searchConnection.Scope;
             //var searchResults = _searchProvider.Search(scope, criteria);
             //return Ok(searchResults);
             return null;
         }
+        */
 
         [HttpGet]
         [Route("catalogitem/rebuild")]
@@ -233,7 +236,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             var catalog = criteria.CatalogId;
             var categoryId = criteria.CategoryId;
 
-            var serviceCriteria = new Data.Model.CatalogIndexedSearchCriteria
+            var serviceCriteria = new CatalogIndexedSearchCriteria
             {
                 Locale = criteria.LanguageCode,
                 IsFuzzySearch = true,
@@ -421,7 +424,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             {
                 sortFields.Add(new SearchSortField(priorityFieldName, true) { IgnoredUnmapped = true });
                 sortFields.Add(new SearchSortField("priority", true));
-                sortFields.AddRange(Data.Model.CatalogIndexedSearchCriteria.DefaultSortOrder.GetSort());
+                sortFields.AddRange(CatalogIndexedSearchCriteria.DefaultSortOrder.GetSort());
             }
 
             serviceCriteria.Sort = new SearchSort(sortFields.ToArray());

@@ -3,10 +3,9 @@ using System.Linq;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Util;
-using VirtoCommerce.Domain.Search.Filters;
-using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.SearchModule.Data.Services;
-using VirtoCommerce.SearchModule.Data.Model;
+using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Data.Model.Filters;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
@@ -193,7 +192,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
             // format is "fieldname_store_currency_pricelist"
             string[] pls = null;
-            var searchCriteria = criteria as Model.CatalogIndexedSearchCriteria;
+            var searchCriteria = criteria as CatalogIndexedSearchCriteria;
             if (searchCriteria != null)
             {
                 pls = searchCriteria.Pricelists;

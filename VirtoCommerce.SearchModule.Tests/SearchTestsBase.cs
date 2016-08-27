@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using VirtoCommerce.Domain.Search.Services;
 using VirtoCommerce.SearchModule.Data.Model;
 using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest;
 using VirtoCommerce.SearchModule.Data.Providers.Lucene;

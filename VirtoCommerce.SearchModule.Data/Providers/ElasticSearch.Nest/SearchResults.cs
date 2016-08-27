@@ -3,13 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using VirtoCommerce.Domain.Search.Filters;
-using VirtoCommerce.Domain.Search.Model;
+using VirtoCommerce.SearchModule.Data.Model.Filters;
+using VirtoCommerce.SearchModule.Data.Model.Search;
+using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
 using VirtoCommerce.SearchModule.Data.Services;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 {
-    public class SearchResults<T> : Model.ISearchResults<T> where T:class
+    public class SearchResults<T> : ISearchResults<T> where T:class
     {
         public SearchResults(ISearchCriteria criteria, ISearchResponse<T> response)
         {

@@ -1,9 +1,11 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
-using VirtoCommerce.Domain.Search.Filters;
-using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.SearchModule.Data.Model;
+using VirtoCommerce.SearchModule.Data.Model.Filters;
+using VirtoCommerce.SearchModule.Data.Model.Indexing;
+using VirtoCommerce.SearchModule.Data.Model.Search;
+using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
 using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest;
 using Xunit;
 
@@ -25,7 +27,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var provider = GetSearchProvider(providerType, scope);
             SearchHelper.CreateSampleIndex(provider, scope);
 
-            var criteria = new Data.Model.CatalogIndexedSearchCriteria
+            var criteria = new CatalogIndexedSearchCriteria
             {
                 IsFuzzySearch = true,
                 Catalog = "goods",
@@ -54,7 +56,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var priceCount2 = GetFacetCount(results, "Price", "100_to_700");
             Assert.True(priceCount2 == 3, string.Format("Returns {0} facets of 100_to_700 prices instead of 3", priceCount2));
 
-            criteria = new Data.Model.CatalogIndexedSearchCriteria
+            criteria = new CatalogIndexedSearchCriteria
             {
                 IsFuzzySearch = true,
                 Catalog = "goods",
@@ -106,7 +108,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
             Assert.Throws<ElasticSearchException>(() => bad_provider.RemoveAll(badscope, ""));
 
-            var criteria = new Data.Model.CatalogIndexedSearchCriteria
+            var criteria = new CatalogIndexedSearchCriteria
             {
                 SearchPhrase = "product",
                 IsFuzzySearch = true,
@@ -140,7 +142,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var provider = GetSearchProvider(providerType, scope);
             SearchHelper.CreateSampleIndex(provider, scope);
 
-            var criteria = new Data.Model.CatalogIndexedSearchCriteria
+            var criteria = new CatalogIndexedSearchCriteria
             {
                 SearchPhrase = "product",
                 IsFuzzySearch = true,
@@ -155,7 +157,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
             Assert.True(results.DocCount == 1, string.Format("Returns {0} instead of 1", results.DocCount));
 
-            criteria = new Data.Model.CatalogIndexedSearchCriteria
+            criteria = new CatalogIndexedSearchCriteria
             {
                 SearchPhrase = "sample product ",
                 IsFuzzySearch = true,
@@ -181,7 +183,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
             SearchHelper.CreateSampleIndex(provider, scope);
 
-            var criteria = new Data.Model.CatalogIndexedSearchCriteria
+            var criteria = new CatalogIndexedSearchCriteria
             {
                 SearchPhrase = "",
                 IsFuzzySearch = true,
@@ -265,7 +267,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var provider = GetSearchProvider(providerType, scope);
             SearchHelper.CreateSampleIndex(provider, scope);
 
-            var criteria = new Data.Model.CatalogIndexedSearchCriteria
+            var criteria = new CatalogIndexedSearchCriteria
             {
                 SearchPhrase = "",
                 IsFuzzySearch = true,
@@ -324,18 +326,6 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.True(priceCount == 1, string.Format("Returns {0} facets of 100_to_700 instead of 1", priceCount));
 
             Assert.True(results.DocCount == 1, string.Format("Returns {0} instead of 1", results.DocCount));
-        }
-
-        private int GetFacetCount(ISearchResults results, string fieldName, string facetKey)
-        {
-            if (results.FacetGroups == null || results.FacetGroups.Length == 0)
-            {
-                return 0;
-            }
-
-            var group = (from fg in results.FacetGroups where fg.FieldName.Equals(fieldName, StringComparison.OrdinalIgnoreCase) select fg).SingleOrDefault();
-
-            return @group == null ? 0 : (from facet in @group.Facets where facet.Key == facetKey select facet.Count).FirstOrDefault();
         }
 
         private int GetFacetCount(ISearchResults<DocumentDictionary> results, string fieldName, string facetKey)

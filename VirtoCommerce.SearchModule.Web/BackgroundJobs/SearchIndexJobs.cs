@@ -1,5 +1,5 @@
 ﻿using Hangfire;
-using VirtoCommerce.Domain.Search.Services;
+using VirtoCommerce.SearchModule.Data.Model.Indexing;
 
 namespace VirtoCommerce.SearchModule.Web.BackgroundJobs
 {
