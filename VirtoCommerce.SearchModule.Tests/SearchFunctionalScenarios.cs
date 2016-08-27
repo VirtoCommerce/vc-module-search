@@ -37,9 +37,43 @@ namespace VirtoCommerce.SearchModule.Tests
         }
 
         [Theory]
+        //[InlineData("Lucene")]
+        [InlineData("Elastic")]
+        public void Can_index_category_demo_data_and_search_using_outline(string providerType)
+        {
+            var scope = "test";
+            var provider = GetSearchProvider(providerType, scope);
+
+            provider.RemoveAll(scope, "");
+            var controller = GetSearchIndexController(provider);
+            controller.Process(scope, "category", true);
+
+            // sleep for index to be commited
+            Thread.Sleep(5000);
+
+            //// get catalog id by name
+            //var catalogRepo = GetCatalogRepository();
+            //var catalog = catalogRepo.Catalogs.SingleOrDefault(x => x.Name.Equals("electronics", StringComparison.OrdinalIgnoreCase));
+
+            //// find all prodducts in the category
+            //var catalogCriteria = new CatalogIndexedSearchCriteria()
+            //{
+            //    Catalog = catalog.Id,
+            //    Currency = "USD"
+            //};
+
+            //catalogCriteria.Outlines.Add("4974648a41df4e6ea67ef2ad76d7bbd4/c76774f9047d4f18a916b38681c50557*");
+
+            //var ibs = GetItemBrowsingService(provider);
+            //var searchResults = ibs.SearchItems(scope, catalogCriteria, Domain.Catalog.Model.ItemResponseGroup.ItemLarge);
+
+            //Assert.True(searchResults.ProductsTotalCount > 0, string.Format("Didn't find any products using {0} search", providerType));
+        }
+
+        [Theory]
         [InlineData("Lucene")]
         [InlineData("Elastic")]
-        public void Can_index_demo_data_and_search_using_outline(string providerType)
+        public void Can_index_product_demo_data_and_search_using_outline(string providerType)
         {
             var scope = "test";
             var provider = GetSearchProvider(providerType, scope);
@@ -69,10 +103,11 @@ namespace VirtoCommerce.SearchModule.Tests
 
             Assert.True(searchResults.ProductsTotalCount > 0, string.Format("Didn't find any products using {0} search", providerType));
         }
+
         [Theory]
         [InlineData("Lucene")]
         [InlineData("Elastic")]
-        public void Can_index_demo_data_and_search(string providerType)
+        public void Can_index_product_demo_data_and_search(string providerType)
         {
             var scope = "test";
             var provider = GetSearchProvider(providerType, scope);
@@ -159,8 +194,9 @@ namespace VirtoCommerce.SearchModule.Tests
         private SearchIndexController GetSearchIndexController(Data.Model.ISearchProvider provider)
         {
             var settings = new Moq.Mock<ISettingsManager>();
-            var builder = new CatalogItemIndexBuilder(provider, GetSearchService(), GetItemService(), GetPricingService(), GetChangeLogService());
-            return new SearchIndexController(settings.Object, provider, builder);
+            return new SearchIndexController(settings.Object, provider,
+                new CatalogItemIndexBuilder(provider, GetSearchService(), GetItemService(), GetPricingService(), GetChangeLogService()),
+                new CategoryIndexBuilder(provider, GetSearchService(), GetCategoryService(), GetChangeLogService()));
         }
 
         private ICommerceService GetCommerceService()
