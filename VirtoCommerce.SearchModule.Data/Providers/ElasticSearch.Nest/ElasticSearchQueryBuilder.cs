@@ -77,13 +77,42 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             }
             #endregion
 
+            #region KeywordSearchCriteria
+            if(criteria is KeywordSearchCriteria)
+            {
+                var c = criteria as KeywordSearchCriteria;
+                if (!string.IsNullOrEmpty(c.SearchPhrase))
+                {
+                    var searchFields = new List<string>();
+
+                    searchFields.Add("__content");
+                    if (!string.IsNullOrEmpty(c.Locale))
+                    {
+                        searchFields.Add(string.Format("__content_{0}", c.Locale.ToLower()));
+                    }
+
+                    AddQueryString(mainQuery, c, searchFields.ToArray());
+                }
+            }
+            #endregion
+
+            #region CategorySearchCriteria
+            if (criteria is CategorySearchCriteria)
+            {
+                var c = criteria as CategorySearchCriteria;
+                if (c.Outlines != null && c.Outlines.Count > 0)
+                {
+                    AddQuery("__outline", mainQuery, c.Outlines);
+                }
+            }
+            #endregion
+
             #region CatalogItemSearchCriteria
             if (criteria is CatalogIndexedSearchCriteria)
             {
                 var c = criteria as CatalogIndexedSearchCriteria;
 
                 mainQuery.Add(new DateRangeQuery() { Field = "startdate", LessThanOrEqualTo = c.StartDate });
-
 
                 if (c.StartDateFrom.HasValue)
                 {
@@ -102,19 +131,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                     AddQuery("__outline", mainQuery, c.Outlines);
                 }
 
-                if (!string.IsNullOrEmpty(c.SearchPhrase))
-                {
-                    var searchFields = new List<string>();
-
-                    searchFields.Add("__content");
-                    if (!string.IsNullOrEmpty(c.Locale))
-                    {
-                        searchFields.Add(string.Format("__content_{0}", c.Locale.ToLower()));
-                    }
-
-                    AddQueryString(mainQuery, c, searchFields.ToArray());
-                }
-
                 if (!string.IsNullOrEmpty(c.Catalog))
                 {
                     AddQuery("catalog", mainQuery, c.Catalog);
@@ -131,9 +147,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             builder.Query = boolQuery;
             builder.PostFilter = mainFilter;
 
-            // Add search facets
-            //var facets = GetFacets(criteria);
-            //builder.Facets(f => facets);
+            // Add search aggregations
             var aggregations = GetAggregations<T>(criteria);
             builder.Aggregations = aggregations;
 
@@ -266,7 +280,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             query.Add(new WildcardQuery() { Field = fieldName.ToLower(), Value = lowerCase ? filter.ToLower() : filter });
         }
 
-        protected void AddQueryString(List<QueryContainer> query, CatalogIndexedSearchCriteria filter, params string[] fields)
+        protected void AddQueryString(List<QueryContainer> query, KeywordSearchCriteria filter, params string[] fields)
         {
             var searchPhrase = filter.SearchPhrase;
             MultiMatchQuery multiMatch;

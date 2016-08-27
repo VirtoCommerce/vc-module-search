@@ -145,6 +145,7 @@
     <Compile Include="Model\Indexing\DocumentField.cs" />
     <Compile Include="Model\Indexing\ISearchIndexBuilder.cs" />
     <Compile Include="Model\Indexing\ResultDocument.cs" />
+    <Compile Include="Model\Search\Criterias\CategorySearchCriteria.cs" />
     <Compile Include="Model\Search\Facet.cs" />
     <Compile Include="Model\Search\FacetGroup.cs" />
     <Compile Include="Model\Search\FacetLabel.cs" />

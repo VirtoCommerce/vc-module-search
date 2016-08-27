@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading;
 using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
 using VirtoCommerce.SearchModule.Data.Model.Filters;
+using VirtoCommerce.SearchModule.Data.Model.Indexing;
 
 namespace VirtoCommerce.SearchModule.Tests
 {
@@ -51,23 +52,16 @@ namespace VirtoCommerce.SearchModule.Tests
             // sleep for index to be commited
             Thread.Sleep(5000);
 
-            //// get catalog id by name
-            //var catalogRepo = GetCatalogRepository();
-            //var catalog = catalogRepo.Catalogs.SingleOrDefault(x => x.Name.Equals("electronics", StringComparison.OrdinalIgnoreCase));
+            // find all prodducts in the category
+            var categoryCriteria = new CategorySearchCriteria()
+            {
+            };
 
-            //// find all prodducts in the category
-            //var catalogCriteria = new CatalogIndexedSearchCriteria()
-            //{
-            //    Catalog = catalog.Id,
-            //    Currency = "USD"
-            //};
+            categoryCriteria.Outlines.Add("4974648a41df4e6ea67ef2ad76d7bbd4/45d3fc9a913d4610a5c7d0470558*");
 
-            //catalogCriteria.Outlines.Add("4974648a41df4e6ea67ef2ad76d7bbd4/c76774f9047d4f18a916b38681c50557*");
 
-            //var ibs = GetItemBrowsingService(provider);
-            //var searchResults = ibs.SearchItems(scope, catalogCriteria, Domain.Catalog.Model.ItemResponseGroup.ItemLarge);
-
-            //Assert.True(searchResults.ProductsTotalCount > 0, string.Format("Didn't find any products using {0} search", providerType));
+            var response = provider.Search<DocumentDictionary>(scope, categoryCriteria);
+            Assert.True(response.TotalCount > 0, string.Format("Didn't find any categories using {0} search", providerType));
         }
 
         [Theory]
