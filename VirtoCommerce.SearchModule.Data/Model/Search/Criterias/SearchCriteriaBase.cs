@@ -90,26 +90,6 @@ namespace VirtoCommerce.SearchModule.Data.Model.Search.Criterias
 
         public virtual string Currency { get; set; }
 
-        public virtual string KeyField
-        {
-            get { return "__key"; }
-        }
-
-        public virtual string OutlineField
-        {
-            get { return "__outline"; }
-        }
-
-        public virtual string ReviewsTotalField
-        {
-            get { return "__reviewstotal"; }
-        }
-
-        public virtual string ReviewsAverageField
-        {
-            get { return "__reviewsavg"; }
-        }
-
         List<ISearchFilter> _filters = new List<ISearchFilter>();
 
         public virtual ISearchFilter[] Filters
@@ -123,22 +103,10 @@ namespace VirtoCommerce.SearchModule.Data.Model.Search.Criterias
         }
 
         List<ISearchFilter> _appliedFilters = new List<ISearchFilter>();
-        public virtual ISearchFilterValue[] CurrentFilterValues
-        {
-            get
-            {
-                return null; //_CurrentFilters.Values.ToArray();
-            }
-        }
 
         public virtual ISearchFilter[] CurrentFilters
         {
             get { return _appliedFilters.ToArray(); }
-        }
-
-        public virtual string[] CurrentFilterFields
-        {
-            get { return (from f in _appliedFilters.ToArray() select f.Key).ToArray(); }
         }
 
         public virtual void Apply(ISearchFilter filter)

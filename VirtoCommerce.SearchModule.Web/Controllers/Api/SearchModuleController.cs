@@ -90,11 +90,27 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         }
         */
 
+        /// <summary>
+        /// Rebuild the index for specified document type. If document type is not specified, then index will be recreated.
+        /// </summary>
+        /// <param name="documentType"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("index/rebuild/{documentType}")]
+        [CheckPermission(Permission = SearchPredefinedPermissions.RebuildIndex)]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public IHttpActionResult Rebuild(string documentType = "")
+        {
+            var jobId = _scheduler.ScheduleRebuildIndex(documentType);
+            var result = new { Id = jobId };
+            return Ok(result);
+        }
+
         [HttpGet]
         [Route("catalogitem/rebuild")]
         [CheckPermission(Permission = SearchPredefinedPermissions.RebuildIndex)]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public IHttpActionResult Rebuild()
+        public IHttpActionResult RebuildCatalogIndex()
         {
             var jobId = _scheduler.ScheduleRebuildIndex();
             var result = new { Id = jobId };
@@ -407,12 +423,14 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                         case "title":
                             sortFields.Add(new SearchSortField("name", isDescending));
                             break;
+                        /*
                         case "rating":
                             sortFields.Add(new SearchSortField(serviceCriteria.ReviewsAverageField, isDescending));
                             break;
                         case "reviews":
                             sortFields.Add(new SearchSortField(serviceCriteria.ReviewsTotalField, isDescending));
                             break;
+                            */
                         default:
                             sortFields.Add(new SearchSortField(fieldName, isDescending));
                             break;
@@ -452,7 +470,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             var searchResults = _browseService.SearchItems(_searchConnection.Scope, serviceCriteria, responseGroup);
             return searchResults;
         }
-
 
         protected void CheckCurrentUserHasPermissionForObjects(string permission, params object[] objects)
         {

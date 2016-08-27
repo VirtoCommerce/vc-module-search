@@ -194,6 +194,7 @@
     <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchProvider.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchQueryBuilder.cs" />
     <Compile Include="Model\Indexing\DocumentDictionary.cs" />
+    <Compile Include="Services\CategoryIndexBuilder.cs" />
     <Compile Include="Services\CatalogItemIndexBuilder.cs" />
     <Compile Include="Providers\Lucene\BaseSearchQueryBuilder.cs" />
     <Compile Include="Providers\Lucene\LuceneHelper.cs" />

@@ -42,34 +42,6 @@ namespace VirtoCommerce.SearchModule.Data.Model.Search.Criterias
         string Currency { get; set; }
 
         /// <summary>
-        /// Gets the key field.
-        /// </summary>
-        /// <value>The key field.</value>
-        string KeyField { get; }
-
-		/// <summary>
-		/// Gets the outline field.
-		/// </summary>
-		/// <value>The outline field.</value>
-		string OutlineField { get; }
-
-        /// <summary>
-        /// Gets the reviews total field.
-        /// </summary>
-        /// <value>
-        /// The reviews total field.
-        /// </value>
-        string ReviewsTotalField { get; }
-
-        /// <summary>
-        /// Gets the reviews average field.
-        /// </summary>
-        /// <value>
-        /// The reviews average field.
-        /// </value>
-        string ReviewsAverageField { get; }
-
-        /// <summary>
         /// Gets the filters.
         /// </summary>
         /// <value>The filters.</value>
