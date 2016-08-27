@@ -168,11 +168,7 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.True(colorAggregation.Items.Where(x => x.Value.ToString().Equals("Black", StringComparison.OrdinalIgnoreCase)).SingleOrDefault().Count == 13);
 
             var brandAggregation = searchResults.Aggregations.SingleOrDefault(a => a.Field.Equals("brand", StringComparison.OrdinalIgnoreCase));
-            Assert.True(brandAggregation.Items.Where(x => x.Value.ToString().Equals("Beats By Dr Dre", StringComparison.OrdinalIgnoreCase)).SingleOrDefault().Count == 3);
-
-            //var results = provider.Search(scope, catalogCriteria);
-            //_output.WriteLine(String.Format("Found {0} documents", results.DocCount));
-            //Assert.True(results.DocCount > 0);            
+            Assert.True(brandAggregation.Items.Where(x => x.Value.ToString().Equals("Beats By Dr Dre", StringComparison.OrdinalIgnoreCase)).SingleOrDefault().Count == 3); 
 
             var keywordSearchCriteria = new KeywordSearchCriteria(CatalogIndexedSearchCriteria.DocType) { Currency = "USD", Locale = "en-us", SearchPhrase = "sony" };
             searchResults = ibs.SearchItems(scope, keywordSearchCriteria, Domain.Catalog.Model.ItemResponseGroup.ItemLarge);

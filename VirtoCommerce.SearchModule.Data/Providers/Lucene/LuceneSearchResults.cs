@@ -211,25 +211,56 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         {
             FacetGroup result = null;
 
-            var values = filter.GetValues();
-            if (values != null)
+            BooleanFilter existing_filters = null;
+            foreach (var f in criteria.CurrentFilters)
             {
-                BooleanFilter ffilter = null;
-                foreach (var f in criteria.CurrentFilters)
+                if (!f.Key.Equals(filter.Key))
                 {
-                    if (!f.Key.Equals(filter.Key))
-                    {
-                        if (ffilter == null)
-                            ffilter = new BooleanFilter();
+                    if (existing_filters == null)
+                        existing_filters = new BooleanFilter();
 
-                        var q = LuceneQueryHelper.CreateQuery(criteria, f, Occur.SHOULD);
-                        ffilter.Add(new FilterClause(q, Occur.MUST));
+                    var q = LuceneQueryHelper.CreateQuery(criteria, f, Occur.SHOULD);
+                    existing_filters.Add(new FilterClause(q, Occur.MUST));
+                }
+            }
+
+            var groupLabels = filter.GetLabels();
+            var facetGroup = new FacetGroup(filter.Key, groupLabels);
+
+            var values = filter.GetValues();
+
+            if(values == null && filter is AttributeFilter) // get values from the index itself
+            {
+                var allValues = reader.UniqueTermsFromField(filter.Key);
+                if (allValues != null && allValues.Count() > 0)
+                {
+                    foreach (var value in allValues)
+                    {
+                        var attributeValue = new AttributeFilterValue() { Id = value, Value = value };
+                        var valueFilter = LuceneQueryHelper.CreateQueryForValue(SearchCriteria, filter, attributeValue);
+
+                        if (valueFilter != null)
+                        {
+                            var queryFilter = new BooleanFilter();
+                            queryFilter.Add(new FilterClause(valueFilter, Occur.MUST));
+                            if (existing_filters != null)
+                                queryFilter.Add(new FilterClause(existing_filters, Occur.MUST));
+
+                            var filterArray = queryFilter.GetDocIdSet(reader);
+                            var newCount = (int)CalculateFacetCount(baseDocIdSet, filterArray);
+
+                            if (newCount > 0)
+                            {
+                                var newFacet = new Facet(facetGroup, value, newCount, null);
+                                facetGroup.Facets.Add(newFacet);
+                            }
+                        }
                     }
                 }
+            }
 
-                var groupLabels = filter.GetLabels();
-                var facetGroup = new FacetGroup(filter.Key, groupLabels);
-
+            if (values != null)
+            {
                 foreach (var group in values.GroupBy(v => v.Id))
                 {
                     var value = group.FirstOrDefault();
@@ -239,8 +270,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                     {
                         var queryFilter = new BooleanFilter();
                         queryFilter.Add(new FilterClause(valueFilter, Occur.MUST));
-                        if (ffilter != null)
-                            queryFilter.Add(new FilterClause(ffilter, Occur.MUST));
+                        if (existing_filters != null)
+                            queryFilter.Add(new FilterClause(existing_filters, Occur.MUST));
 
                         var filterArray = queryFilter.GetDocIdSet(reader);
                         var newCount = (int)CalculateFacetCount(baseDocIdSet, filterArray);
@@ -253,11 +284,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                         }
                     }
                 }
+            }
 
-                if (facetGroup.Facets.Any())
-                {
-                    result = facetGroup;
-                }
+            if (facetGroup.Facets.Any())
+            {
+                result = facetGroup;
             }
 
             return result;
@@ -308,6 +339,25 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             spell.Close();
 
             return similarWords;
+        }
+    }
+
+    public static class ReaderExtentions
+    {
+        public static IEnumerable<string> UniqueTermsFromField(
+                                              this IndexReader reader, string field)
+        {
+            var termEnum = reader.Terms(new Term(field));
+
+            do
+            {
+                var currentTerm = termEnum.Term;
+
+                if (currentTerm.Field != field)
+                    yield break;
+
+                yield return currentTerm.Text;
+            } while (termEnum.Next());
         }
     }
 }

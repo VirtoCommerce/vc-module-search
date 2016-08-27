@@ -4,7 +4,11 @@ namespace VirtoCommerce.SearchModule.Data.Model.Search.Criterias
 {
     public interface ISearchCriteria
     {
+        /// <summary>
+        /// The type of document that will be retrived from the search index.
+        /// </summary>
         string DocumentType { get; }
+
         /// <summary>
         /// Gets the cache key.
         /// </summary>
