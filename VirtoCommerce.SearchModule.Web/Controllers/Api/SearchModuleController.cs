@@ -209,6 +209,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             return StatusCode(HttpStatusCode.NoContent);
         }
 
+        /*
         /// <summary>
         /// Performs generic search.
         /// </summary>
@@ -224,6 +225,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             var searchResults = _searchProvider.Search<DocumentDictionary>(scope, criteria);
             return Ok(searchResults);
         }
+        */
 
         /// <summary>
         /// Search for products and categories
