@@ -6,23 +6,23 @@ namespace VirtoCommerce.SearchModule.Data.Model.Search.Criterias
 {
     // TODO: move to catalog module as it is catalog specific criteria and not generic search one
 
-    public class CatalogIndexedSearchCriteria : KeywordSearchCriteria
+    public class CatalogItemSearchCriteria : KeywordSearchCriteria
     {
         public const string DocType = "catalogitem";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CatalogIndexedSearchCriteria"/> class.
+        /// Initializes a new instance of the <see cref="CatalogItemSearchCriteria"/> class.
         /// </summary>
         /// <param name="documentType">Type of the document.</param>
-        public CatalogIndexedSearchCriteria(string documentType)
+        public CatalogItemSearchCriteria(string documentType)
             : base(documentType)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CatalogIndexedSearchCriteria"/> class.
+        /// Initializes a new instance of the <see cref="CatalogItemSearchCriteria"/> class.
         /// </summary>
-        public CatalogIndexedSearchCriteria()
+        public CatalogItemSearchCriteria()
             : base(DocType)
         {
         }
@@ -133,8 +133,6 @@ namespace VirtoCommerce.SearchModule.Data.Model.Search.Criterias
             set { ChangeState(); _startDateFrom = value; }
         }
 
-
-
         private DateTime? _endDate;
 
         /// <summary>
@@ -146,8 +144,6 @@ namespace VirtoCommerce.SearchModule.Data.Model.Search.Criterias
             get { return _endDate; }
             set { ChangeState(); _endDate = value; }
         }
-
-
 
         /// <summary>
         /// Gets the cache key. Used to generate hash that will be used to store data in memory if needed.

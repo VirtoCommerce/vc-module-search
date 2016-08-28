@@ -1,4 +1,5 @@
-﻿using VirtoCommerce.SearchModule.Data.Model.Filters;
+﻿using System.Collections.Generic;
+using VirtoCommerce.SearchModule.Data.Model.Filters;
 
 namespace VirtoCommerce.SearchModule.Data.Model.Search.Criterias
 {
@@ -44,6 +45,18 @@ namespace VirtoCommerce.SearchModule.Data.Model.Search.Criterias
         /// </summary>
         /// <value>The currency.</value>
         string Currency { get; set; }
+
+        /*
+        /// <summary>
+        /// A list of aggegators to apply
+        /// </summary>
+        string[] Aggregators { get; set; }
+
+        /// <summary>
+        /// A list of filters with key values that need to be applied
+        /// </summary>
+        string[] Filters { get; set; }
+        */
 
         /// <summary>
         /// Gets the filters.

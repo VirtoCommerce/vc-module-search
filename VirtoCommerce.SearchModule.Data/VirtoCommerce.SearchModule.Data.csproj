@@ -169,7 +169,7 @@
     <Compile Include="Model\SearchProviders.cs" />
     <Compile Include="Model\Search\SearchSort.cs" />
     <Compile Include="Model\Search\SearchSortField.cs" />
-    <Compile Include="Model\Search\Criterias\CatalogIndexedSearchCriteria.cs" />
+    <Compile Include="Model\Search\Criterias\CatalogItemSearchCriteria.cs" />
     <Compile Include="Model\ISearchProvider.cs" />
     <Compile Include="Model\ISearchProviderManager.cs" />
     <Compile Include="Model\Search\ISearchQueryBuilder.cs" />

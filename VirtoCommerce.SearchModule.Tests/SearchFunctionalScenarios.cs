@@ -74,7 +74,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
             provider.RemoveAll(scope, "");
             var controller = GetSearchIndexController(provider);
-            controller.Process(scope, CatalogIndexedSearchCriteria.DocType, true);
+            controller.Process(scope, CatalogItemSearchCriteria.DocType, true);
 
             // sleep for index to be commited
             Thread.Sleep(5000);
@@ -84,7 +84,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var catalog = catalogRepo.Catalogs.SingleOrDefault(x => x.Name.Equals("electronics", StringComparison.OrdinalIgnoreCase));
 
             // find all prodducts in the category
-            var catalogCriteria = new CatalogIndexedSearchCriteria()
+            var catalogCriteria = new CatalogItemSearchCriteria()
             {
                 Catalog = catalog.Id,
                 Currency = "USD"
@@ -111,7 +111,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
             provider.RemoveAll(scope, "");
             var controller = GetSearchIndexController(provider);
-            controller.Process(scope, CatalogIndexedSearchCriteria.DocType, true);
+            controller.Process(scope, CatalogItemSearchCriteria.DocType, true);
 
             // sleep for index to be commited
             Thread.Sleep(5000);
@@ -121,7 +121,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var catalog = catalogRepo.Catalogs.SingleOrDefault(x => x.Name.Equals("electronics", StringComparison.OrdinalIgnoreCase));
 
             // find all prodducts in the category
-            var catalogCriteria = new CatalogIndexedSearchCriteria()
+            var catalogCriteria = new CatalogItemSearchCriteria()
             {
                 Catalog = catalog.Id,
                 Currency = "USD"
@@ -170,7 +170,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var brandAggregation = searchResults.Aggregations.SingleOrDefault(a => a.Field.Equals("brand", StringComparison.OrdinalIgnoreCase));
             Assert.True(brandAggregation.Items.Where(x => x.Value.ToString().Equals("Beats By Dr Dre", StringComparison.OrdinalIgnoreCase)).SingleOrDefault().Count == 3); 
 
-            var keywordSearchCriteria = new KeywordSearchCriteria(CatalogIndexedSearchCriteria.DocType) { Currency = "USD", Locale = "en-us", SearchPhrase = "sony" };
+            var keywordSearchCriteria = new KeywordSearchCriteria(CatalogItemSearchCriteria.DocType) { Currency = "USD", Locale = "en-us", SearchPhrase = "sony" };
             searchResults = ibs.SearchItems(scope, keywordSearchCriteria, Domain.Catalog.Model.ItemResponseGroup.ItemLarge);
             Assert.True(searchResults.ProductsTotalCount > 0);
         }

@@ -108,9 +108,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             #endregion
 
             #region CatalogItemSearchCriteria
-            if (criteria is CatalogIndexedSearchCriteria)
+            if (criteria is CatalogItemSearchCriteria)
             {
-                var c = criteria as CatalogIndexedSearchCriteria;
+                var c = criteria as CatalogItemSearchCriteria;
 
                 mainQuery.Add(new DateRangeQuery() { Field = "startdate", LessThanOrEqualTo = c.StartDate });
 

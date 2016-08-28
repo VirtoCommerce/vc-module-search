@@ -27,7 +27,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var provider = GetSearchProvider(providerType, scope);
             SearchHelper.CreateSampleIndex(provider, scope);
 
-            var criteria = new CatalogIndexedSearchCriteria
+            var criteria = new CatalogItemSearchCriteria
             {
                 IsFuzzySearch = true,
                 Catalog = "goods",
@@ -56,7 +56,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var priceCount2 = GetFacetCount(results, "Price", "100_to_700");
             Assert.True(priceCount2 == 3, string.Format("Returns {0} facets of 100_to_700 prices instead of 3", priceCount2));
 
-            criteria = new CatalogIndexedSearchCriteria
+            criteria = new CatalogItemSearchCriteria
             {
                 IsFuzzySearch = true,
                 Catalog = "goods",
@@ -108,7 +108,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
             Assert.Throws<ElasticSearchException>(() => bad_provider.RemoveAll(badscope, ""));
 
-            var criteria = new CatalogIndexedSearchCriteria
+            var criteria = new CatalogItemSearchCriteria
             {
                 SearchPhrase = "product",
                 IsFuzzySearch = true,
@@ -142,7 +142,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var provider = GetSearchProvider(providerType, scope);
             SearchHelper.CreateSampleIndex(provider, scope);
 
-            var criteria = new CatalogIndexedSearchCriteria
+            var criteria = new CatalogItemSearchCriteria
             {
                 SearchPhrase = "product",
                 IsFuzzySearch = true,
@@ -157,7 +157,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
             Assert.True(results.DocCount == 1, string.Format("Returns {0} instead of 1", results.DocCount));
 
-            criteria = new CatalogIndexedSearchCriteria
+            criteria = new CatalogItemSearchCriteria
             {
                 SearchPhrase = "sample product ",
                 IsFuzzySearch = true,
@@ -183,7 +183,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
             SearchHelper.CreateSampleIndex(provider, scope);
 
-            var criteria = new CatalogIndexedSearchCriteria
+            var criteria = new CatalogItemSearchCriteria
             {
                 SearchPhrase = "",
                 IsFuzzySearch = true,
@@ -267,7 +267,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var provider = GetSearchProvider(providerType, scope);
             SearchHelper.CreateSampleIndex(provider, scope);
 
-            var criteria = new CatalogIndexedSearchCriteria
+            var criteria = new CatalogItemSearchCriteria
             {
                 SearchPhrase = "",
                 IsFuzzySearch = true,

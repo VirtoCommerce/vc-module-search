@@ -28,9 +28,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
             var fuzzyMinSimilarity = 0.7f;
             var isFuzzySearch = false;
-            if (criteria is CatalogIndexedSearchCriteria)
+            if (criteria is CatalogItemSearchCriteria)
             {
-                var c = criteria as CatalogIndexedSearchCriteria;
+                var c = criteria as CatalogItemSearchCriteria;
                 var datesFilterStart = new TermRangeQuery(
                     "startdate", c.StartDateFrom.HasValue ? DateTools.DateToString(c.StartDateFrom.Value, DateTools.Resolution.SECOND) : null, DateTools.DateToString(c.StartDate, DateTools.Resolution.SECOND), false, true);
                 query.Add(datesFilterStart, Occur.MUST);

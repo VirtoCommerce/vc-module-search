@@ -34,6 +34,7 @@ using VirtoCommerce.SearchModule.Data.Model;
 using VirtoCommerce.SearchModule.Data.Model.Filters;
 using VirtoCommerce.SearchModule.Data.Model.Search;
 using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Data.Model.Indexing;
 
 namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 {
@@ -209,6 +210,22 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         }
 
         /// <summary>
+        /// Performs generic search.
+        /// </summary>
+        /// <param name="scope"></param>
+        /// <param name="criteria"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("{scope}")]
+        [ResponseType(typeof(CatalogSearchResult))]
+        [ClientCache(Duration = 30)]
+        public IHttpActionResult Search(string scope, ISearchCriteria criteria)
+        {
+            var searchResults = _searchProvider.Search<DocumentDictionary>(scope, criteria);
+            return Ok(searchResults);
+        }
+
+        /// <summary>
         /// Search for products and categories
         /// </summary>
         /// <param name="criteria">Search parameters</param>
@@ -252,7 +269,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             var catalog = criteria.CatalogId;
             var categoryId = criteria.CategoryId;
 
-            var serviceCriteria = new CatalogIndexedSearchCriteria
+            var serviceCriteria = new CatalogItemSearchCriteria
             {
                 Locale = criteria.LanguageCode,
                 IsFuzzySearch = true,
@@ -442,7 +459,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             {
                 sortFields.Add(new SearchSortField(priorityFieldName, true) { IgnoredUnmapped = true });
                 sortFields.Add(new SearchSortField("priority", true));
-                sortFields.AddRange(CatalogIndexedSearchCriteria.DefaultSortOrder.GetSort());
+                sortFields.AddRange(CatalogItemSearchCriteria.DefaultSortOrder.GetSort());
             }
 
             serviceCriteria.Sort = new SearchSort(sortFields.ToArray());
