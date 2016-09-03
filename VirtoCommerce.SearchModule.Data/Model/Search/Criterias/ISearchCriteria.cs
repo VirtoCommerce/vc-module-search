@@ -46,11 +46,13 @@ namespace VirtoCommerce.SearchModule.Data.Model.Search.Criterias
         /// <value>The currency.</value>
         string Currency { get; set; }
 
+        string[] Pricelists { get; set; }
+
         /*
         /// <summary>
         /// A list of aggegators to apply
         /// </summary>
-        string[] Aggregators { get; set; }
+        string[] Facets { get; set; }
 
         /// <summary>
         /// A list of filters with key values that need to be applied

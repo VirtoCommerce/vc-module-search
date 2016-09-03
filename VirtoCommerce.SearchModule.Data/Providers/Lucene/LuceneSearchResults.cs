@@ -6,7 +6,6 @@ using Lucene.Net.Search;
 using Lucene.Net.Util;
 using SpellChecker.Net.Search.Spell;
 using VirtoCommerce.SearchModule.Data.Services;
-using VirtoCommerce.SearchModule.Data.Model;
 using VirtoCommerce.SearchModule.Data.Model.Indexing;
 using VirtoCommerce.SearchModule.Data.Model.Search;
 using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
@@ -207,7 +206,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             Facets = groups.ToArray();
         }
 
-        private FacetGroup CalculateResultCount(IndexReader reader, DocIdSet baseDocIdSet, ISearchFilter filter, ISearchCriteria criteria)
+        protected virtual FacetGroup CalculateResultCount(IndexReader reader, DocIdSet baseDocIdSet, ISearchFilter filter, ISearchCriteria criteria)
         {
             FacetGroup result = null;
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -9,9 +8,6 @@ using System.Web.Http;
 using System.Web.Http.Description;
 using System.Xml.Serialization;
 using CacheManager.Core;
-using VirtoCommerce.CatalogModule.Web.Converters;
-using VirtoCommerce.CatalogModule.Web.Model;
-using VirtoCommerce.CatalogModule.Web.Security;
 using VirtoCommerce.Domain.Catalog.Model;
 using VirtoCommerce.Domain.Catalog.Services;
 using VirtoCommerce.Domain.Store.Model;
@@ -20,21 +16,14 @@ using VirtoCommerce.Platform.Core.Assets;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.DynamicProperties;
 using VirtoCommerce.Platform.Core.Security;
-using VirtoCommerce.Platform.Core.Web.Common;
 using VirtoCommerce.Platform.Core.Web.Security;
-using VirtoCommerce.Platform.Data.Common;
-using VirtoCommerce.SearchModule.Data.Services;
 using VirtoCommerce.SearchModule.Web.BackgroundJobs;
 using VirtoCommerce.SearchModule.Web.Security;
-using VirtoCommerce.SearchModule.Web.Services;
 using Property = VirtoCommerce.Domain.Catalog.Model.Property;
 using PropertyDictionaryValue = VirtoCommerce.Domain.Catalog.Model.PropertyDictionaryValue;
 using webModel = VirtoCommerce.SearchModule.Web.Model;
 using VirtoCommerce.SearchModule.Data.Model;
 using VirtoCommerce.SearchModule.Data.Model.Filters;
-using VirtoCommerce.SearchModule.Data.Model.Search;
-using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
-using VirtoCommerce.SearchModule.Data.Model.Indexing;
 
 namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 {
@@ -51,14 +40,13 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         private readonly IPermissionScopeService _permissionScopeService;
         private readonly IPropertyService _propertyService;
         private readonly IBrowseFilterService _browseFilterService;
-        private readonly IItemBrowsingService _browseService;
         private readonly IBlobUrlResolver _blobUrlResolver;
         private readonly ICatalogSearchService _catalogSearchService;
         private readonly ICacheManager<object> _cacheManager;
 
         public SearchModuleController(Data.Model.ISearchProvider searchProvider, ISearchConnection searchConnection, SearchIndexJobsScheduler scheduler,
             IStoreService storeService, ISecurityService securityService, IPermissionScopeService permissionScopeService,
-            IPropertyService propertyService, IBrowseFilterService browseFilterService, IItemBrowsingService browseService,
+            IPropertyService propertyService, IBrowseFilterService browseFilterService, 
             IBlobUrlResolver blobUrlResolver, ICatalogSearchService catalogSearchService, ICacheManager<object> cacheManager)
         {
             _searchProvider = searchProvider;
@@ -69,7 +57,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             _permissionScopeService = permissionScopeService;
             _propertyService = propertyService;
             _browseFilterService = browseFilterService;
-            _browseService = browseService;
             _blobUrlResolver = blobUrlResolver;
             _catalogSearchService = catalogSearchService;
             _cacheManager = cacheManager;
@@ -209,286 +196,268 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             return StatusCode(HttpStatusCode.NoContent);
         }
 
-        /*
-        /// <summary>
-        /// Performs generic search.
-        /// </summary>
-        /// <param name="scope"></param>
-        /// <param name="criteria"></param>
-        /// <returns></returns>
-        [HttpPost]
-        [Route("{scope}")]
-        [ResponseType(typeof(CatalogSearchResult))]
-        [ClientCache(Duration = 30)]
-        public IHttpActionResult Search(string scope, ISearchCriteria criteria)
-        {
-            var searchResults = _searchProvider.Search<DocumentDictionary>(scope, criteria);
-            return Ok(searchResults);
-        }
-        */
+        ///// <summary>
+        ///// Search for products and categories
+        ///// </summary>
+        ///// <param name="criteria">Search parameters</param>
+        //[HttpPost]
+        //[Route("")]
+        //[ResponseType(typeof(CatalogSearchResult))]
+        //[ClientCache(Duration = 30)]
+        //public IHttpActionResult Search(CatalogModule.Web.Model.SearchCriteria criteria)
+        //{
+        //    var searchCriteria = (criteria ?? new CatalogModule.Web.Model.SearchCriteria()).ToCoreModel();
+        //    searchCriteria.Normalize();
+        //    searchCriteria.ApplyRestrictionsForUser(User.Identity.Name, _securityService);
 
-        /// <summary>
-        /// Search for products and categories
-        /// </summary>
-        /// <param name="criteria">Search parameters</param>
-        [HttpPost]
-        [Route("")]
-        [ResponseType(typeof(CatalogSearchResult))]
-        [ClientCache(Duration = 30)]
-        public IHttpActionResult Search(CatalogModule.Web.Model.SearchCriteria criteria)
-        {
-            var searchCriteria = (criteria ?? new CatalogModule.Web.Model.SearchCriteria()).ToCoreModel();
-            searchCriteria.Normalize();
-            searchCriteria.ApplyRestrictionsForUser(User.Identity.Name, _securityService);
+        //    var result = new Domain.Catalog.Model.SearchResult();
 
-            var result = new Domain.Catalog.Model.SearchResult();
+        //    if ((searchCriteria.ResponseGroup & SearchResponseGroup.WithProducts) == SearchResponseGroup.WithProducts)
+        //    {
+        //        result = SearchProducts(searchCriteria);
+        //    }
 
-            if ((searchCriteria.ResponseGroup & SearchResponseGroup.WithProducts) == SearchResponseGroup.WithProducts)
-            {
-                result = SearchProducts(searchCriteria);
-            }
+        //    var catalogResponseGroup = searchCriteria.ResponseGroup & (SearchResponseGroup.WithCatalogs | SearchResponseGroup.WithCategories);
 
-            var catalogResponseGroup = searchCriteria.ResponseGroup & (SearchResponseGroup.WithCatalogs | SearchResponseGroup.WithCategories);
+        //    if (catalogResponseGroup != SearchResponseGroup.None)
+        //    {
+        //        searchCriteria.ResponseGroup = catalogResponseGroup;
+        //        var catalogResult = _catalogSearchService.Search(searchCriteria);
+        //        result.Catalogs = catalogResult.Catalogs;
+        //        result.Categories = catalogResult.Categories;
+        //    }
 
-            if (catalogResponseGroup != SearchResponseGroup.None)
-            {
-                searchCriteria.ResponseGroup = catalogResponseGroup;
-                var catalogResult = _catalogSearchService.Search(searchCriteria);
-                result.Catalogs = catalogResult.Catalogs;
-                result.Categories = catalogResult.Categories;
-            }
+        //    return Ok(result.ToWebModel(_blobUrlResolver));
+        //}
 
-            return Ok(result.ToWebModel(_blobUrlResolver));
-        }
+        //private Domain.Catalog.Model.SearchResult SearchProducts(Domain.Catalog.Model.SearchCriteria criteria)
+        //{
+        //    var context = new Dictionary<string, object>
+        //    {
+        //        { "StoreId", criteria.StoreId },
+        //    };
 
-        private Domain.Catalog.Model.SearchResult SearchProducts(Domain.Catalog.Model.SearchCriteria criteria)
-        {
-            var context = new Dictionary<string, object>
-            {
-                { "StoreId", criteria.StoreId },
-            };
+        //    var catalog = criteria.CatalogId;
+        //    var categoryId = criteria.CategoryId;
 
-            var catalog = criteria.CatalogId;
-            var categoryId = criteria.CategoryId;
+        //    var serviceCriteria = new CatalogItemSearchCriteria
+        //    {
+        //        Locale = criteria.LanguageCode,
+        //        IsFuzzySearch = true,
+        //    };
 
-            var serviceCriteria = new CatalogItemSearchCriteria
-            {
-                Locale = criteria.LanguageCode,
-                IsFuzzySearch = true,
-            };
+        //    if (!string.IsNullOrWhiteSpace(catalog))
+        //    {
+        //        serviceCriteria.Catalog = catalog.ToLowerInvariant();
+        //    }
 
-            if (!string.IsNullOrWhiteSpace(catalog))
-            {
-                serviceCriteria.Catalog = catalog.ToLowerInvariant();
-            }
+        //    if (!string.IsNullOrWhiteSpace(criteria.Outline))
+        //    {
+        //        serviceCriteria.Outlines.Add(string.Format(CultureInfo.InvariantCulture, "{0}/{1}*", catalog, criteria.Outline));
+        //        categoryId = criteria.Outline.Split('/').Last();
+        //    }
+        //    else
+        //    {
+        //        if (!string.IsNullOrEmpty(categoryId))
+        //        {
+        //            serviceCriteria.Outlines.Add(string.Format(CultureInfo.InvariantCulture, "{0}/{1}*", catalog, categoryId));
+        //        }
+        //    }
 
-            if (!string.IsNullOrWhiteSpace(criteria.Outline))
-            {
-                serviceCriteria.Outlines.Add(string.Format(CultureInfo.InvariantCulture, "{0}/{1}*", catalog, criteria.Outline));
-                categoryId = criteria.Outline.Split('/').Last();
-            }
-            else
-            {
-                if (!string.IsNullOrEmpty(categoryId))
-                {
-                    serviceCriteria.Outlines.Add(string.Format(CultureInfo.InvariantCulture, "{0}/{1}*", catalog, categoryId));
-                }
-            }
+        //    if (!string.IsNullOrEmpty(categoryId))
+        //    {
+        //        context.Add("CategoryId", categoryId);
+        //    }
 
-            if (!string.IsNullOrEmpty(categoryId))
-            {
-                context.Add("CategoryId", categoryId);
-            }
+        //    #region Filters
 
-            #region Filters
+        //    // Now fill in filters
+        //    var filters = _cacheManager.Get("GetFilters-" + criteria.StoreId, "SearchProducts", TimeSpan.FromMinutes(5), () => _browseFilterService.GetFilters(context));
 
-            // Now fill in filters
-            var filters = _cacheManager.Get("GetFilters-" + criteria.StoreId, "SearchProducts", TimeSpan.FromMinutes(5), () => _browseFilterService.GetFilters(context));
+        //    // Add all filters
+        //    foreach (var filter in filters)
+        //    {
+        //        serviceCriteria.Add(filter);
+        //    }
 
-            // Add all filters
-            foreach (var filter in filters)
-            {
-                serviceCriteria.Add(filter);
-            }
+        //    #region apply terms
 
-            #region apply terms
+        //    var terms = criteria.Terms.AsKeyValues();
+        //    if (terms.Any())
+        //    {
+        //        var filtersWithValues = filters
+        //            .Where(x => (!(x is PriceRangeFilter) || ((PriceRangeFilter)x).Currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase)))
+        //            .Select(x => new { Filter = x, Values = x.GetValues() })
+        //            .ToList();
 
-            var terms = ParseKeyValues(criteria.Terms);
-            if (terms.Any())
-            {
-                var filtersWithValues = filters
-                    .Where(x => (!(x is PriceRangeFilter) || ((PriceRangeFilter)x).Currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase)))
-                    .Select(x => new { Filter = x, Values = x.GetValues() })
-                    .ToList();
+        //        foreach (var term in terms)
+        //        {
+        //            var filter = filters.SingleOrDefault(x => x.Key.Equals(term.Key, StringComparison.OrdinalIgnoreCase)
+        //                && (!(x is PriceRangeFilter) || ((PriceRangeFilter)x).Currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase)));
 
-                foreach (var term in terms)
-                {
-                    var filter = filters.SingleOrDefault(x => x.Key.Equals(term.Key, StringComparison.OrdinalIgnoreCase)
-                        && (!(x is PriceRangeFilter) || ((PriceRangeFilter)x).Currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase)));
+        //            // handle special filter term with a key = "tags", it contains just values and we need to determine which filter to use
+        //            if (filter == null && term.Key == "tags")
+        //            {
+        //                foreach (var termValue in term.Values)
+        //                {
+        //                    // try to find filter by value
+        //                    var foundFilter = filtersWithValues.FirstOrDefault(x => x.Values.Any(y => y.Id.Equals(termValue)));
 
-                    // handle special filter term with a key = "tags", it contains just values and we need to determine which filter to use
-                    if (filter == null && term.Key == "tags")
-                    {
-                        foreach (var termValue in term.Values)
-                        {
-                            // try to find filter by value
-                            var foundFilter = filtersWithValues.FirstOrDefault(x => x.Values.Any(y => y.Id.Equals(termValue)));
+        //                    if (foundFilter != null)
+        //                    {
+        //                        filter = foundFilter.Filter;
 
-                            if (foundFilter != null)
-                            {
-                                filter = foundFilter.Filter;
+        //                        var appliedFilter = BrowseFilterHelper.Convert(filter, term.Values);
+        //                        serviceCriteria.Apply(appliedFilter);
+        //                    }
+        //                }
+        //            }
+        //            else
+        //            {
+        //                var attributeFilter = filter as AttributeFilter;
+        //                if (attributeFilter != null && attributeFilter.Values == null)
+        //                {
+        //                    filter = new AttributeFilter
+        //                    {
+        //                        Key = attributeFilter.Key,
+        //                        Values = BrowseFilterHelper.CreateAttributeFilterValues(term.Values),
+        //                        IsLocalized = attributeFilter.IsLocalized,
+        //                        DisplayNames = attributeFilter.DisplayNames,
+        //                    };
+        //                }
 
-                                var appliedFilter = _browseFilterService.Convert(filter, term.Values);
-                                serviceCriteria.Apply(appliedFilter);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        var attributeFilter = filter as AttributeFilter;
-                        if (attributeFilter != null && attributeFilter.Values == null)
-                        {
-                            filter = new AttributeFilter
-                            {
-                                Key = attributeFilter.Key,
-                                Values = CreateAttributeFilterValues(term.Values),
-                                IsLocalized = attributeFilter.IsLocalized,
-                                DisplayNames = attributeFilter.DisplayNames,
-                            };
-                        }
+        //                var appliedFilter = BrowseFilterHelper.Convert(filter, term.Values);
+        //                serviceCriteria.Apply(appliedFilter);
+        //            }
+        //        }
+        //    }
 
-                        var appliedFilter = _browseFilterService.Convert(filter, term.Values);
-                        serviceCriteria.Apply(appliedFilter);
-                    }
-                }
-            }
+        //    #endregion
 
-            #endregion
+        //    // Filter by vendor
+        //    var vendorIds = GetDistinctValues(criteria.VendorId, criteria.VendorIds);
+        //    if (vendorIds.Any())
+        //    {
+        //        var vendorFilter = new AttributeFilter
+        //        {
+        //            Key = "vendor",
+        //            Values = BrowseFilterHelper.CreateAttributeFilterValues(vendorIds),
+        //        };
+        //        serviceCriteria.Apply(vendorFilter);
+        //    }
 
-            // Filter by vendor
-            var vendorIds = GetDistinctValues(criteria.VendorId, criteria.VendorIds);
-            if (vendorIds.Any())
-            {
-                var vendorFilter = new AttributeFilter
-                {
-                    Key = "vendor",
-                    Values = CreateAttributeFilterValues(vendorIds),
-                };
-                serviceCriteria.Apply(vendorFilter);
-            }
+        //    #endregion
 
-            #endregion
+        //    #region Facets
 
-            #region Facets
+        //    // apply facet filters
+        //    var facets = criteria.Facets.AsKeyValues();
+        //    foreach (var facet in facets)
+        //    {
+        //        var filter = filters.SingleOrDefault(
+        //            x => x.Key.Equals(facet.Key, StringComparison.OrdinalIgnoreCase)
+        //                && (!(x is PriceRangeFilter)
+        //                    || ((PriceRangeFilter)x).Currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase)));
 
-            // apply facet filters
-            var facets = ParseKeyValues(criteria.Facets);
-            foreach (var facet in facets)
-            {
-                var filter = filters.SingleOrDefault(
-                    x => x.Key.Equals(facet.Key, StringComparison.OrdinalIgnoreCase)
-                        && (!(x is PriceRangeFilter)
-                            || ((PriceRangeFilter)x).Currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase)));
+        //        var appliedFilter = BrowseFilterHelper.Convert(filter, facet.Values);
+        //        serviceCriteria.Apply(appliedFilter);
+        //    }
 
-                var appliedFilter = _browseFilterService.Convert(filter, facet.Values);
-                serviceCriteria.Apply(appliedFilter);
-            }
+        //    #endregion
 
-            #endregion
+        //    //criteria.ClassTypes.Add("Product");
+        //    serviceCriteria.RecordsToRetrieve = criteria.Take < 0 ? 10 : criteria.Take;
+        //    serviceCriteria.StartingRecord = criteria.Skip;
+        //    serviceCriteria.Pricelists = criteria.PricelistIds;
+        //    serviceCriteria.Currency = criteria.Currency;
+        //    serviceCriteria.StartDateFrom = criteria.StartDateFrom;
+        //    serviceCriteria.SearchPhrase = criteria.Keyword;
 
-            //criteria.ClassTypes.Add("Product");
-            serviceCriteria.RecordsToRetrieve = criteria.Take < 0 ? 10 : criteria.Take;
-            serviceCriteria.StartingRecord = criteria.Skip;
-            serviceCriteria.Pricelists = criteria.PricelistIds;
-            serviceCriteria.Currency = criteria.Currency;
-            serviceCriteria.StartDateFrom = criteria.StartDateFrom;
-            serviceCriteria.SearchPhrase = criteria.Keyword;
+        //    #region Sorting
 
-            #region Sorting
+        //    var sortFields = new List<SearchSortField>();
+        //    var priorityFieldName = string.Format(CultureInfo.InvariantCulture, "priority_{0}_{1}", catalog, categoryId).ToLower();
 
-            var sortFields = new List<SearchSortField>();
-            var priorityFieldName = string.Format(CultureInfo.InvariantCulture, "priority_{0}_{1}", catalog, categoryId).ToLower();
+        //    if (!criteria.SortInfos.IsNullOrEmpty())
+        //    {
 
-            if (!criteria.SortInfos.IsNullOrEmpty())
-            {
+        //        foreach (var sortInfo in criteria.SortInfos)
+        //        {
+        //            var fieldName = sortInfo.SortColumn.ToLowerInvariant();
+        //            var isDescending = sortInfo.SortDirection == SortDirection.Descending;
 
-                foreach (var sortInfo in criteria.SortInfos)
-                {
-                    var fieldName = sortInfo.SortColumn.ToLowerInvariant();
-                    var isDescending = sortInfo.SortDirection == SortDirection.Descending;
+        //            switch (fieldName)
+        //            {
+        //                case "price":
+        //                    if (serviceCriteria.Pricelists != null)
+        //                    {
+        //                        sortFields.AddRange(
+        //                            serviceCriteria.Pricelists.Select(
+        //                                priceList =>
+        //                                    new SearchSortField(string.Format(CultureInfo.InvariantCulture, "price_{0}_{1}", serviceCriteria.Currency.ToLower(), priceList.ToLower()))
+        //                                    {
+        //                                        IgnoredUnmapped = true,
+        //                                        IsDescending = isDescending,
+        //                                        DataType = SearchSortField.DOUBLE
+        //                                    })
+        //                                .ToArray());
+        //                    }
+        //                    break;
+        //                case "priority":
+        //                    sortFields.Add(new SearchSortField(priorityFieldName, isDescending) { IgnoredUnmapped = true });
+        //                    sortFields.Add(new SearchSortField("priority", isDescending));
+        //                    break;
+        //                case "name":
+        //                case "title":
+        //                    sortFields.Add(new SearchSortField("name", isDescending));
+        //                    break;
+        //                /*
+        //                case "rating":
+        //                    sortFields.Add(new SearchSortField(serviceCriteria.ReviewsAverageField, isDescending));
+        //                    break;
+        //                case "reviews":
+        //                    sortFields.Add(new SearchSortField(serviceCriteria.ReviewsTotalField, isDescending));
+        //                    break;
+        //                    */
+        //                default:
+        //                    sortFields.Add(new SearchSortField(fieldName, isDescending));
+        //                    break;
+        //            }
+        //        }
+        //    }
 
-                    switch (fieldName)
-                    {
-                        case "price":
-                            if (serviceCriteria.Pricelists != null)
-                            {
-                                sortFields.AddRange(
-                                    serviceCriteria.Pricelists.Select(
-                                        priceList =>
-                                            new SearchSortField(string.Format(CultureInfo.InvariantCulture, "price_{0}_{1}", serviceCriteria.Currency.ToLower(), priceList.ToLower()))
-                                            {
-                                                IgnoredUnmapped = true,
-                                                IsDescending = isDescending,
-                                                DataType = SearchSortField.DOUBLE
-                                            })
-                                        .ToArray());
-                            }
-                            break;
-                        case "priority":
-                            sortFields.Add(new SearchSortField(priorityFieldName, isDescending) { IgnoredUnmapped = true });
-                            sortFields.Add(new SearchSortField("priority", isDescending));
-                            break;
-                        case "name":
-                        case "title":
-                            sortFields.Add(new SearchSortField("name", isDescending));
-                            break;
-                        /*
-                        case "rating":
-                            sortFields.Add(new SearchSortField(serviceCriteria.ReviewsAverageField, isDescending));
-                            break;
-                        case "reviews":
-                            sortFields.Add(new SearchSortField(serviceCriteria.ReviewsTotalField, isDescending));
-                            break;
-                            */
-                        default:
-                            sortFields.Add(new SearchSortField(fieldName, isDescending));
-                            break;
-                    }
-                }
-            }
+        //    if (!sortFields.Any())
+        //    {
+        //        sortFields.Add(new SearchSortField(priorityFieldName, true) { IgnoredUnmapped = true });
+        //        sortFields.Add(new SearchSortField("priority", true));
+        //        sortFields.AddRange(CatalogItemSearchCriteria.DefaultSortOrder.GetSort());
+        //    }
 
-            if (!sortFields.Any())
-            {
-                sortFields.Add(new SearchSortField(priorityFieldName, true) { IgnoredUnmapped = true });
-                sortFields.Add(new SearchSortField("priority", true));
-                sortFields.AddRange(CatalogItemSearchCriteria.DefaultSortOrder.GetSort());
-            }
+        //    serviceCriteria.Sort = new SearchSort(sortFields.ToArray());
 
-            serviceCriteria.Sort = new SearchSort(sortFields.ToArray());
+        //    #endregion
 
-            #endregion
+        //    var responseGroup = ItemResponseGroup.ItemInfo | ItemResponseGroup.ItemAssets | ItemResponseGroup.Seo | ItemResponseGroup.ItemEditorialReviews;
 
-            var responseGroup = ItemResponseGroup.ItemInfo | ItemResponseGroup.ItemAssets | ItemResponseGroup.Seo | ItemResponseGroup.ItemEditorialReviews;
+        //    if ((criteria.ResponseGroup & SearchResponseGroup.WithProperties) == SearchResponseGroup.WithProperties)
+        //    {
+        //        responseGroup |= ItemResponseGroup.ItemProperties;
+        //    }
 
-            if ((criteria.ResponseGroup & SearchResponseGroup.WithProperties) == SearchResponseGroup.WithProperties)
-            {
-                responseGroup |= ItemResponseGroup.ItemProperties;
-            }
+        //    if ((criteria.ResponseGroup & SearchResponseGroup.WithVariations) == SearchResponseGroup.WithVariations)
+        //    {
+        //        responseGroup |= ItemResponseGroup.Variations;
+        //    }
 
-            if ((criteria.ResponseGroup & SearchResponseGroup.WithVariations) == SearchResponseGroup.WithVariations)
-            {
-                responseGroup |= ItemResponseGroup.Variations;
-            }
+        //    if ((criteria.ResponseGroup & SearchResponseGroup.WithOutlines) == SearchResponseGroup.WithOutlines)
+        //    {
+        //        responseGroup |= ItemResponseGroup.Outlines;
+        //    }
 
-            if ((criteria.ResponseGroup & SearchResponseGroup.WithOutlines) == SearchResponseGroup.WithOutlines)
-            {
-                responseGroup |= ItemResponseGroup.Outlines;
-            }
-
-            //Load ALL products 
-            var searchResults = _browseService.SearchItems(_searchConnection.Scope, serviceCriteria, responseGroup);
-            return searchResults;
-        }
+        //    //Load ALL products 
+        //    var searchResults = _browseService.SearchItems(_searchConnection.Scope, serviceCriteria, responseGroup);
+        //    return searchResults;
+        //}
 
         protected void CheckCurrentUserHasPermissionForObjects(string permission, params object[] objects)
         {
@@ -500,6 +469,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             }
         }
 
+        #region Private methods
         private static string[] GetSelectedFilterProperties(Store store)
         {
             var result = new List<string>();
@@ -607,37 +577,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             return result;
         }
 
-        private static AttributeFilterValue[] CreateAttributeFilterValues(IEnumerable<string> values)
-        {
-            return values.Select(v => new AttributeFilterValue
-            {
-                Id = v,
-                Value = v
-            })
-            .ToArray();
-        }
-
-        private static List<StringKeyValues> ParseKeyValues(string[] items)
-        {
-            var result = new List<StringKeyValues>();
-
-            if (items != null)
-            {
-                var nameValueDelimeter = new[] { ':' };
-                var valuesDelimeter = new[] { ',' };
-
-                result.AddRange(items
-                    .Select(item => item.Split(nameValueDelimeter, 2))
-                    .Where(item => item.Length == 2)
-                    .Select(item => new StringKeyValues { Key = item[0], Values = item[1].Split(valuesDelimeter, StringSplitOptions.RemoveEmptyEntries) })
-                    .GroupBy(item => item.Key)
-                    .Select(g => new StringKeyValues { Key = g.Key, Values = g.SelectMany(i => i.Values).Distinct().ToArray() })
-                    );
-            }
-
-            return result;
-        }
-
         private static webModel.FilterProperty ConvertToFilterProperty(Property property, string[] selectedPropertyNames)
         {
             return new webModel.FilterProperty
@@ -684,11 +623,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 
             return result;
         }
-
-        private class StringKeyValues
-        {
-            public string Key { get; set; }
-            public string[] Values { get; set; }
-        }
+        #endregion
     }
 }

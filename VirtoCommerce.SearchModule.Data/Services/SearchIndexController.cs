@@ -44,7 +44,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             if(string.IsNullOrEmpty(documentType) && rebuild)
                 _searchProvider.RemoveAll(scope, String.Empty);
 
-            foreach (var indexBuilder in validBuilders)
+            foreach (var indexBuilder in validBuilders.Where(i=>i.DocumentType.Equals(documentType) || string.IsNullOrEmpty(documentType)))
             {
                 if (rebuild)
                 {

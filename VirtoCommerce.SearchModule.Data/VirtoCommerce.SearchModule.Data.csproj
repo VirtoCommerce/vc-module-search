@@ -97,14 +97,6 @@
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="PlainElastic.Net, Version=1.1.55.0, Culture=neutral, PublicKeyToken=0930e76dfc03b7ac, processorArchitecture=MSIL">
-      <HintPath>..\packages\VirtoCommerce.PlainElastic.Net.1.1.56.1-beta\lib\Net40\PlainElastic.Net.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="RedDog.Search, Version=0.5.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\RedDog.Search.0.5.2.0\lib\net45\RedDog.Search.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
@@ -145,7 +137,6 @@
     <Compile Include="Model\Indexing\DocumentField.cs" />
     <Compile Include="Model\Indexing\ISearchIndexBuilder.cs" />
     <Compile Include="Model\Indexing\ResultDocument.cs" />
-    <Compile Include="Model\Search\Criterias\CategorySearchCriteria.cs" />
     <Compile Include="Model\Search\Facet.cs" />
     <Compile Include="Model\Search\FacetGroup.cs" />
     <Compile Include="Model\Search\FacetLabel.cs" />
@@ -169,7 +160,6 @@
     <Compile Include="Model\SearchProviders.cs" />
     <Compile Include="Model\Search\SearchSort.cs" />
     <Compile Include="Model\Search\SearchSortField.cs" />
-    <Compile Include="Model\Search\Criterias\CatalogItemSearchCriteria.cs" />
     <Compile Include="Model\ISearchProvider.cs" />
     <Compile Include="Model\ISearchProviderManager.cs" />
     <Compile Include="Model\Search\ISearchQueryBuilder.cs" />
@@ -195,8 +185,6 @@
     <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchProvider.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchQueryBuilder.cs" />
     <Compile Include="Model\Indexing\DocumentDictionary.cs" />
-    <Compile Include="Services\CategoryIndexBuilder.cs" />
-    <Compile Include="Services\CatalogItemIndexBuilder.cs" />
     <Compile Include="Providers\Lucene\BaseSearchQueryBuilder.cs" />
     <Compile Include="Providers\Lucene\LuceneHelper.cs" />
     <Compile Include="Providers\Lucene\LuceneQueryHelper.cs" />

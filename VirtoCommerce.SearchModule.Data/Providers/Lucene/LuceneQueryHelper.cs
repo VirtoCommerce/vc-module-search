@@ -186,30 +186,25 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             const bool lowerboundincluded = true;
             const bool upperboundincluded = false;
 
-            var currency = criteria.Currency.ToLower();
-
             var upper = upperbound == null ? NumericUtils.LongToPrefixCoded(long.MaxValue) : ConvertToSearchable(upperbound);
 
             // format is "fieldname_store_currency_pricelist"
-            string[] pls = null;
-            var searchCriteria = criteria as CatalogItemSearchCriteria;
-            if (searchCriteria != null)
-            {
-                pls = searchCriteria.Pricelists;
-            }
+            var pls = criteria.Pricelists;
+            var currency = criteria.Currency.ToLower();
 
             // Create  filter of type 
             // price_USD_pricelist1:[100 TO 200} (-price_USD_pricelist1:[* TO *} +(price_USD_pricelist2:[100 TO 200} (-price_USD_pricelist2:[* TO *} (+price_USD_pricelist3[100 TO 200}))))
 
-            if (pls == null || !pls.Any())
+            var priceListId = string.Empty;
+            if (pls != null && pls.Any())
             {
-                return null;
+                priceListId = pls[0].ToLower();
             }
-
-            var priceListId = pls[0].ToLower();
+            
+            var fieldName = string.Format(CultureInfo.InvariantCulture, "{0}_{1}{2}", field, currency, string.IsNullOrEmpty(priceListId) ? "" : "_" + priceListId);
 
             var filter = new TermRangeFilter(
-                string.Format(CultureInfo.InvariantCulture, "{0}_{1}_{2}", field, currency, priceListId),
+                fieldName,
                 ConvertToSearchable(lowerbound),
                 upper,
                 lowerboundincluded,
@@ -217,7 +212,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
             query.Add(new FilterClause(filter, Occur.SHOULD));
 
-            if (pls.Length > 1)
+            if (pls != null && pls.Length > 1)
             {
                 var q = CreatePriceRangeQuery(
                     pls,
@@ -228,6 +223,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                     upper,
                     lowerboundincluded,
                     upperboundincluded);
+
                 query.Add(new FilterClause(q, Occur.SHOULD));
             }
 
