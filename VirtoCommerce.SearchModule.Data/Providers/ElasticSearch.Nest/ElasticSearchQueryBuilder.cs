@@ -16,6 +16,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         public virtual object BuildQuery<T>(string scope, ISearchCriteria criteria) where T:class
         {
             var builder = new SearchRequest(scope, criteria.DocumentType);
+            builder.From = criteria.StartingRecord;
+            builder.Size = criteria.RecordsToRetrieve;
 
             QueryContainer mainFilter = null;
             QueryContainer mainQuery = null;

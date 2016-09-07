@@ -207,7 +207,9 @@
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="VirtoCommerce.SearchModule.Data.nuspec" />
+    <None Include="VirtoCommerce.SearchModule.Data.nuspec">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Model\Filters\Filters.xml" />
