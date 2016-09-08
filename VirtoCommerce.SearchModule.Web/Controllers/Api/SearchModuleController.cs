@@ -125,8 +125,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         /// Returns all store catalog properties: selected properties are ordered manually, unselected properties are ordered by name.
         /// </remarks>
         /// <param name="storeId">Store ID</param>
-        /// <responce code="404">Store not found</responce>
-        /// <responce code="200"></responce>
         [HttpGet]
         [Route("storefilterproperties/{storeId}")]
         [ResponseType(typeof(webModel.FilterProperty[]))]
@@ -163,8 +161,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         /// </summary>
         /// <param name="storeId">Store ID</param>
         /// <param name="filterProperties"></param>
-        /// <responce code="404">Store not found</responce>
-        /// <responce code="204"></responce>
         [HttpPut]
         [Route("storefilterproperties/{storeId}")]
         [ResponseType(typeof(void))]
