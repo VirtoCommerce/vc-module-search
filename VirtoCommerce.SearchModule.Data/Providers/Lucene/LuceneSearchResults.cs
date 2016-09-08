@@ -8,6 +8,7 @@ using SpellChecker.Net.Search.Spell;
 using VirtoCommerce.Domain.Search.Filters;
 using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.SearchModule.Data.Services;
+using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
@@ -236,7 +237,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <param name="criteria">The criteria.</param>
         private void CreateSuggestions(IndexReader reader, ISearchCriteria criteria)
         {
-            var keywordSearchCriteria = criteria as KeywordSearchCriteria;
+            var keywordSearchCriteria = criteria as Model.KeywordSearchCriteria;
             if (keywordSearchCriteria != null)
             {
                 var c = keywordSearchCriteria;

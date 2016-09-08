@@ -33,13 +33,13 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 throw new ArgumentNullException("scope");
             }
 
-            var validBulders = _indexBuilders.Where(x => String.Equals(x.DocumentType, documentType, StringComparison.InvariantCultureIgnoreCase));
+            var validBuilders = string.IsNullOrEmpty(documentType) ? _indexBuilders : _indexBuilders.Where(b => string.Equals(b.DocumentType, documentType, StringComparison.OrdinalIgnoreCase)).ToArray();
 
             var lastBuildTimeName = string.Format(CultureInfo.InvariantCulture, "VirtoCommerce.Search.LastBuildTime_{0}_{1}", scope, documentType);
             var lastBuildTime = _settingManager.GetValue(lastBuildTimeName, DateTime.MinValue);
             var nowUtc = DateTime.UtcNow;
 
-            foreach (var indexBuilder in validBulders)
+            foreach (var indexBuilder in validBuilders)
             {
                 if (rebuild)
                 {

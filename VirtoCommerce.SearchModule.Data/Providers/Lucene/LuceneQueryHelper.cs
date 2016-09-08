@@ -6,6 +6,7 @@ using Lucene.Net.Util;
 using VirtoCommerce.Domain.Search.Filters;
 using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.SearchModule.Data.Services;
+using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
@@ -192,7 +193,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
             // format is "fieldname_store_currency_pricelist"
             string[] pls = null;
-            var searchCriteria = criteria as CatalogIndexedSearchCriteria;
+            var searchCriteria = criteria as Model.CatalogIndexedSearchCriteria;
             if (searchCriteria != null)
             {
                 pls = searchCriteria.Pricelists;

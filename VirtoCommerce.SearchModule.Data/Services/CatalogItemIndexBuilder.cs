@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using VirtoCommerce.Domain.Catalog.Model;
 using VirtoCommerce.Domain.Catalog.Services;
+using VirtoCommerce.Domain.Pricing.Model;
 using VirtoCommerce.Domain.Pricing.Services;
 using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
@@ -41,7 +42,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
         {
             get
             {
-                return CatalogIndexedSearchCriteria.DocType;
+                return Model.CatalogIndexedSearchCriteria.DocType;
             }
         }
 
@@ -69,7 +70,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 if (key != null)
                 {
                     var doc = new ResultDocument();
-                    IndexItem(ref doc, key);
+                    IndexItem(doc, key);
                     documents.Add(doc);
                 }
             });
@@ -104,25 +105,34 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         #endregion
 
-        protected virtual void IndexItem(ref ResultDocument doc, string productId)
+        protected virtual void IndexItem(ResultDocument doc, string productId)
         {
             var item = _itemService.GetById(productId, ItemResponseGroup.ItemProperties | ItemResponseGroup.Variations | ItemResponseGroup.Outlines);
             if (item == null)
                 return;
 
-            doc.Add(new DocumentField("__key", item.Id.ToLower(), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            //doc.Add(new DocumentField("__loc", "en-us", new[] { IndexStore.YES, IndexType.NOT_ANALYZED }));
-            doc.Add(new DocumentField("__type", item.GetType().Name, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("__sort", item.Name, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("__hidden", (item.IsActive != true || item.MainProductId != null).ToString().ToLower(), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("code", item.Code, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("name", item.Name, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("startdate", item.StartDate, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("enddate", item.EndDate.HasValue ? item.EndDate : DateTime.MaxValue, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("createddate", item.CreatedDate, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("lastmodifieddate", item.ModifiedDate ?? DateTime.MaxValue, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-
+            var indexStoreNotAnalyzed = new[] { IndexStore.Yes, IndexType.NotAnalyzed };
             var indexStoreNotAnalyzedStringCollection = new[] { IndexStore.Yes, IndexType.NotAnalyzed, IndexDataType.StringCollection };
+            var indexStoreAnalyzedStringCollection = new[] { IndexStore.Yes, IndexType.Analyzed, IndexDataType.StringCollection };
+
+            doc.Add(new DocumentField("__key", item.Id.ToLower(), indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("__type", item.GetType().Name, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("__sort", item.Name, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("__hidden", (item.IsActive != true || item.MainProductId != null).ToString().ToLower(), indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("code", item.Code, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("name", item.Name, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("startdate", item.StartDate, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("enddate", item.EndDate.HasValue ? item.EndDate : DateTime.MaxValue, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("createddate", item.CreatedDate, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("lastmodifieddate", item.ModifiedDate ?? DateTime.MaxValue, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("priority", item.Priority, indexStoreNotAnalyzed));
+            doc.Add(new DocumentField("vendor", item.Vendor, indexStoreNotAnalyzed));
+
+            // Add priority in virtual categories to search index
+            foreach (var link in item.Links)
+            {
+                doc.Add(new DocumentField(string.Format(CultureInfo.InvariantCulture, "priority_{0}_{1}", link.CatalogId, link.CategoryId), link.Priority, indexStoreNotAnalyzed));
+            }
 
             // Add catalogs to search index
             var catalogs = item.Outlines
@@ -143,7 +153,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             }
 
             // Index custom properties
-            IndexItemCustomProperties(ref doc, item);
+            IndexItemCustomProperties(doc, item);
 
             if (item.Variations != null)
             {
@@ -159,19 +169,19 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
                 foreach (var variation in item.Variations)
                 {
-                    IndexItemCustomProperties(ref doc, variation);
+                    IndexItemCustomProperties(doc, variation);
                 }
             }
 
             // Index item prices
-            IndexItemPrices(ref doc, item);
+            IndexItemPrices(doc, item);
 
             //Index item reviews
-            //IndexReviews(ref doc, item);
+            //IndexReviews(doc, item);
 
             // add to content
-            doc.Add(new DocumentField("__content", item.Name, new[] { IndexStore.Yes, IndexType.Analyzed, IndexDataType.StringCollection }));
-            doc.Add(new DocumentField("__content", item.Code, new[] { IndexStore.Yes, IndexType.Analyzed, IndexDataType.StringCollection }));
+            doc.Add(new DocumentField("__content", item.Name, indexStoreAnalyzedStringCollection));
+            doc.Add(new DocumentField("__content", item.Code, indexStoreAnalyzedStringCollection));
         }
 
         protected virtual string[] GetOutlineStrings(IEnumerable<Outline> outlines)
@@ -210,7 +220,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             return result;
         }
 
-        protected virtual void IndexItemCustomProperties(ref ResultDocument doc, CatalogProduct item)
+        protected virtual void IndexItemCustomProperties(ResultDocument doc, CatalogProduct item)
         {
             var properties = item.Properties;
 
@@ -254,9 +264,25 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         #region Price Lists Indexing
 
-        protected virtual void IndexItemPrices(ref ResultDocument doc, CatalogProduct item)
+        protected virtual void IndexItemPrices(ResultDocument doc, CatalogProduct item)
         {
-            var evalContext = new Domain.Pricing.Model.PriceEvaluationContext
+            /*
+            var priceLists = _pricingService.GetPriceLists();
+            if (_prices != null)
+            {
+                var prices = (from p in _prices where p.ItemId.Equals(item.Id, StringComparison.OrdinalIgnoreCase) select p).ToArray();
+
+                foreach (var price in prices)
+                {
+                    //var priceList = price.Pricelist;
+                    var priceList = (from p in _priceLists where p.PricelistId == price.PricelistId select p).SingleOrDefault();
+                    doc.Add(new DocumentField(string.Format("price_{0}_{1}", priceList.Currency, priceList.PricelistId), price.Sale ?? price.List, new[] { IndexStore.NO, IndexType.NOT_ANALYZED }));
+                    doc.Add(new DocumentField(string.Format("price_{0}_{1}_value", priceList.Currency, priceList.PricelistId), price.Sale == null ? price.List.ToString() : price.Sale.ToString(), new[] { IndexStore.YES, IndexType.NOT_ANALYZED }));
+                }
+            }
+            */
+
+            var evalContext = new PriceEvaluationContext
             {
                 ProductIds = new[] { item.Id }
             };
@@ -266,14 +292,14 @@ namespace VirtoCommerce.SearchModule.Data.Services
             foreach (var price in prices)
             {
                 //var priceList = price.Pricelist;
-                doc.Add(new DocumentField(string.Format("price_{0}_{1}", price.Currency, price.PricelistId).ToLower(), price.EffectiveValue, new[] { IndexStore.No, IndexType.NotAnalyzed }));
-                doc.Add(new DocumentField(string.Format("price_{0}_{1}_value", price.Currency, price.PricelistId).ToLower(), (price.EffectiveValue).ToString(CultureInfo.InvariantCulture), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+                doc.Add(new DocumentField(string.Format(CultureInfo.InvariantCulture, "price_{0}_{1}", price.Currency, price.PricelistId).ToLower(), price.EffectiveValue, new[] { IndexStore.No, IndexType.NotAnalyzed }));
+                doc.Add(new DocumentField(string.Format(CultureInfo.InvariantCulture, "price_{0}_{1}_value", price.Currency, price.PricelistId).ToLower(), (price.EffectiveValue).ToString(CultureInfo.InvariantCulture), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             }
         }
 
         #endregion
 
-        //protected virtual void IndexReviews(ref ResultDocument doc, CatalogProduct item)
+        //protected virtual void IndexReviews(ResultDocument doc, CatalogProduct item)
         //{
         //	var reviews = ReviewRepository.Reviews.Where(r => r.ItemId == item.ItemId).ToArray();
         //	var count = reviews.Count();
@@ -329,12 +355,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var allProductChanges = _changeLogService.FindChangeHistory("Item", startDate, endDate).ToList();
             var allPriceChanges = _changeLogService.FindChangeHistory("Price", startDate, endDate).ToList();
 
-            var priceIds = allPriceChanges.Select(c => c.ObjectId).ToList();
-            var prices = _pricingService.GetPricesById(priceIds).ToList();
+            var priceIds = allPriceChanges.Select(c => c.ObjectId).ToArray();
+            var prices = GetPrices(priceIds);
 
             // TODO: How to get product for deleted price?
             var productsWithChangedPrice = allPriceChanges
-                .Select(c => new { c.ModifiedDate, Price = prices.FirstOrDefault(p => p.Id == c.ObjectId) })
+                .Select(c => new { c.ModifiedDate, Price = prices.ContainsKey(c.ObjectId) ? prices[c.ObjectId] : null })
                 .Where(x => x.Price != null)
                 .Select(x => new OperationLog { ObjectId = x.Price.ProductId, ModifiedDate = x.ModifiedDate, OperationType = EntryState.Modified })
                 .ToList();
@@ -346,6 +372,54 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 .GroupBy(c => c.ObjectId)
                 .Select(g => new OperationLog { ObjectId = g.Key, OperationType = g.OrderByDescending(c => c.ModifiedDate).Select(c => c.OperationType).First() })
                 .ToList();
+
+            return result;
+        }
+
+        private IDictionary<string, Price> GetPrices(ICollection<string> priceIds)
+        {
+            // TODO: Get pageSize and degreeOfParallelism from settings
+            return GetPricesWithPagingAndParallelism(priceIds, 1000, 10);
+        }
+
+        private IDictionary<string, Price> GetPricesWithPagingAndParallelism(ICollection<string> priceIds, int pageSize, int degreeOfParallelism)
+        {
+            IDictionary<string, Price> result;
+
+            if (degreeOfParallelism > 1)
+            {
+                var dictionary = new ConcurrentDictionary<string, Price>();
+
+                var pages = new List<string[]>();
+                priceIds.ProcessWithPaging(pageSize, (ids, skipCount, totalCount) => pages.Add(ids.ToArray()));
+
+                var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = degreeOfParallelism };
+
+                Parallel.ForEach(pages, parallelOptions, ids =>
+                {
+                    var prices = _pricingService.GetPricesById(ids);
+                    foreach (var price in prices)
+                    {
+                        dictionary.AddOrUpdate(price.Id, price, (key, oldValue) => price);
+                    }
+                });
+
+                result = dictionary;
+            }
+            else
+            {
+                var dictionary = new Dictionary<string, Price>();
+
+                priceIds.ProcessWithPaging(pageSize, (ids, skipCount, totalCount) =>
+                {
+                    foreach (var price in _pricingService.GetPricesById(ids.ToArray()))
+                    {
+                        dictionary[price.Id] = price;
+                    }
+                });
+
+                result = dictionary;
+            }
 
             return result;
         }

@@ -78,9 +78,9 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         [ResponseType(typeof(ISearchResults))]
         [CheckPermission(Permission = SearchPredefinedPermissions.Debug)]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public IHttpActionResult Debug([FromUri]CatalogIndexedSearchCriteria criteria)
+        public IHttpActionResult Debug([FromUri]Data.Model.CatalogIndexedSearchCriteria criteria)
         {
-            criteria = criteria ?? new CatalogIndexedSearchCriteria();
+            criteria = criteria ?? new Data.Model.CatalogIndexedSearchCriteria();
             var scope = _searchConnection.Scope;
             var searchResults = _searchProvider.Search(scope, criteria);
             return Ok(searchResults);
@@ -218,7 +218,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             return Ok(result.ToWebModel(_blobUrlResolver));
         }
 
-
         private Domain.Catalog.Model.SearchResult SearchProducts(Domain.Catalog.Model.SearchCriteria criteria)
         {
             var context = new Dictionary<string, object>
@@ -229,12 +228,16 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             var catalog = criteria.CatalogId;
             var categoryId = criteria.CategoryId;
 
-            var serviceCriteria = new CatalogIndexedSearchCriteria
+            var serviceCriteria = new Data.Model.CatalogIndexedSearchCriteria
             {
                 Locale = criteria.LanguageCode,
-                Catalog = catalog.ToLowerInvariant(),
                 IsFuzzySearch = true,
             };
+
+            if (!string.IsNullOrWhiteSpace(catalog))
+            {
+                serviceCriteria.Catalog = catalog.ToLowerInvariant();
+            }
 
             if (!string.IsNullOrWhiteSpace(criteria.Outline))
             {
@@ -255,6 +258,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             }
 
             #region Filters
+
             // Now fill in filters
             var filters = _cacheManager.Get("GetFilters-" + criteria.StoreId, "SearchProducts", TimeSpan.FromMinutes(5), () => _browseFilterService.GetFilters(context));
 
@@ -264,7 +268,8 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                 serviceCriteria.Add(filter);
             }
 
-            // apply terms
+            #region apply terms
+
             var terms = ParseKeyValues(criteria.Terms);
             if (terms.Any())
             {
@@ -300,16 +305,13 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                         var attributeFilter = filter as AttributeFilter;
                         if (attributeFilter != null && attributeFilter.Values == null)
                         {
-                            var dynamicValues = new List<AttributeFilterValue>();
-                            foreach (var value in term.Values)
+                            filter = new AttributeFilter
                             {
-                                dynamicValues.Add(new AttributeFilterValue()
-                                {
-                                    Id = value,
-                                    Value = value
-                                });
-                            }
-                            attributeFilter.Values = dynamicValues.ToArray();
+                                Key = attributeFilter.Key,
+                                Values = CreateAttributeFilterValues(term.Values),
+                                IsLocalized = attributeFilter.IsLocalized,
+                                DisplayNames = attributeFilter.DisplayNames,
+                            };
                         }
 
                         var appliedFilter = _browseFilterService.Convert(filter, term.Values);
@@ -317,9 +319,25 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                     }
                 }
             }
+
+            #endregion
+
+            // Filter by vendor
+            var vendorIds = GetDistinctValues(criteria.VendorId, criteria.VendorIds);
+            if (vendorIds.Any())
+            {
+                var vendorFilter = new AttributeFilter
+                {
+                    Key = "vendor",
+                    Values = CreateAttributeFilterValues(vendorIds),
+                };
+                serviceCriteria.Apply(vendorFilter);
+            }
+
             #endregion
 
             #region Facets
+
             // apply facet filters
             var facets = ParseKeyValues(criteria.Facets);
             foreach (var facet in facets)
@@ -332,6 +350,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                 var appliedFilter = _browseFilterService.Convert(filter, facet.Values);
                 serviceCriteria.Apply(appliedFilter);
             }
+
             #endregion
 
             //criteria.ClassTypes.Add("Product");
@@ -342,61 +361,69 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             serviceCriteria.StartDateFrom = criteria.StartDateFrom;
             serviceCriteria.SearchPhrase = criteria.Keyword;
 
-            #region sorting
+            #region Sorting
+
+            var sortFields = new List<SearchSortField>();
+            var priorityFieldName = string.Format(CultureInfo.InvariantCulture, "priority_{0}_{1}", catalog, categoryId).ToLower();
 
             if (!criteria.SortInfos.IsNullOrEmpty())
             {
-                var sortInfo = criteria.SortInfos.FirstOrDefault();
-                var isDescending = sortInfo.SortDirection == SortDirection.Descending;
-                SearchSort sortObject = null;
 
-                switch (sortInfo.SortColumn.ToLowerInvariant())
+                foreach (var sortInfo in criteria.SortInfos)
                 {
-                    case "price":
-                        if (serviceCriteria.Pricelists != null)
-                        {
-                            sortObject = new SearchSort(
-                                serviceCriteria.Pricelists.Select(
-                                    priceList =>
-                                        new SearchSortField(string.Format(CultureInfo.InvariantCulture, "price_{0}_{1}", serviceCriteria.Currency.ToLower(), priceList.ToLower()))
-                                        {
-                                            IgnoredUnmapped = true,
-                                            IsDescending = isDescending,
-                                            DataType = SearchSortField.DOUBLE
-                                        })
-                                    .ToArray());
-                        }
-                        break;
-                    case "position":
-                        sortObject =
-                            new SearchSort(
-                                new SearchSortField(string.Concat("sort", catalog, categoryId).ToLower())
-                                {
-                                    IgnoredUnmapped = true,
-                                    IsDescending = isDescending
-                                });
-                        break;
-                    case "name":
-                    case "title":
-                        sortObject = new SearchSort("name", isDescending);
-                        break;
-                    case "rating":
-                        sortObject = new SearchSort(serviceCriteria.ReviewsAverageField, isDescending);
-                        break;
-                    case "reviews":
-                        sortObject = new SearchSort(serviceCriteria.ReviewsTotalField, isDescending);
-                        break;
-                    default:
-                        sortObject = CatalogIndexedSearchCriteria.DefaultSortOrder;
-                        break;
-                }
+                    var fieldName = sortInfo.SortColumn.ToLowerInvariant();
+                    var isDescending = sortInfo.SortDirection == SortDirection.Descending;
 
-                serviceCriteria.Sort = sortObject;
+                    switch (fieldName)
+                    {
+                        case "price":
+                            if (serviceCriteria.Pricelists != null)
+                            {
+                                sortFields.AddRange(
+                                    serviceCriteria.Pricelists.Select(
+                                        priceList =>
+                                            new SearchSortField(string.Format(CultureInfo.InvariantCulture, "price_{0}_{1}", serviceCriteria.Currency.ToLower(), priceList.ToLower()))
+                                            {
+                                                IgnoredUnmapped = true,
+                                                IsDescending = isDescending,
+                                                DataType = SearchSortField.DOUBLE
+                                            })
+                                        .ToArray());
+                            }
+                            break;
+                        case "priority":
+                            sortFields.Add(new SearchSortField(priorityFieldName, isDescending) { IgnoredUnmapped = true });
+                            sortFields.Add(new SearchSortField("priority", isDescending));
+                            break;
+                        case "name":
+                        case "title":
+                            sortFields.Add(new SearchSortField("name", isDescending));
+                            break;
+                        case "rating":
+                            sortFields.Add(new SearchSortField(serviceCriteria.ReviewsAverageField, isDescending));
+                            break;
+                        case "reviews":
+                            sortFields.Add(new SearchSortField(serviceCriteria.ReviewsTotalField, isDescending));
+                            break;
+                        default:
+                            sortFields.Add(new SearchSortField(fieldName, isDescending));
+                            break;
+                    }
+                }
             }
+
+            if (!sortFields.Any())
+            {
+                sortFields.Add(new SearchSortField(priorityFieldName, true) { IgnoredUnmapped = true });
+                sortFields.Add(new SearchSortField("priority", true));
+                sortFields.AddRange(Data.Model.CatalogIndexedSearchCriteria.DefaultSortOrder.GetSort());
+            }
+
+            serviceCriteria.Sort = new SearchSort(sortFields.ToArray());
 
             #endregion
 
-            var responseGroup = ItemResponseGroup.ItemInfo | ItemResponseGroup.ItemAssets | ItemResponseGroup.Seo;
+            var responseGroup = ItemResponseGroup.ItemInfo | ItemResponseGroup.ItemAssets | ItemResponseGroup.Seo | ItemResponseGroup.ItemEditorialReviews;
 
             if ((criteria.ResponseGroup & SearchResponseGroup.WithProperties) == SearchResponseGroup.WithProperties)
             {
@@ -414,7 +441,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             }
 
             //Load ALL products 
-            var searchResults = _browseService.SearchItems(serviceCriteria, responseGroup);
+            var searchResults = _browseService.SearchItems(_searchConnection.Scope, serviceCriteria, responseGroup);
             return searchResults;
         }
 
@@ -518,6 +545,33 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                 .ThenBy(v => v.Language)
                 .ThenBy(v => v.Value)
                 .ToArray();
+        }
+
+        private static List<string> GetDistinctValues(string value, string[] values)
+        {
+            var result = new List<string>();
+
+            if (!string.IsNullOrEmpty(value))
+            {
+                result.Add(value);
+            }
+
+            if (values != null)
+            {
+                result.AddDistinct(StringComparer.OrdinalIgnoreCase, values);
+            }
+
+            return result;
+        }
+
+        private static AttributeFilterValue[] CreateAttributeFilterValues(IEnumerable<string> values)
+        {
+            return values.Select(v => new AttributeFilterValue
+            {
+                Id = v,
+                Value = v
+            })
+            .ToArray();
         }
 
         private static List<StringKeyValues> ParseKeyValues(string[] items)

@@ -11,7 +11,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
     public class BaseSearchQueryBuilder : ISearchQueryBuilder
     {
-
         /// <summary>
         ///     Builds the query.
         /// </summary>
@@ -53,8 +52,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
             return queryBuilder;
         }
-
-
 
         /// <summary>
         ///     Adds the query.

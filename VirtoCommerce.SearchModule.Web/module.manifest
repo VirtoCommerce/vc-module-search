@@ -1,57 +1,59 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <module>
-  <id>VirtoCommerce.Search</id>
-  <version>2.11.0</version>
-  <platformVersion>2.11.0</platformVersion>
-  <dependencies>
-    <dependency id="VirtoCommerce.Core" version="2.11.0" />
-    <dependency id="VirtoCommerce.Catalog" version="2.11.0" />
-  </dependencies>
+    <id>VirtoCommerce.Search</id>
+    <version>2.11.4</version>
+    <platformVersion>2.11.0</platformVersion>
+    <dependencies>
+        <dependency id="VirtoCommerce.Core" version="2.16.1" />
+        <dependency id="VirtoCommerce.Catalog" version="2.14.1" />
+    </dependencies>
 
-  <title>Search module</title>
-  <description>Indexed search functionality with Lucene and ElasticSearch engines</description>
-  <authors>
-    <author>Virto Commerce</author>
-  </authors>
-  <owners>
-    <owner>Virto Commerce</owner>
-  </owners>
-  <projectUrl>http://virtocommerce.com/</projectUrl>
-  <iconUrl>Modules/$(VirtoCommerce.Core)/Content/logoVC.png</iconUrl>
-  <releaseNotes>First version.</releaseNotes>
-  <copyright>Copyright © 2011-2015 Virto Commerce. All rights reserved</copyright>
-  <tags>order system</tags>
+    <title>Search module</title>
+    <description>Indexed search functionality with Lucene and ElasticSearch engines</description>
+    <authors>
+        <author>Alexander Siniouguine</author>
+        <author>Eugeny Tatarincev</author>
+        <author>Artem Dudarev</author>
+    </authors>
+    <owners>
+        <owner>Virto Commerce</owner>
+    </owners>
+    <projectUrl>https://github.com/VirtoCommerce/vc-module-search</projectUrl>
+    <iconUrl>https://github.com/VirtoCommerce/vc-module-search/raw/master/VirtoCommerce.SearchModule.Web/Content/logo.png</iconUrl>
+    <releaseNotes>First version.</releaseNotes>
+    <copyright>Copyright © 2011-2016 Virto Commerce. All rights reserved</copyright>
+    <tags>order system</tags>
 
-  <assemblyFile>VirtoCommerce.SearchModule.Web.dll</assemblyFile>
-  <moduleType>VirtoCommerce.SearchModule.Web.Module, VirtoCommerce.SearchModule.Web</moduleType>
+    <assemblyFile>VirtoCommerce.SearchModule.Web.dll</assemblyFile>
+    <moduleType>VirtoCommerce.SearchModule.Web.Module, VirtoCommerce.SearchModule.Web</moduleType>
 
-  <scripts>
-    <directory virtualPath="$/Scripts" searchPattern="*.js" searchSubdirectories="true" />
-  </scripts>
+    <scripts>
+        <directory virtualPath="$/Scripts" searchPattern="*.js" searchSubdirectories="true" />
+    </scripts>
 
-  <settings>
-    <group name="Search|General">
-      <setting>
-        <name>VirtoCommerce.Search.SearchConnectionString</name>
-        <valueType>string</valueType>
-        <defaultValue>provider=Lucene;server=~/App_Data/Lucene;scope=default</defaultValue>
-        <title>Search configuration string</title>
-        <description>
-          <![CDATA[ 
+    <settings>
+        <group name="Search|General">
+            <setting>
+                <name>VirtoCommerce.Search.SearchConnectionString</name>
+                <valueType>string</valueType>
+                <defaultValue>provider=Lucene;server=~/App_Data/Lucene;scope=default</defaultValue>
+                <title>Search configuration string</title>
+                <description>
+                    <![CDATA[ 
                     provider=Elasticsearch;server=localhost:9200;scope=default
                     provider=Lucene;server=~/App_Data/Lucene;scope=default
                     ]]>
-        </description>
-      </setting>
-    </group>
-  </settings>
+                </description>
+            </setting>
+        </group>
+    </settings>
 
-  <permissions>
-    <group name="Search">
-      <permission id="VirtoCommerce.Search:Debug" name="Debug search providers" description="Allows to use low level search API."/>
-      <permission id="VirtoCommerce.Search:Index:Rebuild" name="Rebuild Index" description="Allows to delete search index and build it again."/>
-      <permission id="VirtoCommerce.Search:FilterProperties:Read" name="Read store filter properties" />
-      <permission id="VirtoCommerce.Search:FilterProperties:Update" name="Update store filter properties" />
-    </group>
-  </permissions>
+    <permissions>
+        <group name="Search">
+            <permission id="VirtoCommerce.Search:Debug" name="Debug search providers" description="Allows to use low level search API."/>
+            <permission id="VirtoCommerce.Search:Index:Rebuild" name="Rebuild Index" description="Allows to delete search index and build it again."/>
+            <permission id="VirtoCommerce.Search:FilterProperties:Read" name="Read store filter properties" />
+            <permission id="VirtoCommerce.Search:FilterProperties:Update" name="Update store filter properties" />
+        </group>
+    </permissions>
 </module>

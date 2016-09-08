@@ -138,6 +138,12 @@ namespace VirtoCommerce.SearchModule.Client.Model
         public double? Weight { get; set; }
 
         /// <summary>
+        /// Gets or Sets PackageType
+        /// </summary>
+        [DataMember(Name="packageType", EmitDefaultValue=false)]
+        public string PackageType { get; set; }
+
+        /// <summary>
         /// Gets or Sets MeasureUnit
         /// </summary>
         [DataMember(Name="measureUnit", EmitDefaultValue=false)]
@@ -208,6 +214,12 @@ namespace VirtoCommerce.SearchModule.Client.Model
         /// </summary>
         [DataMember(Name="vendor", EmitDefaultValue=false)]
         public string Vendor { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Priority
+        /// </summary>
+        [DataMember(Name="priority", EmitDefaultValue=false)]
+        public int? Priority { get; set; }
 
         /// <summary>
         /// Gets or Sets ImgSrc
@@ -339,6 +351,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
             sb.Append("  ProductType: ").Append(ProductType).Append("\n");
             sb.Append("  WeightUnit: ").Append(WeightUnit).Append("\n");
             sb.Append("  Weight: ").Append(Weight).Append("\n");
+            sb.Append("  PackageType: ").Append(PackageType).Append("\n");
             sb.Append("  MeasureUnit: ").Append(MeasureUnit).Append("\n");
             sb.Append("  Height: ").Append(Height).Append("\n");
             sb.Append("  Length: ").Append(Length).Append("\n");
@@ -351,6 +364,7 @@ namespace VirtoCommerce.SearchModule.Client.Model
             sb.Append("  ShippingType: ").Append(ShippingType).Append("\n");
             sb.Append("  TaxType: ").Append(TaxType).Append("\n");
             sb.Append("  Vendor: ").Append(Vendor).Append("\n");
+            sb.Append("  Priority: ").Append(Priority).Append("\n");
             sb.Append("  ImgSrc: ").Append(ImgSrc).Append("\n");
             sb.Append("  Properties: ").Append(Properties).Append("\n");
             sb.Append("  Images: ").Append(Images).Append("\n");
@@ -505,6 +519,11 @@ namespace VirtoCommerce.SearchModule.Client.Model
                     this.Weight.Equals(other.Weight)
                 ) && 
                 (
+                    this.PackageType == other.PackageType ||
+                    this.PackageType != null &&
+                    this.PackageType.Equals(other.PackageType)
+                ) && 
+                (
                     this.MeasureUnit == other.MeasureUnit ||
                     this.MeasureUnit != null &&
                     this.MeasureUnit.Equals(other.MeasureUnit)
@@ -563,6 +582,11 @@ namespace VirtoCommerce.SearchModule.Client.Model
                     this.Vendor == other.Vendor ||
                     this.Vendor != null &&
                     this.Vendor.Equals(other.Vendor)
+                ) && 
+                (
+                    this.Priority == other.Priority ||
+                    this.Priority != null &&
+                    this.Priority.Equals(other.Priority)
                 ) && 
                 (
                     this.ImgSrc == other.ImgSrc ||
@@ -723,6 +747,9 @@ namespace VirtoCommerce.SearchModule.Client.Model
                 if (this.Weight != null)
                     hash = hash * 59 + this.Weight.GetHashCode();
 
+                if (this.PackageType != null)
+                    hash = hash * 59 + this.PackageType.GetHashCode();
+
                 if (this.MeasureUnit != null)
                     hash = hash * 59 + this.MeasureUnit.GetHashCode();
 
@@ -758,6 +785,9 @@ namespace VirtoCommerce.SearchModule.Client.Model
 
                 if (this.Vendor != null)
                     hash = hash * 59 + this.Vendor.GetHashCode();
+
+                if (this.Priority != null)
+                    hash = hash * 59 + this.Priority.GetHashCode();
 
                 if (this.ImgSrc != null)
                     hash = hash * 59 + this.ImgSrc.GetHashCode();

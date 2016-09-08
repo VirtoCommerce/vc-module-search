@@ -5,6 +5,7 @@ using RedDog.Search.Model;
 using VirtoCommerce.Domain.Search;
 using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
+using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 {
@@ -35,9 +36,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             #endregion
 
             #region CatalogItemSearchCriteria
-            if (criteria is CatalogIndexedSearchCriteria)
+            if (criteria is Model.CatalogIndexedSearchCriteria)
             {
-                var c = criteria as CatalogIndexedSearchCriteria;
+                var c = criteria as Model.CatalogIndexedSearchCriteria;
 
                 if (!String.IsNullOrEmpty(c.SearchPhrase))
                 {
