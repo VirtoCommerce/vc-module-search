@@ -57,9 +57,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                         settings.DisableDirectStreaming().OnRequestCompleted(details =>
                         {
                             Debug.WriteLine("### ES REQEUST ###");
-                            if (details.RequestBodyInBytes != null) Debug.WriteLine(Encoding.UTF8.GetString(details.RequestBodyInBytes));
+                            if (details.RequestBodyInBytes != null) Trace.WriteLine(Encoding.UTF8.GetString(details.RequestBodyInBytes));
                             Debug.WriteLine("### ES RESPONSE ###");
-                            if (details.ResponseBodyInBytes != null) Debug.WriteLine(Encoding.UTF8.GetString(details.ResponseBodyInBytes));
+                            if (details.ResponseBodyInBytes != null) Trace.WriteLine(Encoding.UTF8.GetString(details.ResponseBodyInBytes));
                         })
                         .PrettyJson();
                     }
