@@ -5,9 +5,8 @@ using System.Linq;
 using PlainElastic.Net;
 using PlainElastic.Net.Queries;
 using VirtoCommerce.Domain.Search.Filters;
-using VirtoCommerce.Domain.Search.Services;
-using VirtoCommerce.SearchModule.Data.Model;
 using VirtoCommerce.Domain.Search.Model;
+using VirtoCommerce.Domain.Search.Services;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
@@ -15,7 +14,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
     public class ElasticSearchQueryBuilder : ISearchQueryBuilder
     {
         #region ISearchQueryBuilder Members
-        public object BuildQuery(ISearchCriteria criteria)
+        public virtual object BuildQuery(ISearchCriteria criteria)
         {
             var builder = new QueryBuilder<ESDocument>();
             var mainFilter = new Filter<ESDocument>();

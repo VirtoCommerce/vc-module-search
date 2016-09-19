@@ -2,16 +2,14 @@
 using System.Linq;
 using System.Text;
 using RedDog.Search.Model;
-using VirtoCommerce.Domain.Search;
 using VirtoCommerce.Domain.Search.Model;
 using VirtoCommerce.Domain.Search.Services;
-using VirtoCommerce.SearchModule.Data.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 {
     public class AzureSearchQueryBuilder : ISearchQueryBuilder
     {
-        public object BuildQuery(ISearchCriteria criteria)
+        public virtual object BuildQuery(ISearchCriteria criteria)
         {
             var builder = new SearchQuery();
             var filterBuilder = new StringBuilder();
