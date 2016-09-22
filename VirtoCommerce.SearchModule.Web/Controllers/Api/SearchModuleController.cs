@@ -32,7 +32,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
     {
         private const string _filteredBrowsingPropertyName = "FilteredBrowsing";
 
-        private readonly Data.Model.ISearchProvider _searchProvider;
         private readonly ISearchConnection _searchConnection;
         private readonly SearchIndexJobsScheduler _scheduler;
         private readonly IStoreService _storeService;
@@ -44,12 +43,11 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         private readonly ICatalogSearchService _catalogSearchService;
         private readonly ICacheManager<object> _cacheManager;
 
-        public SearchModuleController(Data.Model.ISearchProvider searchProvider, ISearchConnection searchConnection, SearchIndexJobsScheduler scheduler,
+        public SearchModuleController( ISearchConnection searchConnection, SearchIndexJobsScheduler scheduler,
             IStoreService storeService, ISecurityService securityService, IPermissionScopeService permissionScopeService,
             IPropertyService propertyService, IBrowseFilterService browseFilterService, 
             IBlobUrlResolver blobUrlResolver, ICatalogSearchService catalogSearchService, ICacheManager<object> cacheManager)
         {
-            _searchProvider = searchProvider;
             _searchConnection = searchConnection;
             _scheduler = scheduler;
             _storeService = storeService;
