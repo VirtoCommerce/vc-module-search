@@ -15,10 +15,6 @@ using VirtoCommerce.SearchModule.Data.Model.Search;
 using VirtoCommerce.SearchModule.Data.Model;
 using VirtoCommerce.SearchModule.Data.Model.Indexing;
 using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
-using System.Collections.Specialized;
-using VirtoCommerce.SearchModule.Data.Model.Filters;
-using Lucene.Net.QueryParsers;
-using System.Text;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
@@ -40,15 +36,16 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// </summary>
         /// <param name="queryBuilder">The query builder.</param>
         /// <param name="connection">The connection.</param>
-        public LuceneSearchProvider(ISearchConnection connection)
+        public LuceneSearchProvider(ISearchQueryBuilder queryBuilder, ISearchConnection connection)
         {
             AutoCommit = true;
             AutoCommitCount = 100;
 
+            QueryBuilder = queryBuilder;
             _connection = connection;
             Init();
         }
-        #region ISearchProvider Members
+
         /// <summary>
         ///     Gets or sets a value indicating whether [auto commit].
         /// </summary>
@@ -63,6 +60,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <value>The auto commit count.</value>
         public int AutoCommitCount { get; set; }
 
+        /// <summary>
+        ///     Gets or sets the query builder.
+        /// </summary>
+        /// <value>
+        ///     The query builder.
+        /// </value>
+        public ISearchQueryBuilder QueryBuilder { get; set; }
 
         /// <summary>
         ///     Closes the specified provider.
@@ -225,7 +229,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 var dir = FSDirectory.Open(directoryInfo);
                 var searcher = new IndexSearcher(dir);
 
-                var q = BuildQuery(scope, criteria);
+                var q = (QueryBuilder)QueryBuilder.BuildQuery<T>(scope, criteria);
 
                 // filter out empty value
                 var filter = q.Filter.ToString().Equals("BooleanFilter()") ? null : q.Filter;
@@ -273,141 +277,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             }
 
             return result;
-        }
-        #endregion
-
-        public virtual QueryBuilder BuildQuery(string scope, ISearchCriteria criteria)
-        {
-            var queryBuilder = new QueryBuilder();
-            var queryFilter = new BooleanFilter();
-            var query = new BooleanQuery();
-            var analyzer = new StandardAnalyzer(u.Version.LUCENE_30);
-
-            var fuzzyMinSimilarity = 0.7f;
-            var isFuzzySearch = false;
-
-            queryBuilder.Query = query;
-            queryBuilder.Filter = queryFilter;
-
-            if (criteria.CurrentFilters != null)
-            {
-                foreach (var filter in criteria.CurrentFilters)
-                {
-                    // Skip currencies that are not part of the filter
-                    if (filter.GetType() == typeof(PriceRangeFilter)) // special filtering 
-                    {
-                        var currency = (filter as PriceRangeFilter).Currency;
-                        if (!currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase))
-                        {
-                            continue;
-                        }
-                    }
-
-                    var filterQuery = LuceneQueryHelper.CreateQuery(criteria, filter, Occur.SHOULD);
-
-                    // now add other values that should also be counted?
-
-                    if (filterQuery != null)
-                    {
-                        var clause = new FilterClause(filterQuery, Occur.MUST);
-                        queryFilter.Add(clause);
-                    }
-                }
-            }
-
-            // add standard keyword search
-            if (criteria is KeywordSearchCriteria)
-            {
-                var c = criteria as KeywordSearchCriteria;
-                // Add search
-                if (!String.IsNullOrEmpty(c.SearchPhrase))
-                {
-                    var searchPhrase = c.SearchPhrase;
-                    if (isFuzzySearch)
-                    {
-
-                        var keywords = c.SearchPhrase.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-                        searchPhrase = string.Empty;
-                        searchPhrase = keywords.Aggregate(
-                            searchPhrase,
-                            (current, keyword) =>
-                                current + String.Format("{0}~{1}", keyword.Replace("~", ""), fuzzyMinSimilarity.ToString(CultureInfo.InvariantCulture)));
-                    }
-
-                    var fields = new List<string> { "__content" };
-                    if (c.Locale != null)
-                    {
-                        var contentField = string.Format("__content_{0}", c.Locale.ToLower());
-                        fields.Add(contentField);
-                    }
-
-                    var parser = new MultiFieldQueryParser(u.Version.LUCENE_30, fields.ToArray(), analyzer)
-                    {
-                        DefaultOperator = QueryParser.Operator.OR
-                    };
-
-                    var searchQuery = parser.Parse(searchPhrase);
-                    query.Add(searchQuery, Occur.MUST);
-                }
-            }
-
-            return queryBuilder;
-        }
-
-
-
-        /// <summary>
-        ///     Adds the query.
-        /// </summary>
-        /// <param name="fieldName">Name of the field.</param>
-        /// <param name="query">The query.</param>
-        /// <param name="filter">The filter.</param>
-        protected void AddQuery(string fieldName, BooleanQuery query, StringCollection filter)
-        {
-            fieldName = fieldName.ToLower();
-            if (filter.Count > 0)
-            {
-                if (filter.Count != 1)
-                {
-                    var booleanQuery = new BooleanQuery();
-                    var containsFilter = false;
-                    foreach (var index in filter)
-                    {
-                        if (String.IsNullOrEmpty(index))
-                        {
-                            continue;
-                        }
-
-                        var nodeQuery = new WildcardQuery(new Term(fieldName, index));
-                        booleanQuery.Add(nodeQuery, Occur.SHOULD);
-                        containsFilter = true;
-                    }
-                    if (containsFilter)
-                    {
-                        query.Add(booleanQuery, Occur.MUST);
-                    }
-                }
-                else
-                {
-                    if (!String.IsNullOrEmpty(filter[0]))
-                    {
-                        this.AddQuery(fieldName, query, filter[0].ToLower());
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Adds the query.
-        /// </summary>
-        /// <param name="fieldName">Name of the field.</param>
-        /// <param name="query">The query.</param>
-        /// <param name="filter">The filter.</param>
-        protected void AddQuery(string fieldName, BooleanQuery query, string filter)
-        {
-            fieldName = fieldName.ToLower();
-            var nodeQuery = new WildcardQuery(new Term(fieldName, filter.ToLower()));
-            query.Add(nodeQuery, Occur.MUST);
         }
 
 
@@ -529,34 +398,5 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 _isInitialized = true;
             }
         }
-    }
-
-    public class QueryBuilder
-    {
-        public Query Query { get; set; }
-
-        public Filter Filter { get; set; }
-
-        #region Overrides of Object
-
-        /// <summary>
-        /// Returns a string that represents the current object.
-        /// </summary>
-        /// <returns>
-        /// A string that represents the current object.
-        /// </returns>
-        public override string ToString()
-        {
-            var ret = new StringBuilder();
-            if (this.Query != null)
-                ret.AppendFormat("query:{0}", this.Query.ToString());
-
-            if (this.Filter != null)
-                ret.AppendFormat("filter:{0}", this.Filter.ToString());
-
-            return ret.ToString();
-        }
-
-        #endregion
     }
 }

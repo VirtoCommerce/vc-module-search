@@ -112,12 +112,12 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="VirtoCommerce.Domain, Version=2.16.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\VirtoCommerce.Domain.2.17.0-rc27\lib\net451\VirtoCommerce.Domain.dll</HintPath>
+    <Reference Include="VirtoCommerce.Domain, Version=2.16.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\VirtoCommerce.Domain.2.16.1\lib\net451\VirtoCommerce.Domain.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="VirtoCommerce.Platform.Core, Version=2.11.5.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\VirtoCommerce.Platform.Core.2.12.0-rc3\lib\net451\VirtoCommerce.Platform.Core.dll</HintPath>
+      <HintPath>..\packages\VirtoCommerce.Platform.Core.2.11.5\lib\net451\VirtoCommerce.Platform.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
@@ -158,10 +158,11 @@
     <Compile Include="Model\SearchException.cs" />
     <Compile Include="Model\Indexing\SearchIndexEventArgs.cs" />
     <Compile Include="Model\SearchProviders.cs" />
-    <Compile Include="Model\Search\ISearchQueryBuilder.cs" />
     <Compile Include="Model\Search\SearchSort.cs" />
     <Compile Include="Model\Search\SearchSortField.cs" />
     <Compile Include="Model\ISearchProvider.cs" />
+    <Compile Include="Model\ISearchProviderManager.cs" />
+    <Compile Include="Model\Search\ISearchQueryBuilder.cs" />
     <Compile Include="Model\Search\ISearchResults.cs" />
     <Compile Include="Model\Search\Criterias\KeywordSearchCriteria.cs" />
     <Compile Include="Model\SearchConnection.cs" />
@@ -182,14 +183,18 @@
     <Compile Include="Providers\Azure\StringBuilderExtensions.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchException.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchProvider.cs" />
+    <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchQueryBuilder.cs" />
     <Compile Include="Model\Indexing\DocumentDictionary.cs" />
+    <Compile Include="Providers\Lucene\BaseSearchQueryBuilder.cs" />
     <Compile Include="Providers\Lucene\LuceneHelper.cs" />
     <Compile Include="Providers\Lucene\LuceneQueryHelper.cs" />
     <Compile Include="Providers\Lucene\LuceneSearchException.cs" />
     <Compile Include="Providers\Lucene\LuceneSearchProvider.cs" />
+    <Compile Include="Providers\Lucene\LuceneSearchQueryBuilder.cs" />
     <Compile Include="Providers\Lucene\LuceneSearchResults.cs" />
     <Compile Include="Services\SearchFilterExtensions.cs" />
     <Compile Include="Services\SearchIndexController.cs" />
+    <Compile Include="Services\SearchProviderManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">

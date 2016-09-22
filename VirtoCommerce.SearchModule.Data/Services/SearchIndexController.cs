@@ -10,11 +10,13 @@ namespace VirtoCommerce.SearchModule.Data.Services
     {
         private readonly ISearchIndexBuilder[] _indexBuilders;
         private readonly ISettingsManager _settingManager;
+        private readonly Model.ISearchProvider _searchProvider;
 
-        public SearchIndexController(ISettingsManager settingManager, params ISearchIndexBuilder[] indexBuilders)
+        public SearchIndexController(ISettingsManager settingManager, Model.ISearchProvider searchProvider, params ISearchIndexBuilder[] indexBuilders)
         {
             _settingManager = settingManager;
             _indexBuilders = indexBuilders;
+            _searchProvider = searchProvider;
         }
 
         #region ISearchIndexController
@@ -38,9 +40,9 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var lastBuildTime = _settingManager.GetValue(lastBuildTimeName, DateTime.MinValue);
             var nowUtc = DateTime.UtcNow;
 
-            //// if full rebuild, delete index so mapping is also removed
-            //if(string.IsNullOrEmpty(documentType) && rebuild)
-            //    _searchProvider.RemoveAll(scope, String.Empty);
+            // if full rebuild, delete index so mapping is also removed
+            if(string.IsNullOrEmpty(documentType) && rebuild)
+                _searchProvider.RemoveAll(scope, String.Empty);
 
             foreach (var indexBuilder in validBuilders.Where(i=>i.DocumentType.Equals(documentType) || string.IsNullOrEmpty(documentType)))
             {

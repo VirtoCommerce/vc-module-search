@@ -10,6 +10,8 @@ namespace VirtoCommerce.SearchModule.Data.Model
 {
     public interface ISearchProvider
     {
+        ISearchQueryBuilder QueryBuilder { get; }
+
         void Close(string scope, string documentType);
 
         void Commit(string scope);

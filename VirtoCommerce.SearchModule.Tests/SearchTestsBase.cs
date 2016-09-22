@@ -14,17 +14,20 @@ namespace VirtoCommerce.SearchModule.Tests
         {
             if (searchProvider == "Lucene")
             {
-           
+                var queryBuilder = new LuceneSearchQueryBuilder();
+
                 var conn = new SearchConnection(_LuceneStorageDir, scope);
-                var provider = new LuceneSearchProvider(conn);
+                var provider = new LuceneSearchProvider(queryBuilder, conn);
 
                 return provider;
             }
 
             if (searchProvider == "Elastic")
             {
+                var queryBuilder = new ElasticSearchQueryBuilder();
+
                 var conn = new SearchConnection("localhost:9200", scope);
-                var provider = new ElasticSearchProvider(conn);
+                var provider = new ElasticSearchProvider(queryBuilder, conn);
                 provider.EnableTrace = true;
 
                 return provider;
