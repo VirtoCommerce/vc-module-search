@@ -8,9 +8,7 @@ using VirtoCommerce.SearchModule.Data.Model;
 using VirtoCommerce.SearchModule.Data.Providers.Lucene;
 using VirtoCommerce.SearchModule.Data.Services;
 using VirtoCommerce.SearchModule.Web.BackgroundJobs;
-using VirtoCommerce.SearchModule.Web.Services;
 using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest;
-using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
 using VirtoCommerce.SearchModule.Data.Model.Filters;
 using VirtoCommerce.SearchModule.Data.Model.Indexing;
 
@@ -31,7 +29,6 @@ namespace VirtoCommerce.SearchModule.Web
         {
             base.Initialize();
 
-            _container.RegisterType<ISearchIndexBuilder, CatalogItemIndexBuilder>(CatalogItemSearchCriteria.DocType);
             _container.RegisterType<ISearchIndexController, SearchIndexController>();
             var settingManager = _container.Resolve<ISettingsManager>();
 
@@ -47,9 +44,6 @@ namespace VirtoCommerce.SearchModule.Web
             var searchProviderManager = new SearchProviderManager(searchConnection);
             _container.RegisterInstance<ISearchProviderManager>(searchProviderManager);
             _container.RegisterInstance<ISearchProvider>(searchProviderManager);
-
-            _container.RegisterType<IBrowseFilterService, FilterService>();
-            _container.RegisterType<IItemBrowsingService, ItemBrowsingService>();
         }
 
         public override void PostInitialize()

@@ -1,6 +1,7 @@
 ﻿using Nest;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using VirtoCommerce.SearchModule.Data.Model;
 using VirtoCommerce.SearchModule.Data.Model.Filters;
@@ -106,27 +107,25 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             var lowerboundincluded = true;
             var upperboundincluded = false;
 
-            var currency = criteria.Currency.ToLower();
-
             // format is "fieldname_store_currency_pricelist"
-            string[] pls = null;
-            if (criteria is CatalogItemSearchCriteria)
-            {
-                pls = ((CatalogItemSearchCriteria)criteria).Pricelists;
-            }
+            var pls = criteria.Pricelists;
+            var currency = criteria.Currency.ToLower();
 
             var parentPriceList = string.Empty;
 
             // Create  filter of type 
             // price_USD_pricelist1:[100 TO 200} (-price_USD_pricelist1:[* TO *} +(price_USD_pricelist2:[100 TO 200} (-price_USD_pricelist2:[* TO *} (+price_USD_pricelist3[100 TO 200}))))
 
-            if (pls == null || !pls.Any())
-                return null;
+            var priceListId = string.Empty;
+            if (pls != null && pls.Any())
+            {
+                priceListId = pls[0].ToLower();
+            }
 
-            var priceListId = pls[0].ToLower();
+            var fieldName = string.Format(CultureInfo.InvariantCulture, "{0}_{1}{2}", field, currency, string.IsNullOrEmpty(priceListId) ? "" : "_" + priceListId);
 
             var top_range_query = Query<T>.Range(r => r
-                    .Field(string.Format("{0}_{1}_{2}", field, currency, priceListId))
+                    .Field(fieldName)
                     .GreaterThanOrEquals(lowerbound.AsDouble())
                     .LessThan(upperbound.AsDouble())
                 );
@@ -134,7 +133,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             var queryContainer = new List<QueryContainer>();
 
             queryContainer.Add(top_range_query);
-            if (pls.Count() > 1)
+            if (pls!=null && pls.Count() > 1)
             {
                 var sub_range_query = CreatePriceRangeFilter<T>(pls, 1, field, currency, lowerbound.AsDouble(), upperbound.AsDouble(), lowerboundincluded, upperboundincluded);
                 var sub_range_bool_query = Query<T>.Bool(b => b.Should(sub_range_query));

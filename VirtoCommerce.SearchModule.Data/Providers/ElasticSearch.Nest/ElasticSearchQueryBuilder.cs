@@ -13,15 +13,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
     public class ElasticSearchQueryBuilder : ISearchQueryBuilder
     {
         #region ISearchQueryBuilder Members
-        public object BuildQuery<T>(string scope, ISearchCriteria criteria) where T:class
+        public virtual object BuildQuery<T>(string scope, ISearchCriteria criteria) where T:class
         {
             var builder = new SearchRequest(scope, criteria.DocumentType);
-            
             builder.From = criteria.StartingRecord;
             builder.Size = criteria.RecordsToRetrieve;
 
-            var mainFilter = new BoolQuery();
-            var mainQuery = new List<QueryContainer>();
+            QueryContainer mainFilter = null;
+            QueryContainer mainQuery = null;
 
             #region Sorting
 
@@ -52,7 +51,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             // Perform facet filters
             if (criteria.CurrentFilters != null && criteria.CurrentFilters.Any())
             {
-                var combinedFilter = new List<QueryContainer>();
+                //var combinedFilter = new List<QueryContainer>();
                 // group filters
                 foreach (var filter in criteria.CurrentFilters)
                 {
@@ -72,11 +71,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
                     if (filterQuery != null)
                     {
-                        combinedFilter.Add(filterQuery);
+                        mainFilter &= filterQuery;
+                        //combinedFilter.Add(filterQuery);
                     }
                 }
 
-                mainFilter.Must = combinedFilter;
+                
             }
             #endregion
 
@@ -94,61 +94,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                         searchFields.Add(string.Format("__content_{0}", c.Locale.ToLower()));
                     }
 
-                    AddQueryString(mainQuery, c, searchFields.ToArray());
+                    mainQuery &= CreateQuery(c, searchFields.ToArray());
                 }
             }
             #endregion
 
-            #region CategorySearchCriteria
-            if (criteria is CategorySearchCriteria)
-            {
-                var c = criteria as CategorySearchCriteria;
-                if (c.Outlines != null && c.Outlines.Count > 0)
-                {
-                    AddQuery("__outline", mainQuery, c.Outlines);
-                }
-            }
-            #endregion
-
-            #region CatalogItemSearchCriteria
-            if (criteria is CatalogItemSearchCriteria)
-            {
-                var c = criteria as CatalogItemSearchCriteria;
-
-                mainQuery.Add(new DateRangeQuery() { Field = "startdate", LessThanOrEqualTo = c.StartDate });
-
-                if (c.StartDateFrom.HasValue)
-                {
-                    mainQuery.Add(new DateRangeQuery() { Field = "startdate", GreaterThan = c.StartDateFrom.Value });
-                }
-
-                if (c.EndDate.HasValue)
-                {
-                    mainQuery.Add(new DateRangeQuery() { Field = "enddate", GreaterThan = c.StartDateFrom.Value });
-                }
-
-                mainQuery.Add(new TermQuery() { Field = "__hidden", Value = false });
-
-                if (c.Outlines != null && c.Outlines.Count > 0)
-                {
-                    AddQuery("__outline", mainQuery, c.Outlines);
-                }
-
-                if (!string.IsNullOrEmpty(c.Catalog))
-                {
-                    AddQuery("catalog", mainQuery, c.Catalog);
-                }
-
-                if (c.ClassTypes != null && c.ClassTypes.Count > 0)
-                {
-                    AddQuery("__type", mainQuery, c.ClassTypes, false);
-                }
-            }
-            #endregion
-
-            var boolQuery = new BoolQuery() { Must = mainQuery };
-            builder.Query = boolQuery;
             builder.PostFilter = mainFilter;
+            builder.Query = mainQuery;
 
             // Add search aggregations
             var aggregations = GetAggregations<T>(criteria);
@@ -186,7 +138,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             return container;
         }
 
-        private void AddAggregationQueries<T>(Dictionary<string, AggregationContainer> container, string field, ISearchCriteria criteria) where T:class
+        protected virtual void AddAggregationQueries<T>(Dictionary<string, AggregationContainer> container, string field, ISearchCriteria criteria) where T:class
         {
             var existing_filters = GetExistingFilters<T>(criteria, field);
 
@@ -199,7 +151,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             container.Add(field, agg);
         }
 
-        private void AddAggregationPriceQueries<T>(Dictionary<string, AggregationContainer> container, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria) where T:class
+        protected virtual void AddAggregationPriceQueries<T>(Dictionary<string, AggregationContainer> container, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria) where T:class
         {
             if (values == null)
                 return;
@@ -223,7 +175,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             }
         }
 
-        private void AddAggregationQueries<T>(Dictionary<string, AggregationContainer> container, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria) where T:class
+        protected virtual BoolQuery CreatePriceRangeFilter<T>(ISearchCriteria criteria, string field, RangeFilterValue value) where T : class
+        {
+            return ElasticQueryHelper.CreatePriceRangeFilter<T>(criteria, field, value);
+        }
+
+        protected virtual void AddAggregationQueries<T>(Dictionary<string, AggregationContainer> container, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria) where T:class
         {
             if (values == null)
                 return;
@@ -246,8 +203,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         #endregion
 
         #region Helper Query Methods
-        protected void AddQuery(string fieldName, List<QueryContainer> query, StringCollection filter, bool lowerCase = true)
+        protected QueryContainer CreateQuery(string fieldName, StringCollection filter, bool lowerCase = true)
         {
+            QueryContainer query = null;
             fieldName = fieldName.ToLower();
             if (filter.Count > 0)
             {
@@ -255,7 +213,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                 {
                     if (!string.IsNullOrEmpty(filter[0]))
                     {
-                        AddQuery(fieldName, query, filter[0], lowerCase);
+                        query &= CreateQuery(fieldName, filter[0], lowerCase) as QueryContainer;
                     }
                 }
                 else
@@ -271,20 +229,25 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                     if (containsFilter)
                     {
                         booleanQuery.Should = valueContainer;
-                        query.Add(booleanQuery);
+                        query |= booleanQuery;
                     }
                         
                 }
             }
+
+            return query;
         }
 
-        protected void AddQuery(string fieldName, List<QueryContainer> query, string filter, bool lowerCase = true)
+        protected virtual QueryContainer CreateQuery(string fieldName, string filter, bool lowerCase = true)
         {
-            query.Add(new WildcardQuery() { Field = fieldName.ToLower(), Value = lowerCase ? filter.ToLower() : filter });
+            QueryContainer query = null;
+            query &= new WildcardQuery() { Field = fieldName.ToLower(), Value = lowerCase ? filter.ToLower() : filter };
+            return query;
         }
 
-        protected void AddQueryString(List<QueryContainer> query, KeywordSearchCriteria filter, params string[] fields)
+        protected virtual QueryContainer CreateQuery(KeywordSearchCriteria filter, params string[] fields)
         {
+            QueryContainer query = null;
             var searchPhrase = filter.SearchPhrase;
             MultiMatchQuery multiMatch;
             if (filter.IsFuzzySearch)
@@ -309,7 +272,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                 };
             }
 
-            query.Add(multiMatch);
+            query &= multiMatch;
+            return query;
         }
 
         private List<QueryContainer> GetExistingFilters<T>(ISearchCriteria criteria, string field) where T:class

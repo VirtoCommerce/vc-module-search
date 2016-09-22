@@ -1,0 +1,176 @@
+{
+  "sort": [
+    {
+      "__sort": {
+        "order": "desc"
+      }
+    }
+  ],
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "range": {
+            "startdate": {
+              "lte": "2016-09-07T05:59:42.5599624Z"
+            }
+          }
+        },
+        {
+          "term": {
+            "__hidden": {
+              "value": false
+            }
+          }
+        },
+        {
+          "wildcard": {
+            "__outline": {
+              "value": "4974648a41df4e6ea67ef2ad76d7bbd4/45d3fc9a913d4610a5c7d0470558c4b2*"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "brand": {
+      "filter": {},
+      "aggs": {
+        "brand": {
+          "terms": {
+            "field": "brand"
+          }
+        }
+      }
+    },
+    "color": {
+      "filter": {},
+      "aggs": {
+        "color": {
+          "terms": {
+            "field": "color"
+          }
+        }
+      }
+    },
+    "display size": {
+      "filter": {},
+      "aggs": {
+        "display size": {
+          "terms": {
+            "field": "display size"
+          }
+        }
+      }
+    },
+    "price-under-100": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "bool": {
+                "should": [
+                  {
+                    "range": {
+                      "price_usd": {
+                        "lt": 100.0
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "price-100-200": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "bool": {
+                "should": [
+                  {
+                    "range": {
+                      "price_usd": {
+                        "gte": 100.0,
+                        "lt": 200.0
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "price-200-600": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "bool": {
+                "should": [
+                  {
+                    "range": {
+                      "price_usd": {
+                        "gte": 200.0,
+                        "lt": 600.0
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "price-600-1000": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "bool": {
+                "should": [
+                  {
+                    "range": {
+                      "price_usd": {
+                        "gte": 600.0,
+                        "lt": 1000.0
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "price-over-1000": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "bool": {
+                "should": [
+                  {
+                    "range": {
+                      "price_usd": {
+                        "gte": 1000.0
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

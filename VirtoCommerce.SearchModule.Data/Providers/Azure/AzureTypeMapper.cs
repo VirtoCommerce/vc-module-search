@@ -1,74 +1,74 @@
-﻿using System;
-using RedDog.Search.Model;
-using VirtoCommerce.SearchModule.Data.Model.Indexing;
+﻿//using System;
+//using RedDog.Search.Model;
+//using VirtoCommerce.SearchModule.Data.Model.Indexing;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.Azure
-{
-    public static class AzureTypeMapper
-    {
-        public static string GetAzureSearchType(IDocumentField field)
-        {
-            if (field.ContainsAttribute(IndexDataType.StringCollection))
-            {
-                return FieldType.StringCollection;
-            }
+//namespace VirtoCommerce.SearchModule.Data.Providers.Azure
+//{
+//    public static class AzureTypeMapper
+//    {
+//        public static string GetAzureSearchType(IDocumentField field)
+//        {
+//            if (field.ContainsAttribute(IndexDataType.StringCollection))
+//            {
+//                return FieldType.StringCollection;
+//            }
 
-            var type = field.Value != null ? field.Value.GetType() : typeof(String);
-            return GetAzureSearchType(type);
-        }
-        public static string GetAzureSearchType(Type fieldType)
-        {
-            if (fieldType == typeof(String))
-                return FieldType.String;
+//            var type = field.Value != null ? field.Value.GetType() : typeof(String);
+//            return GetAzureSearchType(type);
+//        }
+//        public static string GetAzureSearchType(Type fieldType)
+//        {
+//            if (fieldType == typeof(String))
+//                return FieldType.String;
 
-            if (fieldType == typeof(String[]))
-                return FieldType.StringCollection;
+//            if (fieldType == typeof(String[]))
+//                return FieldType.StringCollection;
 
-            if (fieldType == typeof(Boolean))
-                return FieldType.Boolean;
+//            if (fieldType == typeof(Boolean))
+//                return FieldType.Boolean;
 
-            if (fieldType == typeof(DateTime))
-                return FieldType.DateTimeOffset;
+//            if (fieldType == typeof(DateTime))
+//                return FieldType.DateTimeOffset;
 
-            return GetAzureSearchNumericType(fieldType) ?? FieldType.String;
-        }
+//            return GetAzureSearchNumericType(fieldType) ?? FieldType.String;
+//        }
 
 
-        public static string GetAzureSearchNumericType(Type fieldType)
-        {
-            if (fieldType.IsEnum)
-                return FieldType.Integer;
+//        public static string GetAzureSearchNumericType(Type fieldType)
+//        {
+//            if (fieldType.IsEnum)
+//                return FieldType.Integer;
 
-            // Map numeric types.
-            var typeCode = Type.GetTypeCode(fieldType);
-            switch (typeCode)
-            {
-                case TypeCode.Byte:
-                case TypeCode.SByte:
-                case TypeCode.Boolean:
-                    return FieldType.String;
+//            // Map numeric types.
+//            var typeCode = Type.GetTypeCode(fieldType);
+//            switch (typeCode)
+//            {
+//                case TypeCode.Byte:
+//                case TypeCode.SByte:
+//                case TypeCode.Boolean:
+//                    return FieldType.String;
 
-                case TypeCode.UInt16:
-                case TypeCode.Int16:
-                    return FieldType.Integer;
+//                case TypeCode.UInt16:
+//                case TypeCode.Int16:
+//                    return FieldType.Integer;
 
-                case TypeCode.UInt32:
-                case TypeCode.Int32:
-                    return FieldType.Integer;
+//                case TypeCode.UInt32:
+//                case TypeCode.Int32:
+//                    return FieldType.Integer;
 
-                case TypeCode.UInt64:
-                case TypeCode.Int64:
-                    return FieldType.Integer;
+//                case TypeCode.UInt64:
+//                case TypeCode.Int64:
+//                    return FieldType.Integer;
 
-                case TypeCode.Single:
-                    return FieldType.Double;
+//                case TypeCode.Single:
+//                    return FieldType.Double;
 
-                case TypeCode.Decimal:
-                case TypeCode.Double:
-                    return FieldType.Double;
-            }
-            return null;
-        }
+//                case TypeCode.Decimal:
+//                case TypeCode.Double:
+//                    return FieldType.Double;
+//            }
+//            return null;
+//        }
 
-    }
-}
+//    }
+//}

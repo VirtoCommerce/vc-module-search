@@ -90,6 +90,17 @@ namespace VirtoCommerce.SearchModule.Data.Model.Search.Criterias
 
         public virtual string Currency { get; set; }
 
+        /// <summary>
+        /// Gets or sets the price lists that should be considered for filtering.
+        /// </summary>
+        /// <value>
+        /// The price lists.
+        /// </value>
+        public virtual string[] Pricelists
+        {
+            get;set;
+        }
+
         List<ISearchFilter> _filters = new List<ISearchFilter>();
 
         public virtual ISearchFilter[] Filters

@@ -44,7 +44,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             if(string.IsNullOrEmpty(documentType) && rebuild)
                 _searchProvider.RemoveAll(scope, String.Empty);
 
-            foreach (var indexBuilder in validBuilders)
+            foreach (var indexBuilder in validBuilders.Where(i=>i.DocumentType.Equals(documentType) || string.IsNullOrEmpty(documentType)))
             {
                 if (rebuild)
                 {
@@ -77,6 +77,39 @@ namespace VirtoCommerce.SearchModule.Data.Services
             {
                 _settingManager.SetValue(lastBuildTimeName, nowUtc);
             }
+        }
+
+        public void Process(string scope, string documentType, string documentId)
+        {
+            if (scope == null)
+            {
+                throw new ArgumentNullException("scope");
+            }
+
+            if (documentType == null)
+            {
+                throw new ArgumentNullException("documentType");
+            }
+
+            if (documentId == null)
+            {
+                throw new ArgumentNullException("documentId");
+            }
+
+            var indexBuilder = _indexBuilders.Where(b => string.Equals(b.DocumentType, documentType, StringComparison.OrdinalIgnoreCase)).SingleOrDefault();
+
+            // remove existing index
+            indexBuilder.RemoveDocuments(scope, new[] { documentId });
+
+            // create new index
+            var partition = new Partition(OperationType.Index, new[] { documentId });
+
+            // create index docs
+            var docs = indexBuilder.CreateDocuments(partition);
+
+            // submit docs to the provider
+            var docsArray = docs.ToArray();
+            indexBuilder.PublishDocuments(scope, docsArray);
         }
 
         #endregion
