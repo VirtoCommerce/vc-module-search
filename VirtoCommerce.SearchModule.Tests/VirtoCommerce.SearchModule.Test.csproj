@@ -96,7 +96,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="VirtoCommerce.Platform.Data, Version=2.11.5.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\VirtoCommerce.Platform.Data.2.11.6-rc2\lib\net451\VirtoCommerce.Platform.Data.dll</HintPath>
+      <HintPath>..\packages\VirtoCommerce.Platform.Data.2.11.5\lib\net451\VirtoCommerce.Platform.Data.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="xunit.abstractions">
