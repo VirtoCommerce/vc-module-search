@@ -10,7 +10,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
     public class BaseSearchQueryBuilder : ISearchQueryBuilder
     {
-        public string DocumentType
+        public virtual string DocumentType
         {
             get
             {

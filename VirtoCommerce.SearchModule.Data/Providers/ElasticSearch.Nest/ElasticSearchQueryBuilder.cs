@@ -12,7 +12,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
     [CLSCompliant(false)]
     public class ElasticSearchQueryBuilder : ISearchQueryBuilder
     {
-        public string DocumentType
+        public virtual string DocumentType
         {
             get
             {
