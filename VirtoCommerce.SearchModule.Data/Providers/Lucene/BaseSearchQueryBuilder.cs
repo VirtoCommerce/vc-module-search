@@ -10,6 +10,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
     public class BaseSearchQueryBuilder : ISearchQueryBuilder
     {
+        public string DocumentType
+        {
+            get
+            {
+                return string.Empty; // default implementation, can handle generic queries
+            }
+        }
+
         /// <summary>
         ///     Builds the query.
         /// </summary>

@@ -125,7 +125,6 @@
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="SearchManagerScenarios.cs" />
     <Compile Include="SearchScenarios.cs" />
     <Compile Include="OutlineBuilderTest.cs" />
     <Compile Include="SearchHelper.cs" />

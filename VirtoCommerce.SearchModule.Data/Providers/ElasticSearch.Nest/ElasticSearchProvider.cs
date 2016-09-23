@@ -56,9 +56,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                     {
                         settings.DisableDirectStreaming().OnRequestCompleted(details =>
                         {
-                            Debug.WriteLine("### ES REQEUST ###");
+                            Trace.WriteLine("### ES REQEUST ###");
                             if (details.RequestBodyInBytes != null) Trace.WriteLine(Encoding.UTF8.GetString(details.RequestBodyInBytes));
-                            Debug.WriteLine("### ES RESPONSE ###");
+                            Trace.WriteLine("### ES RESPONSE ###");
                             if (details.ResponseBodyInBytes != null) Trace.WriteLine(Encoding.UTF8.GetString(details.ResponseBodyInBytes));
                         })
                         .PrettyJson();
@@ -75,12 +75,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         #region Public Properties
         public string DefaultIndex { get; set; }
 
-        private ISearchQueryBuilder _queryBuilder = new ElasticSearchQueryBuilder();
+        private ISearchQueryBuilder[] _queryBuilders = new[] { new ElasticSearchQueryBuilder() };
 
-        public ISearchQueryBuilder QueryBuilder
+        public ISearchQueryBuilder[] QueryBuilders
         {
-            get { return _queryBuilder; }
-            set { _queryBuilder = value; }
+            get { return _queryBuilders; }
+            set { _queryBuilders = value; }
         }
 
         private bool _autoCommit = true;
@@ -134,9 +134,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             Init();
         }
 
-        public ElasticSearchProvider(ISearchQueryBuilder queryBuilder, ISearchConnection connection)
+        public ElasticSearchProvider(ISearchQueryBuilder[] queryBuilders, ISearchConnection connection)
         {
-            _queryBuilder = queryBuilder;
+            _queryBuilders = queryBuilders;
             _connection = connection;
             Init();
 
@@ -166,7 +166,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         public virtual ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria) where T : class
         {
             // Build query
-            var command = QueryBuilder.BuildQuery<T>(scope, criteria) as SearchRequest;
+            var command = GetQueryBuilder(criteria).BuildQuery<T>(scope, criteria) as SearchRequest;
 
             ISearchResponse<T> searchResponse;
 
@@ -285,6 +285,21 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         }
 
         #region Helper Methods
+        protected virtual ISearchQueryBuilder GetQueryBuilder(ISearchCriteria criteria)
+        {
+            if (QueryBuilders == null)
+                throw new NullReferenceException("No QueryBuilders defined");
+
+            var queryBuilder = QueryBuilders.Where(x => x.DocumentType.Equals(criteria.DocumentType)).SingleOrDefault();
+
+            if(queryBuilder == null) // get default builder
+            {
+                queryBuilder = QueryBuilders.Where(x => x.DocumentType.Equals(string.Empty)).First();
+            }
+
+            return queryBuilder;
+        }
+
         protected virtual void Index(string scope, string documentType, IDocument document)
         {
             var core = GetCoreName(scope, documentType);

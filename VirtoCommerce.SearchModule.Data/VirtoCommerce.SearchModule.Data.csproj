@@ -161,7 +161,6 @@
     <Compile Include="Model\Search\SearchSort.cs" />
     <Compile Include="Model\Search\SearchSortField.cs" />
     <Compile Include="Model\ISearchProvider.cs" />
-    <Compile Include="Model\ISearchProviderManager.cs" />
     <Compile Include="Model\Search\ISearchQueryBuilder.cs" />
     <Compile Include="Model\Search\ISearchResults.cs" />
     <Compile Include="Model\Search\Criterias\KeywordSearchCriteria.cs" />
@@ -194,7 +193,6 @@
     <Compile Include="Providers\Lucene\LuceneSearchResults.cs" />
     <Compile Include="Services\SearchFilterExtensions.cs" />
     <Compile Include="Services\SearchIndexController.cs" />
-    <Compile Include="Services\SearchProviderManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">

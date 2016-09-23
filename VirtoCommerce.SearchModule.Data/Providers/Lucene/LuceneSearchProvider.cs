@@ -19,7 +19,7 @@ using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
     /// <summary>
-    ///     File based search provider based on Lucene.
+    /// File based search provider based on Lucene.
     /// </summary>
     public class LuceneSearchProvider : ISearchProvider
     {
@@ -34,14 +34,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <summary>
         ///     Initializes a new instance of the <see cref="LuceneSearchProvider" /> class.
         /// </summary>
-        /// <param name="queryBuilder">The query builder.</param>
+        /// <param name="queryBuilders">The query builders.</param>
         /// <param name="connection">The connection.</param>
-        public LuceneSearchProvider(ISearchQueryBuilder queryBuilder, ISearchConnection connection)
+        public LuceneSearchProvider(ISearchQueryBuilder[] queryBuilders, ISearchConnection connection)
         {
             AutoCommit = true;
             AutoCommitCount = 100;
 
-            QueryBuilder = queryBuilder;
+            QueryBuilders = queryBuilders;
             _connection = connection;
             Init();
         }
@@ -66,7 +66,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <value>
         ///     The query builder.
         /// </value>
-        public ISearchQueryBuilder QueryBuilder { get; set; }
+        public ISearchQueryBuilder[] QueryBuilders { get; set; }
 
         /// <summary>
         ///     Closes the specified provider.
@@ -229,7 +229,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 var dir = FSDirectory.Open(directoryInfo);
                 var searcher = new IndexSearcher(dir);
 
-                var q = (QueryBuilder)QueryBuilder.BuildQuery<T>(scope, criteria);
+                var q = (QueryBuilder)GetQueryBuilder(criteria).BuildQuery<T>(scope, criteria);
 
                 // filter out empty value
                 var filter = q.Filter.ToString().Equals("BooleanFilter()") ? null : q.Filter;
@@ -279,6 +279,20 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             return result;
         }
 
+        protected virtual ISearchQueryBuilder GetQueryBuilder(ISearchCriteria criteria)
+        {
+            if (QueryBuilders == null)
+                throw new NullReferenceException("No QueryBuilders defined");
+
+            var queryBuilder = QueryBuilders.Where(x => x.DocumentType.Equals(criteria.DocumentType)).SingleOrDefault();
+
+            if (queryBuilder == null) // get default builder
+            {
+                queryBuilder = QueryBuilders.Where(x => x.DocumentType.Equals(string.Empty)).First();
+            }
+
+            return queryBuilder;
+        }
 
         /// <summary>
         ///     Closes the specified documentType.

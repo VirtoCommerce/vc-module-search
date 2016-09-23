@@ -11,6 +11,8 @@ using VirtoCommerce.SearchModule.Web.BackgroundJobs;
 using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest;
 using VirtoCommerce.SearchModule.Data.Model.Filters;
 using VirtoCommerce.SearchModule.Data.Model.Indexing;
+using System;
+using VirtoCommerce.SearchModule.Data.Model.Search;
 
 namespace VirtoCommerce.SearchModule.Web
 {
@@ -41,9 +43,22 @@ namespace VirtoCommerce.SearchModule.Web
             var searchConnection = new SearchConnection(connectionString);
             _container.RegisterInstance<ISearchConnection>(searchConnection);
 
+            if (searchConnection.Provider.Equals(SearchProviders.Elasticsearch.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                _container.RegisterType<ISearchProvider, ElasticSearchProvider>();
+                _container.RegisterType<ISearchQueryBuilder, ElasticSearchQueryBuilder>();
+            }
+            else if(searchConnection.Provider.Equals(SearchProviders.Lucene.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                _container.RegisterType<ISearchProvider, LuceneSearchProvider>();
+                _container.RegisterType<ISearchQueryBuilder, LuceneSearchQueryBuilder>();
+            }
+
+            /*
             var searchProviderManager = new SearchProviderManager(searchConnection);
             _container.RegisterInstance<ISearchProviderManager>(searchProviderManager);
             _container.RegisterInstance<ISearchProvider>(searchProviderManager);
+            */
         }
 
         public override void PostInitialize()
@@ -53,10 +68,11 @@ namespace VirtoCommerce.SearchModule.Web
             var jobScheduler = _container.Resolve<SearchIndexJobsScheduler>();
             jobScheduler.ScheduleJobs();
 
+            /*
             var searchProviderManager = _container.Resolve<Data.Model.ISearchProviderManager>();
-
             searchProviderManager.RegisterSearchProvider(SearchProviders.Elasticsearch.ToString(), connection => new ElasticSearchProvider(new ElasticSearchQueryBuilder(), connection));
             searchProviderManager.RegisterSearchProvider(SearchProviders.Lucene.ToString(), connection => new LuceneSearchProvider(new LuceneSearchQueryBuilder(), connection));
+            */
             //searchProviderManager.RegisterSearchProvider(SearchProviders.AzureSearch.ToString(), connection => new AzureSearchProvider(new AzureSearchQueryBuilder(), connection));
 
             // Register dynamic property for storing browsing filters

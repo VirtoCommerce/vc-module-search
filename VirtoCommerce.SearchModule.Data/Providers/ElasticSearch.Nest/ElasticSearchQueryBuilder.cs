@@ -12,6 +12,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
     [CLSCompliant(false)]
     public class ElasticSearchQueryBuilder : ISearchQueryBuilder
     {
+        public string DocumentType
+        {
+            get
+            {
+                return string.Empty; // default implementation, can handle generic queries
+            }
+        }
+
         #region ISearchQueryBuilder Members
         public virtual object BuildQuery<T>(string scope, ISearchCriteria criteria) where T:class
         {
