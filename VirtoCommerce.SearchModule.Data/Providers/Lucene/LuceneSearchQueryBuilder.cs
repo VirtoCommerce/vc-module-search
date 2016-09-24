@@ -7,7 +7,7 @@ using Lucene.Net.Analysis.Standard;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 using u = Lucene.Net.Util;
-using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {

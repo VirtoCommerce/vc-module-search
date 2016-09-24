@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
-using VirtoCommerce.SearchModule.Data.Model;
-using VirtoCommerce.SearchModule.Data.Model.Indexing;
+using VirtoCommerce.SearchModule.Core.Model;
+using VirtoCommerce.SearchModule.Core.Model.Indexing;
 
 namespace VirtoCommerce.SearchModule.Tests
 {

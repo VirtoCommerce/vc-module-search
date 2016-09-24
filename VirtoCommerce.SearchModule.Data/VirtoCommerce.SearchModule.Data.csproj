@@ -125,49 +125,6 @@
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Model\Filters\AttributeFilter.cs" />
-    <Compile Include="Model\Filters\FilterDisplayName.cs" />
-    <Compile Include="Model\Filters\Filters.cs">
-      <DependentUpon>Filters.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Model\Filters\PriceRangeFilter.cs" />
-    <Compile Include="Model\Filters\RangeFilter.cs" />
-    <Compile Include="Model\Filters\CategoryFilter.cs" />
-    <Compile Include="Model\Filters\CategoryFilterValue.cs" />
-    <Compile Include="Model\Indexing\DocumentField.cs" />
-    <Compile Include="Model\Indexing\ISearchIndexBuilder.cs" />
-    <Compile Include="Model\Indexing\ResultDocument.cs" />
-    <Compile Include="Model\Search\Facet.cs" />
-    <Compile Include="Model\Search\FacetGroup.cs" />
-    <Compile Include="Model\Search\FacetLabel.cs" />
-    <Compile Include="Model\Indexing\IDocument.cs" />
-    <Compile Include="Model\Indexing\IDocumentField.cs" />
-    <Compile Include="Model\Indexing\IDocuments.cs" />
-    <Compile Include="Model\Indexing\IndexBuildException.cs" />
-    <Compile Include="Model\Indexing\IndexDataType.cs" />
-    <Compile Include="Model\Indexing\IndexNotFoundException.cs" />
-    <Compile Include="Model\Indexing\IndexStore.cs" />
-    <Compile Include="Model\Indexing\IndexType.cs" />
-    <Compile Include="Model\ISearchConnection.cs" />
-    <Compile Include="Model\Search\Criterias\ISearchCriteria.cs" />
-    <Compile Include="Model\Filters\ISearchFilter.cs" />
-    <Compile Include="Model\Filters\ISearchFilterValue.cs" />
-    <Compile Include="Model\Indexing\OperationType.cs" />
-    <Compile Include="Model\Indexing\Partition.cs" />
-    <Compile Include="Model\SearchEventArgs.cs" />
-    <Compile Include="Model\SearchException.cs" />
-    <Compile Include="Model\Indexing\SearchIndexEventArgs.cs" />
-    <Compile Include="Model\SearchProviders.cs" />
-    <Compile Include="Model\Search\SearchSort.cs" />
-    <Compile Include="Model\Search\SearchSortField.cs" />
-    <Compile Include="Model\ISearchProvider.cs" />
-    <Compile Include="Model\Search\ISearchQueryBuilder.cs" />
-    <Compile Include="Model\Search\ISearchResults.cs" />
-    <Compile Include="Model\Search\Criterias\KeywordSearchCriteria.cs" />
-    <Compile Include="Model\SearchConnection.cs" />
-    <Compile Include="Model\Search\Criterias\SearchCriteriaBase.cs" />
-    <Compile Include="Model\Filters\ISearchFilterService.cs" />
-    <Compile Include="Model\Indexing\ISearchIndexController.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\ElasticQueryHelper.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\PropertyHelper.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\SearchResults.cs" />
@@ -183,7 +140,6 @@
     <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchException.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchProvider.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchQueryBuilder.cs" />
-    <Compile Include="Model\Indexing\DocumentDictionary.cs" />
     <Compile Include="Providers\Lucene\BaseSearchQueryBuilder.cs" />
     <Compile Include="Providers\Lucene\LuceneHelper.cs" />
     <Compile Include="Providers\Lucene\LuceneQueryHelper.cs" />
@@ -198,10 +154,6 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Model\Filters\Filters.cd" />
-    <None Include="Model\Filters\Filters.xsd">
-      <SubType>Designer</SubType>
-    </None>
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
@@ -210,7 +162,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Model\Filters\Filters.xml" />
+    <ProjectReference Include="..\VirtoCommerce.SearchModule.Core\VirtoCommerce.SearchModule.Core.csproj">
+      <Project>{a7afed7f-ff37-462d-b35f-de6467d04f14}</Project>
+      <Name>VirtoCommerce.SearchModule.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

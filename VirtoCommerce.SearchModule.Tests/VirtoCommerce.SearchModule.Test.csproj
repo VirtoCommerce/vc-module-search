@@ -140,6 +140,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\VirtoCommerce.SearchModule.Core\VirtoCommerce.SearchModule.Core.csproj">
+      <Project>{a7afed7f-ff37-462d-b35f-de6467d04f14}</Project>
+      <Name>VirtoCommerce.SearchModule.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\VirtoCommerce.SearchModule.Data\VirtoCommerce.SearchModule.Data.csproj">
       <Project>{e5c50d57-9f69-4ba2-b1c5-f9fd7473dfff}</Project>
       <Name>VirtoCommerce.SearchModule.Data</Name>

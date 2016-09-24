@@ -4,15 +4,15 @@ using VirtoCommerce.Domain.Store.Model;
 using VirtoCommerce.Platform.Core.DynamicProperties;
 using VirtoCommerce.Platform.Core.Modularity;
 using VirtoCommerce.Platform.Core.Settings;
-using VirtoCommerce.SearchModule.Data.Model;
+using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Data.Providers.Lucene;
 using VirtoCommerce.SearchModule.Data.Services;
 using VirtoCommerce.SearchModule.Web.BackgroundJobs;
 using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest;
-using VirtoCommerce.SearchModule.Data.Model.Filters;
-using VirtoCommerce.SearchModule.Data.Model.Indexing;
+using VirtoCommerce.SearchModule.Core.Model.Filters;
+using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using System;
-using VirtoCommerce.SearchModule.Data.Model.Search;
+using VirtoCommerce.SearchModule.Core.Model.Search;
 
 namespace VirtoCommerce.SearchModule.Web
 {

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using VirtoCommerce.SearchModule.Data.Model.Filters;
-using VirtoCommerce.SearchModule.Data.Model.Search;
+using VirtoCommerce.SearchModule.Core.Model.Filters;
+using VirtoCommerce.SearchModule.Core.Model.Search;
 
 namespace VirtoCommerce.SearchModule.Data.Services
 {

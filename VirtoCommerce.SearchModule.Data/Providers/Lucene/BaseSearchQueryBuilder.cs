@@ -2,9 +2,9 @@
 using System.Collections.Specialized;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
-using VirtoCommerce.SearchModule.Data.Model.Search;
-using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
-using VirtoCommerce.SearchModule.Data.Model.Filters;
+using VirtoCommerce.SearchModule.Core.Model.Search;
+using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Core.Model.Filters;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {

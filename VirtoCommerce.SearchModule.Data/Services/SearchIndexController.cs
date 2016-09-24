@@ -2,7 +2,8 @@
 using System.Globalization;
 using System.Linq;
 using VirtoCommerce.Platform.Core.Settings;
-using VirtoCommerce.SearchModule.Data.Model.Indexing;
+using VirtoCommerce.SearchModule.Core.Model;
+using VirtoCommerce.SearchModule.Core.Model.Indexing;
 
 namespace VirtoCommerce.SearchModule.Data.Services
 {
@@ -10,9 +11,9 @@ namespace VirtoCommerce.SearchModule.Data.Services
     {
         private readonly ISearchIndexBuilder[] _indexBuilders;
         private readonly ISettingsManager _settingManager;
-        private readonly Model.ISearchProvider _searchProvider;
+        private readonly ISearchProvider _searchProvider;
 
-        public SearchIndexController(ISettingsManager settingManager, Model.ISearchProvider searchProvider, params ISearchIndexBuilder[] indexBuilders)
+        public SearchIndexController(ISettingsManager settingManager, ISearchProvider searchProvider, params ISearchIndexBuilder[] indexBuilders)
         {
             _settingManager = settingManager;
             _indexBuilders = indexBuilders;

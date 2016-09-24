@@ -4,8 +4,8 @@ using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Util;
 using VirtoCommerce.SearchModule.Data.Services;
-using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
-using VirtoCommerce.SearchModule.Data.Model.Filters;
+using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Core.Model.Filters;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {

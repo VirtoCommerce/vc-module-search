@@ -11,10 +11,10 @@ using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using u = Lucene.Net.Util;
-using VirtoCommerce.SearchModule.Data.Model.Search;
-using VirtoCommerce.SearchModule.Data.Model;
-using VirtoCommerce.SearchModule.Data.Model.Indexing;
-using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Core.Model.Search;
+using VirtoCommerce.SearchModule.Core.Model;
+using VirtoCommerce.SearchModule.Core.Model.Indexing;
+using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {

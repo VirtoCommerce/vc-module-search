@@ -1,5 +1,5 @@
 ﻿using System;
-using VirtoCommerce.SearchModule.Data.Model;
+using VirtoCommerce.SearchModule.Core.Model;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 {

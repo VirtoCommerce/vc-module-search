@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using VirtoCommerce.SearchModule.Data.Model.Filters;
-using VirtoCommerce.SearchModule.Data.Model.Search;
-using VirtoCommerce.SearchModule.Data.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Core.Model.Filters;
+using VirtoCommerce.SearchModule.Core.Model.Search;
+using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 {

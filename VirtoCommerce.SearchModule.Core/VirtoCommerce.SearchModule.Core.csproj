@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{A7AFED7F-FF37-462D-B35F-DE6467D04F14}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>VirtoCommerce.SearchModule.Core</RootNamespace>
+    <AssemblyName>VirtoCommerce.SearchModule.Core</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\CommonAssemblyInfo.cs">
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="Model\Filters\AttributeFilter.cs" />
+    <Compile Include="Model\Filters\CategoryFilter.cs" />
+    <Compile Include="Model\Filters\CategoryFilterValue.cs" />
+    <Compile Include="Model\Filters\FilterDisplayName.cs" />
+    <Compile Include="Model\Filters\Filters.cs">
+      <DependentUpon>Filters.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Filters\ISearchFilter.cs" />
+    <Compile Include="Model\Filters\ISearchFilterService.cs" />
+    <Compile Include="Model\Filters\ISearchFilterValue.cs" />
+    <Compile Include="Model\Filters\PriceRangeFilter.cs" />
+    <Compile Include="Model\Filters\RangeFilter.cs" />
+    <Compile Include="Model\Indexing\DocumentDictionary.cs" />
+    <Compile Include="Model\Indexing\DocumentField.cs" />
+    <Compile Include="Model\Indexing\IDocument.cs" />
+    <Compile Include="Model\Indexing\IDocumentField.cs" />
+    <Compile Include="Model\Indexing\IDocuments.cs" />
+    <Compile Include="Model\Indexing\IndexBuildException.cs" />
+    <Compile Include="Model\Indexing\IndexDataType.cs" />
+    <Compile Include="Model\Indexing\IndexNotFoundException.cs" />
+    <Compile Include="Model\Indexing\IndexStore.cs" />
+    <Compile Include="Model\Indexing\IndexType.cs" />
+    <Compile Include="Model\Indexing\ISearchIndexBuilder.cs" />
+    <Compile Include="Model\Indexing\ISearchIndexController.cs" />
+    <Compile Include="Model\Indexing\OperationType.cs" />
+    <Compile Include="Model\Indexing\Partition.cs" />
+    <Compile Include="Model\Indexing\ResultDocument.cs" />
+    <Compile Include="Model\Indexing\SearchIndexEventArgs.cs" />
+    <Compile Include="Model\ISearchConnection.cs" />
+    <Compile Include="Model\ISearchProvider.cs" />
+    <Compile Include="Model\SearchConnection.cs" />
+    <Compile Include="Model\SearchEventArgs.cs" />
+    <Compile Include="Model\SearchException.cs" />
+    <Compile Include="Model\SearchProviders.cs" />
+    <Compile Include="Model\Search\Criterias\ISearchCriteria.cs" />
+    <Compile Include="Model\Search\Criterias\KeywordSearchCriteria.cs" />
+    <Compile Include="Model\Search\Criterias\SearchCriteriaBase.cs" />
+    <Compile Include="Model\Search\Facet.cs" />
+    <Compile Include="Model\Search\FacetGroup.cs" />
+    <Compile Include="Model\Search\FacetLabel.cs" />
+    <Compile Include="Model\Search\ISearchQueryBuilder.cs" />
+    <Compile Include="Model\Search\ISearchResults.cs" />
+    <Compile Include="Model\Search\SearchSort.cs" />
+    <Compile Include="Model\Search\SearchSortField.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Model\Filters\Filters.cd" />
+    <None Include="Model\Filters\Filters.xsd">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Model\Filters\Filters.xml" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
