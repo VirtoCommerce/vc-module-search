@@ -44,6 +44,13 @@
                     ]]>
                 </description>
             </setting>
+            <setting>
+                <name>VirtoCommerce.Search.ScheduleJobs</name>
+                <valueType>boolean</valueType>
+                <defaultValue>true</defaultValue>
+                <title>Schedule jobs</title>
+                <description>Enable or disable periodic search index builders</description>
+            </setting>
         </group>
     </settings>
 

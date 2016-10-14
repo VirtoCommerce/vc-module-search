@@ -38,7 +38,7 @@ namespace VirtoCommerce.SearchModule.Web
             if (configConnectionString != null && !string.IsNullOrEmpty(configConnectionString.ConnectionString))
             {
                 connectionString = configConnectionString.ConnectionString;
-            }            
+            }
             var searchConnection = new SearchConnection(connectionString);
             _container.RegisterInstance<ISearchConnection>(searchConnection);
 
@@ -47,7 +47,7 @@ namespace VirtoCommerce.SearchModule.Web
                 _container.RegisterType<ISearchProvider, ElasticSearchProvider>();
                 _container.RegisterType<ISearchQueryBuilder, ElasticSearchQueryBuilder>();
             }
-            else if(searchConnection.Provider.Equals(SearchProviders.Lucene.ToString(), StringComparison.OrdinalIgnoreCase))
+            else if (searchConnection.Provider.Equals(SearchProviders.Lucene.ToString(), StringComparison.OrdinalIgnoreCase))
             {
                 _container.RegisterType<ISearchProvider, LuceneSearchProvider>();
                 _container.RegisterType<ISearchQueryBuilder, LuceneSearchQueryBuilder>();
@@ -57,9 +57,6 @@ namespace VirtoCommerce.SearchModule.Web
         public override void PostInitialize()
         {
             base.PostInitialize();
-
-            var jobScheduler = _container.Resolve<SearchIndexJobsScheduler>();
-            jobScheduler.ScheduleJobs();
 
             // Register dynamic property for storing browsing filters
             var filteredBrowsingProperty = new DynamicProperty
@@ -73,6 +70,15 @@ namespace VirtoCommerce.SearchModule.Web
 
             var dynamicPropertyService = _container.Resolve<IDynamicPropertyService>();
             dynamicPropertyService.SaveProperties(new[] { filteredBrowsingProperty });
+
+            // Enable or disable periodic search index builders
+            var settingsManager = _container.Resolve<ISettingsManager>();
+            var scheduleJobs = settingsManager.GetValue("VirtoCommerce.Search.ScheduleJobs", true);
+            if (scheduleJobs)
+            {
+                var jobScheduler = _container.Resolve<SearchIndexJobsScheduler>();
+                jobScheduler.ScheduleJobs();
+            }
         }
 
         #endregion
