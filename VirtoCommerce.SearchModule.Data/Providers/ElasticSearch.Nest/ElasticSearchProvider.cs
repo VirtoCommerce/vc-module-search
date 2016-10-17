@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using VirtoCommerce.SearchModule.Core.Model;
-using Nest;
 using System.Diagnostics;
-using System.Text;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
+using Nest;
+using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
@@ -18,16 +18,17 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
     /// </summary>
     public class ElasticSearchProvider : ISearchProvider
     {
-        public const string SearchAnalyzer = "search_analyzer";
-        private const string _indexAnalyzer = "index_analyzer";
+        public const string SearchAnalyzerName = "search_analyzer";
+        public const string IndexAnalyzerName = "index_analyzer";
 
         private readonly ISearchConnection _connection;
         private readonly Dictionary<string, List<DocumentDictionary>> _pendingDocuments = new Dictionary<string, List<DocumentDictionary>>();
         private readonly Dictionary<string, TypeMapping> _mappings = new Dictionary<string, TypeMapping>();
 
-        #region Private Properties
-        ElasticClient _client;
-        private ElasticClient Client
+        #region Protected Properties
+
+        private ElasticClient _client;
+        protected ElasticClient Client
         {
             get
             {
@@ -70,12 +71,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                 return _client;
             }
         }
+
         #endregion
 
         #region Public Properties
+
         public string DefaultIndex { get; set; }
 
-        private ISearchQueryBuilder[] _queryBuilders = new[] { new ElasticSearchQueryBuilder() };
+        private ISearchQueryBuilder[] _queryBuilders = { new ElasticSearchQueryBuilder() };
 
         public ISearchQueryBuilder[] QueryBuilders
         {
@@ -110,10 +113,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         /// <summary>
         /// Tells provider to run in debug mode outputting all requests to console.
         /// </summary>
-        public bool EnableTrace
-        {
-            get;set;
-        }
+        public bool EnableTrace { get; set; }
 
         private string _elasticServerUrl = string.Empty;
 
@@ -127,6 +127,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             get { return _elasticServerUrl; }
             set { _elasticServerUrl = value; }
         }
+
         #endregion
 
         public ElasticSearchProvider()
@@ -141,7 +142,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             Init();
 
 #if DEBUG
-            this.EnableTrace = true;
+            EnableTrace = true;
 #endif
         }
 
@@ -197,7 +198,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             }
             else
             {
-                ThrowException(string.Format("Document of type {0} not supported", typeof(T).Name), new NotImplementedException());
+                ThrowException(string.Format(CultureInfo.InvariantCulture, "Document type not supported: {0}", typeof(T).Name), new NotImplementedException());
             }
 
             // Auto commit changes when limit is reached
@@ -223,7 +224,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                     {
                         var result = Client.DeleteByQuery(new DeleteByQueryRequest(scope, documentType) { Query = new MatchAllQuery() });
 
-                        if (!result.IsValid && !(result.ApiCall.HttpStatusCode == 404))
+                        if (!result.IsValid && result.ApiCall.HttpStatusCode != 404)
                             throw new IndexBuildException(result.DebugInformation);
                     }
                 }
@@ -231,7 +232,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                 {
                     var result = Client.DeleteIndex(scope);
 
-                    if (!result.IsValid && !(result.ApiCall.HttpStatusCode == 404))
+                    if (!result.IsValid && result.ApiCall.HttpStatusCode != 404)
                         throw new IndexBuildException(result.DebugInformation);
                 }
 
@@ -285,16 +286,17 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         }
 
         #region Helper Methods
+
         protected virtual ISearchQueryBuilder GetQueryBuilder(ISearchCriteria criteria)
         {
             if (QueryBuilders == null)
                 throw new NullReferenceException("No QueryBuilders defined");
 
-            var queryBuilder = QueryBuilders.Where(x => x.DocumentType.Equals(criteria.DocumentType)).SingleOrDefault();
+            var queryBuilder = QueryBuilders.SingleOrDefault(x => x.DocumentType.Equals(criteria.DocumentType));
 
-            if(queryBuilder == null) // get default builder
+            if (queryBuilder == null) // get default builder
             {
-                queryBuilder = QueryBuilders.Where(x => x.DocumentType.Equals(string.Empty)).First();
+                queryBuilder = QueryBuilders.First(x => x.DocumentType.Equals(string.Empty));
             }
 
             return queryBuilder;
@@ -325,7 +327,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             var submitMapping = false;
 
             var properties = new Properties<IProperties>();
-            if(mapping != null) // initialize with existing properties
+            if (mapping != null) // initialize with existing properties
             {
                 properties = new Properties<IProperties>(mapping.Properties);
             }
@@ -397,36 +399,19 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                     */
 
                     // add fields to local document
-                    if (field.Values.Length > 1)
-                    {
-                        localDocument.Add(key, field.Values);
-                    }
-                    else
-                    {
-                        localDocument.Add(key, field.Value);
-                    }
+                    localDocument.Add(key, field.Values.Length > 1 ? field.Values : field.Value);
                 }
             }
-            
+
             // submit mapping
             if (submitMapping)
             {
                 if (!Client.IndexExists(Indices.Parse(scope)).Exists)
                 {
-                    //Use ngrams analyzer for search in the middle of word
-                    //http://www.elasticsearch.org/guide/en/elasticsearch/guide/current/ngrams-compound-words.html
-                    Client.CreateIndex(scope, x=>x.Settings(v=>v
-                        .Analysis(a=>a.TokenFilters(f=> f.NGram("trigrams_filter", ng => ng.MinGram(3).MaxGram(20)))
-                        .Analyzers(an=>an
-                            .Custom(_indexAnalyzer, custom=>custom
-                                .Tokenizer("standard")
-                                .Filters("lowercase", "trigrams_filter"))
-                            .Custom(SearchAnalyzer, custom => custom
-                                .Tokenizer("standard")
-                                .Filters("lowercase"))))));
+                    CreateIndex(scope, documentType);
 
                     var mappingRequest = new PutMappingRequest(scope, documentType) { Properties = properties };
-                    var response = Client.Map<DocumentDictionary>(m=>mappingRequest);
+                    var response = Client.Map<DocumentDictionary>(m => mappingRequest);
 
                     if (!response.IsValid)
                     {
@@ -446,6 +431,21 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             _pendingDocuments[core].Add(localDocument);
         }
 
+        protected virtual void CreateIndex(string scope, string documentType)
+        {
+            // Use ngrams analyzer for search in the middle of the word
+            // http://www.elasticsearch.org/guide/en/elasticsearch/guide/current/ngrams-compound-words.html
+            Client.CreateIndex(scope, x => x.Settings(v => v
+                  .Analysis(a => a.TokenFilters(f => f.NGram("trigrams_filter", ng => ng.MinGram(3).MaxGram(20)))
+                  .Analyzers(an => an
+                      .Custom(IndexAnalyzerName, custom => custom
+                          .Tokenizer("standard")
+                          .Filters("lowercase", "trigrams_filter"))
+                      .Custom(SearchAnalyzerName, custom => custom
+                          .Tokenizer("standard")
+                          .Filters("lowercase"))))));
+        }
+
         private static string GetCoreName(string scope, string documentType)
         {
             return string.Format(CultureInfo.InvariantCulture, "{0}.{1}", scope.ToLower(), documentType);
@@ -456,19 +456,23 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             throw new ElasticSearchException(string.Format(CultureInfo.InvariantCulture, "{0}. URL:{1}", message, ElasticServerUrl), innerException);
         }
 
-        private void SetupProperty(IProperty property, IDocumentField field)
+        protected virtual void SetupProperty(IProperty property, IDocumentField field)
         {
             //property.DocValues = !field.ContainsAttribute(IndexStore.No);
 
-            if(property is StringProperty)
+            SetupStringProperty(property as StringProperty, field);
+        }
+
+        protected virtual void SetupStringProperty(StringProperty stringProperty, IDocumentField field)
+        {
+            if (stringProperty != null)
             {
-                var stringProperty = property as StringProperty;
                 stringProperty.Store = field.ContainsAttribute(IndexStore.Yes);
                 stringProperty.Index = field.ContainsAttribute(IndexType.NotAnalyzed) ? FieldIndexOption.NotAnalyzed : field.ContainsAttribute(IndexType.Analyzed) ? FieldIndexOption.Analyzed : FieldIndexOption.No;
 
-                if(field.Name.StartsWith("__content", StringComparison.OrdinalIgnoreCase))
+                if (field.Name.StartsWith("__content", StringComparison.OrdinalIgnoreCase))
                 {
-                    stringProperty.Analyzer = _indexAnalyzer;
+                    stringProperty.Analyzer = IndexAnalyzerName;
                 }
 
                 if (Regex.Match(field.Name, "__content_en.*").Success)
@@ -487,16 +491,17 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                 {
                     stringProperty.Analyzer = "french";
                 }
-                else if (Regex.Match(field.Name, "__content_se.*").Success)
+                else if (Regex.Match(field.Name, "__content_sv.*").Success)
                 {
                     stringProperty.Analyzer = "swedish";
                 }
-                else if (Regex.Match(field.Name, "__content_no.*").Success)
+                else if (Regex.Match(field.Name, "__content_nb.*").Success)
                 {
                     stringProperty.Analyzer = "norwegian";
                 }
             }
         }
+
         #endregion
     }
 }

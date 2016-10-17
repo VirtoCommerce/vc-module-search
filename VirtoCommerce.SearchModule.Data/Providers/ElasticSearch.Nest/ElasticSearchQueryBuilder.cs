@@ -297,7 +297,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                 {
                     Fields = fields,
                     Query = searchPhrase,
-                    Fuzziness = Fuzziness.Auto,
+                    Fuzziness = criteria.Fuzziness != null ? Fuzziness.EditDistance(criteria.Fuzziness.Value) : Fuzziness.Auto,
                     Analyzer = "standard",
                     Operator = Operator.And
                 };

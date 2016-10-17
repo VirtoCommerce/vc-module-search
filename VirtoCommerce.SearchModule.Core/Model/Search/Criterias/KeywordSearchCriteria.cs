@@ -1,44 +1,32 @@
-﻿namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
+﻿using System;
+
+namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
 {
     public class KeywordSearchCriteria : SearchCriteriaBase
     {
-        private string _SearchPhrase = string.Empty;
-
         /// <summary>
         /// Gets or sets the search phrase.
         /// </summary>
         /// <value>The search phrase.</value>
-        public virtual string SearchPhrase
-        {
-            get { return _SearchPhrase; }
-            set { ChangeState(); _SearchPhrase = value; }
-        }
-
-        private bool _isFuzzySearch = true;
+        public string SearchPhrase { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether this instance is fuzzy search.
         /// </summary>
-        /// <value>
-        /// 	<c>true</c> if this instance is fuzzy search; otherwise, <c>false</c>.
-        /// </value>
-        public bool IsFuzzySearch
-        {
-            get { return _isFuzzySearch; }
-            set { ChangeState(); _isFuzzySearch = value; }
-        }
+        /// <value><c>true</c> if this instance is fuzzy search; otherwise, <c>false</c>.</value>
+        public bool IsFuzzySearch { get; set; }
 
-        private float _fuzzyMinSimilarity = 0.7f;
+        /// <summary>
+        /// Supported values: 0, 1, 2, null (=auto)
+        /// </summary>
+        public int? Fuzziness { get; set; }
 
         /// <summary>
         /// Gets or sets the fuzzy min similarity.
         /// </summary>
         /// <value>The fuzzy min similarity.</value>
-        public float FuzzyMinSimilarity
-        {
-            get { return _fuzzyMinSimilarity; }
-            set { ChangeState(); _fuzzyMinSimilarity = value; }
-        }
+        [Obsolete("Use Fuzziness")]
+        public float FuzzyMinSimilarity { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KeywordSearchCriteria"/> class.
@@ -47,7 +35,8 @@
         public KeywordSearchCriteria(string documentType)
             : base(documentType)
         {
-
+            SearchPhrase = string.Empty;
+            IsFuzzySearch = true;
         }
     }
 }
