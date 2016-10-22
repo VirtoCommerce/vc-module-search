@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
+using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
@@ -35,19 +36,21 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 throw new ArgumentNullException("scope");
             }
 
-            var validBuilders = string.IsNullOrEmpty(documentType) ? _indexBuilders : _indexBuilders.Where(b => string.Equals(b.DocumentType, documentType, StringComparison.OrdinalIgnoreCase)).ToArray();
-
             var lastBuildTimeName = string.Format(CultureInfo.InvariantCulture, "VirtoCommerce.Search.LastBuildTime_{0}_{1}", scope, documentType);
             var lastBuildTime = _settingManager.GetValue(lastBuildTimeName, DateTime.MinValue);
             var nowUtc = DateTime.UtcNow;
 
             // if full rebuild, delete index so mapping is also removed
-            if(string.IsNullOrEmpty(documentType) && rebuild)
-                _searchProvider.RemoveAll(scope, String.Empty);
-
-            foreach (var indexBuilder in validBuilders.Where(i=>i.DocumentType.Equals(documentType) || string.IsNullOrEmpty(documentType)))
+            var indexDeleted = false;
+            if (rebuild && string.IsNullOrEmpty(documentType))
             {
-                if (rebuild)
+                indexDeleted = _searchProvider.RemoveAll(scope, string.Empty);
+            }
+
+            var validBuilders = string.IsNullOrEmpty(documentType) ? _indexBuilders : _indexBuilders.Where(b => b.DocumentType.EqualsInvariant(documentType)).ToArray();
+            foreach (var indexBuilder in validBuilders)
+            {
+                if (rebuild && !indexDeleted)
                 {
                     indexBuilder.RemoveAll(scope);
                 }
@@ -97,20 +100,23 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 throw new ArgumentNullException("documentId");
             }
 
-            var indexBuilder = _indexBuilders.Where(b => string.Equals(b.DocumentType, documentType, StringComparison.OrdinalIgnoreCase)).SingleOrDefault();
+            var indexBuilder = _indexBuilders.SingleOrDefault(b => string.Equals(b.DocumentType, documentType, StringComparison.OrdinalIgnoreCase));
 
-            // remove existing index
-            indexBuilder.RemoveDocuments(scope, new[] { documentId });
+            if (indexBuilder != null)
+            {
+                // remove existing index
+                indexBuilder.RemoveDocuments(scope, new[] { documentId });
 
-            // create new index
-            var partition = new Partition(OperationType.Index, new[] { documentId });
+                // create new index
+                var partition = new Partition(OperationType.Index, new[] { documentId });
 
-            // create index docs
-            var docs = indexBuilder.CreateDocuments(partition);
+                // create index docs
+                var docs = indexBuilder.CreateDocuments(partition);
 
-            // submit docs to the provider
-            var docsArray = docs.ToArray();
-            indexBuilder.PublishDocuments(scope, docsArray);
+                // submit docs to the provider
+                var docsArray = docs.ToArray();
+                indexBuilder.PublishDocuments(scope, docsArray);
+            }
         }
 
         #endregion

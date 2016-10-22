@@ -22,8 +22,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         public const string IndexAnalyzerName = "index_analyzer";
 
         private readonly ISearchConnection _connection;
-        private readonly Dictionary<string, List<DocumentDictionary>> _pendingDocuments = new Dictionary<string, List<DocumentDictionary>>();
-        private readonly Dictionary<string, TypeMapping> _mappings = new Dictionary<string, TypeMapping>();
+        private readonly Dictionary<string, List<IDocument>> _pendingDocuments = new Dictionary<string, List<IDocument>>();
+        private readonly Dictionary<string, Properties<IProperties>> _mappings = new Dictionary<string, Properties<IProperties>>();
 
         #region Protected Properties
 
@@ -166,8 +166,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
         public virtual ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria) where T : class
         {
+            var indexName = GetIndexName(scope, criteria.DocumentType);
+
             // Build query
-            var command = GetQueryBuilder(criteria).BuildQuery<T>(scope, criteria) as SearchRequest;
+            var command = GetQueryBuilder(criteria).BuildQuery<T>(indexName, criteria) as SearchRequest;
 
             ISearchResponse<T> searchResponse;
 
@@ -189,22 +191,27 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
         public virtual void Index<T>(string scope, string documentType, T document)
         {
-            var core = GetCoreName(scope, documentType);
-
-            // process mapping
-            if (document is IDocument) // older case scenario
-            {
-                Index(scope, documentType, document as IDocument);
-            }
-            else
+            var doc = document as IDocument;
+            if (doc == null)
             {
                 ThrowException(string.Format(CultureInfo.InvariantCulture, "Document type not supported: {0}", typeof(T).Name), new NotImplementedException());
             }
-
-            // Auto commit changes when limit is reached
-            if (AutoCommit && _pendingDocuments[core].Count >= AutoCommitCount)
+            else
             {
-                Commit(scope);
+                var key = CreateCacheKey(scope, documentType);
+
+                if (!_pendingDocuments.ContainsKey(key))
+                {
+                    _pendingDocuments.Add(key, new List<IDocument>());
+                }
+
+                _pendingDocuments[key].Add(doc);
+
+                // Auto commit changes when limit is reached
+                if (AutoCommit && _pendingDocuments[key].Count >= AutoCommitCount)
+                {
+                    Commit(scope);
+                }
             }
         }
 
@@ -213,36 +220,41 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             return 0;
         }
 
-        public virtual void RemoveAll(string scope, string documentType)
+        public virtual bool RemoveAll(string scope, string documentType)
         {
             try
             {
-                if (!string.IsNullOrEmpty(documentType))
-                {
-                    // check if index actually exists before performing delete, since it will cause new index to be automatically created
-                    if (Client.IndexExists(Indices.Parse(scope)).Exists)
-                    {
-                        var result = Client.DeleteByQuery(new DeleteByQueryRequest(scope, documentType) { Query = new MatchAllQuery() });
+                var indexName = GetIndexName(scope, documentType);
 
-                        if (!result.IsValid && result.ApiCall.HttpStatusCode != 404)
-                            throw new IndexBuildException(result.DebugInformation);
+                if (string.IsNullOrEmpty(documentType))
+                {
+                    var result = Client.DeleteIndex(indexName);
+                    if (!result.IsValid && result.ApiCall.HttpStatusCode != 404)
+                    {
+                        throw new IndexBuildException(result.DebugInformation);
                     }
                 }
                 else
                 {
-                    var result = Client.DeleteIndex(scope);
-
-                    if (!result.IsValid && result.ApiCall.HttpStatusCode != 404)
-                        throw new IndexBuildException(result.DebugInformation);
+                    // check if index actually exists before performing delete, since it will cause new index to be automatically created
+                    if (IndexExists(indexName))
+                    {
+                        var result = Client.DeleteByQuery(new DeleteByQueryRequest(indexName, documentType) { Query = new MatchAllQuery() });
+                        if (!result.IsValid && result.ApiCall.HttpStatusCode != 404)
+                        {
+                            throw new IndexBuildException(result.DebugInformation);
+                        }
+                    }
                 }
 
-                var core = GetCoreName(scope, documentType);
-                _mappings.Remove(core);
+                RemoveMappingFromCache(indexName, documentType);
             }
             catch (Exception ex)
             {
                 ThrowException("Failed to remove indexes", ex);
             }
+
+            return true;
         }
 
         public virtual void Close(string scope, string documentType)
@@ -251,37 +263,56 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
         public virtual void Commit(string scope)
         {
-            var coreList = _pendingDocuments.Keys.ToList();
-
-            foreach (var core in coreList)
+            foreach (var key in _pendingDocuments.Keys)
             {
-                var documents = _pendingDocuments[core];
-                if (documents == null || documents.Count == 0)
-                    continue;
-
-                var coreArray = core.Split('.');
-                var indexName = coreArray[0];
-                var indexType = coreArray[1];
-
-                var bulkDefinition = new BulkDescriptor();
-                bulkDefinition.IndexMany(documents).Index(indexName).Type(indexType);
-                var result = Client.Bulk(bulkDefinition);
-
-                if (result == null)
+                var documents = _pendingDocuments[key];
+                if (documents != null && documents.Count > 0)
                 {
-                    throw new IndexBuildException("no results");
-                }
-
-                foreach (var op in result.Items)
-                {
-                    if (!op.IsValid)
+                    var keyParts = ParseCacheKey(key);
+                    if (keyParts[0] == scope)
                     {
-                        throw new IndexBuildException(op.Error.Reason);
+                        var documentType = keyParts[1];
+                        var indexName = GetIndexName(scope, documentType);
+
+                        var properties = GetMappedProperties(indexName, documentType);
+                        var oldPropertiesCount = properties.Count();
+
+                        var simpleDocuments = documents.Select(document => ConvertToSimpleDocument(document, properties)).ToList();
+
+                        var updateMapping = properties.Count() != oldPropertiesCount;
+                        var indexExits = IndexExists(indexName);
+
+                        if (!indexExits)
+                        {
+                            CreateIndex(indexName, documentType);
+                        }
+
+                        if (!indexExits || updateMapping)
+                        {
+                            UpdateMapping(indexName, documentType, properties);
+                        }
+
+                        var bulkDefinition = new BulkDescriptor();
+                        bulkDefinition.IndexMany(simpleDocuments).Index(indexName).Type(documentType);
+                        var result = Client.Bulk(bulkDefinition);
+
+                        if (result == null)
+                        {
+                            throw new IndexBuildException("no results");
+                        }
+
+                        foreach (var op in result.Items)
+                        {
+                            if (!op.IsValid)
+                            {
+                                throw new IndexBuildException(op.Error.Reason);
+                            }
+                        }
+
+                        // Remove pending documents
+                        documents.Clear();
                     }
                 }
-
-                // Remove documents
-                _pendingDocuments[core].Clear();
             }
         }
 
@@ -302,50 +333,21 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             return queryBuilder;
         }
 
-        protected virtual void Index(string scope, string documentType, IDocument document)
+        // Convert to simple dictionary document
+        protected virtual DocumentDictionary ConvertToSimpleDocument(IDocument document, Properties<IProperties> properties)
         {
-            var core = GetCoreName(scope, documentType);
-            if (!_pendingDocuments.ContainsKey(core))
-            {
-                _pendingDocuments.Add(core, new List<DocumentDictionary>());
-            }
+            var result = new DocumentDictionary();
 
-            TypeMapping mapping = null;
-            if (!_mappings.ContainsKey(core))
-            {
-                // Get mapping info
-                if (Client.IndexExists(Indices.Parse(scope)).Exists)
-                {
-                    mapping = Client.GetMapping(new GetMappingRequest(scope, documentType)).Mapping;
-                }
-            }
-            else
-            {
-                mapping = _mappings[core];
-            }
-
-            var submitMapping = false;
-
-            var properties = new Properties<IProperties>();
-            if (mapping != null) // initialize with existing properties
-            {
-                properties = new Properties<IProperties>(mapping.Properties);
-            }
-
-            var localDocument = new DocumentDictionary();
-
-            // convert to simple dictionary document
             for (var index = 0; index < document.FieldCount; index++)
             {
                 var field = document[index];
-
                 var key = field.Name.ToLower();
 
-                if (localDocument.ContainsKey(key))
+                if (result.ContainsKey(key))
                 {
                     var newValues = new List<object>();
 
-                    var currentValue = localDocument[key];
+                    var currentValue = result[key];
                     var currentValues = currentValue as object[];
 
                     if (currentValues != null)
@@ -358,13 +360,15 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                     }
 
                     newValues.AddRange(field.Values);
-                    localDocument[key] = newValues.ToArray();
+                    result[key] = newValues.ToArray();
                 }
                 else
                 {
-                    // need to create new mapping or update it here
-                    if (mapping == null || !mapping.Properties.ContainsKey(field.Name))
+                    var dictionary = properties as IDictionary<PropertyName, IProperty>;
+                    if (dictionary != null && !dictionary.ContainsKey(field.Name))
                     {
+                        // Create new property mapping
+
                         var type = field.Value != null ? field.Value.GetType() : typeof(object);
 
                         if (type == typeof(decimal))
@@ -374,68 +378,30 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
                         properties.Add(field.Name, PropertyHelper.InferProperty(type));
                         SetupProperty(properties[field.Name], field);
-
-                        submitMapping = true;
                     }
-                    /* // currently can't change type of mapping for existing data
-                    else // check mapping, and update it if necessary
-                    {
-                        var type = field.Value != null ? field.Value.GetType() : typeof(object);
 
-                        var existingProperty = mapping.Properties[field.Name];
-                        var proposedType = PropertyHelper.InferProperty(type);
-
-                        // check if types match
-                        if (proposedType.Type.Name != existingProperty.Type.Name)
-                        {
-                            // we only change to string type
-                            if (existingProperty.Type.Name != "string" && existingProperty.Type.Name != "object")
-                            {
-                                properties[field.Name] = new StringProperty();
-                                submitMapping = true;
-                            }
-                        }
-                    }
-                    */
-
-                    // add fields to local document
-                    localDocument.Add(key, field.Values.Length > 1 ? field.Values : field.Value);
+                    result.Add(key, field.Values.Length > 1 ? field.Values : field.Value);
                 }
             }
 
-            // submit mapping
-            if (submitMapping)
-            {
-                if (!Client.IndexExists(Indices.Parse(scope)).Exists)
-                {
-                    CreateIndex(scope, documentType);
-
-                    var mappingRequest = new PutMappingRequest(scope, documentType) { Properties = properties };
-                    var response = Client.Map<DocumentDictionary>(m => mappingRequest);
-
-                    if (!response.IsValid)
-                    {
-                        ThrowException("Failed to submit mapping. " + response.DebugInformation, response.OriginalException);
-                    }
-
-                    Client.Refresh(scope);
-                }
-                else // update existing mappings
-                {
-                    var mappingRequest = new PutMappingRequest(scope, documentType) { Properties = properties };
-                    Client.Map<DocumentDictionary>(m => mappingRequest);
-                    Client.Refresh(scope);
-                }
-            }
-
-            _pendingDocuments[core].Add(localDocument);
+            return result;
         }
 
-        protected virtual void CreateIndex(string scope, string documentType)
+        protected virtual string GetIndexName(string scope, string documentType)
+        {
+            return scope;
+        }
+
+        protected virtual bool IndexExists(string indexName)
+        {
+            return Client.IndexExists(indexName).Exists;
+        }
+
+        protected virtual void CreateIndex(string indexName, string documentType)
         {
             // Use ngrams analyzer for search in the middle of the word
             // http://www.elasticsearch.org/guide/en/elasticsearch/guide/current/ngrams-compound-words.html
-            Client.CreateIndex(scope, x => x.Settings(v => v
+            Client.CreateIndex(indexName, x => x.Settings(v => v
                   .Analysis(a => a.TokenFilters(f => f.NGram("trigrams_filter", ng => ng.MinGram(3).MaxGram(20)))
                   .Analyzers(an => an
                       .Custom(IndexAnalyzerName, custom => custom
@@ -446,12 +412,71 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                           .Filters("lowercase"))))));
         }
 
-        private static string GetCoreName(string scope, string documentType)
+        protected virtual Properties<IProperties> GetMappedProperties(string indexName, string documentType)
         {
-            return string.Format(CultureInfo.InvariantCulture, "{0}.{1}", scope.ToLower(), documentType);
+            var properties = GetMappingFromCache(indexName, documentType);
+            if (properties == null)
+            {
+                if (IndexExists(indexName))
+                {
+                    var mapping = Client.GetMapping(new GetMappingRequest(indexName, documentType)).Mapping;
+                    if (mapping != null)
+                    {
+                        properties = new Properties<IProperties>(mapping.Properties);
+                    }
+                }
+            }
+
+            properties = properties ?? new Properties<IProperties>();
+            AddMappingToCache(indexName, documentType, properties);
+
+            return properties;
         }
 
-        private void ThrowException(string message, Exception innerException)
+        protected virtual void UpdateMapping(string indexName, string documentType, Properties<IProperties> properties)
+        {
+            var mappingRequest = new PutMappingRequest(indexName, documentType) { Properties = properties };
+            var response = Client.Map<DocumentDictionary>(m => mappingRequest);
+
+            if (!response.IsValid)
+            {
+                ThrowException("Failed to submit mapping. " + response.DebugInformation, response.OriginalException);
+            }
+
+            AddMappingToCache(indexName, documentType, properties);
+
+            Client.Refresh(indexName);
+        }
+
+        protected virtual Properties<IProperties> GetMappingFromCache(string indexName, string documentType)
+        {
+            var mappingKey = CreateCacheKey(indexName, documentType);
+            return _mappings.ContainsKey(mappingKey) ? _mappings[mappingKey] : null;
+        }
+
+        protected virtual void AddMappingToCache(string indexName, string documentType, Properties<IProperties> properties)
+        {
+            var mappingKey = CreateCacheKey(indexName, documentType);
+            _mappings[mappingKey] = properties;
+        }
+
+        protected virtual void RemoveMappingFromCache(string indexName, string documentType)
+        {
+            var mappingKey = CreateCacheKey(indexName, documentType);
+            _mappings.Remove(mappingKey);
+        }
+
+        protected virtual string CreateCacheKey(params string[] parts)
+        {
+            return string.Join("/", parts);
+        }
+
+        protected virtual string[] ParseCacheKey(string key)
+        {
+            return key.Split('/');
+        }
+
+        protected virtual void ThrowException(string message, Exception innerException)
         {
             throw new ElasticSearchException(string.Format(CultureInfo.InvariantCulture, "{0}. URL:{1}", message, ElasticServerUrl), innerException);
         }

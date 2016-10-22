@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web.Hosting;
@@ -10,11 +9,11 @@ using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
-using u = Lucene.Net.Util;
-using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
+using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
+using u = Lucene.Net.Util;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
@@ -194,19 +193,28 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// </summary>
         /// <param name="scope">Name of the application.</param>
         /// <param name="documentType">The documentType.</param>
-        public virtual void RemoveAll(string scope, string documentType)
+        public virtual bool RemoveAll(string scope, string documentType)
         {
-            // Make sure the existing writer is closed
-            Close(scope, documentType, false);
+            var result = false;
 
-            // retrieve foldername
-            var folderName = GetFolderName(scope, documentType);
+            if (!string.IsNullOrEmpty(documentType))
+            {
+                // Make sure the existing writer is closed
+                Close(scope, documentType, false);
 
-            // re-initialize the write, so all documents are deleted
-            GetIndexWriter(folderName, true, true);
+                // retrieve foldername
+                var folderName = GetFolderName(scope, documentType);
 
-            // now close the write so changes are saved
-            Close(scope, documentType, false);
+                // re-initialize the write, so all documents are deleted
+                GetIndexWriter(folderName, true, true);
+
+                // now close the write so changes are saved
+                Close(scope, documentType, false);
+
+                result = true;
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -340,7 +348,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <returns></returns>
         private string GetFolderName(string scope, string documentType)
         {
-            return string.Format(CultureInfo.InvariantCulture, "{0}-{1}", scope, documentType);
+            return string.Join("-", scope, documentType);
         }
 
         /// <summary>

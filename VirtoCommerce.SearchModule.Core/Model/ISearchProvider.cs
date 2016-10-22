@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VirtoCommerce.SearchModule.Core.Model.Search;
+﻿using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 
 namespace VirtoCommerce.SearchModule.Core.Model
@@ -20,9 +15,8 @@ namespace VirtoCommerce.SearchModule.Core.Model
 
         int Remove(string scope, string documentType, string key, string value);
 
-        void RemoveAll(string scope, string documentType);
+        bool RemoveAll(string scope, string documentType);
 
         ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria) where T : class;
     }
-
 }
