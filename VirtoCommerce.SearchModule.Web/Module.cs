@@ -31,14 +31,21 @@ namespace VirtoCommerce.SearchModule.Web
             base.Initialize();
 
             _container.RegisterType<ISearchIndexController, SearchIndexController>();
-            var settingManager = _container.Resolve<ISettingsManager>();
 
-            var connectionString = settingManager.GetValue("VirtoCommerce.Search.SearchConnectionString", string.Empty);
+            string connectionString = null;
+
             var configConnectionString = ConfigurationManager.ConnectionStrings["SearchConnectionString"];
-            if (configConnectionString != null && !string.IsNullOrEmpty(configConnectionString.ConnectionString))
+            if (configConnectionString != null)
             {
                 connectionString = configConnectionString.ConnectionString;
             }
+
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                var settingsManager = _container.Resolve<ISettingsManager>();
+                connectionString = settingsManager.GetValue("VirtoCommerce.Search.SearchConnectionString", "Lucene;server=~/App_Data/Lucene;scope=default");
+            }
+
             var searchConnection = new SearchConnection(connectionString);
             _container.RegisterInstance<ISearchConnection>(searchConnection);
 
