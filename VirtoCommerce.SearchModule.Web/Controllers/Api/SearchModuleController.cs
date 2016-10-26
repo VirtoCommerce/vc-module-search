@@ -24,6 +24,8 @@ using PropertyDictionaryValue = VirtoCommerce.Domain.Catalog.Model.PropertyDicti
 using webModel = VirtoCommerce.SearchModule.Web.Model;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
+using VirtoCommerce.SearchModule.Core.Model.Indexing;
+using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 
 namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 {
@@ -60,6 +62,24 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             _blobUrlResolver = blobUrlResolver;
             _catalogSearchService = catalogSearchService;
             _cacheManager = cacheManager;
+        }
+
+        /// <summary>
+        /// Get search index for specified document type and document id.
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("index/{documentType}/{documentId}")]
+        [ResponseType(typeof(DocumentDictionary[]))]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public IHttpActionResult GetDocumentIndex(string documentType, string documentId)
+        {
+            var criteria = new KeywordSearchCriteria(documentType);
+
+            criteria.SearchPhrase = "__key:" + documentId;
+
+            var result = _searchProvider.Search<DocumentDictionary>(_searchConnection.Scope, criteria);
+            return Ok(result.Documents);
         }
 
         /// <summary>
