@@ -1,0 +1,35 @@
+﻿<div class="blade-content">
+    <div class="blade-inner">
+        <div class="inner-block">
+            <div ng-if="blade.currentEntity">
+                <div class="sub-t">{{ 'search.blades.index-detail.labels.build-date' | translate }}</div>
+                <div class="form-input __calendar">
+                    <input ng-model="blade.currentEntity.buildDate" datepicker-popup="short" disabled="disabled">
+                    <button type="button" class="btn" disabled="disabled">
+                        <i class="btn-ico fa fa-calendar"></i>
+                    </button>
+                </div>
+                <div class="sub-t">{{ 'search.blades.index-detail.labels.content' | translate }}</div>
+                <div class="log">{{blade.currentEntity.content}}</div>
+
+                <fieldset>
+                    <div class="sub-t">{{ 'search.blades.index-detail.labels.statistics' | translate }}</div>
+                    <div class="form-group">
+                        <label class="form-label">{{ 'search.blades.index-detail.labels.item-count' | translate }}</label>
+                        <div class="form-input">
+                            <input ng-model="blade.currentEntity.itemCount" disabled="disabled">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">{{ 'search.blades.index-detail.labels.itemCountTotal' | translate }}</label>
+                        <div class="form-input">
+                            <input ng-model="blade.currentEntity.itemCountTotal" disabled="disabled">
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <div class="note" ng-if="!blade.currentEntity">{{ 'search.blades.index-detail.labels.no-index' | translate }}</div>
+        </div>
+    </div>
+</div>

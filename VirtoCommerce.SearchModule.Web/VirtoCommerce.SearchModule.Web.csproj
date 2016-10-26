@@ -136,13 +136,21 @@
   <ItemGroup>
     <Content Include="Content\logo.png" />
     <None Include="module.ignore" />
+    <Content Include="Scripts\blades\index-detail.js" />
+    <Content Include="Scripts\blades\index-detail.tpl.html" />
+    <Content Include="Scripts\blades\index-progress.js" />
+    <Content Include="Scripts\blades\index-progress.tpl.html" />
+    <Content Include="Scripts\widgets\common\index-widget.js" />
+    <Content Include="Scripts\widgets\common\index-widget.tpl.html" />
     <Content Include="Scripts\widgets\storePropertiesWidget.js" />
     <Content Include="Scripts\widgets\storePropertiesWidget.tpl.html" />
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
     <Content Include="Localizations\en.VirtoCommerce.Search.json" />
-    <Content Include="module.manifest" />
+    <Content Include="module.manifest">
+      <SubType>Designer</SubType>
+    </Content>
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
@@ -158,7 +166,7 @@
     <Content Include="Scripts\blades\rebuildIndex.tpl.html" />
     <Content Include="Scripts\blades\store-properties.js" />
     <Content Include="Scripts\blades\store-properties.tpl.html" />
-    <Content Include="Scripts\resources\search.js" />
+    <Content Include="Scripts\resources\searchAPI.js" />
     <Content Include="Scripts\search.js" />
     <None Include="Web.config" />
   </ItemGroup>
