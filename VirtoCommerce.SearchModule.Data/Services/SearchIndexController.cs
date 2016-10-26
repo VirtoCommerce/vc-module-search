@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using VirtoCommerce.Platform.Core.Common;
@@ -23,56 +24,85 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         #region ISearchIndexController
 
-        /// <summary>
-        /// Processes the staged indexes.
-        /// </summary>
-        /// <param name="scope"></param>
-        /// <param name="documentType"></param>
-        /// <param name="rebuild"></param>
-        public void Process(string scope, string documentType, bool rebuild)
+        public void RemoveIndex(string scope, string documentType, string[] documentsIds = null)
         {
             if (scope == null)
             {
                 throw new ArgumentNullException("scope");
             }
 
-            var lastBuildTimeName = string.Format(CultureInfo.InvariantCulture, "VirtoCommerce.Search.LastBuildTime_{0}_{1}", scope, documentType);
-            var lastBuildTime = _settingManager.GetValue(lastBuildTimeName, DateTime.MinValue);
-            var nowUtc = DateTime.UtcNow;
-
-            // if full rebuild, delete index so mapping is also removed
-            var indexDeleted = false;
-            if (rebuild && string.IsNullOrEmpty(documentType))
+            // if documentType not specified delete index so mapping is also removed
+            if (documentsIds.IsNullOrEmpty())
             {
-                indexDeleted = _searchProvider.RemoveAll(scope, string.Empty);
+                _searchProvider.RemoveAll(scope, documentType ?? string.Empty);
+
+                var lastBuildTimeName = string.Format(CultureInfo.InvariantCulture, "VirtoCommerce.Search.LastBuildTime_{0}_{1}", scope, documentType);
+                _settingManager.SetValue(lastBuildTimeName, DateTime.MinValue);
+            }
+            else
+            {
+                var indexBuilder = _indexBuilders.FirstOrDefault(b => b.DocumentType.EqualsInvariant(documentType));
+
+                if (indexBuilder != null)
+                {
+                    // remove existing index
+                    indexBuilder.RemoveDocuments(scope, documentsIds);
+                }
+            }
+        }
+
+        public void BuildIndex(string scope, string documentType, Action<IndexProgressInfo> progressCallback, string[] documentsIds = null)
+        {
+            if (scope == null)
+            {
+                throw new ArgumentNullException("scope");
             }
 
-            var validBuilders = string.IsNullOrEmpty(documentType) ? _indexBuilders : _indexBuilders.Where(b => b.DocumentType.EqualsInvariant(documentType)).ToArray();
-            foreach (var indexBuilder in validBuilders)
+      
+            var lastBuildTimeName = string.Format(CultureInfo.InvariantCulture, "VirtoCommerce.Search.LastBuildTime_{0}_{1}", scope, documentType);
+            var lastBuildTime = _settingManager.GetValue(lastBuildTimeName, DateTime.MinValue);
+            var progressInfo = new IndexProgressInfo
             {
-                if (rebuild && !indexDeleted)
+                Description = lastBuildTime == DateTime.MinValue ? "Initial indexation" : string.Format("Date of last indexation : {0}", lastBuildTime)
+            };
+            progressCallback(progressInfo);
+
+            var nowUtc = DateTime.UtcNow;
+            var validBuilders = string.IsNullOrEmpty(documentType) ? _indexBuilders : _indexBuilders.Where(b => b.DocumentType.EqualsInvariant(documentType)).ToArray();
+            var partitions = new List<Partition>();
+
+            if (!documentsIds.IsNullOrEmpty())
+            {
+                var partition = new Partition(OperationType.Index, documentsIds);
+                partitions.Add(partition);
+            }
+            else
+            {
+                progressInfo.Description = string.Format("Evaluate data size");
+                progressCallback(progressInfo);
+
+                foreach (var indexBuilder in validBuilders)
                 {
-                    indexBuilder.RemoveAll(scope);
+                    partitions.AddRange(indexBuilder.GetPartitions(false, lastBuildTime, nowUtc));
                 }
+            }
+            progressInfo.TotalCount = partitions.Sum(x => x.Keys.Count());
 
-                var startDate = rebuild ? DateTime.MinValue : lastBuildTime;
-                var partitions = indexBuilder.GetPartitions(rebuild, startDate, nowUtc);
+            //Indexation
+            foreach (var partition in partitions)
+            {
+                progressInfo.Description = string.Format("Adding data to index");
+                progressInfo.ProcessedCount += partition.Keys.Count();
+                progressCallback(progressInfo);
 
-                foreach (var partition in partitions)
-                {
-                    if (partition.OperationType == OperationType.Remove)
-                    {
-                        indexBuilder.RemoveDocuments(scope, partition.Keys);
-                    }
-                    else
-                    {
-                        // create index docs
-                        var docs = indexBuilder.CreateDocuments(partition);
+                foreach (var indexBuilder in validBuilders)
+                {   
+                    // create index docs
+                    var docs = indexBuilder.CreateDocuments(partition);
 
-                        // submit docs to the provider
-                        var docsArray = docs.ToArray();
-                        indexBuilder.PublishDocuments(scope, docsArray);
-                    }
+                    // submit docs to the provider
+                    var docsArray = docs.ToArray();
+                    indexBuilder.PublishDocuments(scope, docsArray);
                 }
             }
 
@@ -81,44 +111,8 @@ namespace VirtoCommerce.SearchModule.Data.Services
             {
                 _settingManager.SetValue(lastBuildTimeName, nowUtc);
             }
+
         }
-
-        public void Process(string scope, string documentType, string documentId)
-        {
-            if (scope == null)
-            {
-                throw new ArgumentNullException("scope");
-            }
-
-            if (documentType == null)
-            {
-                throw new ArgumentNullException("documentType");
-            }
-
-            if (documentId == null)
-            {
-                throw new ArgumentNullException("documentId");
-            }
-
-            var indexBuilder = _indexBuilders.SingleOrDefault(b => string.Equals(b.DocumentType, documentType, StringComparison.OrdinalIgnoreCase));
-
-            if (indexBuilder != null)
-            {
-                // remove existing index
-                indexBuilder.RemoveDocuments(scope, new[] { documentId });
-
-                // create new index
-                var partition = new Partition(OperationType.Index, new[] { documentId });
-
-                // create index docs
-                var docs = indexBuilder.CreateDocuments(partition);
-
-                // submit docs to the provider
-                var docsArray = docs.ToArray();
-                indexBuilder.PublishDocuments(scope, docsArray);
-            }
-        }
-
         #endregion
     }
 }

@@ -78,14 +78,14 @@ namespace VirtoCommerce.SearchModule.Web
             var dynamicPropertyService = _container.Resolve<IDynamicPropertyService>();
             dynamicPropertyService.SaveProperties(new[] { filteredBrowsingProperty });
 
-            // Enable or disable periodic search index builders
-            var settingsManager = _container.Resolve<ISettingsManager>();
-            var scheduleJobs = settingsManager.GetValue("VirtoCommerce.Search.ScheduleJobs", true);
-            if (scheduleJobs)
-            {
-                var jobScheduler = _container.Resolve<SearchIndexJobsScheduler>();
-                jobScheduler.ScheduleJobs();
-            }
+            //// Enable or disable periodic search index builders
+            //var settingsManager = _container.Resolve<ISettingsManager>();
+            //var scheduleJobs = settingsManager.GetValue("VirtoCommerce.Search.ScheduleJobs", true);
+            //if (scheduleJobs)
+            //{
+            //    var jobScheduler = _container.Resolve<SearchIndexJobsScheduler>();
+            //    jobScheduler.ScheduleJobs();
+            //}
         }
 
         #endregion

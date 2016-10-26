@@ -65,6 +65,7 @@
     <Compile Include="Model\Indexing\IDocument.cs" />
     <Compile Include="Model\Indexing\IDocumentField.cs" />
     <Compile Include="Model\Indexing\IDocuments.cs" />
+    <Compile Include="Model\Indexing\IndexProgressInfo.cs" />
     <Compile Include="Model\Indexing\IndexBuildException.cs" />
     <Compile Include="Model\Indexing\IndexDataType.cs" />
     <Compile Include="Model\Indexing\IndexNotFoundException.cs" />

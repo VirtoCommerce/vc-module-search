@@ -26,6 +26,10 @@ using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
+using VirtoCommerce.Platform.Core.PushNotifications;
+using VirtoCommerce.SearchModule.Web.Model.PushNotifications;
+using Omu.ValueInjecter;
+using Hangfire;
 
 namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 {
@@ -44,12 +48,14 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         private readonly IBrowseFilterService _browseFilterService;
         private readonly IBlobUrlResolver _blobUrlResolver;
         private readonly ICatalogSearchService _catalogSearchService;
-        private readonly ICacheManager<object> _cacheManager;
+        private readonly IPushNotificationManager _pushNotifier;
+        private readonly ISearchIndexController _searchIndexController;
+        private readonly IUserNameResolver _userNameResolver;
 
         public SearchModuleController(ISearchProvider searchProvider, ISearchConnection searchConnection, SearchIndexJobsScheduler scheduler,
             IStoreService storeService, ISecurityService securityService, IPermissionScopeService permissionScopeService,
             IPropertyService propertyService, IBrowseFilterService browseFilterService, 
-            IBlobUrlResolver blobUrlResolver, ICatalogSearchService catalogSearchService, ICacheManager<object> cacheManager)
+            IBlobUrlResolver blobUrlResolver, ICatalogSearchService catalogSearchService, ISearchIndexController searchIndexController, IPushNotificationManager pushNotifier, IUserNameResolver userNameResolver)
         {
             _searchProvider = searchProvider;
             _searchConnection = searchConnection;
@@ -61,7 +67,9 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             _browseFilterService = browseFilterService;
             _blobUrlResolver = blobUrlResolver;
             _catalogSearchService = catalogSearchService;
-            _cacheManager = cacheManager;
+            _pushNotifier = pushNotifier;
+            _searchIndexController = searchIndexController;
+            _userNameResolver = userNameResolver;
         }
 
         /// <summary>
@@ -72,6 +80,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         [Route("index/{documentType}/{documentId}")]
         [ResponseType(typeof(DocumentDictionary[]))]
         [ApiExplorerSettings(IgnoreApi = true)]
+        [CheckPermission(Permission = SearchPredefinedPermissions.RebuildIndex)]
         public IHttpActionResult GetDocumentIndex(string documentType, string documentId)
         {
             var criteria = new KeywordSearchCriteria(documentType);
@@ -83,49 +92,52 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         }
 
         /// <summary>
-        /// Rebuild the index for specified document type. If document type is not specified, then index will be recreated.
+        /// Index specified document or all documents specified type
         /// </summary>
-        /// <param name="documentType"></param>
         /// <returns></returns>
-        [HttpGet]
-        [Route("index/rebuild/{documentType}")]
+        [HttpPost]
+        [Route("index/{documentType?}")]
+        [ResponseType(typeof(IndexProgressPushNotification))]
         [CheckPermission(Permission = SearchPredefinedPermissions.RebuildIndex)]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public IHttpActionResult Rebuild(string documentType = "")
+        public IHttpActionResult IndexDocuments([FromBody] string[] documentsIds, string documentType = null)
         {
-            var jobId = _scheduler.ScheduleRebuildIndex(documentType);
-            var result = new { Id = jobId };
-            return Ok(result);
+            var notification = new IndexProgressPushNotification(_userNameResolver.GetCurrentUserName())
+            {
+                Title = "Indexation process",
+                Description = documentType != null ? string.Format("starting {0} indexations", documentType) : "starting full indexation"
+            };
+            _pushNotifier.Upsert(notification);
+
+            BackgroundJob.Enqueue(() => BackgroundIndex(_searchConnection.Scope, documentType, documentsIds, notification));
+
+            return Ok(notification);
         }
 
         /// <summary>
-        /// Rebuild the index for specified document type and document id.
+        /// Reindex specified document or all documents specified type
         /// </summary>
-        /// <param name="documentType"></param>
-        /// <param name="documentId"></param>
         /// <returns></returns>
-        [HttpGet]
-        [Route("index/rebuild/{documentType}/{documentId}")]
+        [HttpPost]
+        [Route("reindex/{documentType?}")]
+        [ResponseType(typeof(IndexProgressPushNotification))]
         [CheckPermission(Permission = SearchPredefinedPermissions.RebuildIndex)]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public IHttpActionResult Rebuild(string documentType, string documentId)
+        [ApiExplorerSettings(IgnoreApi = true)] 
+        public IHttpActionResult ReindexDocuments([FromBody] string[] documentsIds, string documentType = null)
         {
-            var jobId = _scheduler.ScheduleRebuildIndex(documentType);
-            var result = new { Id = jobId };
-            return Ok(result);
-        }
+            var notification = new IndexProgressPushNotification(_userNameResolver.GetCurrentUserName())
+            {
+                Title = "Re-indexation process",
+                Description = documentType != null ? "starting re-index for " + documentType : "starting full index rebuild"
+            };
+            _pushNotifier.Upsert(notification);
 
-        [HttpGet]
-        [Route("catalogitem/rebuild")]
-        [CheckPermission(Permission = SearchPredefinedPermissions.RebuildIndex)]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public IHttpActionResult RebuildFullIndex()
-        {
-            var jobId = _scheduler.ScheduleRebuildIndex();
-            var result = new { Id = jobId };
-            return Ok(result);
-        }
+            _searchIndexController.RemoveIndex(_searchConnection.Scope, documentType, documentsIds);
+            BackgroundJob.Enqueue(() => BackgroundIndex(_searchConnection.Scope, documentType, documentsIds, notification));
 
+            return Ok(notification);
+        }
+    
         /// <summary>
         /// Get filter properties for store
         /// </summary>
@@ -211,6 +223,35 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             _storeService.Update(new[] { store });
 
             return StatusCode(HttpStatusCode.NoContent);
+        }
+
+
+        [ApiExplorerSettings(IgnoreApi = true)]
+        // Only public methods can be invoked in the background. (Hangfire)
+        public void BackgroundIndex(string scope, string documentType, string[] documentsIds, IndexProgressPushNotification notification)
+        {
+            Action<IndexProgressInfo> progressCallback = x =>
+            {
+                notification.InjectFrom(x);
+                _pushNotifier.Upsert(notification);
+            };
+            try
+            {
+                _searchIndexController.BuildIndex(scope, documentType, progressCallback, documentsIds);
+            }
+            catch (Exception ex)
+            {
+                notification.Description = "Export error";
+                notification.ErrorCount++;
+                notification.Errors.Add(ex.ToString());
+            }
+            finally
+            {
+                notification.Finished = DateTime.UtcNow;
+                notification.Description = "Indexation finished" + (notification.Errors.Any() ? " with errors" : " successfully");
+                _pushNotifier.Upsert(notification);
+            }
+
         }
 
         #region Helper methods
