@@ -71,7 +71,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             {
                 foreach (var val in field.Values)
                 {
-                    doc.Add(new Field(field.Name, val.ToString(), store, index));
+                    doc.Add(new Field(field.Name, index == Field.Index.NOT_ANALYZED ? val.ToString().ToLower() : val.ToString(), store, index));
                     doc.Add(new Field("_content", val.ToString(), Field.Store.NO, Field.Index.ANALYZED));
                 }
             }
@@ -97,7 +97,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             {
                 // TODO: instead of auto detecting, use meta data information
                 decimal t;
-                if (Decimal.TryParse(field.Value.ToString(), out t))
+                if (decimal.TryParse(field.Value.ToString(), out t))
                 {
                     foreach (var val in field.Values)
                     {
