@@ -20,7 +20,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
     {
         public const string SearchAnalyzerName = "search_analyzer";
         public const string IndexAnalyzerName = "index_analyzer";
-        public const string KeywordAnalyzerName = "keyword";
+        public const string KeywordAnalyzerName = "keyword_lowercase";
 
         private readonly ISearchConnection _connection;
         private readonly Dictionary<string, List<IDocument>> _pendingDocuments = new Dictionary<string, List<IDocument>>();
@@ -408,6 +408,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                       .Custom(IndexAnalyzerName, custom => custom
                           .Tokenizer("standard")
                           .Filters("lowercase", "trigrams_filter"))
+                      .Custom(KeywordAnalyzerName, custom => custom
+                          .Tokenizer("keyword")
+                          .Filters("lowercase"))
                       .Custom(SearchAnalyzerName, custom => custom
                           .Tokenizer("standard")
                           .Filters("lowercase"))))));

@@ -110,7 +110,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 {
                     foreach (var val in field.Values)
                     {
-                        doc.Add(new Field(field.Name, val.ToString(), store, index));
+                        doc.Add(new Field(field.Name, index == Field.Index.NOT_ANALYZED ? val.ToString().ToLower() : val.ToString(), store, index));
                     }
                 }
             }
