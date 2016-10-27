@@ -8,9 +8,9 @@ angular.module(moduleName, [
     'ngSanitize'
 ])
 .run(
-  ['platformWebApp.toolbarService', 'platformWebApp.pushNotificationTemplateResolver', 'platformWebApp.bladeNavigationService', 'platformWebApp.dialogService', 'platformWebApp.widgetService', function (toolbarService, pushNotificationTemplateResolver, bladeNavigationService, dialogService, widgetService) {
+  ['platformWebApp.toolbarService', 'platformWebApp.pushNotificationTemplateResolver', 'platformWebApp.bladeNavigationService', 'platformWebApp.dialogService', 'platformWebApp.widgetService', 'virtoCommerce.searchModule.search', function (toolbarService, pushNotificationTemplateResolver, bladeNavigationService, dialogService, widgetService, searchAPI) {
       // register WIDGETS
-      var indexWidget  = {
+      var indexWidget = {
           controller: 'virtoCommerce.searchModule.indexWidgetController',
           // size: [3, 1],
           template: 'Modules/$(VirtoCommerce.Search)/Scripts/widgets/common/index-widget.tpl.html'
@@ -19,11 +19,11 @@ angular.module(moduleName, [
       var widgetToRegister = angular.extend({}, indexWidget, { documentType: 'catalogitem' })
       widgetService.registerWidget(widgetToRegister, 'itemDetail');
       // integration: index in CATEGORY details
-      widgetToRegister = angular.extend({}, indexWidget, { documentType: 'catalogcategory' })
+      widgetToRegister = angular.extend({}, indexWidget, { documentType: 'category' })
       widgetService.registerWidget(widgetToRegister, 'categoryDetail');
       // integration: index in catalog details
-      widgetToRegister = angular.extend({}, indexWidget, { documentType: 'catalog' })
-      widgetService.registerWidget(widgetToRegister, 'catalogDetail');
+      //widgetToRegister = angular.extend({}, indexWidget, { documentType: 'catalog' })
+      //widgetService.registerWidget(widgetToRegister, 'catalogDetail');
 
       // register notification template
       pushNotificationTemplateResolver.register({
@@ -33,7 +33,7 @@ angular.module(moduleName, [
           action: function (notify) {
               var blade = {
                   id: 'indexProgress',
-                  currentEntity: notify,
+                  notification: notify,
                   controller: 'virtoCommerce.searchModule.indexProgressController',
                   template: 'Modules/$(VirtoCommerce.Search)/Scripts/blades/index-progress.tpl.html'
               };
@@ -53,12 +53,17 @@ angular.module(moduleName, [
                   message: "search.dialogs.rebuild-index.message",
                   callback: function (confirm) {
                       if (confirm) {
-                          var newBlade = {
-                              id: 'rebuildIndex',
-                              controller: 'virtoCommerce.searchModule.rebuildIndexController',
-                              template: 'Modules/$(VirtoCommerce.Search)/Scripts/blades/rebuildIndex.tpl.html'
-                          };
-                          bladeNavigationService.showBlade(newBlade, blade);
+                          searchAPI.reindex(
+                              function openProgressBlade(data) {
+                                  // show indexing progress
+                                  var newBlade = {
+                                      id: 'indexProgress',
+                                      notification: data,
+                                      controller: 'virtoCommerce.searchModule.indexProgressController',
+                                      template: 'Modules/$(VirtoCommerce.Search)/Scripts/blades/index-progress.tpl.html'
+                                  };
+                                  bladeNavigationService.showBlade(newBlade, blade);
+                              });
                       }
                   }
               }

@@ -3,6 +3,7 @@
         "blades": {
             "index-detail": {
                 "title": "Search index",
+                "title-new": "Search index missing",
                 "subtitle": "Search index details",
                 "labels": {
                     "no-index": "Index not found",
@@ -14,12 +15,10 @@
                 }
             },
             "index-progress": {
-                "subtitle": "Indexation progress",
                 "labels": {
                     "start": "Start",
                     "end": "End",
-                    "progress-messages": "Progress messages",
-                    "completed": "Index building process completed."
+                    "errors": "Errors"
                 }
             },
             "rebuildIndex": {
@@ -49,7 +48,7 @@
             }
         },
         "commands": {
-            "index-missing": "Index missing",
+            "index": "Index",
             "index-all": "Re-index",
             "rebuild-index": "Rebuild Index"
         }
