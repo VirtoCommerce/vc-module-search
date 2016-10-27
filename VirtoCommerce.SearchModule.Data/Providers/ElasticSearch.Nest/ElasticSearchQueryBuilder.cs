@@ -111,17 +111,29 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
             var keywordSearchCriteria = criteria as KeywordSearchCriteria;
             if (keywordSearchCriteria != null)
-            {
+            {             
                 if (!string.IsNullOrEmpty(keywordSearchCriteria.SearchPhrase))
                 {
-                    var searchFields = new List<string> { "__content" };
-
-                    if (!string.IsNullOrEmpty(criteria.Locale))
+                    //Workaround for possibility to use __key : 'value' as SearchPhrase
+                    if (keywordSearchCriteria.SearchPhrase.StartsWith("__key:"))
                     {
-                        searchFields.Add(string.Concat("__content_", criteria.Locale.ToLower()));
+                        result = new MultiMatchQuery
+                        {
+                            Fields = new[] { "__key" },
+                            Query = keywordSearchCriteria.SearchPhrase.Split(':').Last()
+                        };
                     }
+                    else
+                    {
+                        var searchFields = new List<string> { "__content" };
 
-                    result = CreateKeywordQuery<T>(keywordSearchCriteria, searchFields.ToArray());
+                        if (!string.IsNullOrEmpty(criteria.Locale))
+                        {
+                            searchFields.Add(string.Concat("__content_", criteria.Locale.ToLower()));
+                        }
+
+                        result = CreateKeywordQuery<T>(keywordSearchCriteria, searchFields.ToArray());
+                    }
                 }
             }
 

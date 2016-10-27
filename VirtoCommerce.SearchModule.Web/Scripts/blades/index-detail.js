@@ -27,7 +27,7 @@
         {
             name: "search.commands.index", icon: 'fa fa-recycle',
             executeMethod: function () {
-                searchAPI.index({ documentType: blade.documentType }, { documentsIds: [blade.currentEntityId] }, openProgressBlade);
+                searchAPI.index({ documentType: blade.documentType }, [{ id: blade.currentEntityId }], openProgressBlade);
             },
             canExecuteMethod: function () { return true; },
             permission: 'VirtoCommerce.Search:Index:Rebuild'
@@ -41,7 +41,7 @@
                     message: "search.dialogs.rebuild-index.message",
                     callback: function (confirmed) {
                         if (confirmed) {
-                            searchAPI.reindex({ documentType: blade.documentType }, { documentsIds: blade.currentEntityId }, openProgressBlade);
+                            searchAPI.reindex({ documentType: blade.documentType }, [{ id : blade.currentEntityId }], openProgressBlade);
                         }
                     }
                 });

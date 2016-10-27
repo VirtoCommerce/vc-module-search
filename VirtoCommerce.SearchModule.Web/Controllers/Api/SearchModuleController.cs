@@ -13,6 +13,8 @@ using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.SearchModule.Web.Model.PushNotifications;
 using Omu.ValueInjecter;
 using Hangfire;
+using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.SearchModule.Web.Model;
 
 namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 {
@@ -62,7 +64,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         [ResponseType(typeof(IndexProgressPushNotification))]
         [CheckPermission(Permission = SearchPredefinedPermissions.RebuildIndex)]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public IHttpActionResult IndexDocuments([FromBody] string[] documentsIds, string documentType = null)
+        public IHttpActionResult IndexDocuments([FromBody] IndexDocumentId[] documentsIds, string documentType = null)
         {
             var notification = new IndexProgressPushNotification(_userNameResolver.GetCurrentUserName())
             {
@@ -70,8 +72,13 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                 Description = documentType != null ? string.Format("starting {0} indexations", documentType) : "starting full indexation"
             };
             _pushNotifier.Upsert(notification);
+            string[] ids = null;
+            if (documentsIds != null)
+            {
+                ids = documentsIds.Select(x => x.Id).Distinct().ToArray();
+            }
 
-            BackgroundJob.Enqueue(() => BackgroundIndex(_searchConnection.Scope, documentType, documentsIds, notification));
+            BackgroundJob.Enqueue(() => BackgroundIndex(_searchConnection.Scope, documentType, ids, notification));
 
             return Ok(notification);
         }
@@ -85,7 +92,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         [ResponseType(typeof(IndexProgressPushNotification))]
         [CheckPermission(Permission = SearchPredefinedPermissions.RebuildIndex)]
         [ApiExplorerSettings(IgnoreApi = true)] 
-        public IHttpActionResult ReindexDocuments([FromBody] string[] documentsIds, string documentType = null)
+        public IHttpActionResult ReindexDocuments([FromBody] IndexDocumentId[] documentsIds, string documentType = null)
         {
             var notification = new IndexProgressPushNotification(_userNameResolver.GetCurrentUserName())
             {
@@ -94,8 +101,14 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             };
             _pushNotifier.Upsert(notification);
 
-            _searchIndexController.RemoveIndex(_searchConnection.Scope, documentType, documentsIds);
-            BackgroundJob.Enqueue(() => BackgroundIndex(_searchConnection.Scope, documentType, documentsIds, notification));
+            string[] ids = null;
+            if (documentsIds != null)
+            {
+                ids = documentsIds.Select(x => x.Id).Distinct().ToArray();
+            }
+
+            _searchIndexController.RemoveIndex(_searchConnection.Scope, documentType, ids);
+            BackgroundJob.Enqueue(() => BackgroundIndex(_searchConnection.Scope, documentType, ids, notification));
 
             return Ok(notification);
         }   

@@ -172,6 +172,7 @@
     </Compile>
     <Compile Include="BackgroundJobs\SearchIndexJobs.cs" />
     <Compile Include="Controllers\Api\SearchModuleController.cs" />
+    <Compile Include="Model\IndexDocumentId.cs" />
     <Compile Include="Model\PushNotifications\IndexProgressPushNotification.cs" />
     <Compile Include="Module.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
