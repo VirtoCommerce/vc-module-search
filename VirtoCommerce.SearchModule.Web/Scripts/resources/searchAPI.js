@@ -5,7 +5,5 @@
         // index: { method: 'POST', url: 'api/search/index/:documentType' },
         reindex: { method: 'POST', url: 'api/search/reindex/:documentType' },
         rebuild: { url: 'api/search/catalogitem/rebuild' },
-        queryFilterProperties: { url: 'api/search/storefilterproperties/:id', isArray: true },
-        saveFilterProperties: { url: 'api/search/storefilterproperties/:id', method: 'PUT' }
     });
 }]);

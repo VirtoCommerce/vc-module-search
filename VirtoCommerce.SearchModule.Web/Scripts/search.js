@@ -68,11 +68,5 @@ angular.module(moduleName, [
           permission: 'VirtoCommerce.Search:Index:Rebuild'
       };
       toolbarService.register(rebuildIndexCommand, 'virtoCommerce.catalogModule.catalogsListController');
-
-      // filter properties in STORE details
-      widgetService.registerWidget({
-          controller: 'virtoCommerce.searchModule.storePropertiesWidgetController',
-          template: 'Modules/$(VirtoCommerce.Search)/Scripts/widgets/storePropertiesWidget.tpl.html'
-      }, 'storeDetail');
   }]
 );

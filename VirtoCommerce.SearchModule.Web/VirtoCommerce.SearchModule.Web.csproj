@@ -142,8 +142,6 @@
     <Content Include="Scripts\blades\index-progress.tpl.html" />
     <Content Include="Scripts\widgets\common\index-widget.js" />
     <Content Include="Scripts\widgets\common\index-widget.tpl.html" />
-    <Content Include="Scripts\widgets\storePropertiesWidget.js" />
-    <Content Include="Scripts\widgets\storePropertiesWidget.tpl.html" />
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
@@ -164,8 +162,6 @@
   <ItemGroup>
     <Content Include="Scripts\blades\rebuildIndex.js" />
     <Content Include="Scripts\blades\rebuildIndex.tpl.html" />
-    <Content Include="Scripts\blades\store-properties.js" />
-    <Content Include="Scripts\blades\store-properties.tpl.html" />
     <Content Include="Scripts\resources\searchAPI.js" />
     <Content Include="Scripts\search.js" />
     <None Include="Web.config" />
@@ -176,7 +172,6 @@
     </Compile>
     <Compile Include="BackgroundJobs\SearchIndexJobs.cs" />
     <Compile Include="Controllers\Api\SearchModuleController.cs" />
-    <Compile Include="Model\FilterProperty.cs" />
     <Compile Include="Model\PushNotifications\IndexProgressPushNotification.cs" />
     <Compile Include="Module.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
