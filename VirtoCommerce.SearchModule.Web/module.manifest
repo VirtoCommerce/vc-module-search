@@ -37,7 +37,7 @@
                 <name>VirtoCommerce.Search.SearchConnectionString</name>
                 <valueType>string</valueType>
                 <defaultValue>provider=Lucene;server=~/App_Data/Lucene;scope=default</defaultValue>
-                <title>Search configuration string  (require restart)</title>
+                <title>Search configuration string (requires restart)</title>
                 <description>
                     <![CDATA[ 
                     provider=Elasticsearch;server=localhost:9200;scope=default
@@ -49,14 +49,14 @@
                 <name>VirtoCommerce.Search.ScheduleJobs</name>
                 <valueType>boolean</valueType>
                 <defaultValue>true</defaultValue>
-                <title>Schedule jobs  (require restart)</title>
+                <title>Schedule jobs (requires restart)</title>
                 <description>Enable or disable periodic search index builders</description>
             </setting>
             <setting>
                 <name>VirtoCommerce.Search.ScheduleJobsCronExpression</name>
                 <valueType>string</valueType>
                 <defaultValue>0/5 * * * *</defaultValue>
-                <title>Index jobs cron expression (require restart)</title>
+                <title>Index jobs cron expression (requires restart)</title>
                 <description>
                     <![CDATA[ 
                     x minutes use "0/x * * * *"

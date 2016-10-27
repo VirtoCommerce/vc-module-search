@@ -3,16 +3,15 @@
     var blade = $scope.blade;
 
     $scope.$on("new-notification-event", function (event, notification) {
-        if (blade.currentEntity && notification.id == blade.currentEntity.id) {
-            angular.copy(notification, blade.currentEntity);
+        if (blade.notification && notification.id == blade.notification.id) {
+            angular.copy(notification, blade.notification);
             if (notification.finished && _.any(notification.progressLog) && _.last(notification.progressLog).level !== 'Error' && blade.parentRefresh) {
                 blade.parentRefresh();
             }
         }
     });
 
-    blade.title = blade.currentEntity.documentType;
-    blade.subtitle = 'search.blades.index-progress.subtitle';
+    blade.title = blade.notification.title;
     blade.headIcon = 'fa-search';
     blade.isLoading = false;
 }]);

@@ -24,6 +24,14 @@
             controller: 'virtoCommerce.searchModule.indexDetailController',
             template: 'Modules/$(VirtoCommerce.Search)/Scripts/blades/index-detail.tpl.html'
         };
+
+        if (!$scope.index) {
+            angular.extend(newBlade, {
+                title: 'search.blades.index-detail.title-new',
+                subtitle: undefined,
+            });
+        }
+
         bladeNavigationService.showBlade(newBlade, blade);
     };
 
