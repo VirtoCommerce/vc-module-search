@@ -241,7 +241,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             }
             catch (Exception ex)
             {
-                notification.Description = "Export error";
+                notification.Description = "Index error";
                 notification.ErrorCount++;
                 notification.Errors.Add(ex.ToString());
             }
