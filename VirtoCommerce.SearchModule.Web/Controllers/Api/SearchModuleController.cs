@@ -40,7 +40,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 
         private readonly ISearchProvider _searchProvider;
         private readonly ISearchConnection _searchConnection;
-        private readonly SearchIndexJobsScheduler _scheduler;
         private readonly IStoreService _storeService;
         private readonly ISecurityService _securityService;
         private readonly IPermissionScopeService _permissionScopeService;
@@ -52,14 +51,12 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         private readonly ISearchIndexController _searchIndexController;
         private readonly IUserNameResolver _userNameResolver;
 
-        public SearchModuleController(ISearchProvider searchProvider, ISearchConnection searchConnection, SearchIndexJobsScheduler scheduler,
-            IStoreService storeService, ISecurityService securityService, IPermissionScopeService permissionScopeService,
+        public SearchModuleController(ISearchProvider searchProvider, ISearchConnection searchConnection, IStoreService storeService, ISecurityService securityService, IPermissionScopeService permissionScopeService,
             IPropertyService propertyService, IBrowseFilterService browseFilterService, 
             IBlobUrlResolver blobUrlResolver, ICatalogSearchService catalogSearchService, ISearchIndexController searchIndexController, IPushNotificationManager pushNotifier, IUserNameResolver userNameResolver)
         {
             _searchProvider = searchProvider;
             _searchConnection = searchConnection;
-            _scheduler = scheduler;
             _storeService = storeService;
             _securityService = securityService;
             _permissionScopeService = permissionScopeService;
@@ -88,7 +85,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             criteria.SearchPhrase = "__key:" + documentId;
 
             var result = _searchProvider.Search<DocumentDictionary>(_searchConnection.Scope, criteria);
-            return Ok(result.Documents);
+            return Ok(result != null ? result.Documents : null);
         }
 
         /// <summary>

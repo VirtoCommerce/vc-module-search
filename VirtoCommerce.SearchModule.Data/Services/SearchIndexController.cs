@@ -68,16 +68,9 @@ namespace VirtoCommerce.SearchModule.Data.Services
             if(!documentsIds.IsNullOrEmpty() && string.IsNullOrEmpty(documentType))
             {
                 throw new ArgumentNullException("documentType");
-            }
-
-        
+            }        
             var progressInfo = new IndexProgressInfo();
-
-            //{
-            //    Description = lastBuildTime == DateTime.MinValue ? "Initial indexation" : string.Format("Date of last indexation : {0}", lastBuildTime)
-            //};
-            progressCallback(progressInfo);
-
+        
             var nowUtc = DateTime.UtcNow;
             var validBuilders = string.IsNullOrEmpty(documentType) ? _indexBuilders : _indexBuilders.Where(b => b.DocumentType.EqualsInvariant(documentType)).ToArray();
           
@@ -89,7 +82,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     var lastBuildTimeName = string.Format(CultureInfo.InvariantCulture, "VirtoCommerce.Search.LastBuildTime_{0}_{1}", scope, indexBuilder.DocumentType);
                     var lastBuildTime = _settingManager.GetValue(lastBuildTimeName, DateTime.MinValue);
 
-                    progressInfo.Description = string.Format("{0}: index data size evaluation. {1}", indexBuilder.DocumentType, lastBuildTime == DateTime.MinValue ? string.Empty : string.Format("Since from {0:MM/dd/yyyy hh:mm:ss}", lastBuildTime));
+                    progressInfo.Description = string.Format("{0}: index size evaluation {1}", indexBuilder.DocumentType, lastBuildTime == DateTime.MinValue ? string.Empty : string.Format("Since from {0:MM/dd/yyyy hh:mm:ss}", lastBuildTime));
                     progressCallback(progressInfo);
 
                     if (!documentsIds.IsNullOrEmpty())
@@ -101,14 +94,15 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     {
                         partitions.AddRange(indexBuilder.GetPartitions(false, lastBuildTime, nowUtc));
                     }
-                    progressInfo.TotalCount = partitions.Sum(x => x.Keys.Count());
-                    progressInfo.ProcessedCount = 0;
-                    progressInfo.Description = string.Format("{0} : indexing process", indexBuilder.DocumentType);
-
+                    var total = partitions.Sum(x => x.Keys.Count());
+                    progressInfo.TotalCount += total; 
                     foreach (var partition in partitions)
                     {
-                        progressInfo.ProcessedCount += partition.Keys.Count();
+                        var processedCount = partition.Keys.Count();
+                        progressInfo.Description = string.Format("{0} : index documents {1} of {2}", indexBuilder.DocumentType, processedCount, total);
+                        progressInfo.ProcessedCount += processedCount;
                         progressCallback(progressInfo);
+
                         // create index docs
                         var docs = indexBuilder.CreateDocuments(partition);
 
@@ -116,7 +110,6 @@ namespace VirtoCommerce.SearchModule.Data.Services
                         var docsArray = docs.ToArray();
                         indexBuilder.PublishDocuments(scope, docsArray);
                     }
-
                     var lastBuildTime2 = _settingManager.GetValue(lastBuildTimeName, DateTime.MinValue);
                     if (lastBuildTime2 >= lastBuildTime)
                     {

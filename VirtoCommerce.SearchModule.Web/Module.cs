@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using Hangfire;
 using Microsoft.Practices.Unity;
 using VirtoCommerce.Domain.Store.Model;
 using VirtoCommerce.Platform.Core.DynamicProperties;
@@ -78,14 +79,14 @@ namespace VirtoCommerce.SearchModule.Web
             var dynamicPropertyService = _container.Resolve<IDynamicPropertyService>();
             dynamicPropertyService.SaveProperties(new[] { filteredBrowsingProperty });
 
-            //// Enable or disable periodic search index builders
-            //var settingsManager = _container.Resolve<ISettingsManager>();
-            //var scheduleJobs = settingsManager.GetValue("VirtoCommerce.Search.ScheduleJobs", true);
-            //if (scheduleJobs)
-            //{
-            //    var jobScheduler = _container.Resolve<SearchIndexJobsScheduler>();
-            //    jobScheduler.ScheduleJobs();
-            //}
+            // Enable or disable periodic search index builders
+            var settingsManager = _container.Resolve<ISettingsManager>();
+            var scheduleJobs = settingsManager.GetValue("VirtoCommerce.Search.ScheduleJobs", false);
+            if (scheduleJobs)
+            {
+                var cronExpression = settingsManager.GetValue("VirtoCommerce.Search.ScheduleJobsCronExpression", "0/5 * * * *");
+                RecurringJob.AddOrUpdate<SearchIndexJobs>("CatalogIndexJob", x => x.Process(null, null), cronExpression);
+            }
         }
 
         #endregion

@@ -175,7 +175,6 @@
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="BackgroundJobs\SearchIndexJobs.cs" />
-    <Compile Include="BackgroundJobs\SearchIndexJobsScheduler.cs" />
     <Compile Include="Controllers\Api\SearchModuleController.cs" />
     <Compile Include="Model\FilterProperty.cs" />
     <Compile Include="Model\PushNotifications\IndexProgressPushNotification.cs" />
