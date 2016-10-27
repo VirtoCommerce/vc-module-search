@@ -5,7 +5,7 @@
     $scope.$on("new-notification-event", function (event, notification) {
         if (blade.notification && notification.id == blade.notification.id) {
             angular.copy(notification, blade.notification);
-            if (notification.finished && _.any(notification.progressLog) && _.last(notification.progressLog).level !== 'Error' && blade.parentRefresh) {
+            if (notification.finished && blade.parentRefresh) {
                 blade.parentRefresh();
             }
         }

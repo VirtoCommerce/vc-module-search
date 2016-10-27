@@ -1,7 +1,7 @@
 ﻿<div class="gridster-cnt" ng-click="openBlade()">
     <div class="cnt-inner">
         <div class="list-count" ng-if="loading">...</div>
-        <div class="list-t" ng-if="!loading" translate="{{index ? (index.buildDate<blade.currentEntity.modifiedDate ? 'search.widgets.index.index-old' : 'search.widgets.index.index-ok') : 'search.widgets.index.no-index' }}" translate-compile></div>
+        <div class="list-t" ng-if="!loading" translate="{{index ? (indexDate<blade.currentEntity.modifiedDate ? 'search.widgets.index.index-old' : 'search.widgets.index.index-ok') : 'search.widgets.index.no-index' }}" translate-compile></div>
     </div>
     <!--<ul class="list __stats">
         <li class="list-item">{{'search.widgets.catalogIndex.itemCount' | translate}} <span class="list-price">{{index.itemCount}} / {{index.itemCountCatalog}}</span></li>

@@ -38,8 +38,8 @@
         },
         "widgets": {
             "index": {
-                "index-ok": "Indexed <span am-time-ago='index.buildDate'></span>",
-                "index-old": "Outdated. Index was built <span am-time-ago='index.buildDate'>",
+                "index-ok": "Indexed <span am-time-ago='indexDate'></span>",
+                "index-old": "Outdated. Index was built <span am-time-ago='indexDate'>",
                 "no-index": "Search index missing"
             },
             "catalogIndex": {
