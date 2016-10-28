@@ -8,10 +8,7 @@
                 "labels": {
                     "no-index": "Index not found",
                     "build-date": "Last indexed",
-                    "content": "Index content",
-                    "statistics": "Search index statistics",
-                    "item-count": "Item count",
-                    "itemCountTotal": "Item count total"
+                    "content": "Index content"
                 }
             },
             "index-progress": {
@@ -20,20 +17,16 @@
                     "end": "End",
                     "errors": "Errors"
                 }
-            },
-            "rebuildIndex": {
-                "title": "Rebuild Search Index",
-                "labels": {
-                    "progress": "Progress",
-                    "job": "Job",
-                    "state": "State"
-                }
             }
         },
         "dialogs": {
-            "rebuild-index": {
-                "title": "Rebuild Search Index",
-                "message": "Current search index will be deleted and built from scratch. Are you sure you want to rebuild the index?"
+            "reindex": {
+                "title": "Build Search Index",
+                "msg1": "Choose how to update the Search Index. Options:",
+                "msg2": "Build: Update by indexing just missing or outdated data.",
+                "msg3": "Delete + build: Current search index will be deleted and built from scratch. Note that there WON'T BE ANY SEARCH RESULTS until the build process finishes.",
+                "index": "Build",
+                "reindex": "Delete + build"
             }
         },
         "widgets": {
@@ -41,16 +34,10 @@
                 "index-ok": "Indexed <span am-time-ago='indexDate'></span>",
                 "index-old": "Outdated. Index was built <span am-time-ago='indexDate'>",
                 "no-index": "Search index missing"
-            },
-            "catalogIndex": {
-                "itemCount": "Item count (index / catalog)",
-                "categoryCount": "Categories count (index / catalog)"
             }
         },
         "commands": {
-            "index": "Index",
-            "index-all": "Re-index",
-            "rebuild-index": "Rebuild Index"
+            "rebuild-index": "Build Index"
         }
     }
 }

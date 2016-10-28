@@ -41,37 +41,39 @@ angular.module(moduleName, [
           }
       });
 
-      // toolbar button in catalogs list
+      // toolbar button 'rebuild'
       var rebuildIndexCommand = {
           name: "search.commands.rebuild-index",
           icon: 'fa fa-recycle',
-          index: 4,
+          index: 2,
           executeMethod: function (blade) {
               var dialog = {
                   id: "confirmRebuildIndex",
-                  title: "search.dialogs.rebuild-index.title",
-                  message: "search.dialogs.rebuild-index.message",
-                  callback: function (confirm) {
-                      if (confirm) {
-                          searchAPI.reindex(
+                  callback: function (doReindex) {
+                      var apiToCall = doReindex ? searchAPI.reindex : searchAPI.index;
+                      var documentsIds = blade.currentEntityId ? [{ id: blade.currentEntityId }] : undefined;
+                      apiToCall({ documentType: blade.documentType }, documentsIds,
                               function openProgressBlade(data) {
                                   // show indexing progress
                                   var newBlade = {
                                       id: 'indexProgress',
                                       notification: data,
+                                      parentRefresh: blade.parentRefresh,
                                       controller: 'virtoCommerce.searchModule.indexProgressController',
                                       template: 'Modules/$(VirtoCommerce.Search)/Scripts/blades/index-progress.tpl.html'
                                   };
-                                  bladeNavigationService.showBlade(newBlade, blade);
+                                  bladeNavigationService.showBlade(newBlade, blade.parentBlade || blade);
                               });
-                      }
                   }
               }
-              dialogService.showConfirmationDialog(dialog);
+              dialogService.showDialog(dialog, 'Modules/$(VirtoCommerce.Search)/Scripts/dialogs/reindex-dialog.tpl.html', 'platformWebApp.confirmDialogController');
           },
           canExecuteMethod: function () { return true; },
           permission: 'VirtoCommerce.Search:Index:Rebuild'
       };
+      // register in index details
+      toolbarService.register(rebuildIndexCommand, 'virtoCommerce.searchModule.indexDetailController');
+      // register in catalogs list
       toolbarService.register(rebuildIndexCommand, 'virtoCommerce.catalogModule.catalogsListController');
   }]
 );

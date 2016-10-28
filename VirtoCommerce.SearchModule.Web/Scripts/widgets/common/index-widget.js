@@ -17,10 +17,7 @@
 
     function updateStatus() {
         if (!$scope.loading && blade.currentEntity) {
-            if (!$scope.index) {
-                $scope.widget.UIclass = 'error';
-            } else if ($scope.indexDate < blade.currentEntity.modifiedDate)
-                $scope.widget.UIclass = 'error';
+            $scope.widget.UIclass = !$scope.index || ($scope.indexDate < moment.utc(blade.currentEntity.modifiedDate)) ? 'error' : '';
         }
     }
 
