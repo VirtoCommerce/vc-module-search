@@ -81,7 +81,7 @@ namespace VirtoCommerce.SearchModule.Web
 
             // Enable or disable periodic search index builders
             var settingsManager = _container.Resolve<ISettingsManager>();
-            var scheduleJobs = settingsManager.GetValue("VirtoCommerce.Search.ScheduleJobs", false);
+            var scheduleJobs = settingsManager.GetValue("VirtoCommerce.Search.ScheduleJobs", true);
             if (scheduleJobs)
             {
                 var cronExpression = settingsManager.GetValue("VirtoCommerce.Search.ScheduleJobsCronExpression", "0/5 * * * *");

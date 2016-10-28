@@ -95,12 +95,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
                         partitions.AddRange(indexBuilder.GetPartitions(false, lastBuildTime, nowUtc));
                     }
                     var total = partitions.Sum(x => x.Keys.Count());
+                    var processedCount = 0;
                     progressInfo.TotalCount += total; 
                     foreach (var partition in partitions)
                     {
-                        var processedCount = partition.Keys.Count();
+                        processedCount += partition.Keys.Count();
                         progressInfo.Description = string.Format("{0} : index documents {1} of {2}", indexBuilder.DocumentType, processedCount, total);
-                        progressInfo.ProcessedCount += processedCount;
                         progressCallback(progressInfo);
 
                         // create index docs
@@ -115,6 +115,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     {
                         _settingManager.SetValue(lastBuildTimeName, nowUtc);
                     }
+                    progressInfo.ProcessedCount += processedCount;
                 }
                 catch(Exception ex)
                 {
