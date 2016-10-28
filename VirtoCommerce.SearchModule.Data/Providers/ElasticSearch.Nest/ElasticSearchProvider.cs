@@ -18,9 +18,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
     /// </summary>
     public class ElasticSearchProvider : ISearchProvider
     {
-        public const string SearchAnalyzerName = "search_analyzer";
-        public const string IndexAnalyzerName = "index_analyzer";
-        public const string KeywordAnalyzerName = "keyword_lowercase";
+        public const string ContentAnalyzerName = "content_analyzer";
+        public const string KeywordAnalyzerName = "keyword_analyzer";
+        public const string NGramFilterName = "ngram_filter";
 
         private readonly ISearchConnection _connection;
         private readonly Dictionary<string, List<IDocument>> _pendingDocuments = new Dictionary<string, List<IDocument>>();
@@ -398,23 +398,51 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             return Client.IndexExists(indexName).Exists;
         }
 
+        #region Create and configure index
+
         protected virtual void CreateIndex(string indexName, string documentType)
+        {
+            Client.CreateIndex(indexName, i => i
+                .Settings(s => s
+                    .Analysis(a => a
+                        .TokenFilters(SetupTokenFilters)
+                        .Analyzers(SetupAnalyzers))));
+        }
+
+        protected virtual AnalyzersDescriptor SetupAnalyzers(AnalyzersDescriptor analyzers)
+        {
+            return analyzers
+                .Custom(ContentAnalyzerName, SetupContentAnalyzer)
+                .Custom(KeywordAnalyzerName, SetupKeywordAnalyzer);
+        }
+
+        protected virtual CustomAnalyzerDescriptor SetupContentAnalyzer(CustomAnalyzerDescriptor customAnalyzer)
         {
             // Use ngrams analyzer for search in the middle of the word
             // http://www.elasticsearch.org/guide/en/elasticsearch/guide/current/ngrams-compound-words.html
-            Client.CreateIndex(indexName, x => x.Settings(v => v
-                  .Analysis(a => a.TokenFilters(f => f.NGram("trigrams_filter", ng => ng.MinGram(3).MaxGram(20)))
-                  .Analyzers(an => an
-                      .Custom(IndexAnalyzerName, custom => custom
-                          .Tokenizer("standard")
-                          .Filters("lowercase", "trigrams_filter"))
-                      .Custom(KeywordAnalyzerName, custom => custom
-                          .Tokenizer("keyword")
-                          .Filters("lowercase"))
-                      .Custom(SearchAnalyzerName, custom => custom
-                          .Tokenizer("standard")
-                          .Filters("lowercase"))))));
+            return customAnalyzer
+                .Tokenizer("standard")
+                .Filters("lowercase", NGramFilterName);
         }
+
+        protected virtual CustomAnalyzerDescriptor SetupKeywordAnalyzer(CustomAnalyzerDescriptor customAnalyzer)
+        {
+            return customAnalyzer
+                .Tokenizer("keyword")
+                .Filters("lowercase");
+        }
+
+        protected virtual TokenFiltersDescriptor SetupTokenFilters(TokenFiltersDescriptor filters)
+        {
+            return filters.NGram(NGramFilterName, SetupNGramFilter);
+        }
+
+        protected virtual NGramTokenFilterDescriptor SetupNGramFilter(NGramTokenFilterDescriptor nGram)
+        {
+            return nGram.MinGram(3).MaxGram(20);
+        }
+
+        #endregion
 
         protected virtual Properties<IProperties> GetMappedProperties(string indexName, string documentType)
         {
@@ -508,7 +536,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
                 if (field.Name.StartsWith("__content", StringComparison.OrdinalIgnoreCase))
                 {
-                    stringProperty.Analyzer = IndexAnalyzerName;
+                    stringProperty.Analyzer = ContentAnalyzerName;
                 }
 
                 if (Regex.Match(field.Name, "__content_en.*").Success)
