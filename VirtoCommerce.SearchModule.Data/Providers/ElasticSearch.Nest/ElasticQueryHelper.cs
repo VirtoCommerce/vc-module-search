@@ -47,7 +47,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                 if (value.GetType() == typeof(AttributeFilterValue))
                 {
                     var container = new List<QueryContainer>();
-                    var termQuery = new TermQuery() { Field = field, Value = ((AttributeFilterValue)value).Value };
+                    var termQuery = new TermQuery() { Field = field, Value = ((AttributeFilterValue)value).Value.ToLowerInvariant() };
                     container.Add(termQuery);
                     query.Must = container;
                 }

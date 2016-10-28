@@ -20,6 +20,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
     {
         public const string SearchAnalyzerName = "search_analyzer";
         public const string IndexAnalyzerName = "index_analyzer";
+        public const string KeywordAnalyzerName = "keyword_lowercase";
 
         private readonly ISearchConnection _connection;
         private readonly Dictionary<string, List<IDocument>> _pendingDocuments = new Dictionary<string, List<IDocument>>();
@@ -407,6 +408,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                       .Custom(IndexAnalyzerName, custom => custom
                           .Tokenizer("standard")
                           .Filters("lowercase", "trigrams_filter"))
+                      .Custom(KeywordAnalyzerName, custom => custom
+                          .Tokenizer("keyword")
+                          .Filters("lowercase"))
                       .Custom(SearchAnalyzerName, custom => custom
                           .Tokenizer("standard")
                           .Filters("lowercase"))))));
@@ -494,6 +498,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             {
                 stringProperty.Store = field.ContainsAttribute(IndexStore.Yes);
                 stringProperty.Index = field.ContainsAttribute(IndexType.NotAnalyzed) ? FieldIndexOption.NotAnalyzed : field.ContainsAttribute(IndexType.Analyzed) ? FieldIndexOption.Analyzed : FieldIndexOption.No;
+
+                // for not analyzed fields use KeywordAnalyzer instead
+                if (stringProperty.Index == FieldIndexOption.NotAnalyzed)
+                {
+                    stringProperty.Analyzer = KeywordAnalyzerName;
+                    stringProperty.Index = FieldIndexOption.Analyzed;
+                }
 
                 if (field.Name.StartsWith("__content", StringComparison.OrdinalIgnoreCase))
                 {
