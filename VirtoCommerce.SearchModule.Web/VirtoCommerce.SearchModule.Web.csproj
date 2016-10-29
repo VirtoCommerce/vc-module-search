@@ -140,7 +140,6 @@
     <Content Include="Scripts\blades\index-detail.tpl.html" />
     <Content Include="Scripts\blades\index-progress.js" />
     <Content Include="Scripts\blades\index-progress.tpl.html" />
-    <Content Include="Scripts\dialogs\reindex-dialog.tpl.html" />
     <Content Include="Scripts\widgets\common\index-widget.js" />
     <Content Include="Scripts\widgets\common\index-widget.tpl.html" />
     <None Include="app.config">
