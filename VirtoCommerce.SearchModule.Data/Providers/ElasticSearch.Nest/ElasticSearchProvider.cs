@@ -278,7 +278,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                         var properties = GetMappedProperties(indexName, documentType);
                         var oldPropertiesCount = properties.Count();
 
-                        var simpleDocuments = documents.Select(document => ConvertToSimpleDocument(document, properties)).ToList();
+                        var simpleDocuments = documents.Select(document => ConvertToSimpleDocument(document, properties, documentType)).ToList();
 
                         var updateMapping = properties.Count() != oldPropertiesCount;
                         var indexExits = IndexExists(indexName);
@@ -335,7 +335,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         }
 
         // Convert to simple dictionary document
-        protected virtual DocumentDictionary ConvertToSimpleDocument(IDocument document, Properties<IProperties> properties)
+        protected virtual DocumentDictionary ConvertToSimpleDocument(IDocument document, Properties<IProperties> properties, string documentType)
         {
             var result = new DocumentDictionary();
 
@@ -378,7 +378,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                         }
 
                         properties.Add(field.Name, PropertyHelper.InferProperty(type));
-                        SetupProperty(properties[field.Name], field);
+                        SetupProperty(properties[field.Name], field, documentType);
                     }
 
                     result.Add(key, field.Values.Length > 1 ? field.Values : field.Value);
@@ -405,18 +405,18 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             Client.CreateIndex(indexName, i => i
                 .Settings(s => s
                     .Analysis(a => a
-                        .TokenFilters(SetupTokenFilters)
-                        .Analyzers(SetupAnalyzers))));
+                        .TokenFilters(tokenFilters => SetupTokenFilters(tokenFilters, documentType))
+                        .Analyzers(analyzers => SetupAnalyzers(analyzers, documentType)))));
         }
 
-        protected virtual AnalyzersDescriptor SetupAnalyzers(AnalyzersDescriptor analyzers)
+        protected virtual AnalyzersDescriptor SetupAnalyzers(AnalyzersDescriptor analyzers, string documentType)
         {
             return analyzers
-                .Custom(ContentAnalyzerName, SetupContentAnalyzer)
-                .Custom(KeywordAnalyzerName, SetupKeywordAnalyzer);
+                .Custom(ContentAnalyzerName, customAnalyzer => SetupContentAnalyzer(customAnalyzer, documentType))
+                .Custom(KeywordAnalyzerName, customAnalyzer => SetupKeywordAnalyzer(customAnalyzer, documentType));
         }
 
-        protected virtual CustomAnalyzerDescriptor SetupContentAnalyzer(CustomAnalyzerDescriptor customAnalyzer)
+        protected virtual CustomAnalyzerDescriptor SetupContentAnalyzer(CustomAnalyzerDescriptor customAnalyzer, string documentType)
         {
             // Use ngrams analyzer for search in the middle of the word
             // http://www.elasticsearch.org/guide/en/elasticsearch/guide/current/ngrams-compound-words.html
@@ -425,19 +425,19 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                 .Filters("lowercase", NGramFilterName);
         }
 
-        protected virtual CustomAnalyzerDescriptor SetupKeywordAnalyzer(CustomAnalyzerDescriptor customAnalyzer)
+        protected virtual CustomAnalyzerDescriptor SetupKeywordAnalyzer(CustomAnalyzerDescriptor customAnalyzer, string documentType)
         {
             return customAnalyzer
                 .Tokenizer("keyword")
                 .Filters("lowercase");
         }
 
-        protected virtual TokenFiltersDescriptor SetupTokenFilters(TokenFiltersDescriptor filters)
+        protected virtual TokenFiltersDescriptor SetupTokenFilters(TokenFiltersDescriptor tokenFilters, string documentType)
         {
-            return filters.NGram(NGramFilterName, SetupNGramFilter);
+            return tokenFilters.NGram(NGramFilterName, descriptor => SetupNGramFilter(descriptor, documentType));
         }
 
-        protected virtual NGramTokenFilterDescriptor SetupNGramFilter(NGramTokenFilterDescriptor nGram)
+        protected virtual NGramTokenFilterDescriptor SetupNGramFilter(NGramTokenFilterDescriptor nGram, string documentType)
         {
             return nGram.MinGram(3).MaxGram(20);
         }
@@ -513,14 +513,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             throw new ElasticSearchException(string.Format(CultureInfo.InvariantCulture, "{0}. URL:{1}", message, ElasticServerUrl), innerException);
         }
 
-        protected virtual void SetupProperty(IProperty property, IDocumentField field)
+        protected virtual void SetupProperty(IProperty property, IDocumentField field, string documentType)
         {
             //property.DocValues = !field.ContainsAttribute(IndexStore.No);
 
-            SetupStringProperty(property as StringProperty, field);
+            SetupStringProperty(property as StringProperty, field, documentType);
         }
 
-        protected virtual void SetupStringProperty(StringProperty stringProperty, IDocumentField field)
+        protected virtual void SetupStringProperty(StringProperty stringProperty, IDocumentField field, string documentType)
         {
             if (stringProperty != null)
             {
