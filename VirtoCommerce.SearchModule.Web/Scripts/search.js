@@ -8,8 +8,8 @@ angular.module(moduleName, [
     'ngSanitize'
 ])
 .run(
-  ['platformWebApp.toolbarService', 'platformWebApp.pushNotificationTemplateResolver', 'platformWebApp.bladeNavigationService',  'platformWebApp.widgetService', 'virtoCommerce.searchModule.search', function (toolbarService, pushNotificationTemplateResolver, bladeNavigationService, widgetService, searchAPI) {
-     
+  ['platformWebApp.toolbarService', 'platformWebApp.pushNotificationTemplateResolver', 'platformWebApp.bladeNavigationService', 'platformWebApp.widgetService', 'virtoCommerce.searchModule.search', function (toolbarService, pushNotificationTemplateResolver, bladeNavigationService, widgetService, searchAPI) {
+
       // register notification template
       pushNotificationTemplateResolver.register({
           priority: 900,
@@ -31,10 +31,8 @@ angular.module(moduleName, [
           icon: 'fa fa-recycle',
           index: 2,
           executeMethod: function (blade) {
-
-              var apiToCall = searchAPI.index;
               var documentsIds = blade.currentEntityId ? [{ id: blade.currentEntityId }] : undefined;
-              apiToCall({ documentType: blade.documentType }, documentsIds,
+              searchAPI.reindex({ documentType: blade.documentType }, documentsIds,
                       function openProgressBlade(data) {
                           // show indexing progress
                           var newBlade = {
@@ -50,9 +48,9 @@ angular.module(moduleName, [
           canExecuteMethod: function () { return true; },
           permission: 'VirtoCommerce.Search:Index:Rebuild'
       };
-      
+
       // register in index details
       toolbarService.register(indexCommand, 'virtoCommerce.searchModule.indexDetailController');
-    
+
   }]
 );
