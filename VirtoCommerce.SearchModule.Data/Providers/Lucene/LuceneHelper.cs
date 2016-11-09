@@ -70,7 +70,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                     doc.Add(new Field(field.Name, val.ToString(), store, index));
                 }
             }
-            if (field.Name == "__object")
+            else if (field.Name == "__object")
             {
                 if (field.Value != null)
                 {

@@ -16,7 +16,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         {
             this.SearchCriteria = criteria;
             this.Documents = response.Documents;
-            this.DocCount = response.HitsMetaData.Total;
+            this.DocCount = response.HitsMetaData.Hits.Count;
             this.TotalCount = response.Total;
             this.ProviderAggregations = response.Aggregations;
             this.Facets = CreateFacets(criteria, response.Aggregations);
