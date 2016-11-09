@@ -1,6 +1,9 @@
 ﻿using System;
 using Lucene.Net.Documents;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
+using System.IO;
+using Newtonsoft.Json;
+using VirtoCommerce.Platform.Core.Common;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
@@ -65,6 +68,30 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 foreach (var val in field.Values)
                 {
                     doc.Add(new Field(field.Name, val.ToString(), store, index));
+                }
+            }
+            if (field.Name == "__object")
+            {
+                if (field.Value != null)
+                {
+                    using (var memStream = new MemoryStream())
+                    {
+                        var serializer = new JsonSerializer
+                        {
+                            DefaultValueHandling = DefaultValueHandling.Ignore,
+                            NullValueHandling = NullValueHandling.Ignore,
+                            Formatting = Formatting.None,
+                            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                            TypeNameHandling = TypeNameHandling.None,
+                        };
+
+                        field.Value.SerializeJson(memStream, serializer);
+                        memStream.Seek(0, SeekOrigin.Begin);
+                        var value = memStream.ReadToString();
+
+                        // index full web serialized object
+                        doc.Add(new Field(field.Name, value, store, index));
+                    }
                 }
             }
             else if (field.Value is string)
