@@ -52,7 +52,7 @@ namespace VirtoCommerce.SearchModule.Web
 
             if (searchConnection.Provider.Equals(SearchProviders.Elasticsearch.ToString(), StringComparison.OrdinalIgnoreCase))
             {
-                _container.RegisterType<ISearchProvider, ElasticSearchProvider>();
+                _container.RegisterType<ISearchProvider, ElasticSearchProvider>(new ContainerControlledLifetimeManager());
                 _container.RegisterType<ISearchQueryBuilder, ElasticSearchQueryBuilder>();
             }
             else if (searchConnection.Provider.Equals(SearchProviders.Lucene.ToString(), StringComparison.OrdinalIgnoreCase))
