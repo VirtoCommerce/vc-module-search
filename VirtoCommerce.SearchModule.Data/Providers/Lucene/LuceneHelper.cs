@@ -74,24 +74,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             {
                 if (field.Value != null)
                 {
-                    using (var memStream = new MemoryStream())
-                    {
-                        var serializer = new JsonSerializer
-                        {
-                            DefaultValueHandling = DefaultValueHandling.Ignore,
-                            NullValueHandling = NullValueHandling.Ignore,
-                            Formatting = Formatting.None,
-                            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                            TypeNameHandling = TypeNameHandling.None,
-                        };
+                    var value = SerializeObject(field.Value);
 
-                        field.Value.SerializeJson(memStream, serializer);
-                        memStream.Seek(0, SeekOrigin.Begin);
-                        var value = memStream.ReadToString();
-
-                        // index full web serialized object
-                        doc.Add(new Field(field.Name, value, store, index));
-                    }
+                    // index full web serialized object
+                    doc.Add(new Field(field.Name, value, store, index));
                 }
             }
             else if (field.Value is string)
@@ -140,6 +126,26 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                         doc.Add(new Field(field.Name, index == Field.Index.NOT_ANALYZED ? val.ToString().ToLower() : val.ToString(), store, index));
                     }
                 }
+            }
+        }
+
+        private static string SerializeObject(object obj)
+        {
+            using (var memStream = new MemoryStream())
+            {
+                var serializer = new JsonSerializer
+                {
+                    DefaultValueHandling = DefaultValueHandling.Ignore,
+                    NullValueHandling = NullValueHandling.Ignore,
+                    Formatting = Formatting.None,
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                    TypeNameHandling = TypeNameHandling.None,
+                };
+
+                obj.SerializeJson(memStream, serializer);
+                memStream.Seek(0, SeekOrigin.Begin);
+                var value = memStream.ReadToString();
+                return value;
             }
         }
     }
