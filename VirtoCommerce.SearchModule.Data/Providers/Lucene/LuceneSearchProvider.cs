@@ -324,7 +324,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                         writer.Optimize();
                     }
 
-                    writer.Dispose();
+                    writer.Dispose(true); // added waiting for all merges to complete
                     _indexFolders.Remove(folderName);
                 }
             }
