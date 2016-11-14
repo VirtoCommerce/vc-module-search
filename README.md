@@ -10,7 +10,7 @@ Key features:
 # Documentation
 User guide: trigger manual search index rebuild form Catalogs list in Manager.
 
-Developer guide: <a href="http://docs.virtocommerce.com/x/FADl" target="_blank">Deploy Elasticsearch to dedicated server</a>
+Developer guide: <a href="https://virtocommerce.com/docs/vc2devguide/deployment/deploy-elasticsearch-to-dedicated-server" target="_blank">Deploy Elasticsearch to dedicated server</a>
 
 # Installation
 Installing the module:
