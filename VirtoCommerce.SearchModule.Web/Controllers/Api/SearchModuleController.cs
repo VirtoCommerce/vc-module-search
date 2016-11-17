@@ -48,9 +48,10 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         public IHttpActionResult GetDocumentIndex(string documentType, string documentId)
         {
             var criteria = new KeywordSearchCriteria(documentType);
+            criteria.SearchPhrase = "__key:" + documentId;
 
-            var attr = new AttributeFilter { Key = "__key", Values = new[] { new AttributeFilterValue {Id = documentId,Value = documentId}}};
-            criteria.Apply(attr);
+            //var attr = new AttributeFilter { Key = "__key", Values = new[] { new AttributeFilterValue {Id = documentId,Value = documentId}}};
+            //criteria.Apply(attr);
 
             var result = _searchProvider.Search<DocumentDictionary>(_searchConnection.Scope, criteria);
             return Ok(result != null ? result.Documents : null);
