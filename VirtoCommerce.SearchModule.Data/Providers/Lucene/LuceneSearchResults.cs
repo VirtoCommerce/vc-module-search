@@ -28,7 +28,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             this.SearchCriteria = criteria;
             CreateDocuments(searcher, docs);
             CreateFacets(reader, query);
-            CreateSuggestions(reader, criteria);
+            //CreateSuggestions(reader, criteria);
         }
 
         public FacetGroup[] Facets
