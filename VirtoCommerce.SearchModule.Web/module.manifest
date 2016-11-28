@@ -2,7 +2,7 @@
 <module>
     <id>VirtoCommerce.Search</id>
     <version>2.13.1</version>
-    <platformVersion>2.12.0</platformVersion>
+    <platformVersion>2.12.2</platformVersion>
     <dependencies>
         <dependency id="VirtoCommerce.Core" version="2.17.0" />
     </dependencies>
