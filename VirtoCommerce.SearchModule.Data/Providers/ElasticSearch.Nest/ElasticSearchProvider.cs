@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -79,55 +78,31 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
         public string DefaultIndex { get; set; }
 
-        private ISearchQueryBuilder[] _queryBuilders = { new ElasticSearchQueryBuilder() };
-
-        public ISearchQueryBuilder[] QueryBuilders
-        {
-            get { return _queryBuilders; }
-            set { _queryBuilders = value; }
-        }
-
-        private bool _autoCommit = true;
+        public ISearchQueryBuilder[] QueryBuilders { get; }
 
         /// <summary>
         /// Gets or sets a value indicating whether [auto commit].
         /// </summary>
         /// <value><c>true</c> if [auto commit]; otherwise, <c>false</c>.</value>
-        public bool AutoCommit
-        {
-            get { return _autoCommit; }
-            set { _autoCommit = value; }
-        }
-
-        private int _autoCommitCount = 100;
+        public bool AutoCommit { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the auto commit count.
         /// </summary>
         /// <value>The auto commit count.</value>
-        public int AutoCommitCount
-        {
-            get { return _autoCommitCount; }
-            set { _autoCommitCount = value; }
-        }
+        public int AutoCommitCount { get; set; } = 100;
 
         /// <summary>
         /// Tells provider to run in debug mode outputting all requests to console.
         /// </summary>
         public bool EnableTrace { get; set; }
 
-        private string _elasticServerUrl = string.Empty;
-
         /// <summary>
         /// Gets or sets the solr server URL without Core secified.
         /// </summary>
         /// <example>localhost:9200</example>
         /// <value>The solr server URL.</value>
-        public string ElasticServerUrl
-        {
-            get { return _elasticServerUrl; }
-            set { _elasticServerUrl = value; }
-        }
+        public string ElasticServerUrl { get; set; } = string.Empty;
 
         #endregion
 
@@ -138,7 +113,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
         public ElasticSearchProvider(ISearchQueryBuilder[] queryBuilders, ISearchConnection connection)
         {
-            _queryBuilders = queryBuilders;
+            QueryBuilders = queryBuilders;
             _connection = connection;
             Init();
 
@@ -152,15 +127,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         {
             if (!_isInitialized)
             {
-                if (_connection != null && !string.IsNullOrEmpty(_connection.DataSource))
-                {
-                    _elasticServerUrl = _connection.DataSource;
-                }
-                else
-                {
-                    _elasticServerUrl = "localhost:9200";
-                }
-
+                ElasticServerUrl = !string.IsNullOrEmpty(_connection?.DataSource) ? _connection.DataSource : "localhost:9200";
                 _isInitialized = true;
             }
         }
@@ -195,7 +162,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             var doc = document as IDocument;
             if (doc == null)
             {
-                ThrowException(string.Format(CultureInfo.InvariantCulture, "Document type not supported: {0}", typeof(T).Name), new NotImplementedException());
+                var message = $"Document type '{typeof(T).Name}' is not supported";
+                ThrowException(message, new ArgumentException(message, nameof(document)));
             }
             else
             {
@@ -322,14 +290,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         protected virtual ISearchQueryBuilder GetQueryBuilder(ISearchCriteria criteria)
         {
             if (QueryBuilders == null)
-                throw new NullReferenceException("No QueryBuilders defined");
+                throw new InvalidOperationException("No query builders defined");
 
-            var queryBuilder = QueryBuilders.SingleOrDefault(x => x.DocumentType.Equals(criteria.DocumentType));
-
-            if (queryBuilder == null) // get default builder
-            {
-                queryBuilder = QueryBuilders.First(x => x.DocumentType.Equals(string.Empty));
-            }
+            var queryBuilder = QueryBuilders.SingleOrDefault(b => b.DocumentType.Equals(criteria.DocumentType)) ??
+                               QueryBuilders.First(b => b.DocumentType.Equals(string.Empty));
 
             return queryBuilder;
         }
@@ -370,7 +334,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                     {
                         // Create new property mapping
 
-                        var type = field.Value != null ? field.Value.GetType() : typeof(object);
+                        var type = field.Value?.GetType() ?? typeof(object);
 
                         if (type == typeof(decimal))
                         {
@@ -510,7 +474,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
         protected virtual void ThrowException(string message, Exception innerException)
         {
-            throw new ElasticSearchException(string.Format(CultureInfo.InvariantCulture, "{0}. URL:{1}", message, ElasticServerUrl), innerException);
+            throw new ElasticSearchException($"{message}. URL:{ElasticServerUrl}", innerException);
         }
 
         protected virtual void SetupProperty(IProperty property, IDocumentField field, string documentType)
