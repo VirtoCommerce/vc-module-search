@@ -1,52 +1,51 @@
 ﻿using System;
 using System.IO;
 using VirtoCommerce.SearchModule.Core.Model;
+using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest;
 using VirtoCommerce.SearchModule.Data.Providers.Lucene;
 
-namespace VirtoCommerce.SearchModule.Tests
+namespace VirtoCommerce.SearchModule.Test
 {
     public class SearchTestsBase : IDisposable
     {
-        private string _LuceneStorageDir = Path.Combine(Path.GetTempPath(), "lucene");
+        private readonly string _luceneStorageDir = Path.Combine(Path.GetTempPath(), "lucene");
 
         protected ISearchProvider GetSearchProvider(string searchProvider, string scope)
         {
+            ISearchProvider provider = null;
+
             if (searchProvider == "Lucene")
             {
-                var queryBuilder = new LuceneSearchQueryBuilder();
-
-                var conn = new SearchConnection(_LuceneStorageDir, scope);
-                var provider = new LuceneSearchProvider(new[] { queryBuilder }, conn);
-
-                return provider;
+                var connection = new SearchConnection(_luceneStorageDir, scope);
+                var queryBuilder = new LuceneSearchQueryBuilder() as ISearchQueryBuilder;
+                provider = new LuceneSearchProvider(new[] { queryBuilder }, connection);
             }
 
             if (searchProvider == "Elastic")
             {
-                var queryBuilder = new ElasticSearchQueryBuilder();
-
-                var conn = new SearchConnection("localhost:9200", scope);
-                var provider = new ElasticSearchProvider(new[] { queryBuilder }, conn);
-                provider.EnableTrace = true;
-
-                return provider;
+                var connection = new SearchConnection("localhost:9200", scope);
+                var queryBuilder = new ElasticSearchQueryBuilder() as ISearchQueryBuilder;
+                provider = new ElasticSearchProvider(new[] { queryBuilder }, connection) { EnableTrace = true };
             }
 
-            throw new NullReferenceException(string.Format("{0} is not supported", searchProvider));
+            if (provider == null)
+                throw new ArgumentException($"Search provider '{searchProvider}' is not supported", nameof(searchProvider));
+
+            return provider;
         }
 
         public virtual void Dispose()
         {
             try
             {
-                if(Directory.Exists(_LuceneStorageDir))
-                    Directory.Delete(_LuceneStorageDir, true);
+                if (Directory.Exists(_luceneStorageDir))
+                    Directory.Delete(_luceneStorageDir, true);
             }
-            finally
+            catch
             {
+                // ignored
             }
         }
-
     }
 }

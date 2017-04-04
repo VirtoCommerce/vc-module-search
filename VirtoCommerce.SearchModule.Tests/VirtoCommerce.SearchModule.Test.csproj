@@ -8,7 +8,7 @@
     <ProjectGuid>{02594DA3-A285-4B9F-AD85-E8C9A2922160}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>VirtoCommerce.SearchModule.Tests</RootNamespace>
+    <RootNamespace>VirtoCommerce.SearchModule.Test</RootNamespace>
     <AssemblyName>VirtoCommerce.SearchModule.Test</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
