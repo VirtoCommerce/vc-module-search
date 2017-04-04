@@ -17,8 +17,9 @@ namespace VirtoCommerce.SearchModule.Test
         private const string _scope = "test";
 
         [Theory]
-        [InlineData("Lucene")]
-        [InlineData("Elastic")]
+        //[InlineData("Lucene")]
+        //[InlineData("Elastic")]
+        [InlineData("Azure")]
         public void Can_find_pricelists_prices(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
@@ -79,8 +80,9 @@ namespace VirtoCommerce.SearchModule.Test
         }
 
         [Theory]
-        [InlineData("Lucene")]
-        [InlineData("Elastic")]
+        //[InlineData("Lucene")]
+        //[InlineData("Elastic")]
+        [InlineData("Azure")]
         public void Can_create_search_index(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
@@ -88,8 +90,9 @@ namespace VirtoCommerce.SearchModule.Test
         }
 
         [Theory]
-        [InlineData("Lucene")]
-        [InlineData("Elastic")]
+        //[InlineData("Lucene")]
+        //[InlineData("Elastic")]
+        [InlineData("Azure")]
         public void Can_find_item_using_search(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
@@ -124,8 +127,9 @@ namespace VirtoCommerce.SearchModule.Test
         }
 
         [Theory]
-        [InlineData("Lucene")]
-        [InlineData("Elastic")]
+        //[InlineData("Lucene")]
+        //[InlineData("Elastic")]
+        [InlineData("Azure")]
         public void Can_sort_using_search(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
@@ -161,8 +165,9 @@ namespace VirtoCommerce.SearchModule.Test
         }
 
         [Theory]
-        [InlineData("Lucene")]
-        [InlineData("Elastic")]
+        //[InlineData("Lucene")]
+        //[InlineData("Elastic")]
+        [InlineData("Azure")]
         public void Can_get_item_facets(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
@@ -243,8 +248,9 @@ namespace VirtoCommerce.SearchModule.Test
         }
 
         [Theory]
-        [InlineData("Lucene")]
-        [InlineData("Elastic")]
+        //[InlineData("Lucene")]
+        //[InlineData("Elastic")]
+        [InlineData("Azure")]
         public void Can_get_item_outlines(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
@@ -276,8 +282,9 @@ namespace VirtoCommerce.SearchModule.Test
         }
 
         [Theory]
-        [InlineData("Lucene")]
-        [InlineData("Elastic")]
+        //[InlineData("Lucene")]
+        //[InlineData("Elastic")]
+        [InlineData("Azure")]
         public void Can_get_item_multiple_filters(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);

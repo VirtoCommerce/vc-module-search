@@ -1,351 +1,359 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Net;
-//using System.Threading;
-//using RedDog.Search.Http;
-//using RedDog.Search.Model;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Azure.Search;
+using Microsoft.Azure.Search.Models;
+using VirtoCommerce.SearchModule.Core.Model;
+using VirtoCommerce.SearchModule.Core.Model.Indexing;
+using VirtoCommerce.SearchModule.Core.Model.Search;
+using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 
-//namespace VirtoCommerce.SearchModule.Data.Providers.Azure
-//{
-//    public class AzureSearchProvider : ISearchProvider
-//    {
-//        public AzureSearchProvider()
-//        {
-//        }
+namespace VirtoCommerce.SearchModule.Data.Providers.Azure
+{
+    [CLSCompliant(false)]
+    public class AzureSearchProvider : ISearchProvider
+    {
+        private readonly ISearchConnection _connection;
+        private readonly Dictionary<string, List<IDocument>> _pendingDocuments = new Dictionary<string, List<IDocument>>();
+        private readonly Dictionary<string, IList<Field>> _mappings = new Dictionary<string, IList<Field>>();
 
-//        public AzureSearchProvider(ISearchQueryBuilder queryBuilder, ISearchConnection connection)
-//        {
-//            this._queryBuilder = queryBuilder;
-//            _connection = connection;
-//        }
+        public AzureSearchProvider(ISearchConnection connection, ISearchQueryBuilder[] queryBuilders)
+        {
+            _connection = connection;
+            QueryBuilders = queryBuilders;
+        }
 
-//        private readonly ISearchQueryBuilder _queryBuilder;
+        private SearchServiceClient _client;
+        protected SearchServiceClient Client => _client ?? (_client = CreateSearchServiceClient());
 
-//        private readonly ISearchConnection _connection;
+        public bool AutoCommit { get; set; } = true;
+        public int AutoCommitCount { get; set; } = 100;
 
-//        private readonly Dictionary<string, List<AzureDocument>> _pendingDocuments = new Dictionary<string, List<AzureDocument>>();
-//        private readonly Dictionary<string, Index> _mappings = new Dictionary<string, Index>();
+        #region ISearchProvider members
 
+        public virtual ISearchQueryBuilder[] QueryBuilders { get; }
 
-//        private AzureSearchClient _Client = null;
-//        private AzureSearchClient Client
-//        {
-//            get
-//            {
-//                if (_Client == null)
-//                {
-//                    //var connection = ApiConnection.Create(_connection.DataSource, _connection.AccessKey);
-//                    // experimental
-//                    var connection = ApiConnection.Create("https://azsrchexp.cloudapp.net/", _connection.AccessKey);
-//                    _Client = new AzureSearchClient(connection);
-//                }
+        public virtual void Close(string scope, string documentType)
+        {
+        }
 
-//                return _Client;
-//            }
-//        }
+        public virtual void Commit(string scope)
+        {
+            foreach (var key in _pendingDocuments.Keys)
+            {
+                var documents = _pendingDocuments[key];
+                if (documents != null && documents.Count > 0)
+                {
+                    var keyParts = ParseCacheKey(key);
+                    if (keyParts[0] == scope)
+                    {
+                        var documentType = keyParts[1];
+                        var indexName = GetIndexName(scope, documentType);
 
-//        private bool _autoCommit = true;
+                        var providerFields = GetMapping(indexName, documentType);
+                        var oldFieldsCount = providerFields.Count;
 
-//        /// <summary>
-//        /// Gets or sets a value indicating whether [auto commit].
-//        /// </summary>
-//        /// <value><c>true</c> if [auto commit]; otherwise, <c>false</c>.</value>
-//        public bool AutoCommit
-//        {
-//            get { return _autoCommit; }
-//            set { _autoCommit = value; }
-//        }
+                        var simpleDocuments = documents.Select(document => ConvertToSimpleDocument(document, providerFields, documentType)).ToList();
 
-//        private int _autoCommitCount = 100;
+                        var updateMapping = providerFields.Count != oldFieldsCount;
+                        var indexExits = IndexExists(indexName);
 
-//        /// <summary>
-//        /// Gets or sets the auto commit count.
-//        /// </summary>
-//        /// <value>The auto commit count.</value>
-//        public int AutoCommitCount
-//        {
-//            get { return _autoCommitCount; }
-//            set { _autoCommitCount = value; }
-//        }
+                        if (!indexExits)
+                        {
+                            CreateIndex(indexName, documentType, providerFields);
+                            updateMapping = false;
+                        }
 
-//        public ISearchQueryBuilder QueryBuilder { get; private set; }
+                        if (updateMapping)
+                        {
+                            UpdateMapping(indexName, documentType, providerFields);
+                        }
 
-//        public ISearchResults Search(string scope, ISearchCriteria criteria)
-//        {
-//            // Build query
-//            var builder = (SearchQuery)_queryBuilder.BuildQuery(criteria);
+                        var batch = IndexBatch.Upload(simpleDocuments);
+                        var indexClient = GetSearchIndexClient(indexName);
 
-//            SearchQueryResult resultDocs;
+                        var result = indexClient.Documents.Index(batch);
 
-//            // Add some error handling
-//            //try
-//            {
-//                var searchResponse = Client.Search(scope, builder).Result;
-//                if (!searchResponse.IsSuccess)
-//                {
-//                    throw new AzureSearchException(AzureSearchHelper.FormatSearchException(searchResponse));
-//                }
+                        if (result == null)
+                        {
+                            throw new IndexBuildException("no results");
+                        }
 
-//                resultDocs = searchResponse.Body;
-//            }
-//            /*
-//        catch (Exception ex)
-//        {
-//            throw ex;
-//        }
-//             * */
+                        foreach (var op in result.Results)
+                        {
+                            if (!op.Succeeded)
+                            {
+                                throw new IndexBuildException(op.ErrorMessage);
+                            }
+                        }
 
-//            // Parse documents returned
-//            var documents = new ResultDocumentSet { TotalCount = resultDocs.Count };
-//            var docList = new List<ResultDocument>();
-//            foreach (var indexDoc in resultDocs.Records)
-//            {
-//                var document = new ResultDocument();
-//                foreach (var field in indexDoc.Properties.Keys)
-//                {
-//                    document.Add(new DocumentField(field, indexDoc.Properties[field]));
-//                }
+                        // Remove pending documents
+                        documents.Clear();
+                    }
+                }
+            }
+        }
 
-//                docList.Add(document);
-//            }
+        public virtual void Index<T>(string scope, string documentType, T document)
+        {
+            var doc = document as IDocument;
+            if (doc == null)
+            {
+                ThrowException($"Document type not supported: {typeof(T).Name}", new NotImplementedException());
+            }
+            else
+            {
+                var key = CreateCacheKey(scope, documentType);
 
-//            documents.Documents = docList.ToArray();
+                if (!_pendingDocuments.ContainsKey(key))
+                {
+                    _pendingDocuments.Add(key, new List<IDocument>());
+                }
 
-//            // Create search results object
-//            var results = new SearchResults(criteria, new[] { documents });
+                _pendingDocuments[key].Add(doc);
 
-//            return results;
-//        }
+                // Auto commit changes when limit is reached
+                if (AutoCommit && _pendingDocuments[key].Count >= AutoCommitCount)
+                {
+                    Commit(scope);
+                }
+            }
+        }
 
-//        public virtual void Index(string scope, string documentType, IDocument document)
-//        {
-//            var core = GetCoreName(scope, documentType);
-//            if (!_pendingDocuments.ContainsKey(core))
-//            {
-//                _pendingDocuments.Add(core, new List<AzureDocument>());
-//            }
+        public virtual int Remove(string scope, string documentType, string key, string value)
+        {
+            return 0;
+        }
 
-//            Index mapping = null;
-//            var indexAlreadyCreated = false;
-//            if (!_mappings.ContainsKey(core))
-//            {
-//                Thread.Sleep(3000);
+        public virtual bool RemoveAll(string scope, string documentType)
+        {
+            try
+            {
+                var indexName = GetIndexName(scope, documentType);
 
-//                // Get mapping info
-//                mapping = Client.GetIndex(scope).Result;
-//                if (mapping != null)
-//                {
-//                    indexAlreadyCreated = true;
-//                    _mappings.Add(core, mapping);
-//                }
-//            }
-//            else
-//            {
-//                indexAlreadyCreated = true;
-//                mapping = _mappings[core];
-//            }
+                if (string.IsNullOrEmpty(documentType))
+                {
+                    Client.Indexes.Delete(indexName);
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
 
-//            var submitMapping = false;
+                //RemoveMappingFromCache(indexName, documentType);
+            }
+            catch (Exception ex)
+            {
+                ThrowException("Failed to remove indexes", ex);
+            }
 
-//            var localDocument = new AzureDocument();
+            return true;
+        }
 
-//            for (var index = 0; index < document.FieldCount; index++)
-//            {
-//                var field = document[index];
+        public virtual ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria)
+            where T : class
+        {
+            throw new NotImplementedException();
+        }
 
-//                var key = ConvertToAzureName(field.Name.ToLower());
-
-//                if (localDocument.ContainsKey(key))
-//                {
-//                    var objTemp = localDocument[key];
-//                    string[] objListTemp;
-//                    var temp = objTemp as string[];
-//                    if (temp != null)
-//                    {
-//                        var objList = new List<string>(temp) { ConvertToOffset(field.Value).ToString() };
-//                        objListTemp = objList.ToArray();
-//                    }
-//                    else
-//                    {
-//                        objListTemp = new string[] { objTemp.ToString(), ConvertToOffset(field.Value).ToString() };
-//                    }
-
-//                    localDocument[key] = objListTemp;
-//                }
-//                else
-//                {
-//                    if (mapping == null || !mapping.Fields.Any(x => x.Name.Equals(key)))
-//                    {
-//                        if (mapping == null)
-//                        {
-//                            mapping = new Index(scope);
-//                        }
-
-//                        var indexField = new IndexField(key, AzureTypeMapper.GetAzureSearchType(field));
-
-//                        indexField.IsFilterable();
-
-//                        if (key == ConvertToAzureName("__key"))
-//                        {
-//                            indexField.IsKey();
-//                        }
-
-//                        if (field.ContainsAttribute(IndexStore.Yes))
-//                        {
-//                            indexField.IsRetrievable();
-//                        }
-
-//                        if (field.ContainsAttribute(IndexType.Analyzed))
-//                        {
-//                            indexField.IsSearchable();
-//                        }
+        #endregion
 
 
-//                        if (indexField.Type != FieldType.StringCollection)
-//                        {
-//                            indexField.IsSortable();
-//                        }
+        // Convert to simple dictionary document
+        protected virtual DocumentDictionary ConvertToSimpleDocument(IDocument document, IList<Field> providerFields, string documentType)
+        {
+            var result = new DocumentDictionary();
 
-//                        if (indexField.Type == FieldType.StringCollection || indexField.Type == FieldType.String)
-//                        {
+            for (var index = 0; index < document.FieldCount; index++)
+            {
+                var field = document[index];
 
-//                            if (field.ContainsAttribute(IndexType.Analyzed))
-//                            {
-//                                indexField.IsSearchable();
-//                            }
-//                        }
+                if (field.Name.StartsWith("_"))
+                {
+                    field.Name = "sys" + field.Name;
+                }
 
-//                        mapping.Fields.Add(indexField);
-//                        submitMapping = true;
-//                    }
+                var key = field.Name.ToLower();
 
-//                    if (field.ContainsAttribute(IndexDataType.StringCollection))
-//                        localDocument.Add(key, ConvertToOffset(field.Values.OfType<string>().ToArray()));
-//                    else
-//                        localDocument.Add(key, ConvertToOffset(field.Value));
-//                }
-//            }
+                if (result.ContainsKey(key))
+                {
+                    var newValues = new List<object>();
 
-//            // submit mapping
-//            if (submitMapping)
-//            {
-//                IApiResponse<Index> result = null;
-//                if (indexAlreadyCreated)
-//                {
-//                    result = Client.UpdateIndex(mapping).Result;
-//                }
-//                else
-//                {
-//                    result = Client.CreateIndex(mapping).Result;
-//                }
+                    var currentValue = result[key];
+                    var currentValues = currentValue as object[];
 
-//                if (!result.IsSuccess)
-//                {
-//                    throw new IndexBuildException(AzureSearchHelper.FormatSearchException(result));
-//                }
-//            }
+                    if (currentValues != null)
+                    {
+                        newValues.AddRange(currentValues);
+                    }
+                    else
+                    {
+                        newValues.Add(currentValue);
+                    }
 
-//            _pendingDocuments[core].Add(localDocument);
+                    newValues.AddRange(field.Values);
+                    result[key] = newValues.ToArray();
+                }
+                else
+                {
+                    AddProviderField(documentType, providerFields, field.Name, field);
+                    result.Add(key, field.Values.Length > 1 ? field.Values : field.Value);
+                }
+            }
 
-//            // Auto commit changes when limit is reached
-//            if (AutoCommit && _pendingDocuments[core].Count > AutoCommitCount)
-//            {
-//                Commit(scope);
-//            }
-//        }
+            return result;
+        }
 
-//        public int Remove(string scope, string documentType, string key, string value)
-//        {
-//            throw new NotImplementedException();
-//        }
+        protected virtual void AddProviderField(string documentType, IList<Field> providerFields, string fieldName, IDocumentField field)
+        {
+            var providerField = providerFields.FirstOrDefault(f => f.Name == fieldName);
+            if (providerField == null)
+            {
+                providerField = CreateProviderField(documentType, fieldName, field);
+                providerFields.Add(providerField);
+            }
+        }
 
-//        public void RemoveAll(string scope, string documentType)
-//        {
-//            var result = Client.DeleteIndex(scope).Result;
-//            if (!result.IsSuccess)
-//            {
-//                if (result.StatusCode == HttpStatusCode.NotFound)
-//                {
-//                    // ignore index not found exception as it might simply not exist and thus no deletion is necessary
-//                }
-//                else
-//                {
-//                    throw new IndexBuildException(AzureSearchHelper.FormatSearchException(result));
-//                }
+        protected virtual Field CreateProviderField(string documentType, string fieldName, IDocumentField field)
+        {
+            var originalFieldType = field.Value?.GetType() ?? typeof(object);
+            var providerFieldType = GetProviderFieldType(documentType, fieldName, originalFieldType);
 
-//            }
-//        }
+            var store = field.ContainsAttribute(IndexStore.Yes);
+            var analyzed = field.ContainsAttribute(IndexType.Analyzed);
+            var notAnalyzed = field.ContainsAttribute(IndexType.NotAnalyzed);
 
-//        public void Close(string scope, string documentType)
-//        {
-//        }
+            var providerField = new Field(fieldName, providerFieldType)
+            {
+                IsKey = fieldName == "sys__key",
+                IsRetrievable = store,
+                IsSearchable = analyzed,
+                IsFilterable = notAnalyzed,
+                IsFacetable = notAnalyzed,
+                IsSortable = notAnalyzed,
+            };
 
-//        public void Commit(string scope)
-//        {
-//            var coreList = _pendingDocuments.Keys.ToList();
+            return providerField;
+        }
 
-//            foreach (var core in coreList)
-//            {
-//                var documents = _pendingDocuments[core];
-//                if (documents == null || documents.Count == 0)
-//                    continue;
+        protected virtual DataType GetProviderFieldType(string documentType, string fieldName, Type fieldType)
+        {
+            if (fieldType == typeof(string))
+                return DataType.String;
+            if (fieldType == typeof(int))
+                return DataType.Int32;
+            if (fieldType == typeof(long))
+                return DataType.Int64;
+            if (fieldType == typeof(double) || fieldType == typeof(decimal))
+                return DataType.Double;
+            if (fieldType == typeof(bool))
+                return DataType.Boolean;
+            if (fieldType == typeof(DateTimeOffset) || fieldType == typeof(DateTime))
+                return DataType.DateTimeOffset;
 
-//                var coreArray = core.Split('.');
-//                var indexName = coreArray[0];
-//                var indexType = coreArray[1];
+            throw new ArgumentException($"Field {fieldName} has unsupported type {fieldType}", nameof(fieldType));
+        }
 
-//                var response = Client.IndexBulk(indexName, documents);
-//                var result = response.Result;
+        protected virtual string GetIndexName(string scope, string documentType)
+        {
+            return scope;
+        }
 
-//                if (!result.IsSuccess)
-//                {
-//                    throw new IndexBuildException(AzureSearchHelper.FormatSearchException(result));
-//                }
+        protected virtual bool IndexExists(string indexName)
+        {
+            return Client.Indexes.Exists(indexName);
+        }
 
-//                foreach (var op in result.Body)
-//                {
-//                    if (!op.Status)
-//                    {
-//                        throw new IndexBuildException(op.ErrorMessage);
-//                    }
-//                }
+        #region Create and configure index
 
-//                // Remove documents
-//                _pendingDocuments[core].Clear();
-//            }
-//        }
+        protected virtual void CreateIndex(string indexName, string documentType, IList<Field> providerFields)
+        {
+            var index = new Index
+            {
+                Name = indexName,
+                Fields = providerFields,
+            };
 
-//        private string GetCoreName(string scope, string documentType)
-//        {
-//            return String.Format("{0}.{1}", scope.ToLower(), documentType);
-//        }
+            Client.Indexes.Create(index);
+        }
 
-//        private static string _SysFieldPrefix = "sys";
-//        private static string ConvertToAzureName(string original)
-//        {
-//            // Convert "-" to "_" since azure search doesn't allow those names
-//            if (original.Contains("-"))
-//            {
-//                original = original.Replace("-", "_");
-//            }
+        #endregion
 
-//            if (original.StartsWith("__"))
-//            {
-//                original = _SysFieldPrefix + original;
-//            }
 
-//            return original;
-//        }
+        protected virtual IList<Field> GetMapping(string indexName, string documentType)
+        {
+            var providerFields = GetMappingFromCache(indexName, documentType);
+            if (providerFields == null)
+            {
+                if (IndexExists(indexName))
+                {
+                    providerFields = Client.Indexes.Get(indexName).Fields;
+                }
+            }
 
-//        private object ConvertToOffset(object value)
-//        {
-//            if (value is DateTime)
-//            {
-//                return AzureSearchHelper.ConvertToOffset((DateTime)value);
-//            }
+            providerFields = providerFields ?? new List<Field>();
+            AddMappingToCache(indexName, documentType, providerFields);
 
-//            return value;
-//        }
-//    }
-//}
+            return providerFields;
+        }
+
+        protected virtual void UpdateMapping(string indexName, string documentType, IList<Field> providerFields)
+        {
+            var response = Client.Indexes.CreateOrUpdate(indexName, new Index { Fields = providerFields });
+
+            //if (!response.Validate())
+            //{
+            //    ThrowException("Failed to submit mapping. " + response.DebugInformation, response.OriginalException);
+            //}
+
+            AddMappingToCache(indexName, documentType, providerFields);
+
+            //Client.Refresh(indexName);
+        }
+
+        protected virtual IList<Field> GetMappingFromCache(string indexName, string documentType)
+        {
+            var mappingKey = CreateCacheKey(indexName, documentType);
+            return _mappings.ContainsKey(mappingKey) ? _mappings[mappingKey] : null;
+        }
+
+        protected virtual void AddMappingToCache(string indexName, string documentType, IList<Field> providerFields)
+        {
+            var mappingKey = CreateCacheKey(indexName, documentType);
+            _mappings[mappingKey] = providerFields;
+        }
+
+        protected virtual void RemoveMappingFromCache(string indexName, string documentType)
+        {
+            var mappingKey = CreateCacheKey(indexName, documentType);
+            _mappings.Remove(mappingKey);
+        }
+
+        protected virtual string CreateCacheKey(params string[] parts)
+        {
+            return string.Join("/", parts);
+        }
+
+        protected virtual string[] ParseCacheKey(string key)
+        {
+            return key.Split('/');
+        }
+
+        protected virtual void ThrowException(string message, Exception innerException)
+        {
+            throw new AzureSearchException($"{message}. Service name: {_connection.DataSource}", innerException);
+        }
+
+
+        private SearchServiceClient CreateSearchServiceClient()
+        {
+            var result = new SearchServiceClient(_connection.DataSource, new SearchCredentials(_connection.AccessKey));
+            return result;
+        }
+
+        private ISearchIndexClient GetSearchIndexClient(string indexName)
+        {
+            return Client.Indexes.GetClient(indexName);
+        }
+    }
+}
