@@ -13,7 +13,6 @@ using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
-using u = Lucene.Net.Util;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
@@ -121,15 +120,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
         public virtual void Index<T>(string scope, string documentType, T document)
         {
-            // process mapping
-            if (document is IDocument) // older case scenario
+            var doc = document as IDocument;
+            if (doc == null)
             {
-                Index(scope, documentType, document as IDocument);
+                throw new ArgumentException($"Document type '{typeof(T).Name}' is not supported", nameof(document));
             }
-            else
-            {
-                new NotImplementedException(string.Format("Document of type {0} not supported", typeof(T).Name));
-            }
+
+            Index(scope, documentType, doc);
         }
 
         /// <summary>
@@ -241,6 +238,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
                 // filter out empty value
                 var filter = q.Filter.ToString().Equals("BooleanFilter()") ? null : q.Filter;
+                var query = q.Query.ToString().Equals(string.Empty) ? new MatchAllDocsQuery() : q.Query;
 
                 Debug.WriteLine("Search Lucene Query:{0}", q.ToString());
 
@@ -259,13 +257,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                     if (criteria.Sort != null)
                     {
                         var fields = criteria.Sort.GetSort();
-
-                        docs = searcher.Search(q.Query, filter, numDocs,
-                            new Sort(fields.Select(field => new SortField(field.FieldName, field.DataType, field.IsDescending)).ToArray()));
+                        var sort = new Sort(fields.Select(field => new SortField(field.FieldName, field.DataType, field.IsDescending)).ToArray());
+                        docs = searcher.Search(query, filter, numDocs, sort);
                     }
                     else
                     {
-                        docs = searcher.Search(q.Query, filter, numDocs);
+                        docs = searcher.Search(query, filter, numDocs);
                     }
                 }
                 catch (Exception ex)
@@ -273,7 +270,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                     throw new LuceneSearchException("Search exception", ex);
                 }
 
-                result = new LuceneSearchResults<T>(searcher, searcher.IndexReader, docs, criteria, q.Query) as ISearchResults<T>;
+                result = new LuceneSearchResults<T>(searcher, searcher.IndexReader, docs, criteria, query) as ISearchResults<T>;
 
                 // Cleanup here
                 searcher.IndexReader.Dispose();
@@ -290,14 +287,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         protected virtual ISearchQueryBuilder GetQueryBuilder(ISearchCriteria criteria)
         {
             if (QueryBuilders == null)
-                throw new NullReferenceException("No QueryBuilders defined");
+                throw new InvalidOperationException("No query builders defined");
 
-            var queryBuilder = QueryBuilders.Where(x => x.DocumentType.Equals(criteria.DocumentType)).SingleOrDefault();
-
-            if (queryBuilder == null) // get default builder
-            {
-                queryBuilder = QueryBuilders.Where(x => x.DocumentType.Equals(string.Empty)).First();
-            }
+            var queryBuilder = QueryBuilders.SingleOrDefault(b => b.DocumentType.Equals(criteria.DocumentType)) ??
+                               QueryBuilders.First(b => b.DocumentType.Equals(string.Empty));
 
             return queryBuilder;
         }
@@ -310,7 +303,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <param name="optimize">
         ///     if set to <c>true</c> [optimize].
         /// </param>
-        private void Close(string scope, string documentType, bool optimize)
+        private static void Close(string scope, string documentType, bool optimize)
         {
             lock (_providerlock)
             {
@@ -346,7 +339,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <param name="scope">The scope.</param>
         /// <param name="documentType">Type of the document.</param>
         /// <returns></returns>
-        private string GetFolderName(string scope, string documentType)
+        private static string GetFolderName(string scope, string documentType)
         {
             return string.Join("-", scope, documentType);
         }
@@ -379,7 +372,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
                     var indexWriter = new IndexWriter(
                         localDirectory,
-                        new StandardAnalyzer(u.Version.LUCENE_30),
+                        new StandardAnalyzer(global::Lucene.Net.Util.Version.LUCENE_30),
                         isNew,
                         IndexWriter.MaxFieldLength.LIMITED);
 
