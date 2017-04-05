@@ -52,14 +52,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                     if (keyParts[0] == scope)
                     {
                         var documentType = keyParts[1];
-                        var indexName = GetIndexName(scope, documentType);
 
-                        var providerFields = GetMapping(indexName, documentType);
+                        var providerFields = GetMapping(scope, documentType);
                         var oldFieldsCount = providerFields.Count;
 
                         var simpleDocuments = documents.Select(document => ConvertToSimpleDocument(document, providerFields, documentType)).ToList();
-
                         var updateMapping = providerFields.Count != oldFieldsCount;
+
+                        var indexName = GetIndexName(scope, documentType);
                         var indexExits = IndexExists(indexName);
 
                         if (!indexExits)
@@ -126,25 +126,28 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
         public virtual int Remove(string scope, string documentType, string key, string value)
         {
-            return 0;
+            throw new NotImplementedException();
         }
 
         public virtual bool RemoveAll(string scope, string documentType)
         {
             try
             {
-                var indexName = GetIndexName(scope, documentType);
-
-                if (string.IsNullOrEmpty(documentType))
+                if (!string.IsNullOrEmpty(documentType))
                 {
-                    Client.Indexes.Delete(indexName);
+                    var indexName = GetIndexName(scope, documentType);
+
+                    if (IndexExists(indexName))
+                    {
+                        Client.Indexes.Delete(indexName);
+                    }
                 }
                 else
                 {
                     throw new NotImplementedException();
                 }
 
-                RemoveMappingFromCache(indexName, documentType);
+                RemoveMappingFromCache(scope, documentType);
             }
             catch (Exception ex)
             {
@@ -271,7 +274,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
         protected virtual string GetIndexName(string scope, string documentType)
         {
-            return scope;
+            // Use different index for each document type
+            return string.Join("-", scope, documentType);
         }
 
         protected virtual bool IndexExists(string indexName)
@@ -295,11 +299,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
         #endregion
 
 
-        protected virtual IList<Field> GetMapping(string indexName, string documentType)
+        protected virtual IList<Field> GetMapping(string scope, string documentType)
         {
-            var providerFields = GetMappingFromCache(indexName, documentType);
+            var providerFields = GetMappingFromCache(scope, documentType);
             if (providerFields == null)
             {
+                var indexName = GetIndexName(scope, documentType);
                 if (IndexExists(indexName))
                 {
                     providerFields = Client.Indexes.Get(indexName).Fields;
@@ -307,7 +312,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             }
 
             providerFields = providerFields ?? new List<Field>();
-            AddMappingToCache(indexName, documentType, providerFields);
+            AddMappingToCache(scope, documentType, providerFields);
 
             return providerFields;
         }
@@ -327,21 +332,21 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             AddMappingToCache(indexName, documentType, updatedIndex.Fields);
         }
 
-        protected virtual IList<Field> GetMappingFromCache(string indexName, string documentType)
+        protected virtual IList<Field> GetMappingFromCache(string scope, string documentType)
         {
-            var mappingKey = CreateCacheKey(indexName, documentType);
+            var mappingKey = CreateCacheKey(scope, documentType);
             return _mappings.ContainsKey(mappingKey) ? _mappings[mappingKey] : null;
         }
 
-        protected virtual void AddMappingToCache(string indexName, string documentType, IList<Field> providerFields)
+        protected virtual void AddMappingToCache(string scope, string documentType, IList<Field> providerFields)
         {
-            var mappingKey = CreateCacheKey(indexName, documentType);
+            var mappingKey = CreateCacheKey(scope, documentType);
             _mappings[mappingKey] = providerFields;
         }
 
-        protected virtual void RemoveMappingFromCache(string indexName, string documentType)
+        protected virtual void RemoveMappingFromCache(string scope, string documentType)
         {
-            var mappingKey = CreateCacheKey(indexName, documentType);
+            var mappingKey = CreateCacheKey(scope, documentType);
             _mappings.Remove(mappingKey);
         }
 

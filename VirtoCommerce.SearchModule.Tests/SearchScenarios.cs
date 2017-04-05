@@ -15,6 +15,7 @@ namespace VirtoCommerce.SearchModule.Test
     public class SearchScenarios : SearchTestsBase
     {
         private const string _scope = "test";
+        private const string _documentType = "item";
 
         [Theory]
         //[InlineData("Lucene")]
@@ -23,7 +24,7 @@ namespace VirtoCommerce.SearchModule.Test
         public void Can_create_search_index(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope);
+            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
         }
 
         [Theory]
@@ -33,7 +34,44 @@ namespace VirtoCommerce.SearchModule.Test
         public void Can_update_search_index(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope, true);
+            SearchHelper.CreateSampleIndex(provider, _scope, _documentType, true);
+        }
+
+        [Theory]
+        //[InlineData("Lucene")]
+        //[InlineData("Elastic")]
+        [InlineData("Azure")]
+        public void Can_find_item_using_search(string providerType)
+        {
+            var provider = GetSearchProvider(providerType, _scope);
+            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
+
+            var criteria = new KeywordSearchCriteria(_documentType)
+            {
+                SearchPhrase = "product",
+                IsFuzzySearch = true,
+                RecordsToRetrieve = 10,
+                StartingRecord = 0,
+                Pricelists = new string[] { },
+                Sort = new SearchSort("somefield") // specifically add non-existent field
+            };
+
+            var results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.True(results.DocCount == 1, $"Returns {results.DocCount} instead of 1");
+
+            criteria = new KeywordSearchCriteria(_documentType)
+            {
+                SearchPhrase = "sample product ",
+                IsFuzzySearch = true,
+                RecordsToRetrieve = 10,
+                StartingRecord = 0,
+                Pricelists = new string[] { }
+            };
+
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.True(results.DocCount == 1, $"\"Sample Product\" search returns {results.DocCount} instead of 1");
         }
 
         [Theory]
@@ -43,9 +81,9 @@ namespace VirtoCommerce.SearchModule.Test
         public void Can_find_pricelists_prices(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope);
+            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
 
-            var criteria = new KeywordSearchCriteria("catalogitem")
+            var criteria = new KeywordSearchCriteria(_documentType)
             {
                 IsFuzzySearch = true,
                 RecordsToRetrieve = 10,
@@ -76,7 +114,7 @@ namespace VirtoCommerce.SearchModule.Test
             var priceCount2 = GetFacetCount(results, "Price", "100_to_700");
             Assert.True(priceCount2 == 3, $"Returns {priceCount2} facets of 100_to_700 prices instead of 3");
 
-            criteria = new KeywordSearchCriteria("catalogitem")
+            criteria = new KeywordSearchCriteria(_documentType)
             {
                 IsFuzzySearch = true,
                 RecordsToRetrieve = 10,
@@ -103,49 +141,12 @@ namespace VirtoCommerce.SearchModule.Test
         //[InlineData("Lucene")]
         //[InlineData("Elastic")]
         [InlineData("Azure")]
-        public void Can_find_item_using_search(string providerType)
-        {
-            var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope);
-
-            var criteria = new KeywordSearchCriteria("catalogitem")
-            {
-                SearchPhrase = "product",
-                IsFuzzySearch = true,
-                RecordsToRetrieve = 10,
-                StartingRecord = 0,
-                Pricelists = new string[] { },
-                Sort = new SearchSort("somefield") // specifically add non-existent field
-            };
-
-            var results = provider.Search<DocumentDictionary>(_scope, criteria);
-
-            Assert.True(results.DocCount == 1, $"Returns {results.DocCount} instead of 1");
-
-            criteria = new KeywordSearchCriteria("catalogitem")
-            {
-                SearchPhrase = "sample product ",
-                IsFuzzySearch = true,
-                RecordsToRetrieve = 10,
-                StartingRecord = 0,
-                Pricelists = new string[] { }
-            };
-
-            results = provider.Search<DocumentDictionary>(_scope, criteria);
-
-            Assert.True(results.DocCount == 1, $"\"Sample Product\" search returns {results.DocCount} instead of 1");
-        }
-
-        [Theory]
-        //[InlineData("Lucene")]
-        //[InlineData("Elastic")]
-        [InlineData("Azure")]
         public void Can_sort_using_search(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope);
+            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
 
-            var criteria = new KeywordSearchCriteria("catalogitem")
+            var criteria = new KeywordSearchCriteria(_documentType)
             {
                 RecordsToRetrieve = 10,
                 StartingRecord = 0,
@@ -159,7 +160,7 @@ namespace VirtoCommerce.SearchModule.Test
             var productName = results.Documents.ElementAt(0)["name"] as string; // black sox
             Assert.True(productName == "black sox");
 
-            criteria = new KeywordSearchCriteria("catalogitem")
+            criteria = new KeywordSearchCriteria(_documentType)
             {
                 RecordsToRetrieve = 10,
                 StartingRecord = 0,
@@ -181,9 +182,9 @@ namespace VirtoCommerce.SearchModule.Test
         public void Can_get_item_facets(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope);
+            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
 
-            var criteria = new KeywordSearchCriteria("catalogitem")
+            var criteria = new KeywordSearchCriteria(_documentType)
             {
                 SearchPhrase = "",
                 IsFuzzySearch = true,
@@ -263,9 +264,9 @@ namespace VirtoCommerce.SearchModule.Test
         public void Can_get_item_outlines(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope);
+            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
 
-            var criteria = new KeywordSearchCriteria("catalogitem")
+            var criteria = new KeywordSearchCriteria(_documentType)
             {
                 SearchPhrase = "",
                 IsFuzzySearch = true,
@@ -296,9 +297,9 @@ namespace VirtoCommerce.SearchModule.Test
         public void Can_get_item_multiple_filters(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope);
+            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
 
-            var criteria = new KeywordSearchCriteria("catalogitem")
+            var criteria = new KeywordSearchCriteria(_documentType)
             {
                 SearchPhrase = "",
                 IsFuzzySearch = true,
