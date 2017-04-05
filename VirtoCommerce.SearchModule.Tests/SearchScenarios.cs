@@ -58,7 +58,7 @@ namespace VirtoCommerce.SearchModule.Test
 
             var results = provider.Search<DocumentDictionary>(_scope, criteria);
 
-            Assert.True(results.DocCount == 1, $"Returns {results.DocCount} instead of 1");
+            Assert.Equal(1, results.DocCount);
 
             criteria = new KeywordSearchCriteria(_documentType)
             {
@@ -71,7 +71,45 @@ namespace VirtoCommerce.SearchModule.Test
 
             results = provider.Search<DocumentDictionary>(_scope, criteria);
 
-            Assert.True(results.DocCount == 1, $"\"Sample Product\" search returns {results.DocCount} instead of 1");
+            Assert.Equal(1, results.DocCount);
+        }
+
+        [Theory]
+        //[InlineData("Lucene")]
+        //[InlineData("Elastic")]
+        [InlineData("Azure")]
+        public void Can_sort_using_search(string providerType)
+        {
+            var provider = GetSearchProvider(providerType, _scope);
+            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
+
+            var criteria = new KeywordSearchCriteria(_documentType)
+            {
+                RecordsToRetrieve = 10,
+                StartingRecord = 0,
+                Pricelists = new string[] { },
+                Sort = new SearchSort("name")
+            };
+
+            var results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(6, results.DocCount);
+            var productName = results.Documents.ElementAt(0)["name"] as string; // black sox
+            Assert.True(productName == "black sox");
+
+            criteria = new KeywordSearchCriteria(_documentType)
+            {
+                RecordsToRetrieve = 10,
+                StartingRecord = 0,
+                Pricelists = new string[] { },
+                Sort = new SearchSort("name", true)
+            };
+
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(6, results.DocCount);
+            productName = results.Documents.ElementAt(0)["name"] as string; // sample product
+            Assert.True(productName == "sample product");
         }
 
         [Theory]
@@ -135,44 +173,6 @@ namespace VirtoCommerce.SearchModule.Test
             var priceSaleCount2 = GetFacetCount(results, "Price", "100_to_700");
             Assert.True(priceSaleCount2 == 2, $"Returns {priceSaleCount2} facets of 100_to_700 prices instead of 3");
 
-        }
-
-        [Theory]
-        //[InlineData("Lucene")]
-        //[InlineData("Elastic")]
-        [InlineData("Azure")]
-        public void Can_sort_using_search(string providerType)
-        {
-            var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
-
-            var criteria = new KeywordSearchCriteria(_documentType)
-            {
-                RecordsToRetrieve = 10,
-                StartingRecord = 0,
-                Pricelists = new string[] { },
-                Sort = new SearchSort("name")
-            };
-
-            var results = provider.Search<DocumentDictionary>(_scope, criteria);
-
-            Assert.Equal(6, results.DocCount);
-            var productName = results.Documents.ElementAt(0)["name"] as string; // black sox
-            Assert.True(productName == "black sox");
-
-            criteria = new KeywordSearchCriteria(_documentType)
-            {
-                RecordsToRetrieve = 10,
-                StartingRecord = 0,
-                Pricelists = new string[] { },
-                Sort = new SearchSort("name", true)
-            };
-
-            results = provider.Search<DocumentDictionary>(_scope, criteria);
-
-            Assert.Equal(6, results.DocCount);
-            productName = results.Documents.ElementAt(0)["name"] as string; // sample product
-            Assert.True(productName == "sample product");
         }
 
         [Theory]

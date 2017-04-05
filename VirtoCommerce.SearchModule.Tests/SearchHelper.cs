@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 
@@ -32,7 +33,7 @@ namespace VirtoCommerce.SearchModule.Test
             {
                 provider.Commit(scope);
                 provider.Close(scope, documentType);
-                //Thread.Sleep(2000);
+                Thread.Sleep(2000);
             }
 
             provider.Index(scope, documentType, CreateDocument("jdashf", "blue shirt", "Blue", new[] { new Price("price_usd_default", 23.12m) }, 8, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }, addExtraFields));
@@ -41,7 +42,7 @@ namespace VirtoCommerce.SearchModule.Test
             provider.Close(scope, documentType);
 
             // sleep for index to be commited
-            //Thread.Sleep(2000);
+            Thread.Sleep(2000);
         }
 
         public static ResultDocument CreateDocument(string key, string name, string color, Price[] prices, int size, string[] outlines, bool addExtraFields = false)

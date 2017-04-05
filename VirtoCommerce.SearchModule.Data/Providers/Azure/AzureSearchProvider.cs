@@ -14,8 +14,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
     [CLSCompliant(false)]
     public class AzureSearchProvider : ISearchProvider
     {
-        private const string _fieldNamePrefix = "f_";
-        private const string _keyFieldName = _fieldNamePrefix + "__key";
+        private const string _keyFieldName = AzureFieldNameConverter.FieldNamePrefix + "__key";
 
         private readonly ISearchConnection _connection;
         private readonly Dictionary<string, List<IDocument>> _pendingDocuments = new Dictionary<string, List<IDocument>>();
@@ -160,11 +159,31 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
         public virtual ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria)
             where T : class
         {
-            throw new NotImplementedException();
+            var queryBuilder = GetQueryBuilder(criteria);
+            var query = queryBuilder.BuildQuery<T>(scope, criteria) as AzureSearchQuery;
+
+            var indexName = GetIndexName(scope, criteria.DocumentType);
+            var indexClient = GetSearchIndexClient(indexName);
+
+            var searchResult = indexClient.Documents.Search<DocumentDictionary>(query?.SearchText, query?.SearchParameters);
+
+            var result = new AzureSearchResults(criteria, searchResult) as ISearchResults<T>;
+            return result;
         }
 
         #endregion
 
+
+        protected virtual ISearchQueryBuilder GetQueryBuilder(ISearchCriteria criteria)
+        {
+            if (QueryBuilders == null)
+                throw new InvalidOperationException("No query builders defined");
+
+            var queryBuilder = QueryBuilders.SingleOrDefault(b => b.DocumentType.Equals(criteria.DocumentType)) ??
+                               QueryBuilders.First(b => b.DocumentType.Equals(string.Empty));
+
+            return queryBuilder;
+        }
 
         protected virtual DocumentDictionary ConvertToSimpleDocument(IDocument document, IList<Field> providerFields, string documentType)
         {
@@ -173,7 +192,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             for (var index = 0; index < document.FieldCount; index++)
             {
                 var field = document[index];
-                field.Name = ConvertToAzureFieldName(field.Name);
+                field.Name = AzureFieldNameConverter.ToAzureFieldName(field.Name);
 
                 var key = field.Name.ToLower();
 
@@ -206,11 +225,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             }
 
             return result;
-        }
-
-        protected virtual string ConvertToAzureFieldName(string fieldName)
-        {
-            return _fieldNamePrefix + fieldName;
         }
 
         protected virtual Field AddProviderField(string documentType, IList<Field> providerFields, string fieldName, IDocumentField field)
