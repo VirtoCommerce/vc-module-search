@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Azure.Search;
 using Microsoft.Azure.Search.Models;
+using Microsoft.Rest.Azure;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
@@ -13,6 +14,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
     [CLSCompliant(false)]
     public class AzureSearchProvider : ISearchProvider
     {
+        private const string _fieldNamePrefix = "f_";
+        private const string _keyFieldName = _fieldNamePrefix + "__key";
+
         private readonly ISearchConnection _connection;
         private readonly Dictionary<string, List<IDocument>> _pendingDocuments = new Dictionary<string, List<IDocument>>();
         private readonly Dictionary<string, IList<Field>> _mappings = new Dictionary<string, IList<Field>>();
@@ -61,10 +65,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                         if (!indexExits)
                         {
                             CreateIndex(indexName, documentType, providerFields);
-                            updateMapping = false;
                         }
-
-                        if (updateMapping)
+                        else if (updateMapping)
                         {
                             UpdateMapping(indexName, documentType, providerFields);
                         }
@@ -72,19 +74,21 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                         var batch = IndexBatch.Upload(simpleDocuments);
                         var indexClient = GetSearchIndexClient(indexName);
 
-                        var result = indexClient.Documents.Index(batch);
-
-                        if (result == null)
+                        try
                         {
-                            throw new IndexBuildException("no results");
-                        }
+                            var result = indexClient.Documents.Index(batch);
 
-                        foreach (var op in result.Results)
-                        {
-                            if (!op.Succeeded)
+                            foreach (var r in result.Results)
                             {
-                                throw new IndexBuildException(op.ErrorMessage);
+                                if (!r.Succeeded)
+                                {
+                                    throw new IndexBuildException(r.ErrorMessage);
+                                }
                             }
+                        }
+                        catch (CloudException ex)
+                        {
+                            throw new IndexBuildException(ex.Message, ex);
                         }
 
                         // Remove pending documents
@@ -140,7 +144,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                     throw new NotImplementedException();
                 }
 
-                //RemoveMappingFromCache(indexName, documentType);
+                RemoveMappingFromCache(indexName, documentType);
             }
             catch (Exception ex)
             {
@@ -159,7 +163,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
         #endregion
 
 
-        // Convert to simple dictionary document
         protected virtual DocumentDictionary ConvertToSimpleDocument(IDocument document, IList<Field> providerFields, string documentType)
         {
             var result = new DocumentDictionary();
@@ -167,11 +170,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             for (var index = 0; index < document.FieldCount; index++)
             {
                 var field = document[index];
-
-                if (field.Name.StartsWith("_"))
-                {
-                    field.Name = "sys" + field.Name;
-                }
+                field.Name = ConvertToAzureFieldName(field.Name);
 
                 var key = field.Name.ToLower();
 
@@ -196,41 +195,57 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                 }
                 else
                 {
-                    AddProviderField(documentType, providerFields, field.Name, field);
-                    result.Add(key, field.Values.Length > 1 ? field.Values : field.Value);
+                    var providerField = AddProviderField(documentType, providerFields, field.Name, field);
+                    var isCollection = providerField.Type.ToString().StartsWith("Collection(");
+
+                    result.Add(key, isCollection ? field.Values : field.Value);
                 }
             }
 
             return result;
         }
 
-        protected virtual void AddProviderField(string documentType, IList<Field> providerFields, string fieldName, IDocumentField field)
+        protected virtual string ConvertToAzureFieldName(string fieldName)
+        {
+            return _fieldNamePrefix + fieldName;
+        }
+
+        protected virtual Field AddProviderField(string documentType, IList<Field> providerFields, string fieldName, IDocumentField field)
         {
             var providerField = providerFields.FirstOrDefault(f => f.Name == fieldName);
+
             if (providerField == null)
             {
                 providerField = CreateProviderField(documentType, fieldName, field);
                 providerFields.Add(providerField);
             }
+
+            return providerField;
         }
 
         protected virtual Field CreateProviderField(string documentType, string fieldName, IDocumentField field)
         {
+            var isStored = field.ContainsAttribute(IndexStore.Yes);
+            var isAnalyzed = field.ContainsAttribute(IndexType.Analyzed);
+            var isNotAnalyzed = field.ContainsAttribute(IndexType.NotAnalyzed);
+            var isCollection = field.ContainsAttribute(IndexDataType.StringCollection);
+
             var originalFieldType = field.Value?.GetType() ?? typeof(object);
             var providerFieldType = GetProviderFieldType(documentType, fieldName, originalFieldType);
 
-            var store = field.ContainsAttribute(IndexStore.Yes);
-            var analyzed = field.ContainsAttribute(IndexType.Analyzed);
-            var notAnalyzed = field.ContainsAttribute(IndexType.NotAnalyzed);
+            if (isCollection)
+            {
+                providerFieldType = DataType.Collection(providerFieldType);
+            }
 
             var providerField = new Field(fieldName, providerFieldType)
             {
-                IsKey = fieldName == "sys__key",
-                IsRetrievable = store,
-                IsSearchable = analyzed,
-                IsFilterable = notAnalyzed,
-                IsFacetable = notAnalyzed,
-                IsSortable = notAnalyzed,
+                IsKey = fieldName == _keyFieldName,
+                IsRetrievable = isStored,
+                IsSearchable = isAnalyzed,
+                IsFilterable = isNotAnalyzed,
+                IsFacetable = isNotAnalyzed,
+                IsSortable = isNotAnalyzed && !isCollection,
             };
 
             return providerField;
@@ -299,16 +314,17 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
         protected virtual void UpdateMapping(string indexName, string documentType, IList<Field> providerFields)
         {
-            var response = Client.Indexes.CreateOrUpdate(indexName, new Index { Fields = providerFields });
+            var index = new Index
+            {
+                Name = indexName,
+                Fields = providerFields,
+            };
 
-            //if (!response.Validate())
-            //{
-            //    ThrowException("Failed to submit mapping. " + response.DebugInformation, response.OriginalException);
-            //}
+            var updatedIndex = Client.Indexes.CreateOrUpdate(indexName, index);
 
-            AddMappingToCache(indexName, documentType, providerFields);
+            // TODO: Need to wait some time until changes are applied
 
-            //Client.Refresh(indexName);
+            AddMappingToCache(indexName, documentType, updatedIndex.Fields);
         }
 
         protected virtual IList<Field> GetMappingFromCache(string indexName, string documentType)

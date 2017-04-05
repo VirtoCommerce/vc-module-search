@@ -20,6 +20,26 @@ namespace VirtoCommerce.SearchModule.Test
         //[InlineData("Lucene")]
         //[InlineData("Elastic")]
         [InlineData("Azure")]
+        public void Can_create_search_index(string providerType)
+        {
+            var provider = GetSearchProvider(providerType, _scope);
+            SearchHelper.CreateSampleIndex(provider, _scope);
+        }
+
+        [Theory]
+        //[InlineData("Lucene")]
+        //[InlineData("Elastic")]
+        [InlineData("Azure")]
+        public void Can_update_search_index(string providerType)
+        {
+            var provider = GetSearchProvider(providerType, _scope);
+            SearchHelper.CreateSampleIndex(provider, _scope, true);
+        }
+
+        [Theory]
+        //[InlineData("Lucene")]
+        //[InlineData("Elastic")]
+        [InlineData("Azure")]
         public void Can_find_pricelists_prices(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
@@ -77,16 +97,6 @@ namespace VirtoCommerce.SearchModule.Test
             var priceSaleCount2 = GetFacetCount(results, "Price", "100_to_700");
             Assert.True(priceSaleCount2 == 2, $"Returns {priceSaleCount2} facets of 100_to_700 prices instead of 3");
 
-        }
-
-        [Theory]
-        //[InlineData("Lucene")]
-        //[InlineData("Elastic")]
-        [InlineData("Azure")]
-        public void Can_create_search_index(string providerType)
-        {
-            var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope);
         }
 
         [Theory]
@@ -171,7 +181,6 @@ namespace VirtoCommerce.SearchModule.Test
         public void Can_get_item_facets(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-
             SearchHelper.CreateSampleIndex(provider, _scope);
 
             var criteria = new KeywordSearchCriteria("catalogitem")
@@ -254,7 +263,6 @@ namespace VirtoCommerce.SearchModule.Test
         public void Can_get_item_outlines(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-
             SearchHelper.CreateSampleIndex(provider, _scope);
 
             var criteria = new KeywordSearchCriteria("catalogitem")
