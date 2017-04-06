@@ -185,7 +185,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                 return new double?();
 
             double convertedValue;
-            if (double.TryParse(input, out convertedValue))
+            if (double.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out convertedValue))
             {
                 return convertedValue;
             }
