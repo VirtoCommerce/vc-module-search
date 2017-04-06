@@ -194,13 +194,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                 var field = document[index];
                 field.Name = AzureFieldNameConverter.ToAzureFieldName(field.Name);
 
-                var key = field.Name.ToLower();
-
-                if (result.ContainsKey(key))
+                if (result.ContainsKey(field.Name))
                 {
                     var newValues = new List<object>();
 
-                    var currentValue = result[key];
+                    var currentValue = result[field.Name];
                     var currentValues = currentValue as object[];
 
                     if (currentValues != null)
@@ -213,14 +211,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                     }
 
                     newValues.AddRange(field.Values);
-                    result[key] = newValues.ToArray();
+                    result[field.Name] = newValues.ToArray();
                 }
                 else
                 {
                     var providerField = AddProviderField(documentType, providerFields, field.Name, field);
                     var isCollection = providerField.Type.ToString().StartsWith("Collection(");
 
-                    result.Add(key, isCollection ? field.Values : field.Value);
+                    result.Add(field.Name, isCollection ? field.Values : field.Value);
                 }
             }
 
@@ -242,9 +240,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
         protected virtual Field CreateProviderField(string documentType, string fieldName, IDocumentField field)
         {
-            var isStored = field.ContainsAttribute(IndexStore.Yes);
-            var isAnalyzed = field.ContainsAttribute(IndexType.Analyzed);
-            var isNotAnalyzed = field.ContainsAttribute(IndexType.NotAnalyzed);
+            var isAnalyzed = field.ContainsAttribute(IndexType.Analyzed) || !field.ContainsAttribute(IndexType.NotAnalyzed);
+            var isStored = field.ContainsAttribute(IndexStore.Yes) || !field.ContainsAttribute(IndexStore.No);
             var isCollection = field.ContainsAttribute(IndexDataType.StringCollection);
 
             var originalFieldType = field.Value?.GetType() ?? typeof(object);
@@ -260,9 +257,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                 IsKey = fieldName == _keyFieldName,
                 IsRetrievable = isStored,
                 IsSearchable = isAnalyzed,
-                IsFilterable = isNotAnalyzed,
-                IsFacetable = isNotAnalyzed,
-                IsSortable = isNotAnalyzed && !isCollection,
+                IsFilterable = !isAnalyzed,
+                IsFacetable = !isAnalyzed,
+                IsSortable = !isAnalyzed && !isCollection,
             };
 
             return providerField;

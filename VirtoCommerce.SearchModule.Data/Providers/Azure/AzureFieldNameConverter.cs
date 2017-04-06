@@ -6,7 +6,7 @@
 
         public static string ToAzureFieldName(string fieldName)
         {
-            return FieldNamePrefix + fieldName;
+            return FieldNamePrefix + fieldName.ToLowerInvariant();
         }
 
         public static string FromAzureFieldName(string azureFieldName)
