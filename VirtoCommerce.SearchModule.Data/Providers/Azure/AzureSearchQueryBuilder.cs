@@ -42,6 +42,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                 Facets = GetFacets(criteria),
                 Skip = criteria.StartingRecord,
                 Top = criteria.RecordsToRetrieve,
+                SearchMode = SearchMode.All,
             };
         }
 
@@ -63,9 +64,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                 }
                 else if (rangeFilter != null)
                 {
+                    expression = GetRangeFilterExpression(rangeFilter, criteria);
                 }
                 else if (priceRangeFilter != null && priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
                 {
+                    expression = GetPriceRangeFilterExpression(priceRangeFilter, criteria);
                 }
 
                 if (!string.IsNullOrEmpty(expression))
@@ -86,13 +89,91 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             {
                 var value = GetFilterValue(filterValue.Value);
                 builder.Append(builder.Length == 0 ? "(" : " or ");
-                builder.AppendFormat("{0} eq {1}", azureFieldName, value);
+                builder.AppendFormat(CultureInfo.InvariantCulture, "{0} eq {1}", azureFieldName, value);
             }
 
             if (builder.Length > 0)
                 builder.Append(")");
 
             return builder.ToString();
+        }
+
+        protected virtual string GetRangeFilterExpression(RangeFilter filter, ISearchCriteria criteria)
+        {
+            string result = null;
+
+            var azureFieldName = AzureFieldNameConverter.ToAzureFieldName(filter.Key).ToLower();
+            var expressions = filter.Values
+                .Select(v => GetRangeFilterValueExpression(v, azureFieldName))
+                .Where(e => !string.IsNullOrEmpty(e))
+                .ToArray();
+
+            if (expressions.Any())
+            {
+                result = "(" + string.Join(" or ", expressions) + ")";
+            }
+
+            return result;
+        }
+
+        protected virtual string GetPriceRangeFilterExpression(PriceRangeFilter filter, ISearchCriteria criteria)
+        {
+            string result = null;
+
+            var currency = criteria.Currency;
+            var pricelistId = criteria.Pricelists?.FirstOrDefault();
+            var fieldName = string.Join("_", filter.Key, currency, pricelistId);
+
+            var azureFieldName = AzureFieldNameConverter.ToAzureFieldName(fieldName).ToLower();
+
+            var expressions = filter.Values
+                .Select(v => GetPriceRangeFilterValueExpression(v, azureFieldName))
+                .Where(e => !string.IsNullOrEmpty(e))
+                .ToArray();
+
+            if (expressions.Any())
+            {
+                result = "(" + string.Join(" or ", expressions) + ")";
+            }
+
+            return result;
+        }
+
+        protected virtual string GetPriceRangeFilterValueExpression(RangeFilterValue filterValue, string azureFieldName)
+        {
+            return GetRangeFilterValueExpression(filterValue, azureFieldName);
+        }
+
+        protected virtual string GetRangeFilterValueExpression(RangeFilterValue filterValue, string azureFieldName)
+        {
+            string result = null;
+
+            var lower = ConvertToDecimal(filterValue.Lower);
+            var upper = ConvertToDecimal(filterValue.Upper);
+
+            if (lower != null || upper != null)
+            {
+                var builder = new StringBuilder();
+
+                if (lower != null)
+                {
+                    builder.AppendFormat(CultureInfo.InvariantCulture, "{0} ge {1}", azureFieldName, lower);
+
+                    if (upper != null)
+                    {
+                        builder.Append(" and ");
+                    }
+                }
+
+                if (upper != null)
+                {
+                    builder.AppendFormat(CultureInfo.InvariantCulture, "{0} lt {1}", azureFieldName, upper);
+                }
+
+                result = builder.ToString();
+            }
+
+            return result;
         }
 
         protected virtual string GetFilterValue(string filterValue)
@@ -180,7 +261,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
             if (filter.FacetSize != null)
             {
-                builder.AppendFormat(",count:{0}", filter.FacetSize);
+                builder.AppendFormat(CultureInfo.InvariantCulture, ",count:{0}", filter.FacetSize);
             }
 
             return builder.ToString();

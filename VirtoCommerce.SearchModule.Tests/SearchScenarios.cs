@@ -19,8 +19,8 @@ namespace VirtoCommerce.SearchModule.Test
         private const string _documentType = "item";
 
         [Theory]
-        //[InlineData("Lucene")]
-        //[InlineData("Elastic")]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [InlineData("Azure")]
         public void CanCreateIndex(string providerType)
         {
@@ -29,8 +29,8 @@ namespace VirtoCommerce.SearchModule.Test
         }
 
         [Theory]
-        //[InlineData("Lucene")]
-        //[InlineData("Elastic")]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [InlineData("Azure")]
         public void CanUpdateIndex(string providerType)
         {
@@ -39,8 +39,8 @@ namespace VirtoCommerce.SearchModule.Test
         }
 
         [Theory]
-        //[InlineData("Lucene")]
-        //[InlineData("Elastic")]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [InlineData("Azure")]
         public void CanSearchByPhrase(string providerType)
         {
@@ -49,14 +49,14 @@ namespace VirtoCommerce.SearchModule.Test
 
             var criteria = new KeywordSearchCriteria(_documentType)
             {
-                SearchPhrase = " red ",
+                SearchPhrase = " shirt ",
                 RecordsToRetrieve = 10,
             };
 
             var results = provider.Search<DocumentDictionary>(_scope, criteria);
 
-            Assert.Equal(2, results.DocCount);
-            Assert.Equal(2, results.TotalCount);
+            Assert.Equal(3, results.DocCount);
+            Assert.Equal(3, results.TotalCount);
 
 
             criteria = new KeywordSearchCriteria(_documentType)
@@ -68,24 +68,12 @@ namespace VirtoCommerce.SearchModule.Test
             results = provider.Search<DocumentDictionary>(_scope, criteria);
 
             Assert.Equal(1, results.DocCount);
-            Assert.Equal(3, results.TotalCount); // red shirt, red shirt 2, blue shirt
-
-
-            criteria = new KeywordSearchCriteria(_documentType)
-            {
-                SearchPhrase = "red shirt 2",
-                RecordsToRetrieve = 10,
-            };
-
-            results = provider.Search<DocumentDictionary>(_scope, criteria);
-
-            Assert.Equal(3, results.DocCount);
-            Assert.Equal(3, results.TotalCount);
+            Assert.Equal(2, results.TotalCount);
         }
 
         [Theory]
-        //[InlineData("Lucene")]
-        //[InlineData("Elastic")]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [InlineData("Azure")]
         public void CanSort(string providerType)
         {
@@ -122,8 +110,8 @@ namespace VirtoCommerce.SearchModule.Test
         }
 
         [Theory]
-        //[InlineData("Lucene")]
-        //[InlineData("Elastic")]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [InlineData("Azure")]
         public void CanFilter(string providerType)
         {
@@ -188,8 +176,8 @@ namespace VirtoCommerce.SearchModule.Test
                 Key = "size",
                 Values = new[]
                 {
-                    new RangeFilterValue { Id = "0_to_5", Lower = "0", Upper = "5" },
-                    new RangeFilterValue { Id = "5_to_10", Lower = "5", Upper = "10" },
+                    new RangeFilterValue { Lower = "0", Upper = "5" },
+                    new RangeFilterValue { Lower = "5", Upper = "10" },
                 }
             };
 
@@ -204,7 +192,7 @@ namespace VirtoCommerce.SearchModule.Test
             criteria = new KeywordSearchCriteria(_documentType)
             {
                 Currency = "USD",
-                Pricelists = new[] { "sale", "default" },
+                Pricelists = new[] { "default" },
                 RecordsToRetrieve = 10,
             };
 
@@ -213,8 +201,8 @@ namespace VirtoCommerce.SearchModule.Test
                 Currency = "usd",
                 Values = new[]
                 {
-                    new RangeFilterValue { Id = "under_100", Upper = "100" },
-                    new RangeFilterValue { Id = "over_700", Lower = "700" },
+                    new RangeFilterValue { Upper = "100" },
+                    new RangeFilterValue { Lower = "700" },
                 }
             };
 
@@ -224,11 +212,36 @@ namespace VirtoCommerce.SearchModule.Test
 
             Assert.Equal(3, results.DocCount);
             Assert.Equal(3, results.TotalCount);
+
+
+            criteria = new KeywordSearchCriteria(_documentType)
+            {
+                Currency = "USD",
+                Pricelists = new[] { "sale", "default" },
+                RecordsToRetrieve = 10,
+            };
+
+            priceRangefilter = new PriceRangeFilter
+            {
+                Currency = "usd",
+                Values = new[]
+                {
+                    new RangeFilterValue { Upper = "100" },
+                    new RangeFilterValue { Lower = "700" },
+                }
+            };
+
+            criteria.Apply(priceRangefilter);
+
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(4, results.DocCount);
+            Assert.Equal(4, results.TotalCount);
         }
 
         [Theory]
-        //[InlineData("Lucene")]
-        //[InlineData("Elastic")]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [InlineData("Azure")]
         public void CanGetFacets(string providerType)
         {
@@ -242,7 +255,7 @@ namespace VirtoCommerce.SearchModule.Test
                 RecordsToRetrieve = 0,
             };
 
-            var filter = new AttributeFilter
+            var attributeFacet = new AttributeFilter
             {
                 Key = "Color",
                 Values = new[]
@@ -253,7 +266,7 @@ namespace VirtoCommerce.SearchModule.Test
                 }
             };
 
-            var rangefilter = new RangeFilter
+            var rangeFacet = new RangeFilter
             {
                 Key = "size",
                 Values = new[]
@@ -263,7 +276,7 @@ namespace VirtoCommerce.SearchModule.Test
                 }
             };
 
-            var priceRangefilter = new PriceRangeFilter
+            var priceRangeFacet = new PriceRangeFilter
             {
                 Currency = "usd",
                 Values = new[]
@@ -275,13 +288,13 @@ namespace VirtoCommerce.SearchModule.Test
                 }
             };
 
-            criteria.Add(filter);
-            criteria.Add(rangefilter);
-            criteria.Add(priceRangefilter);
+            criteria.Add(attributeFacet);
+            criteria.Add(rangeFacet);
+            criteria.Add(priceRangeFacet);
 
             var results = provider.Search<DocumentDictionary>(_scope, criteria);
 
-            Assert.True(results.DocCount == 0, $"Returns {results.DocCount} instead of 0");
+            Assert.Equal(0, results.DocCount);
 
             var redCount = GetFacetCount(results, "Color", "red");
             Assert.True(redCount == 3, $"Returns {redCount} facets of red instead of 3");
@@ -306,8 +319,8 @@ namespace VirtoCommerce.SearchModule.Test
         }
 
         [Theory]
-        //[InlineData("Lucene")]
-        //[InlineData("Elastic")]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [InlineData("Azure")]
         public void Can_find_pricelists_prices(string providerType)
         {
@@ -367,8 +380,8 @@ namespace VirtoCommerce.SearchModule.Test
         }
 
         [Theory]
-        //[InlineData("Lucene")]
-        //[InlineData("Elastic")]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [InlineData("Azure")]
         public void Can_get_item_outlines(string providerType)
         {
@@ -399,8 +412,8 @@ namespace VirtoCommerce.SearchModule.Test
         }
 
         [Theory]
-        //[InlineData("Lucene")]
-        //[InlineData("Elastic")]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
         [InlineData("Azure")]
         public void Can_get_item_multiple_filters(string providerType)
         {
@@ -416,27 +429,27 @@ namespace VirtoCommerce.SearchModule.Test
                 Pricelists = new[] { "default" }
             };
 
-            var colorFilter = new AttributeFilter
+            var attributeFacet = new AttributeFilter
             {
                 Key = "Color",
                 Values = new[]
                 {
-                    new AttributeFilterValue {Id = "red", Value = "red"},
-                    new AttributeFilterValue {Id = "blue", Value = "blue"},
-                    new AttributeFilterValue {Id = "black", Value = "black"}
+                    new AttributeFilterValue {Id = "red", Value = "Red"},
+                    new AttributeFilterValue {Id = "blue", Value = "Blue"},
+                    new AttributeFilterValue {Id = "black", Value = "Black"}
                 }
             };
 
-            var filter = new AttributeFilter
+            var attributeFilter = new AttributeFilter
             {
                 Key = "Color",
                 Values = new[]
                 {
-                    new AttributeFilterValue {Id = "black", Value = "black"}
+                    new AttributeFilterValue {Id = "black", Value = "Black"}
                 }
             };
 
-            var rangefilter = new RangeFilter
+            var rangeFacet = new RangeFilter
             {
                 Key = "size",
                 Values = new[]
@@ -446,7 +459,7 @@ namespace VirtoCommerce.SearchModule.Test
                 }
             };
 
-            var priceRangefilter = new PriceRangeFilter
+            var priceRangeFacet = new PriceRangeFilter
             {
                 Currency = "usd",
                 Values = new[]
@@ -455,14 +468,14 @@ namespace VirtoCommerce.SearchModule.Test
                 }
             };
 
-            criteria.Add(colorFilter);
-            criteria.Add(rangefilter);
-            criteria.Add(priceRangefilter);
+            criteria.Add(attributeFacet);
+            criteria.Add(rangeFacet);
+            criteria.Add(priceRangeFacet);
 
             // add applied filters
-            criteria.Apply(filter);
-            criteria.Apply(rangefilter);
-            criteria.Apply(priceRangefilter);
+            criteria.Apply(attributeFilter);
+            criteria.Apply(rangeFacet);
+            criteria.Apply(priceRangeFacet);
 
             var results = provider.Search<DocumentDictionary>(_scope, criteria);
 
