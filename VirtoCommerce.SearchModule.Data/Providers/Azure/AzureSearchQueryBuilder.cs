@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using Microsoft.Azure.Search.Models;
 using VirtoCommerce.Platform.Core.Common;
@@ -51,8 +52,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             foreach (var filter in criteria.CurrentFilters)
             {
                 var attributeFilter = filter as AttributeFilter;
-                var priceRangeFilter = filter as PriceRangeFilter;
                 var rangeFilter = filter as RangeFilter;
+                var priceRangeFilter = filter as PriceRangeFilter;
 
                 string expression = null;
 
@@ -60,13 +61,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                 {
                     expression = GetAttributeFilterExpression(attributeFilter, criteria);
                 }
-                else if (priceRangeFilter != null)
-                {
-                    if (priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
-                    {
-                    }
-                }
                 else if (rangeFilter != null)
+                {
+                }
+                else if (priceRangeFilter != null && priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
                 {
                 }
 
@@ -97,7 +95,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             return builder.ToString();
         }
 
-        private static string GetFilterValue(string filterValue)
+        protected virtual string GetFilterValue(string filterValue)
         {
             string result;
 
@@ -114,7 +112,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             }
             else
             {
-                result = $"'{filterValue}'";
+                result = $"'{filterValue.Replace("'", "''")}'";
             }
 
             return result;
@@ -158,13 +156,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                 {
                     facet = GetAttributeFilterFacet(attributeFilter, criteria);
                 }
-                else if (priceRangeFilter != null)
-                {
-                    if (priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
-                    {
-                    }
-                }
                 else if (rangeFilter != null)
+                {
+                    facet = GetRangeFilterFacet(rangeFilter, criteria);
+                }
+                else if (priceRangeFilter != null && priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
                 {
                 }
 
@@ -188,6 +184,34 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             }
 
             return builder.ToString();
+        }
+
+        protected virtual string GetRangeFilterFacet(RangeFilter filter, ISearchCriteria criteria)
+        {
+            var azureFieldName = AzureFieldNameConverter.ToAzureFieldName(filter.Key).ToLower();
+            var edgeValues = filter.Values
+                .SelectMany(v => new[] { ConvertToDecimal(v.Lower), ConvertToDecimal(v.Upper) })
+                .Where(v => v > 0m)
+                .Distinct()
+                .OrderBy(v => v)
+                .ToArray();
+
+            var values = string.Join("|", edgeValues);
+
+            return $"{azureFieldName},values:{values}";
+        }
+
+        protected virtual decimal? ConvertToDecimal(string input)
+        {
+            decimal? result = null;
+
+            decimal value;
+            if (decimal.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+            {
+                result = value;
+            }
+
+            return result;
         }
     }
 }

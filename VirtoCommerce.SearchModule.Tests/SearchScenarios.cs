@@ -188,8 +188,8 @@ namespace VirtoCommerce.SearchModule.Test
                 Key = "size",
                 Values = new[]
                 {
-                    new RangeFilterValue {Id = "0_to_5", Lower = "0", Upper = "5"},
-                    new RangeFilterValue {Id = "5_to_10", Lower = "5", Upper = "10"},
+                    new RangeFilterValue { Id = "0_to_5", Lower = "0", Upper = "5" },
+                    new RangeFilterValue { Id = "5_to_10", Lower = "5", Upper = "10" },
                 }
             };
 
@@ -213,8 +213,8 @@ namespace VirtoCommerce.SearchModule.Test
                 Currency = "usd",
                 Values = new[]
                 {
-                    new RangeFilterValue {Id = "under_100", Upper = "100"},
-                    new RangeFilterValue {Id = "over_700", Lower = "700"},
+                    new RangeFilterValue { Id = "under_100", Upper = "100" },
+                    new RangeFilterValue { Id = "over_700", Lower = "700" },
                 }
             };
 
@@ -247,9 +247,9 @@ namespace VirtoCommerce.SearchModule.Test
                 Key = "Color",
                 Values = new[]
                 {
-                    new AttributeFilterValue {Id = "red", Value = "red"},
-                    new AttributeFilterValue {Id = "blue", Value = "blue"},
-                    new AttributeFilterValue {Id = "black", Value = "black"}
+                    new AttributeFilterValue { Id = "red", Value = "red" },
+                    new AttributeFilterValue { Id = "blue", Value = "blue" },
+                    new AttributeFilterValue { Id = "black", Value = "black" },
                 }
             };
 
@@ -258,8 +258,8 @@ namespace VirtoCommerce.SearchModule.Test
                 Key = "size",
                 Values = new[]
                 {
-                    new RangeFilterValue {Id = "0_to_5", Lower = "0", Upper = "5"},
-                    new RangeFilterValue {Id = "5_to_10", Lower = "5", Upper = "10"}
+                    new RangeFilterValue { Id = "5_to_10", Lower = "5", Upper = "10" },
+                    new RangeFilterValue { Id = "0_to_5", Lower = "0", Upper = "5" },
                 }
             };
 
@@ -268,10 +268,10 @@ namespace VirtoCommerce.SearchModule.Test
                 Currency = "usd",
                 Values = new[]
                 {
-                    new RangeFilterValue {Id = "0_to_100", Lower = "0", Upper = "100"},
-                    new RangeFilterValue {Id = "100_to_700", Lower = "100", Upper = "700"},
-                    new RangeFilterValue {Id = "over_700", Lower = "700"},
-                    new RangeFilterValue {Id = "under_100", Upper = "100"},
+                    new RangeFilterValue { Id = "0_to_100", Lower = "0", Upper = "100" },
+                    new RangeFilterValue { Id = "100_to_700", Lower = "100", Upper = "700" },
+                    new RangeFilterValue { Id = "over_700", Lower = "700" },
+                    new RangeFilterValue { Id = "under_100", Upper = "100" },
                 }
             };
 
