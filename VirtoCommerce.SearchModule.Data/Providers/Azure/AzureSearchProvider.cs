@@ -130,9 +130,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
         public virtual bool RemoveAll(string scope, string documentType)
         {
-            try
+            var result = false;
+
+            if (!string.IsNullOrEmpty(documentType))
             {
-                if (!string.IsNullOrEmpty(documentType))
+                try
                 {
                     var indexName = GetIndexName(scope, documentType);
 
@@ -140,20 +142,18 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                     {
                         Client.Indexes.Delete(indexName);
                     }
+
+                    RemoveMappingFromCache(scope, documentType);
                 }
-                else
+                catch (Exception ex)
                 {
-                    throw new NotImplementedException();
+                    ThrowException("Failed to remove index", ex);
                 }
 
-                RemoveMappingFromCache(scope, documentType);
-            }
-            catch (Exception ex)
-            {
-                ThrowException("Failed to remove indexes", ex);
+                result = true;
             }
 
-            return true;
+            return result;
         }
 
         public virtual ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria)

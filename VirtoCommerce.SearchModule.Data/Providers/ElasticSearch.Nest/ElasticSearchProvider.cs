@@ -191,39 +191,31 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
         public virtual bool RemoveAll(string scope, string documentType)
         {
-            try
-            {
-                var indexName = GetIndexName(scope, documentType);
+            var result = false;
 
-                if (string.IsNullOrEmpty(documentType))
+            if (!string.IsNullOrEmpty(documentType))
+            {
+                try
                 {
-                    var result = Client.DeleteIndex(indexName);
-                    if (!result.IsValid && result.ApiCall.HttpStatusCode != 404)
+                    var indexName = GetIndexName(scope, documentType);
+
+                    var response = Client.DeleteIndex(indexName);
+                    if (!response.IsValid && response.ApiCall.HttpStatusCode != 404)
                     {
-                        throw new IndexBuildException(result.DebugInformation);
+                        throw new IndexBuildException(response.DebugInformation);
                     }
+
+                    RemoveMappingFromCache(indexName, documentType);
                 }
-                else
+                catch (Exception ex)
                 {
-                    // check if index actually exists before performing delete, since it will cause new index to be automatically created
-                    if (IndexExists(indexName))
-                    {
-                        var result = Client.DeleteByQuery(new DeleteByQueryRequest(indexName, documentType) { Query = new MatchAllQuery() });
-                        if (!result.IsValid && result.ApiCall.HttpStatusCode != 404)
-                        {
-                            throw new IndexBuildException(result.DebugInformation);
-                        }
-                    }
+                    ThrowException("Failed to remove index", ex);
                 }
 
-                RemoveMappingFromCache(indexName, documentType);
-            }
-            catch (Exception ex)
-            {
-                ThrowException("Failed to remove indexes", ex);
+                result = true;
             }
 
-            return true;
+            return result;
         }
 
         public virtual void Close(string scope, string documentType)
@@ -354,7 +346,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
         protected virtual string GetIndexName(string scope, string documentType)
         {
-            return scope;
+            // Use different index for each document type
+            return string.Join("-", scope, documentType);
         }
 
         protected virtual bool IndexExists(string indexName)
