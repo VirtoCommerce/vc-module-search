@@ -14,7 +14,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
     [CLSCompliant(false)]
     public class AzureSearchProvider : ISearchProvider
     {
-        private const string _keyFieldName = AzureFieldNameConverter.FieldNamePrefix + "__key";
+        private const string _keyFieldName = AzureQueryHelper.FieldNamePrefix + "__key";
 
         private readonly ISearchConnection _connection;
         private readonly Dictionary<string, List<IDocument>> _pendingDocuments = new Dictionary<string, List<IDocument>>();
@@ -192,7 +192,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             for (var index = 0; index < document.FieldCount; index++)
             {
                 var field = document[index];
-                field.Name = AzureFieldNameConverter.ToAzureFieldName(field.Name);
+                field.Name = AzureQueryHelper.ToAzureFieldName(field.Name);
 
                 if (result.ContainsKey(field.Name))
                 {

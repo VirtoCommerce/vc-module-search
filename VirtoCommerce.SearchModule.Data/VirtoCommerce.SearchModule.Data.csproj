@@ -136,7 +136,7 @@
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Providers\Azure\AzureFieldNameConverter.cs" />
+    <Compile Include="Providers\Azure\AzureQueryHelper.cs" />
     <Compile Include="Providers\Azure\AzureSearchQuery.cs" />
     <Compile Include="Providers\Azure\AzureSearchProvider.cs" />
     <Compile Include="Providers\Azure\AzureSearchQueryBuilder.cs" />

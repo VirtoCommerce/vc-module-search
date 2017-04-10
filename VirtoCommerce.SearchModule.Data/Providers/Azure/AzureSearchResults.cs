@@ -47,19 +47,22 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             {
                 foreach (var filter in criteria.Filters)
                 {
-                    var azureFieldName = AzureFieldNameConverter.ToAzureFieldName(filter.Key).ToLower();
+                    var attributeFilter = filter as AttributeFilter;
+                    var rangeFilter = filter as RangeFilter;
+                    var priceRangeFilter = filter as PriceRangeFilter;
+
+                    var azureFieldName = priceRangeFilter != null
+                        ? AzureQueryHelper.ToAzureFieldName($"{filter.Key}_{criteria.Currency}_{criteria.Pricelists?.FirstOrDefault()}").ToLowerInvariant()
+                        : AzureQueryHelper.ToAzureFieldName(filter.Key).ToLowerInvariant();
+
                     if (facets.ContainsKey(azureFieldName))
                     {
                         var facetResults = facets[azureFieldName];
                         if (facetResults != null && facetResults.Count > 0)
                         {
                             var groupLabels = filter.GetLabels();
-                            var facetGroup = new FacetGroup(filter.Key, groupLabels);
-
                             var values = filter.GetValues();
-                            var attributeFilter = filter as AttributeFilter;
-                            var rangeFilter = filter as RangeFilter;
-                            var priceRangeFilter = filter as PriceRangeFilter;
+                            var facetGroup = new FacetGroup(filter.Key, groupLabels);
 
                             // Return all facet terms for attribute filter if values are not defined
                             if (values == null && attributeFilter != null)
@@ -91,9 +94,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                                         }
                                     }
 
-                                    if (rangeFilter != null)
+                                    if (rangeFilter != null || priceRangeFilter != null)
                                     {
-                                        facetGroup.FacetType = FacetTypes.Range;
+                                        facetGroup.FacetType = rangeFilter != null ? FacetTypes.Range : FacetTypes.PriceRange;
 
                                         var rangeFilterValue = group.FirstOrDefault() as RangeFilterValue;
                                         var lower = rangeFilterValue?.Lower == "0" ? null : rangeFilterValue?.Lower;
@@ -128,7 +131,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
             foreach (var kvp in document)
             {
-                var key = AzureFieldNameConverter.FromAzureFieldName(kvp.Key);
+                var key = AzureQueryHelper.FromAzureFieldName(kvp.Key);
                 result[key] = kvp.Value;
             }
 
