@@ -25,15 +25,17 @@ namespace VirtoCommerce.SearchModule.Test
 
             if (searchProvider == "Elastic")
             {
-                var connection = new SearchConnection("localhost:9200", scope);
+                var elasticsearchHost = Environment.GetEnvironmentVariable("TestElasticsearchHost") ?? "localhost:9200";
+
+                var connection = new SearchConnection(elasticsearchHost, scope);
                 var queryBuilder = new ElasticSearchQueryBuilder() as ISearchQueryBuilder;
                 provider = new ElasticSearchProvider(new[] { queryBuilder }, connection) { EnableTrace = true };
             }
 
             if (searchProvider == "Azure")
             {
-                var azureSearchServiceName = Environment.GetEnvironmentVariable("AzureSearchServiceName");
-                var azureSearchAccessKey = Environment.GetEnvironmentVariable("AzureSearchAccessKey");
+                var azureSearchServiceName = Environment.GetEnvironmentVariable("TestAzureSearchServiceName");
+                var azureSearchAccessKey = Environment.GetEnvironmentVariable("TestAzureSearchAccessKey");
 
                 var connection = new SearchConnection(azureSearchServiceName, scope, accessKey: azureSearchAccessKey);
                 var queryBuilder = new AzureSearchQueryBuilder() as ISearchQueryBuilder;

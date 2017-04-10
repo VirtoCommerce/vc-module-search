@@ -123,30 +123,6 @@ namespace VirtoCommerce.SearchModule.Test
                 RecordsToRetrieve = 10,
             };
 
-            var numericFilter = new AttributeFilter
-            {
-                Key = "Size",
-                Values = new[]
-                {
-                    new AttributeFilterValue { Value = "1" },
-                    new AttributeFilterValue { Value = "2" },
-                    new AttributeFilterValue { Value = "3" },
-                }
-            };
-
-            criteria.Apply(numericFilter);
-
-            var results = provider.Search<DocumentDictionary>(_scope, criteria);
-
-            Assert.Equal(2, results.DocCount);
-            Assert.Equal(2, results.TotalCount);
-
-
-            criteria = new KeywordSearchCriteria(_documentType)
-            {
-                RecordsToRetrieve = 10,
-            };
-
             var stringFilter = new AttributeFilter
             {
                 Key = "Color",
@@ -160,7 +136,7 @@ namespace VirtoCommerce.SearchModule.Test
 
             criteria.Apply(stringFilter);
 
-            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            var results = provider.Search<DocumentDictionary>(_scope, criteria);
 
             Assert.Equal(5, results.DocCount);
             Assert.Equal(5, results.TotalCount);
@@ -171,9 +147,33 @@ namespace VirtoCommerce.SearchModule.Test
                 RecordsToRetrieve = 10,
             };
 
+            var numericFilter = new AttributeFilter
+            {
+                Key = "Size",
+                Values = new[]
+                {
+                    new AttributeFilterValue { Value = "1" },
+                    new AttributeFilterValue { Value = "2" },
+                    new AttributeFilterValue { Value = "3" },
+                }
+            };
+
+            criteria.Apply(numericFilter);
+
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(2, results.DocCount);
+            Assert.Equal(2, results.TotalCount);
+
+
+            criteria = new KeywordSearchCriteria(_documentType)
+            {
+                RecordsToRetrieve = 10,
+            };
+
             var rangefilter = new RangeFilter
             {
-                Key = "size",
+                Key = "Size",
                 Values = new[]
                 {
                     new RangeFilterValue { Lower = "0", Upper = "5" },
@@ -198,7 +198,32 @@ namespace VirtoCommerce.SearchModule.Test
 
             var priceRangefilter = new PriceRangeFilter
             {
-                Currency = "usd",
+                Currency = "USD",
+                Values = new[]
+                {
+                    new RangeFilterValue { Upper = "100" },
+                    new RangeFilterValue { Lower = "700" },
+                }
+            };
+
+            criteria.Apply(priceRangefilter);
+
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(3, results.DocCount);
+            Assert.Equal(3, results.TotalCount);
+
+
+            criteria = new KeywordSearchCriteria(_documentType)
+            {
+                Currency = "USD",
+                Pricelists = new[] { "default", "sale" },
+                RecordsToRetrieve = 10,
+            };
+
+            priceRangefilter = new PriceRangeFilter
+            {
+                Currency = "USD",
                 Values = new[]
                 {
                     new RangeFilterValue { Upper = "100" },
@@ -223,7 +248,7 @@ namespace VirtoCommerce.SearchModule.Test
 
             priceRangefilter = new PriceRangeFilter
             {
-                Currency = "usd",
+                Currency = "USD",
                 Values = new[]
                 {
                     new RangeFilterValue { Upper = "100" },
@@ -237,6 +262,31 @@ namespace VirtoCommerce.SearchModule.Test
 
             Assert.Equal(4, results.DocCount);
             Assert.Equal(4, results.TotalCount);
+
+
+            criteria = new KeywordSearchCriteria(_documentType)
+            {
+                Currency = "USD",
+                Pricelists = new[] { "supersale", "sale", "default" },
+                RecordsToRetrieve = 10,
+            };
+
+            priceRangefilter = new PriceRangeFilter
+            {
+                Currency = "USD",
+                Values = new[]
+                {
+                    new RangeFilterValue { Upper = "100" },
+                    new RangeFilterValue { Lower = "700" },
+                }
+            };
+
+            criteria.Apply(priceRangefilter);
+
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(5, results.DocCount);
+            Assert.Equal(5, results.TotalCount);
         }
 
         [Theory]
@@ -268,7 +318,7 @@ namespace VirtoCommerce.SearchModule.Test
 
             var rangeFacet = new RangeFilter
             {
-                Key = "size",
+                Key = "Size",
                 Values = new[]
                 {
                     new RangeFilterValue { Id = "5_to_10", Lower = "5", Upper = "10" },
@@ -278,7 +328,7 @@ namespace VirtoCommerce.SearchModule.Test
 
             var priceRangeFacet = new PriceRangeFilter
             {
-                Currency = "usd",
+                Currency = "USD",
                 Values = new[]
                 {
                     new RangeFilterValue { Id = "0_to_100", Lower = "0", Upper = "100" },
@@ -331,13 +381,13 @@ namespace VirtoCommerce.SearchModule.Test
             {
                 IsFuzzySearch = true,
                 RecordsToRetrieve = 10,
-                Currency = "usd",
+                Currency = "USD",
                 Pricelists = new[] { "default", "sale" }
             };
 
             var priceRangefilter = new PriceRangeFilter
             {
-                Currency = "usd",
+                Currency = "USD",
                 Values = new[]
                 {
                     new RangeFilterValue {Id = "0_to_100", Lower = "0", Upper = "100"},
@@ -361,7 +411,7 @@ namespace VirtoCommerce.SearchModule.Test
             {
                 IsFuzzySearch = true,
                 RecordsToRetrieve = 10,
-                Currency = "usd",
+                Currency = "USD",
                 Pricelists = new[] { "sale", "default" }
             };
 
@@ -434,9 +484,9 @@ namespace VirtoCommerce.SearchModule.Test
                 Key = "Color",
                 Values = new[]
                 {
-                    new AttributeFilterValue {Id = "red", Value = "Red"},
-                    new AttributeFilterValue {Id = "blue", Value = "Blue"},
-                    new AttributeFilterValue {Id = "black", Value = "Black"}
+                    new AttributeFilterValue {Id = "Red", Value = "Red"},
+                    new AttributeFilterValue {Id = "Blue", Value = "Blue"},
+                    new AttributeFilterValue {Id = "Black", Value = "Black"}
                 }
             };
 
@@ -445,13 +495,13 @@ namespace VirtoCommerce.SearchModule.Test
                 Key = "Color",
                 Values = new[]
                 {
-                    new AttributeFilterValue {Id = "black", Value = "Black"}
+                    new AttributeFilterValue {Id = "Black", Value = "Black"}
                 }
             };
 
             var rangeFacet = new RangeFilter
             {
-                Key = "size",
+                Key = "Size",
                 Values = new[]
                 {
                     new RangeFilterValue {Id = "0_to_5", Lower = "0", Upper = "5"},
@@ -461,7 +511,7 @@ namespace VirtoCommerce.SearchModule.Test
 
             var priceRangeFacet = new PriceRangeFilter
             {
-                Currency = "usd",
+                Currency = "USD",
                 Values = new[]
                 {
                     new RangeFilterValue {Id = "100_to_700", Lower = "100", Upper = "700"}
@@ -479,11 +529,11 @@ namespace VirtoCommerce.SearchModule.Test
 
             var results = provider.Search<DocumentDictionary>(_scope, criteria);
 
-            var blackCount = GetFacetCount(results, "Color", "black");
-            Assert.True(blackCount == 1, $"Returns {blackCount} facets of black instead of 1");
+            var blackCount = GetFacetCount(results, "Color", "Black");
+            Assert.True(blackCount == 1, $"Returns {blackCount} facets of Black instead of 1");
 
-            var redCount = GetFacetCount(results, "Color", "red");
-            Assert.True(redCount == 2, $"Returns {redCount} facets of black instead of 2");
+            var redCount = GetFacetCount(results, "Color", "Red");
+            Assert.True(redCount == 2, $"Returns {redCount} facets of Red instead of 2");
 
             var priceCount = GetFacetCount(results, "Price", "100_to_700");
             Assert.True(priceCount == 1, $"Returns {priceCount} facets of 100_to_700 instead of 1");

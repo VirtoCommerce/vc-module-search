@@ -9,25 +9,27 @@ namespace VirtoCommerce.SearchModule.Test
     {
         public class Price
         {
-            public Price(string priceList, decimal amount)
+            public Price(string currency, string pricelist, decimal amount)
             {
+                Currency = currency;
+                Pricelist = pricelist;
                 Amount = amount;
-                PriceList = priceList;
             }
 
+            public string Currency;
+            public string Pricelist;
             public decimal Amount;
-            public string PriceList;
         }
 
         public static void CreateSampleIndex(ISearchProvider provider, string scope, string documentType, bool addExtraFields = false)
         {
             provider.RemoveAll(scope, documentType);
 
-            provider.Index(scope, documentType, CreateDocument("12345", "Sample Product", "Red", 2, new[] { new Price("price_usd_default", 123.23m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
-            provider.Index(scope, documentType, CreateDocument("red3", "Red Shirt 2", "Red", 4, new[] { new Price("price_usd_default", 200m), new Price("price_usd_sale", 99m), new Price("price_eur_sale", 300m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
-            provider.Index(scope, documentType, CreateDocument("sad121", "Red Shirt", "Red", 3, new[] { new Price("price_usd_default", 10m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
-            provider.Index(scope, documentType, CreateDocument("32894hjf", "Black Sox", "Black", 10, new[] { new Price("price_usd_default", 243.12m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
-            provider.Index(scope, documentType, CreateDocument("another", "Black Sox2", "Silver", 20, new[] { new Price("price_usd_default", 700m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
+            provider.Index(scope, documentType, CreateDocument("12345", "Sample Product", "Red", 2, new[] { new Price("USD", "default", 123.23m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
+            provider.Index(scope, documentType, CreateDocument("red3", "Red Shirt 2", "Red", 4, new[] { new Price("USD", "default", 200m), new Price("USD", "sale", 99m), new Price("EUR", "sale", 300m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
+            provider.Index(scope, documentType, CreateDocument("sad121", "Red Shirt", "Red", 3, new[] { new Price("USD", "default", 10m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
+            provider.Index(scope, documentType, CreateDocument("32894hjf", "Black Sox", "Black", 10, new[] { new Price("USD", "default", 243.12m), new Price("USD", "supersale", 89m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
+            provider.Index(scope, documentType, CreateDocument("another", "Black Sox2", "Silver", 20, new[] { new Price("USD", "default", 700m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
 
             if (addExtraFields)
             {
@@ -36,7 +38,7 @@ namespace VirtoCommerce.SearchModule.Test
                 Thread.Sleep(2000);
             }
 
-            provider.Index(scope, documentType, CreateDocument("jdashf", "Blue Shirt", "Blue", 8, new[] { new Price("price_usd_default", 23.12m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }, addExtraFields));
+            provider.Index(scope, documentType, CreateDocument("jdashf", "Blue Shirt", "Blue", 8, new[] { new Price("USD", "default", 23.12m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }, addExtraFields));
 
             provider.Commit(scope);
             provider.Close(scope, documentType);
@@ -64,8 +66,8 @@ namespace VirtoCommerce.SearchModule.Test
 
             foreach (var price in prices)
             {
-                doc.Add(new DocumentField(price.PriceList, price.Amount, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-                doc.Add(new DocumentField("price_usd", price.Amount, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+                doc.Add(new DocumentField($"price_{price.Currency}_{price.Pricelist}".ToLowerInvariant(), price.Amount, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+                doc.Add(new DocumentField($"price_{price.Currency}".ToLowerInvariant(), price.Amount, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             }
 
             doc.Add(new DocumentField("color", color, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
