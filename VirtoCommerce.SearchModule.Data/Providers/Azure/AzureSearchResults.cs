@@ -52,8 +52,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                     var priceRangeFilter = filter as PriceRangeFilter;
 
                     var azureFieldName = priceRangeFilter != null
-                        ? AzureQueryHelper.ToAzureFieldName($"{filter.Key}_{criteria.Currency}_{criteria.Pricelists?.FirstOrDefault()}").ToLowerInvariant()
-                        : AzureQueryHelper.ToAzureFieldName(filter.Key).ToLowerInvariant();
+                        ? AzureSearchHelper.ToAzureFieldName($"{filter.Key}_{criteria.Currency}_{criteria.Pricelists?.FirstOrDefault()}").ToLowerInvariant()
+                        : AzureSearchHelper.ToAzureFieldName(filter.Key).ToLowerInvariant();
 
                     if (facets.ContainsKey(azureFieldName))
                     {
@@ -131,7 +131,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
             foreach (var kvp in document)
             {
-                var key = AzureQueryHelper.FromAzureFieldName(kvp.Key);
+                var key = AzureSearchHelper.FromAzureFieldName(kvp.Key);
                 result[key] = kvp.Value;
             }
 

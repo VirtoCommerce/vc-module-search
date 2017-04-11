@@ -1,48 +1,47 @@
-﻿//using System;
-//using System.Text;
-//using RedDog.Search.Http;
+﻿using System.Text;
 
-//namespace VirtoCommerce.SearchModule.Data.Providers.Azure
-//{
-//    public class AzureSearchHelper
-//    {
-//        public static DateTimeOffset ConvertToOffset(DateTime value)
-//        {
-//            if (value == DateTime.MaxValue)
-//            {
-//                return DateTimeOffset.MaxValue;
-//            }
+namespace VirtoCommerce.SearchModule.Data.Providers.Azure
+{
+    public static class AzureSearchHelper
+    {
+        public const string FieldNamePrefix = "f_";
 
-//            return new DateTimeOffset(value);
-//        }
+        public static string ToAzureFieldName(string fieldName)
+        {
+            return FieldNamePrefix + fieldName.ToLowerInvariant();
+        }
 
-//        public static string Create(string field, string value)
-//        {
-//            return String.Format("{0} eq '{1}'", field, value);
-//        }
+        public static string FromAzureFieldName(string azureFieldName)
+        {
+            return azureFieldName.StartsWith(FieldNamePrefix) ? azureFieldName.Substring(FieldNamePrefix.Length) : azureFieldName;
+        }
 
-//        public static string CombineFilters(string original, string target, bool and = true)
-//        {
-//            return String.Format("{0}{1}{2}", original.Length > 0 ?
-//                String.Format("{0} {1} ", original, and ? "and" : "or") : "", target);
-//        }
+        public static string JoinNonEmptyStrings(string separator, bool encloseInParenthesis, params string[] values)
+        {
+            var builder = new StringBuilder();
+            var valuesCount = 0;
 
-//        public static void Combine(StringBuilder original, string target, bool and = true)
-//        {
-//            if (original.Length > 0)
-//                original.AppendFormat(" {0} ", and ? "AND" : "OR");
+            foreach (var value in values)
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    if (valuesCount > 0)
+                    {
+                        builder.Append(separator);
+                    }
 
-//            original.Append(target);
-//        }
+                    builder.Append(value);
+                    valuesCount++;
+                }
+            }
 
-//        [CLSCompliant(false)]
-//        public static string FormatSearchException(IApiResponse response)
-//        {
-//            return String.Format(
-//                "StatusCode: {0}; Error Code: {1}; Error Message: {2}",
-//                response.StatusCode,
-//                response.Error.Code,
-//                response.Error.Message);
-//        }
-//    }
-//}
+            if (valuesCount > 1 && encloseInParenthesis)
+            {
+                builder.Insert(0, "(");
+                builder.Append(")");
+            }
+
+            return builder.ToString();
+        }
+    }
+}

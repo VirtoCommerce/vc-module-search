@@ -3,13 +3,12 @@ using System.Runtime.Serialization;
 
 namespace VirtoCommerce.SearchModule.Core.Model
 {
-    public abstract class SearchException : ApplicationException
+    public class SearchException : ApplicationException
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="SearchException"/> class.
         /// </summary>
         public SearchException()
-            : base()
         {
         }
 
@@ -42,5 +41,4 @@ namespace VirtoCommerce.SearchModule.Core.Model
         {
         }
     }
-
 }

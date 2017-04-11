@@ -14,7 +14,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
     [CLSCompliant(false)]
     public class AzureSearchProvider : ISearchProvider
     {
-        private const string _keyFieldName = AzureQueryHelper.FieldNamePrefix + "__key";
+        private const string _keyFieldName = AzureSearchHelper.FieldNamePrefix + "__key";
 
         private readonly ISearchConnection _connection;
         private readonly Dictionary<string, List<IDocument>> _pendingDocuments = new Dictionary<string, List<IDocument>>();
@@ -102,7 +102,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             var doc = document as IDocument;
             if (doc == null)
             {
-                ThrowException($"Document type not supported: {typeof(T).Name}", new NotImplementedException());
+                ThrowException($"Document type is not supported: {typeof(T).Name}", new NotImplementedException());
             }
             else
             {
@@ -192,7 +192,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             for (var index = 0; index < document.FieldCount; index++)
             {
                 var field = document[index];
-                field.Name = AzureQueryHelper.ToAzureFieldName(field.Name);
+                field.Name = AzureSearchHelper.ToAzureFieldName(field.Name);
 
                 if (result.ContainsKey(field.Name))
                 {
@@ -373,7 +373,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
         protected virtual void ThrowException(string message, Exception innerException)
         {
-            throw new AzureSearchException($"{message}. Service name: {_connection.DataSource}", innerException);
+            throw new SearchException($"{message}. Service name: {_connection.DataSource}", innerException);
         }
 
 

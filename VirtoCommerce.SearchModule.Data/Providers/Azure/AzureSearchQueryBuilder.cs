@@ -82,7 +82,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
         protected virtual string GetAttributeFilterExpression(AttributeFilter filter, ISearchCriteria criteria)
         {
-            var azureFieldName = AzureQueryHelper.ToAzureFieldName(filter.Key).ToLower();
+            var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key).ToLower();
 
             var builder = new StringBuilder();
             foreach (var filterValue in filter.Values)
@@ -100,14 +100,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
         protected virtual string GetRangeFilterExpression(RangeFilter filter, ISearchCriteria criteria)
         {
-            var azureFieldName = AzureQueryHelper.ToAzureFieldName(filter.Key).ToLower();
+            var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key).ToLower();
 
             var expressions = filter.Values
                 .Select(v => GetRangeFilterValueExpression(v, azureFieldName))
                 .Where(e => !string.IsNullOrEmpty(e))
                 .ToArray();
 
-            var result = AzureQueryHelper.JoinNonEmptyStrings(" or ", true, expressions);
+            var result = AzureSearchHelper.JoinNonEmptyStrings(" or ", true, expressions);
             return result;
         }
 
@@ -122,7 +122,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                     .Where(e => !string.IsNullOrEmpty(e))
                     .ToArray();
 
-                result = AzureQueryHelper.JoinNonEmptyStrings(" or ", true, expressions);
+                result = AzureSearchHelper.JoinNonEmptyStrings(" or ", true, expressions);
             }
 
             return result;
@@ -141,20 +141,20 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                 if (pricelistIndex > 0)
                 {
                     var previousFieldName = string.Join("_", filter.Key, currency, criteria.Pricelists[pricelistIndex - 1]);
-                    var previousAzureFieldName = AzureQueryHelper.ToAzureFieldName(previousFieldName).ToLower();
+                    var previousAzureFieldName = AzureSearchHelper.ToAzureFieldName(previousFieldName).ToLower();
                     previousPricelistExpression = $"not({previousAzureFieldName} gt 0)";
                 }
 
                 // Get positive expression for current pricelist
                 var currentFieldName = string.Join("_", filter.Key, currency, criteria.Pricelists[pricelistIndex]);
-                var currentAzureFieldName = AzureQueryHelper.ToAzureFieldName(currentFieldName).ToLower();
+                var currentAzureFieldName = AzureSearchHelper.ToAzureFieldName(currentFieldName).ToLower();
                 var currentPricelistExpresion = GetRangeFilterValueExpression(filterValue, currentAzureFieldName);
 
                 // Get expression for next pricelist
                 var nextPricelistExpression = GetPriceRangeFilterValueExpression(pricelistIndex + 1, filter, filterValue, criteria);
 
-                var currentExpression = AzureQueryHelper.JoinNonEmptyStrings(" or ", true, currentPricelistExpresion, nextPricelistExpression);
-                result = AzureQueryHelper.JoinNonEmptyStrings(" and ", false, previousPricelistExpression, currentExpression);
+                var currentExpression = AzureSearchHelper.JoinNonEmptyStrings(" or ", true, currentPricelistExpresion, nextPricelistExpression);
+                result = AzureSearchHelper.JoinNonEmptyStrings(" and ", false, previousPricelistExpression, currentExpression);
             }
 
             return result;
@@ -230,7 +230,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                         result = new List<string>();
                     }
 
-                    result.Add(string.Join(" ", AzureQueryHelper.ToAzureFieldName(field.FieldName), field.IsDescending ? "desc" : "asc"));
+                    result.Add(string.Join(" ", AzureSearchHelper.ToAzureFieldName(field.FieldName), field.IsDescending ? "desc" : "asc"));
                 }
             }
 
@@ -273,7 +273,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
         protected virtual string GetAttributeFilterFacet(AttributeFilter filter, ISearchCriteria criteria)
         {
-            var azureFieldName = AzureQueryHelper.ToAzureFieldName(filter.Key).ToLower();
+            var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key).ToLower();
             var builder = new StringBuilder(azureFieldName);
 
             if (filter.FacetSize != null)
@@ -286,14 +286,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
         protected virtual string GetRangeFilterFacet(RangeFilter filter, ISearchCriteria criteria)
         {
-            var azureFieldName = AzureQueryHelper.ToAzureFieldName(filter.Key).ToLower();
+            var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key).ToLower();
             return GetRangeFilterFacet(azureFieldName, filter.Values, criteria);
         }
 
         protected virtual string GetPriceRangeFilterFacet(PriceRangeFilter filter, ISearchCriteria criteria)
         {
-            var fieldName = AzureQueryHelper.JoinNonEmptyStrings("_", false, filter.Key, criteria.Currency, criteria.Pricelists?.FirstOrDefault());
-            var azureFieldName = AzureQueryHelper.ToAzureFieldName(fieldName).ToLower();
+            var fieldName = AzureSearchHelper.JoinNonEmptyStrings("_", false, filter.Key, criteria.Currency, criteria.Pricelists?.FirstOrDefault());
+            var azureFieldName = AzureSearchHelper.ToAzureFieldName(fieldName).ToLower();
             return GetRangeFilterFacet(azureFieldName, filter.Values, criteria);
         }
 

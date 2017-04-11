@@ -136,7 +136,7 @@
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Providers\Azure\AzureQueryHelper.cs" />
+    <Compile Include="Providers\Azure\AzureSearchHelper.cs" />
     <Compile Include="Providers\Azure\AzureSearchQuery.cs" />
     <Compile Include="Providers\Azure\AzureSearchProvider.cs" />
     <Compile Include="Providers\Azure\AzureSearchQueryBuilder.cs" />
@@ -145,14 +145,6 @@
     <Compile Include="Providers\ElasticSearch.Nest\PropertyHelper.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\SearchResults.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Providers\Azure\AzureDocument.cs" />
-    <Compile Include="Providers\Azure\AzureSearchClient.cs" />
-    <Compile Include="Providers\Azure\AzureSearchException.cs" />
-    <Compile Include="Providers\Azure\AzureSearchHelper.cs" />
-    <Compile Include="Providers\Azure\AzureSearchProvider1.cs" />
-    <Compile Include="Providers\Azure\AzureSearchQueryBuilder1.cs" />
-    <Compile Include="Providers\Azure\AzureTypeMapper.cs" />
-    <Compile Include="Providers\Azure\StringBuilderExtensions.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchException.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchProvider.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchQueryBuilder.cs" />
