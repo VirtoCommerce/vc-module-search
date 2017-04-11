@@ -240,12 +240,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
         protected virtual Field CreateProviderField(string documentType, string fieldName, IDocumentField field)
         {
-            var isAnalyzed = field.ContainsAttribute(IndexType.Analyzed) || !field.ContainsAttribute(IndexType.NotAnalyzed);
-            var isStored = field.ContainsAttribute(IndexStore.Yes) || !field.ContainsAttribute(IndexStore.No);
-            var isCollection = field.ContainsAttribute(IndexDataType.StringCollection);
-
             var originalFieldType = field.Value?.GetType() ?? typeof(object);
             var providerFieldType = GetProviderFieldType(documentType, fieldName, originalFieldType);
+
+            var isAnalyzed = field.ContainsAttribute(IndexType.Analyzed) || !field.ContainsAttribute(IndexType.NotAnalyzed);
+            var isStored = field.ContainsAttribute(IndexStore.Yes) || !field.ContainsAttribute(IndexStore.No);
+            var isCollection = field.ContainsAttribute(IndexDataType.StringCollection) && providerFieldType == DataType.String;
 
             if (isCollection)
             {
@@ -298,13 +298,19 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
         protected virtual void CreateIndex(string indexName, string documentType, IList<Field> providerFields)
         {
+            var index = CreateIndexDefinition(indexName, providerFields);
+            Client.Indexes.Create(index);
+        }
+
+        protected virtual Index CreateIndexDefinition(string indexName, IList<Field> providerFields)
+        {
             var index = new Index
             {
                 Name = indexName,
-                Fields = providerFields,
+                Fields = providerFields.OrderBy(f => f.Name).ToArray(),
             };
 
-            Client.Indexes.Create(index);
+            return index;
         }
 
         #endregion
@@ -330,12 +336,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
         protected virtual void UpdateMapping(string indexName, string documentType, IList<Field> providerFields)
         {
-            var index = new Index
-            {
-                Name = indexName,
-                Fields = providerFields,
-            };
-
+            var index = CreateIndexDefinition(indexName, providerFields);
             var updatedIndex = Client.Indexes.CreateOrUpdate(indexName, index);
 
             // TODO: Need to wait some time until changes are applied
