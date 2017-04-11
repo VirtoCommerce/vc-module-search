@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using Newtonsoft.Json.Linq;
-using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
@@ -42,33 +41,29 @@ namespace VirtoCommerce.SearchModule.Test
         [InlineData("Lucene")]
         [InlineData("Elastic")]
         [InlineData("Azure")]
-        public void CanSearchByPhrase(string providerType)
+        public void CanGetOutlines(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
             SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
 
             var criteria = new KeywordSearchCriteria(_documentType)
             {
-                SearchPhrase = " shirt ",
                 RecordsToRetrieve = 10,
             };
 
             var results = provider.Search<DocumentDictionary>(_scope, criteria);
 
-            Assert.Equal(3, results.DocCount);
-            Assert.Equal(3, results.TotalCount);
+            Assert.Equal(6, results.DocCount);
+            Assert.Equal(6, results.TotalCount);
 
+            int outlineCount;
+            var outlineObject = results.Documents.First()["__outline"]; // can be JArray or object[] depending on provider used
+            if (outlineObject is JArray)
+                outlineCount = (outlineObject as JArray).Count;
+            else
+                outlineCount = ((object[])outlineObject).Length;
 
-            criteria = new KeywordSearchCriteria(_documentType)
-            {
-                SearchPhrase = "red shirt",
-                RecordsToRetrieve = 1,
-            };
-
-            results = provider.Search<DocumentDictionary>(_scope, criteria);
-
-            Assert.Equal(1, results.DocCount);
-            Assert.Equal(2, results.TotalCount);
+            Assert.True(outlineCount == 2, $"Returns {outlineCount} outlines instead of 2");
         }
 
         [Theory]
@@ -107,6 +102,39 @@ namespace VirtoCommerce.SearchModule.Test
 
             productName = results.Documents.First()["name"] as string;
             Assert.Equal("Sample Product", productName);
+        }
+
+        [Theory]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
+        [InlineData("Azure")]
+        public void CanSearchByPhrase(string providerType)
+        {
+            var provider = GetSearchProvider(providerType, _scope);
+            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
+
+            var criteria = new KeywordSearchCriteria(_documentType)
+            {
+                SearchPhrase = " shirt ",
+                RecordsToRetrieve = 10,
+            };
+
+            var results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(3, results.DocCount);
+            Assert.Equal(3, results.TotalCount);
+
+
+            criteria = new KeywordSearchCriteria(_documentType)
+            {
+                SearchPhrase = "red shirt",
+                RecordsToRetrieve = 1,
+            };
+
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(1, results.DocCount);
+            Assert.Equal(2, results.TotalCount);
         }
 
         [Theory]
@@ -371,31 +399,30 @@ namespace VirtoCommerce.SearchModule.Test
         [Theory]
         [InlineData("Lucene")]
         [InlineData("Elastic")]
-        [InlineData("Azure")]
-        public void Can_find_pricelists_prices(string providerType)
+        //[InlineData("Azure")] // Azure does not allow to provide filters for individual facets
+        public void CanGetPriceFacetsForMultiplePricelists(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
             SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
 
             var criteria = new KeywordSearchCriteria(_documentType)
             {
-                IsFuzzySearch = true,
-                RecordsToRetrieve = 10,
                 Currency = "USD",
-                Pricelists = new[] { "default", "sale" }
+                Pricelists = new[] { "default", "sale" },
+                RecordsToRetrieve = 10,
             };
 
-            var priceRangefilter = new PriceRangeFilter
+            var priceRangeFacet = new PriceRangeFilter
             {
                 Currency = "USD",
                 Values = new[]
                 {
                     new RangeFilterValue {Id = "0_to_100", Lower = "0", Upper = "100"},
-                    new RangeFilterValue {Id = "100_to_700", Lower = "100", Upper = "700"}
+                    new RangeFilterValue {Id = "100_to_700", Lower = "100", Upper = "700"},
                 }
             };
 
-            criteria.Add(priceRangefilter);
+            criteria.Add(priceRangeFacet);
 
             var results = provider.Search<DocumentDictionary>(_scope, criteria);
 
@@ -407,15 +434,15 @@ namespace VirtoCommerce.SearchModule.Test
             var priceCount2 = GetFacetCount(results, "Price", "100_to_700");
             Assert.True(priceCount2 == 3, $"Returns {priceCount2} facets of 100_to_700 prices instead of 3");
 
+
             criteria = new KeywordSearchCriteria(_documentType)
             {
-                IsFuzzySearch = true,
-                RecordsToRetrieve = 10,
                 Currency = "USD",
-                Pricelists = new[] { "sale", "default" }
+                Pricelists = new[] { "sale", "default" },
+                RecordsToRetrieve = 10,
             };
 
-            criteria.Add(priceRangefilter);
+            criteria.Add(priceRangeFacet);
 
             results = provider.Search<DocumentDictionary>(_scope, criteria);
 
@@ -432,54 +459,18 @@ namespace VirtoCommerce.SearchModule.Test
         [Theory]
         [InlineData("Lucene")]
         [InlineData("Elastic")]
-        [InlineData("Azure")]
-        public void Can_get_item_outlines(string providerType)
+        //[InlineData("Azure")] // Azure applies filters before calculating facets
+        public void CanGetAllFacetValuesWhenFilterIsApplied(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
             SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
 
             var criteria = new KeywordSearchCriteria(_documentType)
             {
-                SearchPhrase = "",
-                IsFuzzySearch = true,
-                RecordsToRetrieve = 6,
-                Currency = "USD",
-                Pricelists = new[] { "default" }
-            };
-
-            var results = provider.Search<DocumentDictionary>(_scope, criteria);
-
-            Assert.True(results.DocCount == 6, $"Returns {results.DocCount} instead of 6");
-
-            int outlineCount;
-            var outlineObject = results.Documents.First()["__outline"]; // can be JArray or object[] depending on provider used
-            if (outlineObject is JArray)
-                outlineCount = (outlineObject as JArray).Count;
-            else
-                outlineCount = ((object[])outlineObject).Length;
-
-            Assert.True(outlineCount == 2, $"Returns {outlineCount} outlines instead of 2");
-        }
-
-        [Theory]
-        [InlineData("Lucene")]
-        [InlineData("Elastic")]
-        [InlineData("Azure")]
-        public void Can_get_item_multiple_filters(string providerType)
-        {
-            var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
-
-            var criteria = new KeywordSearchCriteria(_documentType)
-            {
-                SearchPhrase = "",
-                IsFuzzySearch = true,
                 RecordsToRetrieve = 10,
-                Currency = "USD",
-                Pricelists = new[] { "default" }
             };
 
-            var attributeFacet = new AttributeFilter
+            var facet = new AttributeFilter
             {
                 Key = "Color",
                 Values = new[]
@@ -490,71 +481,31 @@ namespace VirtoCommerce.SearchModule.Test
                 }
             };
 
-            var attributeFilter = new AttributeFilter
+            var filter = new AttributeFilter
             {
                 Key = "Color",
                 Values = new[]
                 {
-                    new AttributeFilterValue {Id = "Black", Value = "Black"}
+                    new AttributeFilterValue {Id = "Red", Value = "Red"}
                 }
             };
 
-            var rangeFacet = new RangeFilter
-            {
-                Key = "Size",
-                Values = new[]
-                {
-                    new RangeFilterValue {Id = "0_to_5", Lower = "0", Upper = "5"},
-                    new RangeFilterValue {Id = "5_to_10", Lower = "5", Upper = "11"}
-                }
-            };
-
-            var priceRangeFacet = new PriceRangeFilter
-            {
-                Currency = "USD",
-                Values = new[]
-                {
-                    new RangeFilterValue {Id = "100_to_700", Lower = "100", Upper = "700"}
-                }
-            };
-
-            criteria.Add(attributeFacet);
-            criteria.Add(rangeFacet);
-            criteria.Add(priceRangeFacet);
-
-            // add applied filters
-            criteria.Apply(attributeFilter);
-            criteria.Apply(rangeFacet);
-            criteria.Apply(priceRangeFacet);
+            criteria.Add(facet);
+            criteria.Apply(filter);
 
             var results = provider.Search<DocumentDictionary>(_scope, criteria);
 
-            var blackCount = GetFacetCount(results, "Color", "Black");
-            Assert.True(blackCount == 1, $"Returns {blackCount} facets of Black instead of 1");
+            Assert.Equal(3, results.DocCount);
+            Assert.Equal(3, results.TotalCount);
 
             var redCount = GetFacetCount(results, "Color", "Red");
-            Assert.True(redCount == 2, $"Returns {redCount} facets of Red instead of 2");
+            Assert.True(redCount == 3, $"Returns {redCount} facets of Red instead of 3");
 
-            var priceCount = GetFacetCount(results, "Price", "100_to_700");
-            Assert.True(priceCount == 1, $"Returns {priceCount} facets of 100_to_700 instead of 1");
+            var blueCount = GetFacetCount(results, "Color", "Blue");
+            Assert.True(blueCount == 1, $"Returns {blueCount} facets of Blue instead of 1");
 
-            Assert.True(results.DocCount == 1, $"Returns {results.DocCount} instead of 1");
-        }
-
-
-        private static int GetFacetCount(ISearchResults<DocumentDictionary> results, string fieldName, string facetKey)
-        {
-            if (results.Facets == null || results.Facets.Length == 0)
-            {
-                return 0;
-            }
-
-            var group = results.Facets.SingleOrDefault(fg => fg.FieldName.EqualsInvariant(fieldName));
-
-            return group?.Facets
-                .Where(facet => facet.Key == facetKey)
-                .Select(facet => facet.Count)
-                .FirstOrDefault() ?? 0;
+            var blackCount = GetFacetCount(results, "Color", "Black");
+            Assert.True(blackCount == 1, $"Returns {blackCount} facets of Black instead of 1");
         }
     }
 }
