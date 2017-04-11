@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
+using System.Text;
 using Nest;
+using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 
@@ -98,82 +99,77 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         public static BoolQuery CreatePriceRangeFilter<T>(ISearchCriteria criteria, string field, RangeFilterValue value)
             where T : class
         {
-            var lowerbound = value.Lower;
-            var upperbound = value.Upper;
+            var lowerbound = value.Lower.AsDouble();
+            var upperbound = value.Upper.AsDouble();
 
-            const bool lowerBoundIncluded = true;
-            const bool upperBoundIncluded = false;
-
-            // format is "fieldname_store_currency_pricelist"
-            var pls = criteria.Pricelists;
-            var currency = criteria.Currency.ToLower();
-
-            // Create  filter of type 
-            // price_USD_pricelist1:[100 TO 200} (-price_USD_pricelist1:[* TO *} +(price_USD_pricelist2:[100 TO 200} (-price_USD_pricelist2:[* TO *} (+price_USD_pricelist3[100 TO 200}))))
-
-            var priceListId = string.Empty;
-            if (pls != null && pls.Any())
-            {
-                priceListId = pls[0].ToLower();
-            }
-
-            var fieldName = string.Format(CultureInfo.InvariantCulture, "{0}_{1}{2}", field, currency, string.IsNullOrEmpty(priceListId) ? "" : "_" + priceListId);
-
-            var topRangeQuery = Query<T>.Range(r => r
-                    .Field(fieldName)
-                    .GreaterThanOrEquals(lowerbound.AsDouble())
-                    .LessThan(upperbound.AsDouble())
-                );
-
-            var queryContainer = new List<QueryContainer> { topRangeQuery };
-
-            if (pls != null && pls.Length > 1)
-            {
-                var subRangeQuery = CreatePriceRangeFilter<T>(pls, 1, field, currency, lowerbound.AsDouble(), upperbound.AsDouble(), lowerBoundIncluded, upperBoundIncluded);
-                var subRangeBoolQuery = Query<T>.Bool(b => b.Should(subRangeQuery));
-                queryContainer.Add(subRangeBoolQuery);
-            }
+            var query = CreatePriceRangeFilterValueQuery<T>(criteria.Pricelists, 0, field, criteria.Currency, lowerbound, upperbound);
+            var queryContainer = new List<QueryContainer> { query };
 
             return new BoolQuery { Should = queryContainer };
         }
 
-        private static BoolQuery CreatePriceRangeFilter<T>(string[] priceLists, int index, string field, string currency, double? lowerbound, double? upperbound, bool lowerboundincluded, bool upperboundincluded)
+        private static QueryContainer CreatePriceRangeFilterValueQuery<T>(string[] priceLists, int index, string field, string currency, double? lowerbound, double? upperbound)
             where T : class
         {
-            var query = new BoolQuery();
+            QueryContainer result = null;
 
-            // create left part
-            var notRangeQuery = Query<T>.Range(r => r
-                    .Field(string.Format(CultureInfo.InvariantCulture, "{0}_{1}_{2}", field, currency, priceLists[index - 1].ToLower())).GreaterThan(int.MinValue)
-                );
-
-            //range_query.Field(string.Format("{0}_{1}_{2}", field, currency, priceLists[index - 1].ToLower()))/*.From("*").To("*")*/.IncludeLower(lowerboundincluded).IncludeUpper(upperboundincluded);
-            query.MustNot = new List<QueryContainer> { notRangeQuery };
-
-            // create right part
-            if (index == priceLists.Length - 1) // last element
+            if (priceLists.IsNullOrEmpty())
             {
-                var rangeQuery = Query<T>.Range(r => r
-                        .Field(string.Format(CultureInfo.InvariantCulture, "{0}_{1}_{2}", field, currency, priceLists[index].ToLower()))
-                        .GreaterThanOrEquals(lowerbound)
-                        .LessThan(upperbound)
-                    );
-
-                var rangeQueryContainer = new List<QueryContainer>();
-                var subRangeBoolQuery = Query<T>.Bool(b => b.Should(rangeQuery));
-                rangeQueryContainer.Add(subRangeBoolQuery);
-                query.Must = rangeQueryContainer;
+                var fieldName = JoinNonEmptyStrings("_", field, currency).ToLower();
+                result = new BoolQuery
+                {
+                    Must = new[] { Query<T>.Range(r => r.Field(fieldName).GreaterThanOrEquals(lowerbound).LessThan(upperbound)) }
+                };
             }
-            else
+            else if (index < priceLists.Length)
             {
-                var rangeQueryContainer = new List<QueryContainer>();
-                var rangeQuery = CreatePriceRangeFilter<T>(priceLists, index + 1, field, currency, lowerbound, upperbound, lowerboundincluded, upperboundincluded);
-                var subRangeBoolQuery = Query<T>.Bool(b => b.Should(rangeQuery));
-                rangeQueryContainer.Add(subRangeBoolQuery);
-                query.Should = rangeQueryContainer;
+                // Create negative query for previous pricelist
+                BoolQuery previousPricelistQuery = null;
+                if (index > 0)
+                {
+                    var previousFieldName = JoinNonEmptyStrings("_", field, currency, priceLists[index - 1]).ToLower();
+                    previousPricelistQuery = new BoolQuery
+                    {
+                        MustNot = new[] { Query<T>.Range(r => r.Field(previousFieldName).GreaterThan(0)) }
+                    };
+                }
+
+                // Create positive query for current pricelist
+                var currentFieldName = JoinNonEmptyStrings("_", field, currency, priceLists[index]).ToLower();
+                var currentPricelistQuery = new BoolQuery
+                {
+                    Must = new[] { Query<T>.Range(r => r.Field(currentFieldName).GreaterThanOrEquals(lowerbound).LessThan(upperbound)) }
+                };
+
+                // Get expression for next pricelist
+                var nextPricelistQuery = CreatePriceRangeFilterValueQuery<T>(priceLists, index + 1, field, currency, lowerbound, upperbound);
+
+                result = previousPricelistQuery & (currentPricelistQuery | nextPricelistQuery);
             }
 
-            return query;
+            return result;
+        }
+
+        public static string JoinNonEmptyStrings(string separator, params string[] values)
+        {
+            var builder = new StringBuilder();
+            var valuesCount = 0;
+
+            foreach (var value in values)
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    if (valuesCount > 0)
+                    {
+                        builder.Append(separator);
+                    }
+
+                    builder.Append(value);
+                    valuesCount++;
+                }
+            }
+
+            return builder.ToString();
         }
     }
 

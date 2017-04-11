@@ -138,6 +138,39 @@ namespace VirtoCommerce.SearchModule.Test
         }
 
         [Theory]
+        [InlineData("Lucene", 5)]
+        [InlineData("Elastic", 5)]
+        [InlineData("Azure", 3)] // Azure does not support collections with non-string elements
+        public void CanFilterByPriceWithoutAnyPricelist(string providerType, long expectedDocumentsCount)
+        {
+            var provider = GetSearchProvider(providerType, _scope);
+            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
+
+            var criteria = new KeywordSearchCriteria(_documentType)
+            {
+                Currency = "USD",
+                RecordsToRetrieve = 10,
+            };
+
+            var priceRangefilter = new PriceRangeFilter
+            {
+                Currency = "USD",
+                Values = new[]
+                {
+                    new RangeFilterValue { Upper = "100" },
+                    new RangeFilterValue { Lower = "700" },
+                }
+            };
+
+            criteria.Apply(priceRangefilter);
+
+            var results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(expectedDocumentsCount, results.DocCount);
+            Assert.Equal(expectedDocumentsCount, results.TotalCount);
+        }
+
+        [Theory]
         [InlineData("Lucene")]
         [InlineData("Elastic")]
         [InlineData("Azure")]
@@ -249,16 +282,6 @@ namespace VirtoCommerce.SearchModule.Test
                 RecordsToRetrieve = 10,
             };
 
-            priceRangefilter = new PriceRangeFilter
-            {
-                Currency = "USD",
-                Values = new[]
-                {
-                    new RangeFilterValue { Upper = "100" },
-                    new RangeFilterValue { Lower = "700" },
-                }
-            };
-
             criteria.Apply(priceRangefilter);
 
             results = provider.Search<DocumentDictionary>(_scope, criteria);
@@ -274,16 +297,6 @@ namespace VirtoCommerce.SearchModule.Test
                 RecordsToRetrieve = 10,
             };
 
-            priceRangefilter = new PriceRangeFilter
-            {
-                Currency = "USD",
-                Values = new[]
-                {
-                    new RangeFilterValue { Upper = "100" },
-                    new RangeFilterValue { Lower = "700" },
-                }
-            };
-
             criteria.Apply(priceRangefilter);
 
             results = provider.Search<DocumentDictionary>(_scope, criteria);
@@ -297,16 +310,6 @@ namespace VirtoCommerce.SearchModule.Test
                 Currency = "USD",
                 Pricelists = new[] { "supersale", "sale", "default" },
                 RecordsToRetrieve = 10,
-            };
-
-            priceRangefilter = new PriceRangeFilter
-            {
-                Currency = "USD",
-                Values = new[]
-                {
-                    new RangeFilterValue { Upper = "100" },
-                    new RangeFilterValue { Lower = "700" },
-                }
             };
 
             criteria.Apply(priceRangefilter);
@@ -399,7 +402,7 @@ namespace VirtoCommerce.SearchModule.Test
         [Theory]
         [InlineData("Lucene")]
         [InlineData("Elastic")]
-        //[InlineData("Azure")] // Azure does not allow to provide filters for individual facets
+        //[InlineData("Azure")] // Azure does not support filters for individual facets
         public void CanGetPriceFacetsForMultiplePricelists(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);

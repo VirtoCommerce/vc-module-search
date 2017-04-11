@@ -132,21 +132,25 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
         {
             string result = null;
 
-            if (pricelistIndex < criteria.Pricelists.Length)
+            if (criteria.Pricelists.IsNullOrEmpty())
             {
-                var currency = criteria.Currency;
-
+                var fieldName = string.Join("_", filter.Key, criteria.Currency);
+                var azureFieldName = AzureSearchHelper.ToAzureFieldName(fieldName).ToLower();
+                result = GetRangeFilterValueExpression(filterValue, azureFieldName);
+            }
+            else if (pricelistIndex < criteria.Pricelists.Length)
+            {
                 // Get negative expression for previous pricelist
                 string previousPricelistExpression = null;
                 if (pricelistIndex > 0)
                 {
-                    var previousFieldName = string.Join("_", filter.Key, currency, criteria.Pricelists[pricelistIndex - 1]);
+                    var previousFieldName = string.Join("_", filter.Key, criteria.Currency, criteria.Pricelists[pricelistIndex - 1]);
                     var previousAzureFieldName = AzureSearchHelper.ToAzureFieldName(previousFieldName).ToLower();
                     previousPricelistExpression = $"not({previousAzureFieldName} gt 0)";
                 }
 
                 // Get positive expression for current pricelist
-                var currentFieldName = string.Join("_", filter.Key, currency, criteria.Pricelists[pricelistIndex]);
+                var currentFieldName = string.Join("_", filter.Key, criteria.Currency, criteria.Pricelists[pricelistIndex]);
                 var currentAzureFieldName = AzureSearchHelper.ToAzureFieldName(currentFieldName).ToLower();
                 var currentPricelistExpresion = GetRangeFilterValueExpression(filterValue, currentAzureFieldName);
 
