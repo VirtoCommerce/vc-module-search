@@ -188,7 +188,30 @@ namespace VirtoCommerce.SearchModule.Test
             {
                 Key = "Color",
                 Values = new[]
-               {
+                {
+                    new AttributeFilterValue { Value = "White" }, // Non-existent value
+                    new AttributeFilterValue { Value = "Green" }, // Non-existent value
+                }
+            };
+
+            criteria.Apply(stringFilter);
+
+            var results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(0, results.DocCount);
+            Assert.Equal(0, results.TotalCount);
+
+
+            criteria = new KeywordSearchCriteria(_documentType)
+            {
+                RecordsToRetrieve = 10,
+            };
+
+            stringFilter = new AttributeFilter
+            {
+                Key = "Color",
+                Values = new[]
+              {
                     new AttributeFilterValue { Value = "Red" },
                     new AttributeFilterValue { Value = "Blue" },
                     new AttributeFilterValue { Value = "Black" },
@@ -197,7 +220,7 @@ namespace VirtoCommerce.SearchModule.Test
 
             criteria.Apply(stringFilter);
 
-            var results = provider.Search<DocumentDictionary>(_scope, criteria);
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
 
             Assert.Equal(5, results.DocCount);
             Assert.Equal(5, results.TotalCount);
