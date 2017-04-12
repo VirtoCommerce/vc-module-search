@@ -3,69 +3,173 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Lucene.Net.Analysis.Standard;
+using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
+using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.SearchModule.Core.Model.Filters;
+using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
-using u = Lucene.Net.Util;
+using Version = Lucene.Net.Util.Version;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
 {
-    public class LuceneSearchQueryBuilder : LuceneSearchQueryBuilderBase
+    public class LuceneSearchQueryBuilder : ISearchQueryBuilder
     {
+        public virtual string DocumentType => string.Empty;
+
         /// <summary>
         ///     Builds the query.
         /// </summary>
         /// <param name="scope"></param>
         /// <param name="criteria">The criteria.</param>
         /// <returns></returns>
-        public override object BuildQuery<T>(string scope, ISearchCriteria criteria)
+        public virtual object BuildQuery<T>(string scope, ISearchCriteria criteria)
+            where T : class
         {
-            var result = base.BuildQuery<T>(scope, criteria) as LuceneSearchQuery;
+            var filter = new BooleanFilter();
+            var query = new BooleanQuery();
 
-            var query = result.Query as BooleanQuery;
-            var analyzer = new StandardAnalyzer(u.Version.LUCENE_30);
-
-            var fuzzyMinSimilarity = 0.7f;
-            var isFuzzySearch = false;
-
-            // add standard keyword search
-            if (criteria is KeywordSearchCriteria)
+            var result = new LuceneSearchQuery
             {
-                var c = criteria as KeywordSearchCriteria;
-                // Add search
-                if (!string.IsNullOrEmpty(c.SearchPhrase))
-                {
-                    var searchPhrase = c.SearchPhrase;
-                    if (isFuzzySearch)
-                    {
+                Query = query,
+                Filter = filter,
+            };
 
-                        var keywords = c.SearchPhrase.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-                        searchPhrase = string.Empty;
-                        searchPhrase = keywords.Aggregate(
-                            searchPhrase,
-                            (current, keyword) =>
-                                current + string.Format("{0}~{1}", keyword.Replace("~", ""), fuzzyMinSimilarity.ToString(CultureInfo.InvariantCulture)));
-                    }
-
-                    var fields = new List<string> { "__content" };
-                    if (c.Locale != null)
-                    {
-                        var contentField = $"__content_{c.Locale.ToLower()}";
-                        fields.Add(contentField);
-                    }
-
-                    var parser = new MultiFieldQueryParser(u.Version.LUCENE_30, fields.ToArray(), analyzer)
-                    {
-                        DefaultOperator = QueryParser.Operator.AND
-                    };
-
-                    var searchQuery = parser.Parse(searchPhrase);
-                    query.Add(searchQuery, Occur.MUST);
-                }
+            if (!criteria.Ids.IsNullOrEmpty())
+            {
+                AddQuery("__key", query, criteria.Ids);
+            }
+            else
+            {
+                ProcessCurrentFilters(criteria, filter);
+                AddKeywordQuery(criteria as KeywordSearchCriteria, query);
             }
 
             return result;
         }
 
+        [CLSCompliant(false)]
+        protected virtual void ProcessCurrentFilters(ISearchCriteria criteria, BooleanFilter queryFilter)
+        {
+            if (criteria.CurrentFilters != null)
+            {
+                foreach (var filter in criteria.CurrentFilters)
+                {
+                    // Skip currencies that are not part of the filter
+                    var priceRangeFilter = filter as PriceRangeFilter;
+                    if (priceRangeFilter != null) // special filtering 
+                    {
+                        if (!priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
+                        {
+                            continue;
+                        }
+                    }
+
+                    var filterQuery = LuceneQueryHelper.CreateQuery(criteria, filter, Occur.SHOULD);
+
+                    // now add other values that should also be counted?
+
+                    if (filterQuery != null)
+                    {
+                        var clause = new FilterClause(filterQuery, Occur.MUST);
+                        queryFilter.Add(clause);
+                    }
+                }
+            }
+        }
+
+
+        protected virtual void AddKeywordQuery(KeywordSearchCriteria criteria, BooleanQuery query)
+        {
+            if (!string.IsNullOrEmpty(criteria?.SearchPhrase))
+            {
+                var searchPhrase = criteria.SearchPhrase;
+                if (criteria.IsFuzzySearch)
+                {
+                    const float fuzzyMinSimilarity = 0.7f;
+                    var keywords = criteria.SearchPhrase.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+
+                    searchPhrase = string.Empty;
+                    searchPhrase = keywords.Aggregate(
+                        searchPhrase,
+                        (current, keyword) =>
+                            current + $"{keyword.Replace("~", "")}~{fuzzyMinSimilarity.ToString(CultureInfo.InvariantCulture)}");
+                }
+
+                var fields = new List<string> { "__content" };
+                if (criteria.Locale != null)
+                {
+                    var contentField = $"__content_{criteria.Locale.ToLower()}";
+                    fields.Add(contentField);
+                }
+
+                const Version matchVersion = Version.LUCENE_30;
+                var analyzer = new StandardAnalyzer(matchVersion);
+
+                var parser = new MultiFieldQueryParser(matchVersion, fields.ToArray(), analyzer)
+                {
+                    DefaultOperator = QueryParser.Operator.AND
+                };
+
+                var searchQuery = parser.Parse(searchPhrase);
+                query.Add(searchQuery, Occur.MUST);
+            }
+        }
+
+        /// <summary>
+        ///     Adds the query.
+        /// </summary>
+        /// <param name="fieldName">Name of the field.</param>
+        /// <param name="query">The query.</param>
+        /// <param name="values">The values.</param>
+        protected virtual void AddQuery(string fieldName, BooleanQuery query, IList<string> values)
+        {
+            if (values.Count > 0)
+            {
+                fieldName = fieldName.ToLower();
+
+                if (values.Count > 1)
+                {
+                    var booleanQuery = new BooleanQuery();
+                    var containsFilter = false;
+
+                    foreach (var value in values)
+                    {
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            var nodeQuery = new WildcardQuery(new Term(fieldName, value));
+                            booleanQuery.Add(nodeQuery, Occur.SHOULD);
+                            containsFilter = true;
+                        }
+                    }
+
+                    if (containsFilter)
+                    {
+                        query.Add(booleanQuery, Occur.MUST);
+                    }
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(values[0]))
+                    {
+                        AddWildcardQuery(fieldName, query, values[0].ToLower());
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Adds the query.
+        /// </summary>
+        /// <param name="fieldName">Name of the field.</param>
+        /// <param name="query">The query.</param>
+        /// <param name="value">The filter.</param>
+        protected virtual void AddWildcardQuery(string fieldName, BooleanQuery query, string value)
+        {
+            fieldName = fieldName.ToLower();
+            var nodeQuery = new WildcardQuery(new Term(fieldName, value.ToLower()));
+            query.Add(nodeQuery, Occur.MUST);
+        }
     }
 }

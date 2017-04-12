@@ -14,8 +14,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
     [CLSCompliant(false)]
     public class AzureSearchProvider : ISearchProvider
     {
-        private const string _keyFieldName = AzureSearchHelper.FieldNamePrefix + "__key";
-
         private readonly ISearchConnection _connection;
         private readonly Dictionary<string, List<IDocument>> _pendingDocuments = new Dictionary<string, List<IDocument>>();
         private readonly Dictionary<string, IList<Field>> _mappings = new Dictionary<string, IList<Field>>();
@@ -254,7 +252,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
             var providerField = new Field(fieldName, providerFieldType)
             {
-                IsKey = fieldName == _keyFieldName,
+                IsKey = fieldName == AzureSearchHelper.KeyFieldName,
                 IsRetrievable = isStored,
                 IsSearchable = isAnalyzed,
                 IsFilterable = !isAnalyzed,

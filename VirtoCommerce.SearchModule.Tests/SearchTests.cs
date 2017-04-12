@@ -108,6 +108,30 @@ namespace VirtoCommerce.SearchModule.Test
         [InlineData("Lucene")]
         [InlineData("Elastic")]
         [InlineData("Azure")]
+        public void CanSearchByIds(string providerType)
+        {
+            var provider = GetSearchProvider(providerType, _scope);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
+
+            var criteria = new KeywordSearchCriteria(_documentType)
+            {
+                Ids = new[] { "red3", "another" },
+                RecordsToRetrieve = 10,
+            };
+
+            var results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(2, results.DocCount);
+            Assert.Equal(2, results.TotalCount);
+
+            Assert.True(results.Documents.Any(d => (string)d.Id == "red3"), "Cannot find 'red3'");
+            Assert.True(results.Documents.Any(d => (string)d.Id == "another"), "Cannot find 'another'");
+        }
+
+        [Theory]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
+        [InlineData("Azure")]
         public void CanSearchByPhrase(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);

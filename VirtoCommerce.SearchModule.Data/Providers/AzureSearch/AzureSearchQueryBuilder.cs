@@ -48,54 +48,65 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
         protected virtual string GetFilters(ISearchCriteria criteria)
         {
-            IList<string> result = new List<string>();
+            string result;
 
-            foreach (var filter in criteria.CurrentFilters)
+            if (!criteria.Ids.IsNullOrEmpty())
             {
-                var attributeFilter = filter as AttributeFilter;
-                var rangeFilter = filter as RangeFilter;
-                var priceRangeFilter = filter as PriceRangeFilter;
-
-                string expression = null;
-
-                if (attributeFilter != null)
-                {
-                    expression = GetAttributeFilterExpression(attributeFilter, criteria);
-                }
-                else if (rangeFilter != null)
-                {
-                    expression = GetRangeFilterExpression(rangeFilter, criteria);
-                }
-                else if (priceRangeFilter != null && priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
-                {
-                    expression = GetPriceRangeFilterExpression(priceRangeFilter, criteria);
-                }
-
-                if (!string.IsNullOrEmpty(expression))
-                {
-                    result.Add(expression);
-                }
+                result = GetIdsFilterExpression(criteria);
             }
+            else
+            {
+                IList<string> filters = new List<string>();
 
-            return string.Join(" and ", result);
+                foreach (var filter in criteria.CurrentFilters)
+                {
+                    var attributeFilter = filter as AttributeFilter;
+                    var rangeFilter = filter as RangeFilter;
+                    var priceRangeFilter = filter as PriceRangeFilter;
+
+                    string expression = null;
+
+                    if (attributeFilter != null)
+                    {
+                        expression = GetAttributeFilterExpression(attributeFilter, criteria);
+                    }
+                    else if (rangeFilter != null)
+                    {
+                        expression = GetRangeFilterExpression(rangeFilter, criteria);
+                    }
+                    else if (priceRangeFilter != null && priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
+                    {
+                        expression = GetPriceRangeFilterExpression(priceRangeFilter, criteria);
+                    }
+
+                    if (!string.IsNullOrEmpty(expression))
+                    {
+                        filters.Add(expression);
+                    }
+                }
+
+                result = string.Join(" and ", filters);
+            }
+            return result;
+        }
+
+        protected string GetIdsFilterExpression(ISearchCriteria criteria)
+        {
+            var values = criteria.Ids.Select(GetStringFilterValue).ToArray();
+            return GetFilterExpression(AzureSearchHelper.KeyFieldName, values);
         }
 
         protected virtual string GetAttributeFilterExpression(AttributeFilter filter, ISearchCriteria criteria)
         {
             var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key).ToLower();
+            var values = filter.Values.Select(v => GetFilterValue(v.Value)).ToArray();
 
-            var builder = new StringBuilder();
-            foreach (var filterValue in filter.Values)
-            {
-                var value = GetFilterValue(filterValue.Value);
-                builder.Append(builder.Length == 0 ? "(" : " or ");
-                builder.AppendFormat(CultureInfo.InvariantCulture, "{0} eq {1}", azureFieldName, value);
-            }
+            return GetFilterExpression(azureFieldName, values);
+        }
 
-            if (builder.Length > 0)
-                builder.Append(")");
-
-            return builder.ToString();
+        protected virtual string GetFilterExpression(string field, IList<string> values)
+        {
+            return AzureSearchHelper.JoinNonEmptyStrings(" or ", true, values.Select(v => $"{field} eq {v}").ToArray());
         }
 
         protected virtual string GetRangeFilterExpression(RangeFilter filter, ISearchCriteria criteria)
@@ -213,10 +224,15 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             }
             else
             {
-                result = $"'{filterValue.Replace("'", "''")}'";
+                result = GetStringFilterValue(filterValue);
             }
 
             return result;
+        }
+
+        protected virtual string GetStringFilterValue(string rawValue)
+        {
+            return $"'{rawValue.Replace("'", "''")}'";
         }
 
         protected virtual IList<string> GetSorting(ISearchCriteria criteria)
