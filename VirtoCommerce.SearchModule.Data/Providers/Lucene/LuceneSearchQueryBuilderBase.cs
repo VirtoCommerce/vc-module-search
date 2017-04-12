@@ -1,31 +1,26 @@
-﻿using System;
-using System.Collections.Specialized;
+﻿using System.Collections.Specialized;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
+using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
-using VirtoCommerce.SearchModule.Core.Model.Filters;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
-    public class BaseSearchQueryBuilder : ISearchQueryBuilder
+    public class LuceneSearchQueryBuilderBase : ISearchQueryBuilder
     {
-        public virtual string DocumentType
-        {
-            get
-            {
-                return string.Empty; // default implementation, can handle generic queries
-            }
-        }
+        public virtual string DocumentType => string.Empty;
 
         /// <summary>
         ///     Builds the query.
         /// </summary>
+        /// <param name="scope"></param>
         /// <param name="criteria">The criteria.</param>
         /// <returns></returns>
         public virtual object BuildQuery<T>(string scope, ISearchCriteria criteria) where T : class
         {
-            var queryBuilder = new QueryBuilder();
+            var queryBuilder = new LuceneSearchQuery();
             var queryFilter = new BooleanFilter();
             var query = new BooleanQuery();
             queryBuilder.Query = query;
@@ -36,10 +31,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 foreach (var filter in criteria.CurrentFilters)
                 {
                     // Skip currencies that are not part of the filter
-                    if (filter.GetType() == typeof(PriceRangeFilter)) // special filtering 
+                    var priceRangeFilter = filter as PriceRangeFilter;
+                    if (priceRangeFilter != null) // special filtering 
                     {
-                        var currency = (filter as PriceRangeFilter).Currency;
-                        if (!currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase))
+                        if (!priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
                         {
                             continue;
                         }
@@ -77,7 +72,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                     var containsFilter = false;
                     foreach (var index in filter)
                     {
-                        if (String.IsNullOrEmpty(index))
+                        if (string.IsNullOrEmpty(index))
                         {
                             continue;
                         }
@@ -93,9 +88,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 }
                 else
                 {
-                    if (!String.IsNullOrEmpty(filter[0]))
+                    if (!string.IsNullOrEmpty(filter[0]))
                     {
-                        this.AddQuery(fieldName, query, filter[0].ToLower());
+                        AddQuery(fieldName, query, filter[0].ToLower());
                     }
                 }
             }

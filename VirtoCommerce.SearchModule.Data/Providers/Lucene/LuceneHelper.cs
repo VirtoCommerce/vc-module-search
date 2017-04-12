@@ -1,15 +1,14 @@
 ﻿using System;
-using Lucene.Net.Documents;
-using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using System.IO;
+using Lucene.Net.Documents;
 using Newtonsoft.Json;
 using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.SearchModule.Core.Model.Indexing;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
     public class LuceneHelper
     {
-
         /// <summary>
         ///     Converts the search document to lucene document
         /// </summary>
@@ -28,14 +27,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         }
 
 
-        /// <summary>
-        ///     Adds the field to the lucene document.
-        /// </summary>
-        /// <param name="doc">The doc.</param>
-        /// <param name="field">The field.</param>
         private static void AddFieldToDocument(ref Document doc, IDocumentField field)
         {
-            if (field == null)
+            if (field?.Value == null)
             {
                 return;
             }
@@ -57,17 +51,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 index = Field.Index.NO;
             }
 
-            if (field.Value == null)
-            {
-                return;
-            }
+            field.Name = field.Name.ToLowerInvariant();
 
-            field.Name = field.Name.ToLower();
             if (field.Name == "__key")
             {
-                foreach (var val in field.Values)
+                foreach (var value in field.Values)
                 {
-                    doc.Add(new Field(field.Name, val.ToString(), store, index));
+                    doc.Add(new Field(field.Name, value.ToString(), store, index));
                 }
             }
             else if (field.Name == "__object")
@@ -82,28 +72,28 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             }
             else if (field.Value is string)
             {
-                foreach (var val in field.Values)
+                foreach (var value in field.Values)
                 {
-                    doc.Add(new Field(field.Name, index == Field.Index.NOT_ANALYZED ? val.ToString().ToLower() : val.ToString(), store, index));
-                    doc.Add(new Field("_content", val.ToString(), Field.Store.NO, Field.Index.ANALYZED));
+                    doc.Add(new Field(field.Name, value.ToString(), store, index));
+                    doc.Add(new Field("_content", value.ToString(), Field.Store.NO, Field.Index.ANALYZED));
                 }
             }
             else if (field.Value is decimal) // parse prices
             {
-                foreach (var val in field.Values)
+                foreach (var value in field.Values)
                 {
                     var numericField = new NumericField(field.Name, store, index != Field.Index.NO);
-                    numericField.SetDoubleValue(double.Parse(val.ToString()));
+                    numericField.SetDoubleValue(double.Parse(value.ToString()));
                     doc.Add(numericField);
                 }
             }
             else if (field.Value is DateTime) // parse dates
             {
-                foreach (var val in field.Values)
+                foreach (var value in field.Values)
                 {
                     doc.Add(
                         new Field(
-                            field.Name, DateTools.DateToString((DateTime)val, DateTools.Resolution.SECOND), store, index));
+                            field.Name, DateTools.DateToString((DateTime)value, DateTools.Resolution.SECOND), store, index));
                 }
             }
             else // try detecting the type
@@ -112,18 +102,18 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 decimal t;
                 if (decimal.TryParse(field.Value.ToString(), out t))
                 {
-                    foreach (var val in field.Values)
+                    foreach (var value in field.Values)
                     {
                         var numericField = new NumericField(field.Name, store, index != Field.Index.NO);
-                        numericField.SetDoubleValue(double.Parse(val.ToString()));
+                        numericField.SetDoubleValue(double.Parse(value.ToString()));
                         doc.Add(numericField);
                     }
                 }
                 else
                 {
-                    foreach (var val in field.Values)
+                    foreach (var value in field.Values)
                     {
-                        doc.Add(new Field(field.Name, index == Field.Index.NOT_ANALYZED ? val.ToString().ToLower() : val.ToString(), store, index));
+                        doc.Add(new Field(field.Name, value.ToString(), store, index));
                     }
                 }
             }

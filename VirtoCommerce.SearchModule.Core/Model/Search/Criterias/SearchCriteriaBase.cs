@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 
@@ -7,24 +6,61 @@ namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
 {
     public abstract class SearchCriteriaBase : ISearchCriteria
     {
-        private readonly string _documentType;
+        private readonly IList<ISearchFilter> _filters = new List<ISearchFilter>();
+        private readonly IList<ISearchFilter> _currentFilters = new List<ISearchFilter>();
 
-        public virtual string DocumentType
+        protected SearchCriteriaBase(string documentType)
         {
-            get { return _documentType; }
+            DocumentType = documentType;
         }
 
-        bool _cacheResults = true;
-        public virtual bool CacheResults
-        {
-            get
-            {
-                return _cacheResults;
-            }
+        public virtual string DocumentType { get; }
 
-            set
+        public virtual bool CacheResults { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the starting record.
+        /// </summary>
+        /// <value>The starting record.</value>
+        public virtual int StartingRecord { get; set; }
+
+        /// <summary>
+        /// Gets or sets the records to retrieve.
+        /// </summary>
+        /// <value>The records to retrieve.</value>
+        public virtual int RecordsToRetrieve { get; set; } = 50;
+
+        public virtual SearchSort Sort { get; set; }
+
+        public virtual string Locale { get; set; }
+
+        public virtual string Currency { get; set; }
+
+        /// <summary>
+        /// Gets or sets the price lists that should be considered for filtering.
+        /// </summary>
+        /// <value>
+        /// The price lists.
+        /// </value>
+        public virtual IList<string> Pricelists { get; set; }
+
+        public virtual IList<ISearchFilter> Filters => _filters;
+
+        public virtual IList<ISearchFilter> CurrentFilters => _currentFilters;
+
+        public virtual void Add(ISearchFilter filter)
+        {
+            if (filter != null)
             {
-                _cacheResults = value;
+                _filters.Add(filter);
+            }
+        }
+
+        public virtual void Apply(ISearchFilter filter)
+        {
+            if (filter != null)
+            {
+                _currentFilters.Add(filter);
             }
         }
 
@@ -56,97 +92,6 @@ namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
 
                 return key.ToString();
             }
-        }
-
-        /// <summary>
-        /// Gets or sets the starting record.
-        /// </summary>
-        /// <value>The starting record.</value>
-        public virtual int StartingRecord { get; set; }
-
-        int _recordsToRetrieve = 50;
-        /// <summary>
-        /// Gets or sets the records to retrieve.
-        /// </summary>
-        /// <value>The records to retrieve.</value>
-        public virtual int RecordsToRetrieve
-        {
-            get
-            {
-                return _recordsToRetrieve;
-            }
-            set
-            {
-                _recordsToRetrieve = value;
-            }
-        }
-
-        public virtual SearchSort Sort { get; set; }
-
-        public virtual string Locale
-        {
-            get; set;
-        }
-
-        public virtual string Currency { get; set; }
-
-        /// <summary>
-        /// Gets or sets the price lists that should be considered for filtering.
-        /// </summary>
-        /// <value>
-        /// The price lists.
-        /// </value>
-        public virtual string[] Pricelists
-        {
-            get;set;
-        }
-
-        List<ISearchFilter> _filters = new List<ISearchFilter>();
-
-        public virtual ISearchFilter[] Filters
-        {
-            get { return _filters.ToArray(); }
-        }
-
-        public virtual void Add(ISearchFilter filter)
-        {
-            _filters.Add(filter);
-        }
-
-        List<ISearchFilter> _appliedFilters = new List<ISearchFilter>();
-
-        public virtual ISearchFilter[] CurrentFilters
-        {
-            get { return _appliedFilters.ToArray(); }
-        }
-
-        public virtual void Apply(ISearchFilter filter)
-        {
-            if (filter != null)
-            {
-                _appliedFilters.Add(filter);
-            }
-        }
-
-        protected SearchCriteriaBase(string documentType)
-        {
-            _documentType = documentType;
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether this instance is modified.
-        /// </summary>
-        /// <value>
-        /// 	<c>true</c> if this instance is modified; otherwise, <c>false</c>.
-        /// </value>
-        protected bool IsModified { get; set; }
-
-        /// <summary>
-        /// Changes the state.
-        /// </summary>
-        protected virtual void ChangeState()
-        {
-            IsModified = true;
         }
     }
 }

@@ -5,11 +5,11 @@ using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Util;
 using SpellChecker.Net.Search.Spell;
-using VirtoCommerce.SearchModule.Data.Services;
+using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
-using VirtoCommerce.SearchModule.Core.Model.Filters;
+using VirtoCommerce.SearchModule.Data.Services;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
@@ -181,7 +181,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
             #endregion
 
-            if (SearchCriteria.Filters != null && SearchCriteria.Filters.Length > 0)
+            if (SearchCriteria.Filters != null && SearchCriteria.Filters.Count > 0)
             {
                 foreach (var filter in SearchCriteria.Filters)
                 {
@@ -228,7 +228,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
             var values = filter.GetValues();
 
-            if(values == null && filter is AttributeFilter) // get values from the index itself
+            if (values == null && filter is AttributeFilter) // get values from the index itself
             {
                 var allValues = reader.UniqueTermsFromField(filter.Key);
                 if (allValues != null && allValues.Count() > 0)

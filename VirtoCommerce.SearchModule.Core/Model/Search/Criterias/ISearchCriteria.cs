@@ -46,25 +46,15 @@ namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
         /// <value>The currency.</value>
         string Currency { get; set; }
 
-        string[] Pricelists { get; set; }
-
-        /*
-        /// <summary>
-        /// A list of aggegators to apply
-        /// </summary>
-        string[] Facets { get; set; }
-
-        /// <summary>
-        /// A list of filters with key values that need to be applied
-        /// </summary>
-        string[] Filters { get; set; }
-        */
+        IList<string> Pricelists { get; set; }
 
         /// <summary>
         /// Gets the filters.
         /// </summary>
         /// <value>The filters.</value>
-        ISearchFilter[] Filters { get; }
+        IList<ISearchFilter> Filters { get; }
+
+        IList<ISearchFilter> CurrentFilters { get; }
 
         /// <summary>
         /// Adds the specified filter.
@@ -72,12 +62,10 @@ namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
         /// <param name="filter">The filter.</param>
         void Add(ISearchFilter filter);
 
-        ISearchFilter[] CurrentFilters { get; }
-
         /// <summary>
         /// Applies the specified filter.
         /// </summary>
-        /// <param name="field">The field.</param>
+        /// <param name="filter"></param>
         void Apply(ISearchFilter filter);
     }
 }

@@ -1,9 +1,11 @@
-﻿using System.Globalization;
+﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using Nest;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Data.Services;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 {
@@ -14,7 +16,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
         {
             QueryContainer result = null;
 
-            var values = GetFilterValues(filter);
+            var values = filter.GetValues();
             if (values != null)
             {
                 foreach (var value in values)
@@ -51,30 +53,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             return query;
         }
 
-        public static ISearchFilterValue[] GetFilterValues(ISearchFilter filter)
-        {
-            ISearchFilterValue[] values = null;
-
-            if (filter is AttributeFilter)
-            {
-                values = ((AttributeFilter)filter).Values;
-            }
-            else if (filter is RangeFilter)
-            {
-                values = ((RangeFilter)filter).Values;
-            }
-            else if (filter is PriceRangeFilter)
-            {
-                values = ((PriceRangeFilter)filter).Values;
-            }
-            else if (filter is CategoryFilter)
-            {
-                values = ((CategoryFilter)filter).Values;
-            }
-
-            return values;
-        }
-
         /// <summary>
         /// Creates the price range filter.
         /// </summary>
@@ -88,32 +66,32 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             return CreatePriceRangeFilterValueQuery<T>(criteria.Pricelists, 0, field, criteria.Currency, value.Lower.AsDouble(), value.Upper.AsDouble());
         }
 
-        private static QueryContainer CreatePriceRangeFilterValueQuery<T>(string[] priceLists, int index, string field, string currency, double? lowerbound, double? upperbound)
+        private static QueryContainer CreatePriceRangeFilterValueQuery<T>(IList<string> pricelists, int index, string field, string currency, double? lowerBound, double? upperBound)
             where T : class
         {
             QueryContainer result = null;
 
-            if (priceLists.IsNullOrEmpty())
+            if (pricelists.IsNullOrEmpty())
             {
                 var fieldName = JoinNonEmptyStrings("_", field, currency).ToLower();
-                result = Query<T>.Range(r => r.Field(fieldName).GreaterThanOrEquals(lowerbound).LessThan(upperbound));
+                result = Query<T>.Range(r => r.Field(fieldName).GreaterThanOrEquals(lowerBound).LessThan(upperBound));
             }
-            else if (index < priceLists.Length)
+            else if (index < pricelists.Count)
             {
                 // Create negative query for previous pricelist
                 QueryContainer previousPricelistQuery = null;
                 if (index > 0)
                 {
-                    var previousFieldName = JoinNonEmptyStrings("_", field, currency, priceLists[index - 1]).ToLower();
+                    var previousFieldName = JoinNonEmptyStrings("_", field, currency, pricelists[index - 1]).ToLower();
                     previousPricelistQuery = Query<T>.Range(r => r.Field(previousFieldName).GreaterThan(0));
                 }
 
                 // Create positive query for current pricelist
-                var currentFieldName = JoinNonEmptyStrings("_", field, currency, priceLists[index]).ToLower();
-                var currentPricelistQuery = Query<T>.Range(r => r.Field(currentFieldName).GreaterThanOrEquals(lowerbound).LessThan(upperbound));
+                var currentFieldName = JoinNonEmptyStrings("_", field, currency, pricelists[index]).ToLower();
+                var currentPricelistQuery = Query<T>.Range(r => r.Field(currentFieldName).GreaterThanOrEquals(lowerBound).LessThan(upperBound));
 
-                // Get expression for next pricelist
-                var nextPricelistQuery = CreatePriceRangeFilterValueQuery<T>(priceLists, index + 1, field, currency, lowerbound, upperbound);
+                // Get query for next pricelist
+                var nextPricelistQuery = CreatePriceRangeFilterValueQuery<T>(pricelists, index + 1, field, currency, lowerBound, upperBound);
 
                 result = !previousPricelistQuery & (currentPricelistQuery | nextPricelistQuery);
             }

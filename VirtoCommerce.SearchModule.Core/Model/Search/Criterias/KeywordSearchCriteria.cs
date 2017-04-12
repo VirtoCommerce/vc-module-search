@@ -5,6 +5,17 @@ namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
     public class KeywordSearchCriteria : SearchCriteriaBase
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="KeywordSearchCriteria"/> class.
+        /// </summary>
+        /// <param name="documentType">Type of the document.</param>
+        public KeywordSearchCriteria(string documentType)
+            : base(documentType)
+        {
+            SearchPhrase = string.Empty;
+            IsFuzzySearch = true;
+        }
+
+        /// <summary>
         /// Gets or sets the search phrase.
         /// </summary>
         /// <value>The search phrase.</value>
@@ -27,16 +38,5 @@ namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
         /// <value>The fuzzy min similarity.</value>
         [Obsolete("Use Fuzziness")]
         public float FuzzyMinSimilarity { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="KeywordSearchCriteria"/> class.
-        /// </summary>
-        /// <param name="documentType">Type of the document.</param>
-        public KeywordSearchCriteria(string documentType)
-            : base(documentType)
-        {
-            SearchPhrase = string.Empty;
-            IsFuzzySearch = true;
-        }
     }
 }

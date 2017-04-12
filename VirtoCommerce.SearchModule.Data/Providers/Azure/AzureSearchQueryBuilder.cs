@@ -138,7 +138,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                 var azureFieldName = AzureSearchHelper.ToAzureFieldName(fieldName).ToLower();
                 result = GetRangeFilterValueExpression(filterValue, azureFieldName);
             }
-            else if (pricelistIndex < criteria.Pricelists.Length)
+            else if (pricelistIndex < criteria.Pricelists.Count)
             {
                 // Get negative expression for previous pricelist
                 string previousPricelistExpression = null;

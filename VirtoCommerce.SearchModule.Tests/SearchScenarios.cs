@@ -364,9 +364,9 @@ namespace VirtoCommerce.SearchModule.Test
                 Key = "Color",
                 Values = new[]
                 {
-                    new AttributeFilterValue { Id = "red", Value = "red" },
-                    new AttributeFilterValue { Id = "blue", Value = "blue" },
-                    new AttributeFilterValue { Id = "black", Value = "black" },
+                    new AttributeFilterValue { Id = "Red", Value = "Red" },
+                    new AttributeFilterValue { Id = "Blue", Value = "Blue" },
+                    new AttributeFilterValue { Id = "Black", Value = "Black" },
                 }
             };
 
@@ -400,13 +400,13 @@ namespace VirtoCommerce.SearchModule.Test
 
             Assert.Equal(0, results.DocCount);
 
-            var redCount = GetFacetCount(results, "Color", "red");
+            var redCount = GetFacetCount(results, "Color", "Red");
             Assert.True(redCount == 3, $"Returns {redCount} facets of red instead of 3");
 
-            var sizeCount = GetFacetCount(results, "size", "0_to_5");
+            var sizeCount = GetFacetCount(results, "Size", "0_to_5");
             Assert.True(sizeCount == 3, $"Returns {sizeCount} facets of 0_to_5 size instead of 3");
 
-            var sizeCount2 = GetFacetCount(results, "size", "5_to_10");
+            var sizeCount2 = GetFacetCount(results, "Size", "5_to_10");
             Assert.True(sizeCount2 == 1, $"Returns {sizeCount2} facets of 5_to_10 size instead of 1"); // only 1 result because upper bound is not included
 
             var priceCount = GetFacetCount(results, "Price", "0_to_100");

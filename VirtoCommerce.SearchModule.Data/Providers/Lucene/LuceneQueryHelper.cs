@@ -1,11 +1,12 @@
-﻿using System.Globalization;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Util;
-using VirtoCommerce.SearchModule.Data.Services;
-using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
+using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
+using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Data.Services;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 {
@@ -19,7 +20,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <returns></returns>
         public static string ConvertToSearchable(object value, bool tryConvertToNumber = true)
         {
-            if (value == null || string.IsNullOrEmpty(value.ToString()))
+            var stringValue = value?.ToString();
+
+            if (string.IsNullOrEmpty(stringValue))
             {
                 return string.Empty;
             }
@@ -30,11 +33,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 int intVal;
 
                 // Try converting to a known type
-                if (decimal.TryParse(value.ToString(), out decimalVal))
+                if (decimal.TryParse(stringValue, out decimalVal))
                 {
                     value = decimalVal;
                 }
-                else if (int.TryParse(value.ToString(), out intVal))
+                else if (int.TryParse(stringValue, out intVal))
                 {
                     value = intVal;
                 }
@@ -42,17 +45,17 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
             if (value is string)
             {
-                return value.ToString().ToLower();//.Replace("-", @"\-");
+                return stringValue;
             }
 
             if (value is decimal)
             {
-                return NumericUtils.DoubleToPrefixCoded(double.Parse(value.ToString()));
+                return NumericUtils.DoubleToPrefixCoded(Convert.ToDouble(value));
             }
 
             if (value.GetType() != typeof(int) || value.GetType() != typeof(long) || value.GetType() != typeof(double))
             {
-                return value.ToString().ToLower();
+                return stringValue;
             }
 
             return NumericUtils.DoubleToPrefixCoded((double)value);
@@ -60,65 +63,48 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
         public static Filter CreateQuery(ISearchCriteria criteria, ISearchFilter filter, Occur clause)
         {
-            var values = filter.GetValues();
-            if (values == null)
-                return null;
+            Filter result = null;
 
-            var query = new BooleanFilter();
-            foreach (var value in values)
+            var values = filter.GetValues();
+            if (values != null)
             {
-                var valueQuery = CreateQueryForValue(criteria, filter, value);
-                query.Add(new FilterClause(valueQuery, Occur.SHOULD));
+                var query = new BooleanFilter();
+                foreach (var value in values)
+                {
+                    var valueQuery = CreateQueryForValue(criteria, filter, value);
+                    query.Add(new FilterClause(valueQuery, Occur.SHOULD));
+                }
+
+                result = query;
             }
 
-            return query;
+            return result;
         }
 
         public static Filter CreateQueryForValue(ISearchCriteria criteria, ISearchFilter filter, ISearchFilterValue value)
         {
-            Filter q;
-            var priceQuery = filter is PriceRangeFilter;
+            Filter result = null;
 
-            var rangeFilterValue = value as RangeFilterValue;
-            if (rangeFilterValue != null && priceQuery)
+            var fieldName = filter.Key.ToLowerInvariant();
+
+            if (filter is AttributeFilter)
             {
-                q = CreateQuery(criteria, filter.Key, rangeFilterValue);
+                result = CreateTermsFilter(fieldName, value as AttributeFilterValue);
             }
-            else if (value is CategoryFilterValue)
+            else if (filter is RangeFilter)
             {
-                q = CreateQuery(filter.Key, (CategoryFilterValue)value);
+                result = CreateTermRangeFilter(fieldName, value as RangeFilterValue);
             }
-            else
+            else if (filter is PriceRangeFilter)
             {
-                q = CreateQuery(filter.Key, value);
+                result = CreatePriceRangeFilter(criteria, fieldName, value as RangeFilterValue);
             }
-
-            return q;
-        }
-
-        /// <summary>
-        ///     Creates the query.
-        /// </summary>
-        /// <param name="field">The field.</param>
-        /// <param name="value">The value.</param>
-        /// <returns></returns>
-        public static Filter CreateQuery(string field, ISearchFilterValue value)
-        {
-            field = field.ToLower();
-
-            var attributeFilterValue = value as AttributeFilterValue;
-            if (attributeFilterValue != null)
+            else if (filter is CategoryFilter)
             {
-                return CreateTermsFilter(field, attributeFilterValue);
+                result = CreateCategoryFilter(fieldName, value as CategoryFilterValue);
             }
 
-            var rangeFilterValue = value as RangeFilterValue;
-            if (rangeFilterValue != null)
-            {
-                return CreateTermRangeFilter(field, rangeFilterValue);
-            }
-
-            return null;
+            return result;
         }
 
         /// <summary>
@@ -129,9 +115,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <returns></returns>
         public static Filter CreateTermsFilter(string field, AttributeFilterValue value)
         {
-            object val = value.Id;
+            object val = value.Value;
             var query = new TermsFilter();
-            query.AddTerm(new Term(field, ConvertToSearchable(val, false)));
+            query.AddTerm(new Term(field, ConvertToSearchable(val)));
             return query;
         }
 
@@ -156,7 +142,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <param name="field">The field.</param>
         /// <param name="value">The value.</param>
         /// <returns></returns>
-        public static Filter CreateQuery(string field, CategoryFilterValue value)
+        public static Filter CreateCategoryFilter(string field, CategoryFilterValue value)
         {
             var query = new BooleanFilter();
             if (!string.IsNullOrEmpty(value.Outline))
@@ -176,130 +162,54 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <param name="field">The field.</param>
         /// <param name="value">The value.</param>
         /// <returns></returns>
-        public static Filter CreateQuery(ISearchCriteria criteria, string field, RangeFilterValue value)
+        public static Filter CreatePriceRangeFilter(ISearchCriteria criteria, string field, RangeFilterValue value)
         {
-            var query = new BooleanFilter();
+            var lowerBound = value.Lower != null ? ConvertToSearchable(value.Lower) : NumericUtils.LongToPrefixCoded(long.MinValue);
+            var upperBound = value.Upper != null ? ConvertToSearchable(value.Upper) : NumericUtils.LongToPrefixCoded(long.MaxValue);
 
-            object lowerbound = value.Lower;
-            object upperbound = value.Upper;
-
-            const bool lowerboundincluded = true;
-            const bool upperboundincluded = false;
-
-            var upper = upperbound == null ? NumericUtils.LongToPrefixCoded(long.MaxValue) : ConvertToSearchable(upperbound);
-
-            // format is "fieldname_store_currency_pricelist"
-            var pls = criteria.Pricelists;
-            var currency = criteria.Currency.ToLower();
-
-            // Create  filter of type 
-            // price_USD_pricelist1:[100 TO 200} (-price_USD_pricelist1:[* TO *} +(price_USD_pricelist2:[100 TO 200} (-price_USD_pricelist2:[* TO *} (+price_USD_pricelist3[100 TO 200}))))
-
-            var priceListId = string.Empty;
-            if (pls != null && pls.Any())
-            {
-                priceListId = pls[0].ToLower();
-            }
-            
-            var fieldName = string.Format(CultureInfo.InvariantCulture, "{0}_{1}{2}", field, currency, string.IsNullOrEmpty(priceListId) ? "" : "_" + priceListId);
-
-            var filter = new TermRangeFilter(
-                fieldName,
-                ConvertToSearchable(lowerbound),
-                upper,
-                lowerboundincluded,
-                upperboundincluded);
-
-            query.Add(new FilterClause(filter, Occur.SHOULD));
-
-            if (pls != null && pls.Length > 1)
-            {
-                var q = CreatePriceRangeQuery(
-                    pls,
-                    1,
-                    field,
-                    currency,
-                    ConvertToSearchable(lowerbound),
-                    upper,
-                    lowerboundincluded,
-                    upperboundincluded);
-
-                query.Add(new FilterClause(q, Occur.SHOULD));
-            }
-
-            return query;
+            return CreatePriceRangeFilterValueQuery(criteria.Pricelists, 0, field, criteria.Currency, lowerBound, upperBound, true, false);
         }
 
 
-        /// <summary>
-        ///     Creates the price range query.
-        /// </summary>
-        /// <param name="priceLists">The price lists.</param>
-        /// <param name="index">The index.</param>
-        /// <param name="field">The field.</param>
-        /// <param name="currency">The currency.</param>
-        /// <param name="lowerbound">The lowerbound.</param>
-        /// <param name="upperbound">The upperbound.</param>
-        /// <param name="lowerboundincluded">
-        ///     if set to <c>true</c> [lowerboundincluded].
-        /// </param>
-        /// <param name="upperboundincluded">
-        ///     if set to <c>true</c> [upperboundincluded].
-        /// </param>
-        /// <returns></returns>
-        private static BooleanFilter CreatePriceRangeQuery(
-            string[] priceLists,
-            int index,
-            string field,
-            string currency,
-            string lowerbound,
-            string upperbound,
-            bool lowerboundincluded,
-            bool upperboundincluded)
+        private static Filter CreatePriceRangeFilterValueQuery(IList<string> pricelists, int index, string field, string currency, string lowerBound, string upperBound, bool lowerBoundIncluded, bool upperBoundIncluded)
         {
-            var query = new BooleanFilter();
+            var result = new BooleanFilter();
 
-            // create left part
-            var filter =
-                new TermRangeFilter(
-                    string.Format(CultureInfo.InvariantCulture, "{0}_{1}_{2}", field, currency, priceLists[index - 1].ToLower()),
-                    NumericUtils.LongToPrefixCoded(long.MinValue),
-                    NumericUtils.LongToPrefixCoded(long.MaxValue),
-                    true,
-                    false);
-            var leftClause = new FilterClause(filter, Occur.MUST_NOT);
-            query.Add(leftClause);
-
-            // create right part
-            if (index == priceLists.Length - 1) // last element
+            if (pricelists.IsNullOrEmpty())
             {
-                //var rangefilter = NumericRangeFilter.;
-                var filter2 =
-                    new TermRangeFilter(
-                        string.Format(CultureInfo.InvariantCulture, "{0}_{1}_{2}", field, currency, priceLists[index].ToLower()),
-                        lowerbound,
-                        upperbound,
-                        lowerboundincluded,
-                        upperboundincluded);
-                var rightClause = new FilterClause(filter2, Occur.MUST);
-                query.Add(rightClause);
+                var fieldName = string.Join("_", field, currency).ToLower();
+                var filter = new TermRangeFilter(fieldName, lowerBound, upperBound, lowerBoundIncluded, upperBoundIncluded);
+                result.Add(new FilterClause(filter, Occur.MUST));
             }
-            else
+            else if (index < pricelists.Count)
             {
-                query.Add(new FilterClause(
-                    CreatePriceRangeQuery(
-                        priceLists,
-                        index + 1,
-                        field,
-                        currency,
-                        lowerbound,
-                        upperbound,
-                        lowerboundincluded,
-                        upperboundincluded),
-                    Occur.SHOULD));
+                // Create negative query for previous pricelist
+                if (index > 0)
+                {
+                    var previousFieldName = string.Join("_", field, currency, pricelists[index - 1]).ToLower();
+                    var previousPricelistFilter = new TermRangeFilter(previousFieldName, NumericUtils.LongToPrefixCoded(long.MinValue), NumericUtils.LongToPrefixCoded(long.MaxValue), true, false);
+                    result.Add(new FilterClause(previousPricelistFilter, Occur.MUST_NOT));
+                }
+
+                // Create positive query for current pricelist
+                var currentFieldName = string.Join("_", field, currency, pricelists[index]).ToLower();
+                var currentPricelistFilter = new TermRangeFilter(currentFieldName, lowerBound, upperBound, lowerBoundIncluded, upperBoundIncluded);
+
+                // Get query for next pricelist
+                var nextPricelistFilter = CreatePriceRangeFilterValueQuery(pricelists, index + 1, field, currency, lowerBound, upperBound, lowerBoundIncluded, upperBoundIncluded);
+
+                if (nextPricelistFilter != null)
+                {
+                    result.Add(new FilterClause(currentPricelistFilter, Occur.SHOULD));
+                    result.Add(new FilterClause(nextPricelistFilter, Occur.SHOULD));
+                }
+                else
+                {
+                    result.Add(new FilterClause(currentPricelistFilter, Occur.MUST));
+                }
             }
 
-            return query;
+            return result;
         }
 
     }

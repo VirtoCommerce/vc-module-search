@@ -148,11 +148,12 @@
     <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchException.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchProvider.cs" />
     <Compile Include="Providers\ElasticSearch.Nest\ElasticSearchQueryBuilder.cs" />
-    <Compile Include="Providers\Lucene\BaseSearchQueryBuilder.cs" />
+    <Compile Include="Providers\Lucene\LuceneSearchQueryBuilderBase.cs" />
     <Compile Include="Providers\Lucene\LuceneHelper.cs" />
     <Compile Include="Providers\Lucene\LuceneQueryHelper.cs" />
     <Compile Include="Providers\Lucene\LuceneSearchException.cs" />
     <Compile Include="Providers\Lucene\LuceneSearchProvider.cs" />
+    <Compile Include="Providers\Lucene\LuceneSearchQuery.cs" />
     <Compile Include="Providers\Lucene\LuceneSearchQueryBuilder.cs" />
     <Compile Include="Providers\Lucene\LuceneSearchResults.cs" />
     <Compile Include="Services\SearchFilterExtensions.cs" />

@@ -234,7 +234,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 var dir = FSDirectory.Open(directoryInfo);
                 var searcher = new IndexSearcher(dir);
 
-                var q = (QueryBuilder)GetQueryBuilder(criteria).BuildQuery<T>(scope, criteria);
+                var q = (LuceneSearchQuery)GetQueryBuilder(criteria).BuildQuery<T>(scope, criteria);
 
                 // filter out empty value
                 var filter = q.Filter.ToString().Equals("BooleanFilter()") ? null : q.Filter;
