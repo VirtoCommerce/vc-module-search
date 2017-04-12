@@ -12,7 +12,7 @@ namespace VirtoCommerce.SearchModule.Test
     [CLSCompliant(false)]
     [Collection("Search")]
     [Trait("Category", "CI")]
-    public class SearchScenarios : SearchTestsBase
+    public class SearchTests : SearchTestsBase
     {
         private const string _scope = "test";
         private const string _documentType = "item";
@@ -24,7 +24,7 @@ namespace VirtoCommerce.SearchModule.Test
         public void CanCreateIndex(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
         }
 
         [Theory]
@@ -34,7 +34,7 @@ namespace VirtoCommerce.SearchModule.Test
         public void CanUpdateIndex(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope, _documentType, true);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType, true);
         }
 
         [Theory]
@@ -44,7 +44,7 @@ namespace VirtoCommerce.SearchModule.Test
         public void CanGetOutlines(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
             var criteria = new KeywordSearchCriteria(_documentType)
             {
@@ -73,7 +73,7 @@ namespace VirtoCommerce.SearchModule.Test
         public void CanSort(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
             var criteria = new KeywordSearchCriteria(_documentType)
             {
@@ -111,7 +111,7 @@ namespace VirtoCommerce.SearchModule.Test
         public void CanSearchByPhrase(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
             var criteria = new KeywordSearchCriteria(_documentType)
             {
@@ -144,7 +144,7 @@ namespace VirtoCommerce.SearchModule.Test
         public void CanFilterByPriceWithoutAnyPricelist(string providerType, long expectedDocumentsCount)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
             var criteria = new KeywordSearchCriteria(_documentType)
             {
@@ -177,7 +177,7 @@ namespace VirtoCommerce.SearchModule.Test
         public void CanFilter(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
             var criteria = new KeywordSearchCriteria(_documentType)
             {
@@ -350,7 +350,7 @@ namespace VirtoCommerce.SearchModule.Test
         public void CanGetFacets(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
             var criteria = new KeywordSearchCriteria(_documentType)
             {
@@ -429,7 +429,7 @@ namespace VirtoCommerce.SearchModule.Test
         public void CanGetPriceFacetsForMultiplePricelists(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
             var criteria = new KeywordSearchCriteria(_documentType)
             {
@@ -489,7 +489,7 @@ namespace VirtoCommerce.SearchModule.Test
         public void CanGetAllFacetValuesWhenFilterIsApplied(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
-            SearchHelper.CreateSampleIndex(provider, _scope, _documentType);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
             var criteria = new KeywordSearchCriteria(_documentType)
             {

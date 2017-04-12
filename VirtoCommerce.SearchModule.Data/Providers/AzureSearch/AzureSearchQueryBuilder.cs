@@ -9,7 +9,7 @@ using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.Azure
+namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 {
     [CLSCompliant(false)]
     public class AzureSearchQueryBuilder : ISearchQueryBuilder

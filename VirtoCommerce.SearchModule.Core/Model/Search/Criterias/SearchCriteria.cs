@@ -4,17 +4,18 @@ using VirtoCommerce.SearchModule.Core.Model.Filters;
 
 namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
 {
-    public abstract class SearchCriteriaBase : ISearchCriteria
+    public class SearchCriteria : ISearchCriteria
     {
-        private readonly IList<ISearchFilter> _filters = new List<ISearchFilter>();
-        private readonly IList<ISearchFilter> _currentFilters = new List<ISearchFilter>();
-
-        protected SearchCriteriaBase(string documentType)
+        public SearchCriteria(string documentType)
         {
             DocumentType = documentType;
         }
 
         public virtual string DocumentType { get; }
+
+        public virtual string RawQuery { get; set; }
+
+        public virtual IList<string> Ids { get; set; }
 
         public virtual bool CacheResults { get; set; } = true;
 
@@ -44,15 +45,15 @@ namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
         /// </value>
         public virtual IList<string> Pricelists { get; set; }
 
-        public virtual IList<ISearchFilter> Filters => _filters;
+        public virtual IList<ISearchFilter> Filters { get; } = new List<ISearchFilter>();
 
-        public virtual IList<ISearchFilter> CurrentFilters => _currentFilters;
+        public virtual IList<ISearchFilter> CurrentFilters { get; } = new List<ISearchFilter>();
 
         public virtual void Add(ISearchFilter filter)
         {
             if (filter != null)
             {
-                _filters.Add(filter);
+                Filters.Add(filter);
             }
         }
 
@@ -60,7 +61,7 @@ namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
         {
             if (filter != null)
             {
-                _currentFilters.Add(filter);
+                CurrentFilters.Add(filter);
             }
         }
 

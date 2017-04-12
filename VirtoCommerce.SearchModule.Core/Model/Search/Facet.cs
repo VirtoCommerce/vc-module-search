@@ -11,19 +11,19 @@
         /// <summary>
         /// Gets the facet labels.
         /// </summary>
-        public FacetLabel[] Labels { get; private set; }
+        public FacetLabel[] Labels { get; }
 
         /// <summary>
         /// Gets the count.
         /// </summary>
         /// <value>The count.</value>
-        public int Count { get; private set; }
+        public long? Count { get; }
 
         /// <summary>
         /// Gets or sets the Key.
         /// </summary>
         /// <value>The URL.</value>
-        public string Key { get; private set; }
+        public string Key { get; }
 
         public Facet()
         {
@@ -36,7 +36,7 @@
         /// <param name="key">The key.</param>
         /// <param name="count">The count.</param>
         /// <param name="labels">The labels.</param>
-        public Facet(FacetGroup group, string key, int count, FacetLabel[] labels)
+        public Facet(FacetGroup group, string key, long? count, FacetLabel[] labels)
         {
             Group = group;
             Key = key;

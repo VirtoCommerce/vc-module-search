@@ -14,7 +14,7 @@ using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
+namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
 {
     /// <summary>
     /// File based search provider based on Lucene.
@@ -222,7 +222,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
         /// <param name="scope">Name of the application.</param>
         /// <param name="criteria">The criteria.</param>
         /// <returns></returns>
-        /// <exception cref="VirtoCommerce.SearchModule.Data.Providers.Lucene.LuceneSearchException"></exception>
+        /// <exception cref="SearchException"></exception>
         public virtual ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria) where T : class
         {
             ISearchResults<T> result;
@@ -267,7 +267,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                 }
                 catch (Exception ex)
                 {
-                    throw new LuceneSearchException("Search exception", ex);
+                    throw new SearchException("Search exception", ex);
                 }
 
                 result = new LuceneSearchResults<T>(searcher, searcher.IndexReader, docs, criteria, query) as ISearchResults<T>;

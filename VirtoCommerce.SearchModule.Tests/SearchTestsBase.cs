@@ -5,9 +5,9 @@ using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
-using VirtoCommerce.SearchModule.Data.Providers.Azure;
-using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest;
-using VirtoCommerce.SearchModule.Data.Providers.Lucene;
+using VirtoCommerce.SearchModule.Data.Providers.AzureSearch;
+using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch;
+using VirtoCommerce.SearchModule.Data.Providers.LuceneSearch;
 
 namespace VirtoCommerce.SearchModule.Test
 {
@@ -51,9 +51,9 @@ namespace VirtoCommerce.SearchModule.Test
             return provider;
         }
 
-        public int GetFacetCount(ISearchResults<DocumentDictionary> results, string fieldName, string facetKey)
+        protected long GetFacetCount(ISearchResults<DocumentDictionary> results, string fieldName, string facetKey)
         {
-            if (results.Facets == null || results.Facets.Length == 0)
+            if (results.Facets == null || results.Facets.Count == 0)
             {
                 return 0;
             }
@@ -61,9 +61,9 @@ namespace VirtoCommerce.SearchModule.Test
             var group = results.Facets.SingleOrDefault(fg => fg.FieldName.EqualsInvariant(fieldName));
 
             return group?.Facets
-                       .Where(facet => facet.Key == facetKey)
-                       .Select(facet => facet.Count)
-                       .FirstOrDefault() ?? 0;
+                .Where(facet => facet.Key == facetKey)
+                .Select(facet => facet.Count)
+                .FirstOrDefault() ?? 0;
         }
 
         public virtual void Dispose()

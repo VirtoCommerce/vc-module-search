@@ -4,6 +4,6 @@
     {
         Lucene,
         Elasticsearch,
-        AzureSearch
+        AzureSearch,
     }
 }

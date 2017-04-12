@@ -9,7 +9,7 @@ using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 using VirtoCommerce.SearchModule.Data.Services;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.Azure
+namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 {
     [CLSCompliant(false)]
     public class AzureSearchResults : ISearchResults<DocumentDictionary>
@@ -24,11 +24,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
             Facets = ConvertFacets(searchResult.Facets, criteria);
         }
 
-        public IEnumerable<DocumentDictionary> Documents { get; }
+        public IList<DocumentDictionary> Documents { get; }
         public ISearchCriteria SearchCriteria { get; }
         public long DocCount { get; }
-        public FacetGroup[] Facets { get; }
-        public string[] Suggestions { get; }
+        public IList<FacetGroup> Facets { get; }
+        public IList<string> Suggestions { get; }
         public long TotalCount { get; }
 
         public FacetResults ProviderAggregations { get; set; }
@@ -71,7 +71,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
 
                                 foreach (var facetResult in facetResults)
                                 {
-                                    var newFacet = new Facet(facetGroup, facetResult.Value.ToString(), (int)facetResult.Count, null);
+                                    var newFacet = new Facet(facetGroup, facetResult.Value.ToString(), facetResult.Count, null);
                                     facetGroup.Facets.Add(newFacet);
                                 }
                             }
@@ -89,7 +89,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                                         var facetResult = facetResults.FirstOrDefault(r => r.Value.ToString().EqualsInvariant(group.Key));
                                         if (facetResult != null)
                                         {
-                                            var newFacet = new Facet(facetGroup, group.Key, (int)facetResult.Count, valueLabels);
+                                            var newFacet = new Facet(facetGroup, group.Key, facetResult.Count, valueLabels);
                                             facetGroup.Facets.Add(newFacet);
                                         }
                                     }
@@ -105,7 +105,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Azure
                                         var facetResult = facetResults.FirstOrDefault(r => r.From?.ToString() == lower && r.To?.ToString() == upper);
                                         if (facetResult != null)
                                         {
-                                            var newFacet = new Facet(facetGroup, group.Key, (int)facetResult.Count, valueLabels);
+                                            var newFacet = new Facet(facetGroup, group.Key, facetResult.Count, valueLabels);
                                             facetGroup.Facets.Add(newFacet);
                                         }
                                     }

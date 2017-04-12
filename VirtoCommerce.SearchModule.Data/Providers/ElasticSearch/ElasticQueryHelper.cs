@@ -7,7 +7,7 @@ using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 using VirtoCommerce.SearchModule.Data.Services;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
+namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
     public class ElasticQueryHelper
     {

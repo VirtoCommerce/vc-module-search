@@ -8,7 +8,7 @@ using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 using VirtoCommerce.SearchModule.Data.Services;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
+namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
 {
     public class LuceneQueryHelper
     {

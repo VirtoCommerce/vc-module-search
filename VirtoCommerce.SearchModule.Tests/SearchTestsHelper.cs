@@ -5,7 +5,7 @@ using VirtoCommerce.SearchModule.Core.Model.Indexing;
 
 namespace VirtoCommerce.SearchModule.Test
 {
-    public class SearchHelper
+    public class SearchTestsHelper
     {
         public class Price
         {

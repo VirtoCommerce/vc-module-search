@@ -10,7 +10,7 @@ using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
+namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
     /// <summary>
     /// NEST based elastic search provider.
@@ -147,13 +147,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             }
             catch (Exception ex)
             {
-                throw new ElasticSearchException("Search using Elastic Search NEST provider failed, check logs for more details.", ex);
+                throw new SearchException("Search using Elastic Search NEST provider failed, check logs for more details.", ex);
             }
 
             if (!searchResponse.IsValid)
                 ThrowException(searchResponse.DebugInformation, null);
 
-            var results = new SearchResults<T>(criteria, searchResponse);
+            var results = new ElasticSearchResults<T>(criteria, searchResponse);
             return results;
         }
 
@@ -467,7 +467,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
 
         protected virtual void ThrowException(string message, Exception innerException)
         {
-            throw new ElasticSearchException($"{message}. URL:{ElasticServerUrl}", innerException);
+            throw new SearchException($"{message}. URL:{ElasticServerUrl}", innerException);
         }
 
         protected virtual void SetupProperty(IProperty property, IDocumentField field, string documentType)

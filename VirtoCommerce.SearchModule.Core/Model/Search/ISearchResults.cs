@@ -5,15 +5,15 @@ namespace VirtoCommerce.SearchModule.Core.Model.Search
 {
     public interface ISearchResults<T> where T : class
     {
-        IEnumerable<T> Documents { get; }
+        IList<T> Documents { get; }
 
         ISearchCriteria SearchCriteria { get; }
 
+        IList<FacetGroup> Facets { get; }
+
+        IList<string> Suggestions { get; }
+
         long DocCount { get; }
-
-        FacetGroup[] Facets { get; }
-
-        string[] Suggestions { get;}
 
         long TotalCount { get; }
     }

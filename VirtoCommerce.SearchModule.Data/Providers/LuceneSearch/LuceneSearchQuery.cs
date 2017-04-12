@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Lucene.Net.Search;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
+namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
 {
     public class LuceneSearchQuery
     {

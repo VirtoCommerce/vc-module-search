@@ -11,12 +11,12 @@ using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 using VirtoCommerce.SearchModule.Data.Services;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
+namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
 {
     public class LuceneSearchResults<T> : ISearchResults<DocumentDictionary> where T : class
     {
         /// <summary>
-        ///     Initializes a new instance of the <see cref="SearchResults" /> class.
+        ///     Initializes a new instance of the <see cref="LuceneSearchResults&lt;T&gt;" /> class.
         /// </summary>
         /// <param name="searcher">The searcher.</param>
         /// <param name="reader">The reader.</param>
@@ -31,11 +31,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             //CreateSuggestions(reader, criteria);
         }
 
-        public FacetGroup[] Facets
-        {
-            get;
-            private set;
-        }
+        public IList<FacetGroup> Facets { get; private set; }
 
         public long DocCount
         {
@@ -43,24 +39,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
             private set;
         }
 
-        public IEnumerable<DocumentDictionary> Documents
-        {
-            get;
-            private set;
-        }
+        public IList<DocumentDictionary> Documents { get; private set; }
 
-        public ISearchCriteria SearchCriteria
-        {
-            get;
-            private set;
-        }
+        public ISearchCriteria SearchCriteria { get; private set; }
 
-        public long TotalCount
-        {
-            get;
-            private set;
-        }
-        public string[] Suggestions { get; private set; }
+        public long TotalCount { get; private set; }
+
+        public IList<string> Suggestions { get; private set; }
 
 
         /// <summary>
@@ -163,7 +148,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
 
                     var queryFilter = new CachingWrapperFilter(new QueryWrapperFilter(q));
                     var filterArray = queryFilter.GetDocIdSet(reader);
-                    var newCount = (int)CalculateFacetCount(baseDocIdSet, filterArray);
+                    var newCount = CalculateFacetCount(baseDocIdSet, filterArray);
                     if (newCount == 0) continue;
 
                     var newFacet = new Facet(group, value.Code, value.Name, newCount);
@@ -246,7 +231,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                                 queryFilter.Add(new FilterClause(existing_filters, Occur.MUST));
 
                             var filterArray = queryFilter.GetDocIdSet(reader);
-                            var newCount = (int)CalculateFacetCount(baseDocIdSet, filterArray);
+                            var newCount = CalculateFacetCount(baseDocIdSet, filterArray);
 
                             if (newCount > 0)
                             {
@@ -273,7 +258,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
                             queryFilter.Add(new FilterClause(existing_filters, Occur.MUST));
 
                         var filterArray = queryFilter.GetDocIdSet(reader);
-                        var newCount = (int)CalculateFacetCount(baseDocIdSet, filterArray);
+                        var newCount = CalculateFacetCount(baseDocIdSet, filterArray);
 
                         if (newCount > 0)
                         {

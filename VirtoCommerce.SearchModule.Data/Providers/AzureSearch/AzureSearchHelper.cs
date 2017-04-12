@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.Azure
+namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 {
     public static class AzureSearchHelper
     {

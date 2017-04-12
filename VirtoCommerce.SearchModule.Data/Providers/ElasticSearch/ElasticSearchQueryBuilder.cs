@@ -8,17 +8,11 @@ using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
+namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
     public class ElasticSearchQueryBuilder : ISearchQueryBuilder
     {
-        public virtual string DocumentType
-        {
-            get
-            {
-                return string.Empty; // default implementation, can handle generic queries
-            }
-        }
+        public virtual string DocumentType => string.Empty;
 
         #region ISearchQueryBuilder Members
 
@@ -110,30 +104,27 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
             QueryContainer result = null;
 
             var keywordSearchCriteria = criteria as KeywordSearchCriteria;
-            if (keywordSearchCriteria != null)
-            {             
-                if (!string.IsNullOrEmpty(keywordSearchCriteria.SearchPhrase))
+            if (!string.IsNullOrEmpty(keywordSearchCriteria?.SearchPhrase))
+            {
+                //Workaround for possibility to use __key : 'value' as SearchPhrase
+                if (keywordSearchCriteria.SearchPhrase.StartsWith("__key:"))
                 {
-                    //Workaround for possibility to use __key : 'value' as SearchPhrase
-                    if (keywordSearchCriteria.SearchPhrase.StartsWith("__key:"))
+                    result = new MultiMatchQuery
                     {
-                        result = new MultiMatchQuery
-                        {
-                            Fields = new[] { "__key" },
-                            Query = keywordSearchCriteria.SearchPhrase.Split(':').Last()
-                        };
-                    }
-                    else
+                        Fields = new[] { "__key" },
+                        Query = keywordSearchCriteria.SearchPhrase.Split(':').Last()
+                    };
+                }
+                else
+                {
+                    var searchFields = new List<string> { "__content" };
+
+                    if (!string.IsNullOrEmpty(criteria.Locale))
                     {
-                        var searchFields = new List<string> { "__content" };
-
-                        if (!string.IsNullOrEmpty(criteria.Locale))
-                        {
-                            searchFields.Add(string.Concat("__content_", criteria.Locale.ToLower()));
-                        }
-
-                        result = CreateKeywordQuery<T>(keywordSearchCriteria, searchFields.ToArray());
+                        searchFields.Add(string.Concat("__content_", criteria.Locale.ToLower()));
                     }
+
+                    result = CreateKeywordQuery<T>(keywordSearchCriteria, searchFields.ToArray());
                 }
             }
 

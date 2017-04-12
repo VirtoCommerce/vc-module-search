@@ -8,7 +8,7 @@ using Lucene.Net.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 using u = Lucene.Net.Util;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.Lucene
+namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
 {
     public class LuceneSearchQueryBuilder : LuceneSearchQueryBuilderBase
     {

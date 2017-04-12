@@ -1,16 +1,17 @@
-﻿using System;
-using System.Configuration;
+﻿using System.Configuration;
 using Hangfire;
 using Microsoft.Practices.Unity;
 using VirtoCommerce.Domain.Store.Model;
+using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.DynamicProperties;
 using VirtoCommerce.Platform.Core.Modularity;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
-using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest;
-using VirtoCommerce.SearchModule.Data.Providers.Lucene;
+using VirtoCommerce.SearchModule.Data.Providers.AzureSearch;
+using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch;
+using VirtoCommerce.SearchModule.Data.Providers.LuceneSearch;
 using VirtoCommerce.SearchModule.Data.Services;
 using VirtoCommerce.SearchModule.Web.BackgroundJobs;
 
@@ -50,15 +51,20 @@ namespace VirtoCommerce.SearchModule.Web
             var searchConnection = new SearchConnection(connectionString);
             _container.RegisterInstance<ISearchConnection>(searchConnection);
 
-            if (searchConnection.Provider.Equals(SearchProviders.Elasticsearch.ToString(), StringComparison.OrdinalIgnoreCase))
+            if (searchConnection.Provider.EqualsInvariant(SearchProviders.Lucene.ToString()))
+            {
+                _container.RegisterType<ISearchProvider, LuceneSearchProvider>();
+                _container.RegisterType<ISearchQueryBuilder, LuceneSearchQueryBuilder>();
+            }
+            else if (searchConnection.Provider.EqualsInvariant(SearchProviders.Elasticsearch.ToString()))
             {
                 _container.RegisterType<ISearchProvider, ElasticSearchProvider>(new ContainerControlledLifetimeManager());
                 _container.RegisterType<ISearchQueryBuilder, ElasticSearchQueryBuilder>();
             }
-            else if (searchConnection.Provider.Equals(SearchProviders.Lucene.ToString(), StringComparison.OrdinalIgnoreCase))
+            else if (searchConnection.Provider.EqualsInvariant(SearchProviders.AzureSearch.ToString()))
             {
-                _container.RegisterType<ISearchProvider, LuceneSearchProvider>();
-                _container.RegisterType<ISearchQueryBuilder, LuceneSearchQueryBuilder>();
+                _container.RegisterType<ISearchProvider, AzureSearchProvider>(new ContainerControlledLifetimeManager());
+                _container.RegisterType<ISearchQueryBuilder, AzureSearchQueryBuilder>();
             }
         }
 

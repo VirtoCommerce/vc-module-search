@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using Newtonsoft.Json;
 using VirtoCommerce.Platform.Core.PushNotifications;
 
 namespace VirtoCommerce.SearchModule.Web.Model.PushNotifications
 {
 
-	public class IndexProgressPushNotification : PushNotification
+    public class IndexProgressPushNotification : PushNotification
     {
         public IndexProgressPushNotification(string creator)
             : base(creator)

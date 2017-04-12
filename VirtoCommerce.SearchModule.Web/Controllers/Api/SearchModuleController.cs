@@ -2,25 +2,23 @@
 using System.Linq;
 using System.Web.Http;
 using System.Web.Http.Description;
+using Hangfire;
+using Omu.ValueInjecter;
+using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.Platform.Core.Web.Security;
-using VirtoCommerce.SearchModule.Web.Security;
 using VirtoCommerce.SearchModule.Core.Model;
-using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
-using VirtoCommerce.Platform.Core.PushNotifications;
-using VirtoCommerce.SearchModule.Web.Model.PushNotifications;
-using Omu.ValueInjecter;
-using Hangfire;
-using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Web.Model;
+using VirtoCommerce.SearchModule.Web.Model.PushNotifications;
+using VirtoCommerce.SearchModule.Web.Security;
 
 namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 {
     [RoutePrefix("api/search")]
     public class SearchModuleController : ApiController
-    { 
+    {
         private readonly ISearchProvider _searchProvider;
         private readonly ISearchConnection _searchConnection;
         private readonly IPushNotificationManager _pushNotifier;
@@ -30,7 +28,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         public SearchModuleController(ISearchProvider searchProvider, ISearchConnection searchConnection, ISearchIndexController searchIndexController, IPushNotificationManager pushNotifier, IUserNameResolver userNameResolver)
         {
             _searchProvider = searchProvider;
-            _searchConnection = searchConnection;         
+            _searchConnection = searchConnection;
             _pushNotifier = pushNotifier;
             _searchIndexController = searchIndexController;
             _userNameResolver = userNameResolver;
@@ -47,14 +45,9 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         [CheckPermission(Permission = SearchPredefinedPermissions.RebuildIndex)]
         public IHttpActionResult GetDocumentIndex(string documentType, string documentId)
         {
-            var criteria = new KeywordSearchCriteria(documentType);
-            criteria.SearchPhrase = "__key:" + documentId;
-
-            //var attr = new AttributeFilter { Key = "__key", Values = new[] { new AttributeFilterValue {Id = documentId,Value = documentId}}};
-            //criteria.Apply(attr);
-
+            var criteria = new SearchCriteria(documentType) { Ids = new[] { documentId } };
             var result = _searchProvider.Search<DocumentDictionary>(_searchConnection.Scope, criteria);
-            return Ok(result != null ? result.Documents : null);
+            return Ok(result?.Documents);
         }
 
         /// <summary>
@@ -71,7 +64,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             var notification = new IndexProgressPushNotification(_userNameResolver.GetCurrentUserName())
             {
                 Title = "Indexation process",
-                Description = documentType != null ? string.Format("starting {0} indexations", documentType) : "starting full indexation"
+                Description = documentType != null ? $"Starting {documentType} indexation" : "Starting full indexation"
             };
             _pushNotifier.Upsert(notification);
             string[] ids = null;
@@ -93,13 +86,13 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         [Route("reindex/{documentType?}")]
         [ResponseType(typeof(IndexProgressPushNotification))]
         [CheckPermission(Permission = SearchPredefinedPermissions.RebuildIndex)]
-        [ApiExplorerSettings(IgnoreApi = true)] 
+        [ApiExplorerSettings(IgnoreApi = true)]
         public IHttpActionResult ReindexDocuments([FromBody] IndexDocumentId[] documentsIds, string documentType = null)
         {
             var notification = new IndexProgressPushNotification(_userNameResolver.GetCurrentUserName())
             {
-                Title = "Re-indexation process",
-                Description = documentType != null ? "starting re-index for " + documentType : "starting full index rebuild"
+                Title = "Reindexation process",
+                Description = documentType != null ? "Starting reindex for " + documentType : "Starting full index rebuild"
             };
             _pushNotifier.Upsert(notification);
 
@@ -113,8 +106,8 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
             BackgroundJob.Enqueue(() => BackgroundIndex(_searchConnection.Scope, documentType, ids, notification));
 
             return Ok(notification);
-        }   
-     
+        }
+
 
         [ApiExplorerSettings(IgnoreApi = true)]
         // Only public methods can be invoked in the background. (Hangfire)
@@ -125,6 +118,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                 notification.InjectFrom(x);
                 _pushNotifier.Upsert(notification);
             };
+
             try
             {
                 _searchIndexController.BuildIndex(scope, documentType, progressCallback, documentsIds);
@@ -141,7 +135,6 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                 notification.Description = "Indexation finished" + (notification.Errors.Any() ? " with errors" : " successfully");
                 _pushNotifier.Upsert(notification);
             }
-
         }
     }
 }

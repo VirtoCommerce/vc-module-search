@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Reflection;
 using System.Collections;
-using Nest;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using Nest;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
+namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
-    class PropertyHelper
+    internal class PropertyHelper
     {
         public static IProperty InferProperty(Type type)
         {

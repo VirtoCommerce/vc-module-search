@@ -1,67 +1,43 @@
-﻿using Nest;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Nest;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
 using VirtoCommerce.SearchModule.Data.Services;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
+namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
-    public class SearchResults<T> : ISearchResults<T> where T:class
+    public class ElasticSearchResults<T> : ISearchResults<T> where T : class
     {
-        public SearchResults(ISearchCriteria criteria, ISearchResponse<T> response)
+        public ElasticSearchResults(ISearchCriteria criteria, ISearchResponse<T> response)
         {
-            this.SearchCriteria = criteria;
-            this.Documents = response.Documents;
-            this.DocCount = response.HitsMetaData.Hits.Count;
-            this.TotalCount = response.Total;
-            this.ProviderAggregations = response.Aggregations;
-            this.Facets = CreateFacets(criteria, response.Aggregations);
+            SearchCriteria = criteria;
+            Documents = response.Documents?.ToList();
+            DocCount = response.HitsMetaData.Hits.Count;
+            TotalCount = response.Total;
+            ProviderAggregations = response.Aggregations;
+            Facets = CreateFacets(criteria, response.Aggregations);
         }
 
         public IDictionary<string, IAggregate> ProviderAggregations
         {
             get;
-            private set;
         }
 
-        public FacetGroup[] Facets
-        {
-            get;
-            private set;
-        }
+        public IList<FacetGroup> Facets { get; }
 
-        public long DocCount
-        {
-            get;
-            private set;
-        }
+        public long DocCount { get; }
 
-        public IEnumerable<T> Documents
-        {
-            get;
-            private set;
-        }
+        public IList<T> Documents { get; }
 
-        public ISearchCriteria SearchCriteria
-        {
-            get;
-            private set;
-        }
+        public ISearchCriteria SearchCriteria { get; }
 
-        public long TotalCount
-        {
-            get;
-            private set;
-        }
+        public long TotalCount { get; }
 
-        public string[] Suggestions
-        {
-            get; private set;
-        }
+        public IList<string> Suggestions { get; }
 
         private static FacetGroup[] CreateFacets(ISearchCriteria criteria, IDictionary<string, IAggregate> facets)
         {
@@ -85,19 +61,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                         if (facets.ContainsKey(key))
                         {
                             var facet = facets[key] as SingleBucketAggregate;
-                            if (facet != null)
+                            var termAgg = facet?.Aggregations?[key] as BucketAggregate;
+                            if (termAgg != null)
                             {
-                                if (facet.Aggregations != null)
+                                foreach (var term in termAgg.Items.OfType<KeyedBucket>())
                                 {
-                                    var termAgg = facet.Aggregations[key] as BucketAggregate;
-                                    if (termAgg != null)
-                                    {
-                                        foreach (var term in termAgg.Items.OfType<KeyedBucket>())
-                                        {
-                                            var newFacet = new Facet(facetGroup, term.Key, (int)term.DocCount, null);
-                                            facetGroup.Facets.Add(newFacet);
-                                        }
-                                    }
+                                    var newFacet = new Facet(facetGroup, term.Key, term.DocCount, null);
+                                    facetGroup.Facets.Add(newFacet);
                                 }
                             }
                         }
@@ -117,21 +87,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                                 if (facets.ContainsKey(key))
                                 {
                                     var facet = facets[key] as SingleBucketAggregate;
-                                    if (facet != null)
+                                    var termAgg = facet?.Aggregations?[key] as BucketAggregate;
+                                    var term = termAgg?.Items.OfType<KeyedBucket>().FirstOrDefault(t => t.Key.Equals(group.Key, StringComparison.OrdinalIgnoreCase));
+                                    if (term != null)
                                     {
-                                        if (facet.Aggregations != null)
-                                        {
-                                            var termAgg = facet.Aggregations[key] as BucketAggregate;
-                                            if (termAgg != null)
-                                            {
-                                                var term = termAgg.Items.OfType<KeyedBucket>().FirstOrDefault(t => t.Key.Equals(group.Key, StringComparison.OrdinalIgnoreCase));
-                                                if (term != null)
-                                                {
-                                                    var newFacet = new Facet(facetGroup, group.Key, (int)term.DocCount, valueLabels);
-                                                    facetGroup.Facets.Add(newFacet);
-                                                }
-                                            }
-                                        }
+                                        var newFacet = new Facet(facetGroup, group.Key, term.DocCount, valueLabels);
+                                        facetGroup.Facets.Add(newFacet);
                                     }
                                 }
                             }
@@ -148,7 +109,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                                         var facet = facets[key] as SingleBucketAggregate;
                                         if (facet != null && facet.DocCount > 0)
                                         {
-                                            var newFacet = new Facet(facetGroup, group.Key, (int)facet.DocCount, valueLabels);
+                                            var newFacet = new Facet(facetGroup, group.Key, facet.DocCount, valueLabels);
                                             facetGroup.Facets.Add(newFacet);
                                         }
                                     }
@@ -165,7 +126,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch.Nest
                                     if (facet != null && facet.DocCount > 0)
                                     {
 
-                                        var newFacet = new Facet(facetGroup, group.Key, (int)facet.DocCount, valueLabels);
+                                        var newFacet = new Facet(facetGroup, group.Key, facet.DocCount, valueLabels);
                                         facetGroup.Facets.Add(newFacet);
                                     }
                                 }

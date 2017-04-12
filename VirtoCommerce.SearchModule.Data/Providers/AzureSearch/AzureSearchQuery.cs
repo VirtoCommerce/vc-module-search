@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Azure.Search.Models;
 
-namespace VirtoCommerce.SearchModule.Data.Providers.Azure
+namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 {
     [CLSCompliant(false)]
     public class AzureSearchQuery

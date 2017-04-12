@@ -10,6 +10,10 @@ namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
         /// </summary>
         string DocumentType { get; }
 
+        string RawQuery { get; set; }
+
+        IList<string> Ids { get; set; }
+
         /// <summary>
         /// Gets the cache key.
         /// </summary>
