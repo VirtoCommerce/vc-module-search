@@ -10,15 +10,31 @@ namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
         /// </summary>
         string DocumentType { get; }
 
-        string RawQuery { get; set; }
-
         IList<string> Ids { get; set; }
 
+        string RawQuery { get; set; }
+
+        IList<ISearchFilter> CurrentFilters { get; }
+
         /// <summary>
-        /// Gets the cache key.
+        /// Gets the filters.
         /// </summary>
-        /// <value>The cache key.</value>
-        string CacheKey { get; }
+        /// <value>The filters.</value>
+        IList<ISearchFilter> Filters { get; }
+
+        /// <summary>
+        /// Gets or sets the currency.
+        /// </summary>
+        /// <value>The currency.</value>
+        string Currency { get; set; }
+
+        IList<string> Pricelists { get; set; }
+
+        /// <summary>
+        /// Gets the sorts.
+        /// </summary>
+        /// <value>The sorts.</value>
+        SearchSort Sort { get; set; }
 
         /// <summary>
         /// Gets or sets the starting record.
@@ -32,33 +48,6 @@ namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
         /// <value>The records to retrieve.</value>
         int RecordsToRetrieve { get; set; }
 
-        /// <summary>
-        /// Gets the sorts.
-        /// </summary>
-        /// <value>The sorts.</value>
-        SearchSort Sort { get; set; }
-
-        /// <summary>
-        /// Gets or sets the locale.
-        /// </summary>
-        /// <value>The locale.</value>
-        string Locale { get; set; }
-
-        /// <summary>
-        /// Gets or sets the currency.
-        /// </summary>
-        /// <value>The currency.</value>
-        string Currency { get; set; }
-
-        IList<string> Pricelists { get; set; }
-
-        /// <summary>
-        /// Gets the filters.
-        /// </summary>
-        /// <value>The filters.</value>
-        IList<ISearchFilter> Filters { get; }
-
-        IList<ISearchFilter> CurrentFilters { get; }
 
         /// <summary>
         /// Adds the specified filter.

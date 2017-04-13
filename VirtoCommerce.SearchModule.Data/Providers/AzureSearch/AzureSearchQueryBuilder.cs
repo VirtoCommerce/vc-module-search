@@ -19,81 +19,89 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
         public object BuildQuery<T>(string scope, ISearchCriteria criteria)
             where T : class
         {
-            return new AzureSearchQuery
+            var result = new AzureSearchQuery
             {
-                SearchText = GetSearchText(criteria as KeywordSearchCriteria),
-                SearchParameters = GetSearchParameters(criteria),
+                SearchText = GetSearchText(criteria),
+                SearchParameters = new SearchParameters
+                {
+                    QueryType = GetQueryType(criteria),
+                    Filter = GetFilters(criteria),
+                    Facets = GetFacets(criteria),
+                    OrderBy = GetSorting(criteria),
+                    Skip = criteria.StartingRecord,
+                    Top = criteria.RecordsToRetrieve,
+                    IncludeTotalResultCount = true,
+                    SearchMode = SearchMode.All,
+                }
             };
+
+            return result;
         }
 
+
+        protected virtual QueryType GetQueryType(ISearchCriteria criteria)
+        {
+            return string.IsNullOrEmpty(criteria?.RawQuery) ? QueryType.Simple : QueryType.Full;
+        }
 
         protected virtual string GetSearchText(ISearchCriteria criteria)
         {
-            return (criteria as KeywordSearchCriteria)?.SearchPhrase;
-        }
-
-        protected virtual SearchParameters GetSearchParameters(ISearchCriteria criteria)
-        {
-            return new SearchParameters
-            {
-                IncludeTotalResultCount = true,
-                Filter = GetFilters(criteria),
-                OrderBy = GetSorting(criteria),
-                Facets = GetFacets(criteria),
-                Skip = criteria.StartingRecord,
-                Top = criteria.RecordsToRetrieve,
-                SearchMode = SearchMode.All,
-            };
+            return criteria?.RawQuery ?? (criteria as KeywordSearchCriteria)?.SearchPhrase;
         }
 
         protected virtual string GetFilters(ISearchCriteria criteria)
         {
-            string result;
+            IList<string> filters = new List<string>();
 
-            if (!criteria.Ids.IsNullOrEmpty())
-            {
-                result = GetIdsFilterExpression(criteria);
-            }
-            else
-            {
-                IList<string> filters = new List<string>();
+            AddIdsFilter(criteria, filters);
+            AddCurrentFilters(criteria, filters);
 
-                foreach (var filter in criteria.CurrentFilters)
-                {
-                    var attributeFilter = filter as AttributeFilter;
-                    var rangeFilter = filter as RangeFilter;
-                    var priceRangeFilter = filter as PriceRangeFilter;
-
-                    string expression = null;
-
-                    if (attributeFilter != null)
-                    {
-                        expression = GetAttributeFilterExpression(attributeFilter, criteria);
-                    }
-                    else if (rangeFilter != null)
-                    {
-                        expression = GetRangeFilterExpression(rangeFilter, criteria);
-                    }
-                    else if (priceRangeFilter != null && priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
-                    {
-                        expression = GetPriceRangeFilterExpression(priceRangeFilter, criteria);
-                    }
-
-                    if (!string.IsNullOrEmpty(expression))
-                    {
-                        filters.Add(expression);
-                    }
-                }
-
-                result = string.Join(" and ", filters);
-            }
+            var result = string.Join(" and ", filters.Where(f => !string.IsNullOrEmpty(f)));
             return result;
         }
 
-        protected string GetIdsFilterExpression(ISearchCriteria criteria)
+        protected void AddIdsFilter(ISearchCriteria criteria, IList<string> filters)
         {
-            var values = criteria.Ids.Select(GetStringFilterValue).ToArray();
-            return GetFilterExpression(AzureSearchHelper.KeyFieldName, values);
+            if (criteria?.Ids != null && criteria.Ids.Any())
+            {
+                var values = criteria.Ids.Select(GetStringFilterValue).ToArray();
+                var filter = GetFilterExpression(AzureSearchHelper.KeyFieldName, values);
+
+                if (!string.IsNullOrEmpty(filter))
+                {
+                    filters.Add(filter);
+                }
+            }
+        }
+
+        protected virtual void AddCurrentFilters(ISearchCriteria criteria, IList<string> filters)
+        {
+            foreach (var filter in criteria.CurrentFilters)
+            {
+                var attributeFilter = filter as AttributeFilter;
+                var rangeFilter = filter as RangeFilter;
+                var priceRangeFilter = filter as PriceRangeFilter;
+
+                string expression = null;
+
+                if (attributeFilter != null)
+                {
+                    expression = GetAttributeFilterExpression(attributeFilter, criteria);
+                }
+                else if (rangeFilter != null)
+                {
+                    expression = GetRangeFilterExpression(rangeFilter, criteria);
+                }
+                else if (priceRangeFilter != null && priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
+                {
+                    expression = GetPriceRangeFilterExpression(priceRangeFilter, criteria);
+                }
+
+                if (!string.IsNullOrEmpty(expression))
+                {
+                    filters.Add(expression);
+                }
+            }
         }
 
         protected virtual string GetAttributeFilterExpression(AttributeFilter filter, ISearchCriteria criteria)

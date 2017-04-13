@@ -18,6 +18,12 @@
         public virtual string SearchPhrase { get; set; } = string.Empty;
 
         /// <summary>
+        /// Gets or sets the locale.
+        /// </summary>
+        /// <value>The locale.</value>
+        public string Locale { get; set; }
+
+        /// <summary>
         /// Gets or sets a value indicating whether this instance is fuzzy search.
         /// </summary>
         /// <value><c>true</c> if this instance is fuzzy search; otherwise, <c>false</c>.</value>

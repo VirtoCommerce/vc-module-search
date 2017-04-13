@@ -129,6 +129,30 @@ namespace VirtoCommerce.SearchModule.Test
         }
 
         [Theory]
+        [InlineData("Lucene", "__content:Red __content:shirt", 2)]
+        [InlineData("Elastic", "__content:Red __content:shirt", 2)]
+        [InlineData("Azure", "f___content:Red f___content:shirt", 2)]
+        [InlineData("Lucene", "__content:Red __content:sox", 0)]
+        [InlineData("Elastic", "__content:Red __content:sox", 0)]
+        [InlineData("Azure", "f___content:Red f___content:sox", 0)]
+        public void CanSearchByRawQuery(string providerType, string rawQuery, long expectedDocumentsCount)
+        {
+            var provider = GetSearchProvider(providerType, _scope);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
+
+            var criteria = new KeywordSearchCriteria(_documentType)
+            {
+                RawQuery = rawQuery,
+                RecordsToRetrieve = 10,
+            };
+
+            var results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(expectedDocumentsCount, results.DocCount);
+            Assert.Equal(expectedDocumentsCount, results.TotalCount);
+        }
+
+        [Theory]
         [InlineData("Lucene")]
         [InlineData("Elastic")]
         [InlineData("Azure")]

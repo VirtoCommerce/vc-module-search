@@ -20,14 +20,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             for (var index = 0; index < document.FieldCount; index++)
             {
                 var field = document[index];
-                AddFieldToDocument(ref doc, field);
+                AddFieldToDocument(doc, field);
             }
 
             return doc;
         }
 
 
-        private static void AddFieldToDocument(ref Document doc, IDocumentField field)
+        private static void AddFieldToDocument(Document doc, IDocumentField field)
         {
             if (field?.Value == null)
             {

@@ -124,7 +124,7 @@
     <Compile Include="Providers\AzureSearch\AzureSearchProvider.cs" />
     <Compile Include="Providers\AzureSearch\AzureSearchQueryBuilder.cs" />
     <Compile Include="Providers\AzureSearch\AzureSearchResults.cs" />
-    <Compile Include="Providers\ElasticSearch\ElasticQueryHelper.cs" />
+    <Compile Include="Providers\ElasticSearch\ElasticSearchHelper.cs" />
     <Compile Include="Providers\ElasticSearch\PropertyHelper.cs" />
     <Compile Include="Providers\ElasticSearch\ElasticSearchResults.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

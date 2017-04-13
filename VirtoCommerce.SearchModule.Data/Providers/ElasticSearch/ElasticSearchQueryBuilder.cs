@@ -4,7 +4,6 @@ using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
 using Nest;
-using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
@@ -20,33 +19,111 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         public virtual object BuildQuery<T>(string scope, ISearchCriteria criteria)
             where T : class
         {
-            SearchRequest result;
-
-            if (!criteria.Ids.IsNullOrEmpty())
+            var result = new SearchRequest(scope, criteria.DocumentType)
             {
-                result = new SearchRequest(scope, criteria.DocumentType)
-                {
-                    Query = new IdsQuery { Values = criteria.Ids.Select(id => new Id(id)) },
-                    Sort = GetSorting<T>(criteria.Sort),
-                };
-            }
-            else
-            {
-                result = new SearchRequest(scope, criteria.DocumentType)
-                {
-                    From = criteria.StartingRecord,
-                    Size = criteria.RecordsToRetrieve,
-                    Sort = GetSorting<T>(criteria.Sort),
-                    PostFilter = GetPostFilter<T>(criteria),
-                    Query = GetQuery<T>(criteria),
-                    Aggregations = GetAggregations<T>(criteria),
-                };
-            }
+                Query = GetQuery<T>(criteria),
+                PostFilter = GetPostFilter<T>(criteria),
+                Aggregations = GetAggregations<T>(criteria),
+                Sort = GetSorting<T>(criteria.Sort),
+                From = criteria.StartingRecord,
+                Size = criteria.RecordsToRetrieve
+            };
 
             return result;
         }
 
         #endregion
+
+        protected virtual QueryContainer GetQuery<T>(ISearchCriteria criteria)
+            where T : class
+        {
+            QueryContainer result = null;
+
+            result &= GetIdsQuery<T>(criteria);
+            result &= GetRawQuery<T>(criteria);
+            result &= GetKeywordQuery<T>(criteria as KeywordSearchCriteria);
+
+            return result;
+        }
+
+        protected virtual QueryContainer GetIdsQuery<T>(ISearchCriteria criteria)
+            where T : class
+        {
+            QueryContainer result = null;
+
+            if (criteria?.Ids != null && criteria.Ids.Any())
+            {
+                result = new IdsQuery { Values = criteria.Ids.Select(id => new Id(id)) };
+            }
+
+            return result;
+        }
+
+        protected virtual QueryContainer GetRawQuery<T>(ISearchCriteria criteria)
+            where T : class
+        {
+            QueryContainer result = null;
+
+            if (!string.IsNullOrEmpty(criteria?.RawQuery))
+            {
+                result = new QueryStringQuery { Query = criteria.RawQuery, Lenient = true, DefaultOperator = Operator.And, Analyzer = "standard" };
+            }
+
+            return result;
+        }
+
+        protected virtual QueryContainer GetKeywordQuery<T>(KeywordSearchCriteria criteria)
+            where T : class
+        {
+            QueryContainer result = null;
+
+            if (!string.IsNullOrEmpty(criteria?.SearchPhrase))
+            {
+                var searchFields = new List<string> { "__content" };
+
+                if (!string.IsNullOrEmpty(criteria.Locale))
+                {
+                    searchFields.Add(string.Concat("__content_", criteria.Locale.ToLower()));
+                }
+
+                result = GetKeywordQuery<T>(criteria, searchFields.ToArray());
+            }
+
+            return result;
+        }
+
+        protected virtual QueryContainer GetKeywordQuery<T>(KeywordSearchCriteria criteria, params string[] fields)
+            where T : class
+        {
+            QueryContainer result = null;
+
+            var searchPhrase = criteria.SearchPhrase;
+            MultiMatchQuery multiMatch;
+            if (criteria.IsFuzzySearch)
+            {
+                multiMatch = new MultiMatchQuery
+                {
+                    Fields = fields,
+                    Query = searchPhrase,
+                    Fuzziness = criteria.Fuzziness != null ? Fuzziness.EditDistance(criteria.Fuzziness.Value) : Fuzziness.Auto,
+                    Analyzer = "standard",
+                    Operator = Operator.And
+                };
+            }
+            else
+            {
+                multiMatch = new MultiMatchQuery
+                {
+                    Fields = fields,
+                    Query = searchPhrase,
+                    Analyzer = "standard",
+                    Operator = Operator.And
+                };
+            }
+
+            result &= multiMatch;
+            return result;
+        }
 
         protected virtual IList<ISort> GetSorting<T>(SearchSort sorting)
             where T : class
@@ -100,7 +177,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                         }
                     }
 
-                    var filterQuery = ElasticQueryHelper.CreateQuery<T>(criteria, filter);
+                    var filterQuery = ElasticSearchHelper.CreateQuery<T>(criteria, filter);
 
                     if (filterQuery != null)
                     {
@@ -110,12 +187,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             }
 
             return result;
-        }
-
-        protected virtual QueryContainer GetQuery<T>(ISearchCriteria criteria)
-            where T : class
-        {
-            return CreateKeywordQuery<T>(criteria as KeywordSearchCriteria);
         }
 
         #region Aggregations
@@ -181,7 +252,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
             foreach (var value in values)
             {
-                var query = ElasticQueryHelper.CreatePriceRangeFilter<T>(criteria, fieldName, value);
+                var query = ElasticSearchHelper.CreatePriceRangeFilter<T>(criteria, fieldName, value);
 
                 if (query != null)
                 {
@@ -275,59 +346,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             return new WildcardQuery { Field = fieldName.ToLower(), Value = lowerCaseValue ? value.ToLower() : value };
         }
 
-        protected virtual QueryContainer CreateKeywordQuery<T>(KeywordSearchCriteria criteria)
-            where T : class
-        {
-            QueryContainer result = null;
-
-            if (!string.IsNullOrEmpty(criteria?.SearchPhrase))
-            {
-                var searchFields = new List<string> { "__content" };
-
-                if (!string.IsNullOrEmpty(criteria.Locale))
-                {
-                    searchFields.Add(string.Concat("__content_", criteria.Locale.ToLower()));
-                }
-
-                result = CreateKeywordQuery<T>(criteria, searchFields.ToArray());
-            }
-
-            return result;
-        }
-
-        protected virtual QueryContainer CreateKeywordQuery<T>(KeywordSearchCriteria criteria, params string[] fields)
-            where T : class
-        {
-            QueryContainer result = null;
-
-            var searchPhrase = criteria.SearchPhrase;
-            MultiMatchQuery multiMatch;
-            if (criteria.IsFuzzySearch)
-            {
-                multiMatch = new MultiMatchQuery
-                {
-                    Fields = fields,
-                    Query = searchPhrase,
-                    Fuzziness = criteria.Fuzziness != null ? Fuzziness.EditDistance(criteria.Fuzziness.Value) : Fuzziness.Auto,
-                    Analyzer = "standard",
-                    Operator = Operator.And
-                };
-            }
-            else
-            {
-                multiMatch = new MultiMatchQuery
-                {
-                    Fields = fields,
-                    Query = searchPhrase,
-                    Analyzer = "standard",
-                    Operator = Operator.And
-                };
-            }
-
-            result &= multiMatch;
-            return result;
-        }
-
         protected virtual List<QueryContainer> GetExistingFilters<T>(ISearchCriteria criteria, string field)
             where T : class
         {
@@ -337,7 +355,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             {
                 if (!f.Key.Equals(field, StringComparison.OrdinalIgnoreCase))
                 {
-                    var q = ElasticQueryHelper.CreateQuery<T>(criteria, f);
+                    var q = ElasticSearchHelper.CreateQuery<T>(criteria, f);
                     existingFilters.Add(q);
                 }
             }

@@ -9,7 +9,7 @@ using VirtoCommerce.SearchModule.Data.Services;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
-    public class ElasticQueryHelper
+    public class ElasticSearchHelper
     {
         public static QueryContainer CreateQuery<T>(ISearchCriteria criteria, ISearchFilter filter)
             where T : class

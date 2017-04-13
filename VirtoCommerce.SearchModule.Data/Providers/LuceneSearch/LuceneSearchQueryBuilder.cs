@@ -27,30 +27,47 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         public virtual object BuildQuery<T>(string scope, ISearchCriteria criteria)
             where T : class
         {
-            var filter = new BooleanFilter();
-            var query = new BooleanQuery();
-
             var result = new LuceneSearchQuery
             {
-                Query = query,
-                Filter = filter,
+                Query = GetQuery(criteria),
+                Filter = GetFilters(criteria),
             };
-
-            if (!criteria.Ids.IsNullOrEmpty())
-            {
-                AddQuery("__key", query, criteria.Ids);
-            }
-            else
-            {
-                ProcessCurrentFilters(criteria, filter);
-                AddKeywordQuery(criteria as KeywordSearchCriteria, query);
-            }
 
             return result;
         }
 
+
+        protected virtual BooleanQuery GetQuery(ISearchCriteria criteria)
+        {
+            var query = new BooleanQuery();
+
+            AddIdsQuery(criteria, query);
+            AddRawQuery(criteria, query);
+            AddKeywordQuery(criteria as KeywordSearchCriteria, query);
+
+            return query;
+        }
+
         [CLSCompliant(false)]
-        protected virtual void ProcessCurrentFilters(ISearchCriteria criteria, BooleanFilter queryFilter)
+        protected virtual BooleanFilter GetFilters(ISearchCriteria criteria)
+        {
+            var filter = new BooleanFilter();
+
+            ApplyCurrentFilters(criteria, filter);
+
+            return filter;
+        }
+
+        protected virtual void AddIdsQuery(ISearchCriteria criteria, BooleanQuery query)
+        {
+            if (criteria?.Ids != null && criteria.Ids.Any())
+            {
+                AddQuery("__key", query, criteria.Ids);
+            }
+        }
+
+        [CLSCompliant(false)]
+        protected virtual void ApplyCurrentFilters(ISearchCriteria criteria, BooleanFilter queryFilter)
         {
             if (criteria.CurrentFilters != null)
             {
@@ -79,6 +96,21 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             }
         }
 
+        protected virtual void AddRawQuery(ISearchCriteria criteria, BooleanQuery query)
+        {
+            if (!string.IsNullOrEmpty(criteria.RawQuery))
+            {
+                const Version matchVersion = Version.LUCENE_30;
+                var analyzer = new StandardAnalyzer(matchVersion);
+
+                var parser = new QueryParser(matchVersion, "__content", analyzer)
+                {
+                    DefaultOperator = QueryParser.Operator.AND
+                };
+                var parsedQuery = parser.Parse(criteria.RawQuery);
+                query.Add(parsedQuery, Occur.MUST);
+            }
+        }
 
         protected virtual void AddKeywordQuery(KeywordSearchCriteria criteria, BooleanQuery query)
         {
