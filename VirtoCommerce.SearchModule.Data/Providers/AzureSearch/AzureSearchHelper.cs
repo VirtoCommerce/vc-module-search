@@ -5,7 +5,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
     public static class AzureSearchHelper
     {
         public const string FieldNamePrefix = "f_";
-        public const string KeyFieldName = FieldNamePrefix + "__key";
+        public const string RawKeyFieldName = "__key";
+        public const string KeyFieldName = FieldNamePrefix + RawKeyFieldName;
 
         public static string ToAzureFieldName(string fieldName)
         {

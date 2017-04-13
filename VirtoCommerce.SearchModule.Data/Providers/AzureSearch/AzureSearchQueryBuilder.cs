@@ -16,7 +16,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
     {
         public string DocumentType => string.Empty;
 
-        public object BuildQuery<T>(string scope, ISearchCriteria criteria)
+        public virtual object BuildQuery<T>(string scope, ISearchCriteria criteria)
             where T : class
         {
             var result = new AzureSearchQuery
@@ -53,24 +53,24 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
         {
             IList<string> filters = new List<string>();
 
-            AddIdsFilter(criteria, filters);
-            AddCurrentFilters(criteria, filters);
+            AddFilters(criteria, filters);
 
             var result = string.Join(" and ", filters.Where(f => !string.IsNullOrEmpty(f)));
             return result;
         }
 
-        protected void AddIdsFilter(ISearchCriteria criteria, IList<string> filters)
+        protected virtual void AddFilters(ISearchCriteria criteria, IList<string> filters)
+        {
+            AddIdsFilter(criteria, filters);
+            AddCurrentFilters(criteria, filters);
+        }
+
+        protected virtual void AddIdsFilter(ISearchCriteria criteria, IList<string> filters)
         {
             if (criteria?.Ids != null && criteria.Ids.Any())
             {
-                var values = criteria.Ids.Select(GetStringFilterValue).ToArray();
-                var filter = GetFilterExpression(AzureSearchHelper.KeyFieldName, values);
-
-                if (!string.IsNullOrEmpty(filter))
-                {
-                    filters.Add(filter);
-                }
+                var filter = GetEqualsFilterExpression(AzureSearchHelper.RawKeyFieldName, criteria.Ids, false);
+                filters.Add(filter);
             }
         }
 
@@ -106,15 +106,21 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
         protected virtual string GetAttributeFilterExpression(AttributeFilter filter, ISearchCriteria criteria)
         {
-            var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key).ToLower();
-            var values = filter.Values.Select(v => GetFilterValue(v.Value)).ToArray();
-
-            return GetFilterExpression(azureFieldName, values);
+            return GetEqualsFilterExpression(filter.Key, filter.Values.Select(v => v.Value), true);
         }
 
-        protected virtual string GetFilterExpression(string field, IList<string> values)
+        protected virtual string GetContainsFilterExpression(string rawName, IEnumerable<string> rawValues)
         {
-            return AzureSearchHelper.JoinNonEmptyStrings(" or ", true, values.Select(v => $"{field} eq {v}").ToArray());
+            var azureFieldName = AzureSearchHelper.ToAzureFieldName(rawName).ToLower();
+            var values = rawValues.Where(v => !string.IsNullOrEmpty(v)).Select(GetStringFilterValue).ToArray();
+            return AzureSearchHelper.JoinNonEmptyStrings(" or ", true, values.Select(v => $"{azureFieldName}/any(v: v eq {v})").ToArray());
+        }
+
+        protected virtual string GetEqualsFilterExpression(string rawName, IEnumerable<string> rawValues, bool parseValues)
+        {
+            var azureFieldName = AzureSearchHelper.ToAzureFieldName(rawName).ToLower();
+            var values = rawValues.Where(v => !string.IsNullOrEmpty(v)).Select(v => GetFilterValue(v, parseValues)).ToArray();
+            return AzureSearchHelper.JoinNonEmptyStrings(" or ", true, values.Select(v => $"{azureFieldName} eq {v}").ToArray());
         }
 
         protected virtual string GetRangeFilterExpression(RangeFilter filter, ISearchCriteria criteria)
@@ -215,27 +221,26 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             return result;
         }
 
-        protected virtual string GetFilterValue(string filterValue)
+        protected virtual string GetFilterValue(string rawValue, bool parseValue)
         {
-            string result;
+            string result = null;
 
-            long integerValue;
-            double doubleValue;
+            if (parseValue)
+            {
+                long integerValue;
+                double doubleValue;
 
-            if (long.TryParse(filterValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out integerValue))
-            {
-                result = filterValue;
-            }
-            else if (double.TryParse(filterValue, NumberStyles.Float, CultureInfo.InvariantCulture, out doubleValue))
-            {
-                result = filterValue;
-            }
-            else
-            {
-                result = GetStringFilterValue(filterValue);
+                if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out integerValue))
+                {
+                    result = rawValue;
+                }
+                else if (double.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out doubleValue))
+                {
+                    result = rawValue;
+                }
             }
 
-            return result;
+            return result ?? GetStringFilterValue(rawValue);
         }
 
         protected virtual string GetStringFilterValue(string rawValue)
