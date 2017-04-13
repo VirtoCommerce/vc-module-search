@@ -191,28 +191,41 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
         protected virtual string GetRangeFilterValueExpression(RangeFilterValue filterValue, string azureFieldName)
         {
+            return GetRangeFilterExpression(azureFieldName, filterValue.Lower, "ge", filterValue.Upper, "lt");
+        }
+
+        protected virtual string GetRangeFilterExpression(string rawName, DateTime? lowerBound, bool lowerBoundIncluded, DateTime? upperBound, bool upperBoundIncluded)
+        {
+            var azureFieldName = AzureSearchHelper.ToAzureFieldName(rawName).ToLower();
+            var lower = lowerBound?.ToString("O");
+            var upper = upperBound?.ToString("O");
+            var lowerCondition = lowerBoundIncluded ? "ge" : "gt";
+            var upperCondition = upperBoundIncluded ? "le" : "lt";
+
+            return GetRangeFilterExpression(azureFieldName, lower, lowerCondition, upper, upperCondition);
+        }
+
+        protected virtual string GetRangeFilterExpression(string azureFieldName, string lowerBound, string lowerCondition, string upperBound, string upperCondition)
+        {
             string result = null;
 
-            var lower = ConvertToDecimal(filterValue.Lower);
-            var upper = ConvertToDecimal(filterValue.Upper);
-
-            if (lower != null || upper != null)
+            if (lowerBound != null && lowerCondition != null || upperBound != null && upperCondition != null)
             {
                 var builder = new StringBuilder();
 
-                if (lower != null)
+                if (lowerBound != null)
                 {
-                    builder.AppendFormat(CultureInfo.InvariantCulture, "{0} ge {1}", azureFieldName, lower);
+                    builder.Append($"{azureFieldName} {lowerCondition} {lowerBound}");
 
-                    if (upper != null)
+                    if (upperBound != null)
                     {
                         builder.Append(" and ");
                     }
                 }
 
-                if (upper != null)
+                if (upperBound != null)
                 {
-                    builder.AppendFormat(CultureInfo.InvariantCulture, "{0} lt {1}", azureFieldName, upper);
+                    builder.Append($"{azureFieldName} {upperCondition} {upperBound}");
                 }
 
                 result = builder.ToString();
