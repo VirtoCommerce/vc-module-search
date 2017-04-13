@@ -190,13 +190,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             for (var index = 0; index < document.FieldCount; index++)
             {
                 var field = document[index];
-                field.Name = AzureSearchHelper.ToAzureFieldName(field.Name);
+                var fieldName = AzureSearchHelper.ToAzureFieldName(field.Name);
 
-                if (result.ContainsKey(field.Name))
+                if (result.ContainsKey(fieldName))
                 {
                     var newValues = new List<object>();
 
-                    var currentValue = result[field.Name];
+                    var currentValue = result[fieldName];
                     var currentValues = currentValue as object[];
 
                     if (currentValues != null)
@@ -209,14 +209,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                     }
 
                     newValues.AddRange(field.Values);
-                    result[field.Name] = newValues.ToArray();
+                    result[fieldName] = newValues.ToArray();
                 }
                 else
                 {
-                    var providerField = AddProviderField(documentType, providerFields, field.Name, field);
+                    var providerField = AddProviderField(documentType, providerFields, fieldName, field);
                     var isCollection = providerField.Type.ToString().StartsWith("Collection(");
 
-                    result.Add(field.Name, isCollection ? field.Values : field.Value);
+                    result.Add(fieldName, isCollection ? field.Values : field.Value);
                 }
             }
 
@@ -241,9 +241,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             var originalFieldType = field.Value?.GetType() ?? typeof(object);
             var providerFieldType = GetProviderFieldType(documentType, fieldName, originalFieldType);
 
+            var isString = providerFieldType == DataType.String;
             var isAnalyzed = field.ContainsAttribute(IndexType.Analyzed) || !field.ContainsAttribute(IndexType.NotAnalyzed);
             var isStored = field.ContainsAttribute(IndexStore.Yes) || !field.ContainsAttribute(IndexStore.No);
-            var isCollection = field.ContainsAttribute(IndexDataType.StringCollection) && providerFieldType == DataType.String;
+            var isCollection = field.ContainsAttribute(IndexDataType.StringCollection) && isString;
 
             if (isCollection)
             {
@@ -254,7 +255,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             {
                 IsKey = fieldName == AzureSearchHelper.KeyFieldName,
                 IsRetrievable = isStored,
-                IsSearchable = isAnalyzed,
+                IsSearchable = isString && isAnalyzed,
                 IsFilterable = !isAnalyzed,
                 IsFacetable = !isAnalyzed,
                 IsSortable = !isAnalyzed && !isCollection,

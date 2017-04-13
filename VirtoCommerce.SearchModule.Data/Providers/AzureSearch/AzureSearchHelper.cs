@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 {
@@ -10,7 +11,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
         public static string ToAzureFieldName(string fieldName)
         {
-            return FieldNamePrefix + fieldName.ToLowerInvariant();
+            return FieldNamePrefix + Regex.Replace(fieldName, @"\W", "_").ToLowerInvariant();
         }
 
         public static string FromAzureFieldName(string azureFieldName)
