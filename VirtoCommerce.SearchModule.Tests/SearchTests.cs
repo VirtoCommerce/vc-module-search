@@ -283,6 +283,30 @@ namespace VirtoCommerce.SearchModule.Test
                 RecordsToRetrieve = 10,
             };
 
+            stringFilter = new AttributeFilter
+            {
+                Key = "is",
+                Values = new[]
+                {
+                    new AttributeFilterValue { Value = "Red" },
+                    new AttributeFilterValue { Value = "Blue" },
+                    new AttributeFilterValue { Value = "Black" },
+                }
+            };
+
+            criteria.Apply(stringFilter);
+
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(5, results.DocCount);
+            Assert.Equal(5, results.TotalCount);
+
+
+            criteria = new BaseSearchCriteria(_documentType)
+            {
+                RecordsToRetrieve = 10,
+            };
+
             var numericFilter = new AttributeFilter
             {
                 Key = "Size",
