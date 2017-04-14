@@ -42,6 +42,7 @@
                     <![CDATA[ 
                     provider=Elasticsearch;server=localhost:9200;scope=default
                     provider=Lucene;server=~/App_Data/Lucene;scope=default
+                    provider=AzureSearch;server=test;key=****;scope=default
                     ]]>
                 </description>
             </setting>
