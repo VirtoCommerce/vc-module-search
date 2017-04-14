@@ -256,9 +256,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                 IsKey = fieldName == AzureSearchHelper.KeyFieldName,
                 IsRetrievable = isStored,
                 IsSearchable = isString && isAnalyzed,
-                IsFilterable = !isAnalyzed,
-                IsFacetable = !isAnalyzed,
-                IsSortable = !isAnalyzed && !isCollection,
+                IsFilterable = true,
+                IsFacetable = true,
+                IsSortable = !isCollection,
             };
 
             return providerField;
