@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.Azure.Search.Models;
 using VirtoCommerce.Platform.Core.Common;
@@ -71,7 +72,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
                                 foreach (var facetResult in facetResults)
                                 {
-                                    var newFacet = new Facet(facetGroup, facetResult.Value.ToString(), facetResult.Count, null);
+                                    var newFacet = new Facet(facetGroup, ToStringInvariant(facetResult.Value), facetResult.Count, null);
                                     facetGroup.Facets.Add(newFacet);
                                 }
                             }
@@ -86,7 +87,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                                     {
                                         facetGroup.FacetType = FacetTypes.Attribute;
 
-                                        var facetResult = facetResults.FirstOrDefault(r => r.Value.ToString().EqualsInvariant(group.Key));
+                                        var facetResult = facetResults.FirstOrDefault(r => ToStringInvariant(r.Value).EqualsInvariant(group.Key));
                                         if (facetResult != null)
                                         {
                                             var newFacet = new Facet(facetGroup, group.Key, facetResult.Count, valueLabels);
@@ -136,6 +137,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             }
 
             return result;
+        }
+
+        private static string ToStringInvariant(object value)
+        {
+            return string.Format(CultureInfo.InvariantCulture, "{0}", value);
         }
     }
 }
