@@ -157,6 +157,16 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
         public virtual ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria)
             where T : class
         {
+            // Remove non-existent filds from sorting
+            if (criteria?.Sort != null)
+            {
+                var providerFields = GetMapping(scope, criteria.DocumentType).Select(f => f.Name).ToList();
+                var validSortingFields = criteria.Sort.GetSort()
+                    .Where(f => providerFields.Contains(AzureSearchHelper.ToAzureFieldName(f.FieldName)))
+                    .ToArray();
+                criteria.Sort = new SearchSort(validSortingFields);
+            }
+
             var queryBuilder = GetQueryBuilder(criteria);
             var query = queryBuilder.BuildQuery<T>(scope, criteria) as AzureSearchQuery;
 

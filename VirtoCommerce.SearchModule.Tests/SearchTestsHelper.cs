@@ -73,12 +73,11 @@ namespace VirtoCommerce.SearchModule.Test
             doc.Add(new DocumentField("color", color, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             doc.Add(new DocumentField("catalog", "goods", new[] { IndexStore.Yes, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
             doc.Add(new DocumentField("size", size, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("currency", "USD", new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
 
             if (addExtraFields) // adds extra properties to test mapping updates for indexer
             {
-                doc.Add(new DocumentField("name2", name, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-                doc.Add(new DocumentField("startdate2", DateTime.UtcNow.AddDays(-1), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+                doc.Add(new DocumentField("name 2", name, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+                doc.Add(new DocumentField("startdate(2)", DateTime.UtcNow.AddDays(-1), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             }
 
             if (outlines != null)
