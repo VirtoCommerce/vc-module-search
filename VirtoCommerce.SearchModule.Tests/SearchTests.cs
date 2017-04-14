@@ -432,7 +432,7 @@ namespace VirtoCommerce.SearchModule.Test
                 }
             };
 
-            var priceRangeFacet = new PriceRangeFilter
+            var priceRangeFacetUsd = new PriceRangeFilter
             {
                 Currency = "USD",
                 Values = new[]
@@ -444,13 +444,28 @@ namespace VirtoCommerce.SearchModule.Test
                 }
             };
 
+            // This facet should not present in search results because its currency does not equal to criteria currency
+            var priceRangeFacetEur = new PriceRangeFilter
+            {
+                Currency = "EUR",
+                Values = new[]
+                {
+                    new RangeFilterValue { Id = "0_to_100", Lower = "0", Upper = "100" },
+                    new RangeFilterValue { Id = "100_to_700", Lower = "100", Upper = "700" },
+                    new RangeFilterValue { Id = "over_700", Lower = "700" },
+                    new RangeFilterValue { Id = "under_100", Upper = "100" },
+                }
+            };
+
             criteria.Add(attributeFacet);
             criteria.Add(rangeFacet);
-            criteria.Add(priceRangeFacet);
+            criteria.Add(priceRangeFacetUsd);
+            criteria.Add(priceRangeFacetEur);
 
             var results = provider.Search<DocumentDictionary>(_scope, criteria);
 
             Assert.Equal(0, results.DocCount);
+            Assert.Equal(3, results.Facets.Count);
 
             var redCount = GetFacetCount(results, "Color", "Red");
             Assert.True(redCount == 3, $"Returns {redCount} facets of red instead of 3");

@@ -94,16 +94,16 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                                         }
                                     }
 
-                                    if (rangeFilter != null || priceRangeFilter != null)
+                                    if (rangeFilter != null || priceRangeFilter != null && priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
                                     {
                                         facetGroup.FacetType = rangeFilter != null ? FacetTypes.Range : FacetTypes.PriceRange;
 
-                                        var rangeFilterValue = group.FirstOrDefault() as RangeFilterValue;
-                                        var lower = rangeFilterValue?.Lower == "0" ? null : rangeFilterValue?.Lower;
-                                        var upper = rangeFilterValue?.Upper;
+                                        var rangeFilterValue = group.First() as RangeFilterValue;
+                                        var lower = rangeFilterValue.Lower == null ? null : rangeFilterValue.Lower.Length == 0 ? null : rangeFilterValue.Lower == "0" ? null : rangeFilterValue.Lower;
+                                        var upper = rangeFilterValue.Upper;
 
                                         var facetResult = facetResults.FirstOrDefault(r => r.From?.ToString() == lower && r.To?.ToString() == upper);
-                                        if (facetResult != null)
+                                        if (facetResult != null && facetResult.Count > 0)
                                         {
                                             var newFacet = new Facet(facetGroup, group.Key, facetResult.Count, valueLabels);
                                             facetGroup.Facets.Add(newFacet);
