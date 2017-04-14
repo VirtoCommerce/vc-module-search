@@ -313,6 +313,8 @@ namespace VirtoCommerce.SearchModule.Test
                 Values = new[]
                 {
                     new RangeFilterValue { Lower = "0", Upper = "5" },
+                    new RangeFilterValue { Lower = "", Upper = "5" },
+                    new RangeFilterValue { Lower = null, Upper = "5" },
                     new RangeFilterValue { Lower = "5", Upper = "10" },
                 }
             };

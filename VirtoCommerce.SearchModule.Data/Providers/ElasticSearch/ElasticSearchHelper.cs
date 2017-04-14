@@ -43,7 +43,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             else if (filter is RangeFilter)
             {
                 var rangeFilterValue = value as RangeFilterValue;
-                query = new TermRangeQuery { Field = fieldName, GreaterThanOrEqualTo = rangeFilterValue?.Lower, LessThan = rangeFilterValue?.Upper };
+                var lower = string.IsNullOrEmpty(rangeFilterValue?.Lower) ? null : rangeFilterValue.Lower;
+                var upper = string.IsNullOrEmpty(rangeFilterValue?.Upper) ? null : rangeFilterValue.Upper;
+                query = new TermRangeQuery { Field = fieldName, GreaterThanOrEqualTo = lower, LessThan = upper };
             }
             else if (filter is PriceRangeFilter)
             {

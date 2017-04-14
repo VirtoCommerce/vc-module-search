@@ -209,21 +209,21 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
         {
             string result = null;
 
-            if (lowerBound != null && lowerCondition != null || upperBound != null && upperCondition != null)
+            if (lowerBound?.Length > 0 && lowerCondition?.Length > 0 || upperBound?.Length > 0 && upperCondition?.Length > 0)
             {
                 var builder = new StringBuilder();
 
-                if (lowerBound != null)
+                if (lowerBound?.Length > 0)
                 {
                     builder.Append($"{azureFieldName} {lowerCondition} {lowerBound}");
 
-                    if (upperBound != null)
+                    if (upperBound?.Length > 0)
                     {
                         builder.Append(" and ");
                     }
                 }
 
-                if (upperBound != null)
+                if (upperBound?.Length > 0)
                 {
                     builder.Append($"{azureFieldName} {upperCondition} {upperBound}");
                 }
