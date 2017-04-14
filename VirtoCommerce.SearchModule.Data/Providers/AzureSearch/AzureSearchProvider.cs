@@ -170,7 +170,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             var queryBuilder = GetQueryBuilder(criteria);
             var query = queryBuilder.BuildQuery<T>(scope, criteria) as AzureSearchQuery;
 
-            var indexName = GetIndexName(scope, criteria.DocumentType);
+            var indexName = GetIndexName(scope, criteria?.DocumentType);
             var indexClient = GetSearchIndexClient(indexName);
 
             var searchResult = indexClient.Documents.Search<DocumentDictionary>(query?.SearchText, query?.SearchParameters);
