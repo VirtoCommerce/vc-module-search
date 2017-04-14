@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 
-namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
+namespace VirtoCommerce.SearchModule.Core.Model.Search.Criteria
 {
-    public class SearchCriteria : ISearchCriteria
+    public class BaseSearchCriteria : ISearchCriteria
     {
-        public SearchCriteria(string documentType)
+        public BaseSearchCriteria(string documentType)
         {
             DocumentType = documentType;
         }
@@ -43,6 +43,29 @@ namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
         /// </summary>
         /// <value>The records to retrieve.</value>
         public virtual int RecordsToRetrieve { get; set; } = 50;
+
+        /// <summary>
+        /// Gets or sets the search phrase.
+        /// </summary>
+        /// <value>The search phrase.</value>
+        public virtual string SearchPhrase { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the locale.
+        /// </summary>
+        /// <value>The locale.</value>
+        public virtual string Locale { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is fuzzy search.
+        /// </summary>
+        /// <value><c>true</c> if this instance is fuzzy search; otherwise, <c>false</c>.</value>
+        public virtual bool IsFuzzySearch { get; set; } = true;
+
+        /// <summary>
+        /// Supported values: 0, 1, 2, null (=auto)
+        /// </summary>
+        public virtual int? Fuzziness { get; set; }
 
 
         public virtual void Add(ISearchFilter filter)

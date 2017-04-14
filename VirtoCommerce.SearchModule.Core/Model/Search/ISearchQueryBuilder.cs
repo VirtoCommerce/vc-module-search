@@ -1,4 +1,6 @@
-﻿namespace VirtoCommerce.SearchModule.Core.Model.Search
+﻿using VirtoCommerce.SearchModule.Core.Model.Search.Criteria;
+
+namespace VirtoCommerce.SearchModule.Core.Model.Search
 {
     public interface ISearchQueryBuilder
     {
@@ -9,7 +11,7 @@
         /// <param name="scope"></param>
         /// <param name="criteria"></param>
         /// <returns></returns>
-        object BuildQuery<T>(string scope, Criterias.ISearchCriteria criteria) where T:class;
+        object BuildQuery<T>(string scope, ISearchCriteria criteria) where T : class;
 
         /// <summary>
         /// Defines type of document this query builder handles

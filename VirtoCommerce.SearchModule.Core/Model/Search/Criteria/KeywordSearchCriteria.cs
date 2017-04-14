@@ -1,13 +1,13 @@
-﻿namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
+﻿namespace VirtoCommerce.SearchModule.Core.Model.Search.Criteria
 {
-    public class KeywordSearchCriteria : SearchCriteria
+    public class KeywordSearchCriteria1 //: BaseSearchCriteria
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="KeywordSearchCriteria"/> class.
+        /// Initializes a new instance of the <see cref="KeywordSearchCriteria1"/> class.
         /// </summary>
         /// <param name="documentType">Type of the document.</param>
-        public KeywordSearchCriteria(string documentType)
-            : base(documentType)
+        public KeywordSearchCriteria1(string documentType)
+        //: base(documentType)
         {
         }
 

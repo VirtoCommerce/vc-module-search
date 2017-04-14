@@ -6,7 +6,7 @@ using System.Linq;
 using Nest;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search;
-using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Core.Model.Search.Criteria;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
@@ -41,7 +41,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
             result &= GetIdsQuery<T>(criteria);
             result &= GetRawQuery<T>(criteria);
-            result &= GetKeywordQuery<T>(criteria as KeywordSearchCriteria);
+            result &= GetKeywordQuery<T>(criteria);
 
             return result;
         }
@@ -72,7 +72,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             return result;
         }
 
-        protected virtual QueryContainer GetKeywordQuery<T>(KeywordSearchCriteria criteria)
+        protected virtual QueryContainer GetKeywordQuery<T>(ISearchCriteria criteria)
             where T : class
         {
             QueryContainer result = null;
@@ -92,7 +92,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             return result;
         }
 
-        protected virtual QueryContainer GetKeywordQuery<T>(KeywordSearchCriteria criteria, params string[] fields)
+        protected virtual QueryContainer GetKeywordQuery<T>(ISearchCriteria criteria, params string[] fields)
             where T : class
         {
             QueryContainer result = null;

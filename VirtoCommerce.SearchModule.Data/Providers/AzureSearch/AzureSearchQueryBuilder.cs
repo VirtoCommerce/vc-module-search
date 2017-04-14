@@ -7,7 +7,7 @@ using Microsoft.Azure.Search.Models;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search;
-using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Core.Model.Search.Criteria;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 {
@@ -46,7 +46,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
         protected virtual string GetSearchText(ISearchCriteria criteria)
         {
-            return criteria?.RawQuery ?? (criteria as KeywordSearchCriteria)?.SearchPhrase;
+            return criteria?.RawQuery ?? criteria?.SearchPhrase;
         }
 
         protected virtual string GetFilters(ISearchCriteria criteria)

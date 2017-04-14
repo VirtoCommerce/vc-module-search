@@ -9,7 +9,7 @@ using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.Platform.Core.Web.Security;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
-using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Core.Model.Search.Criteria;
 using VirtoCommerce.SearchModule.Web.Model;
 using VirtoCommerce.SearchModule.Web.Model.PushNotifications;
 using VirtoCommerce.SearchModule.Web.Security;
@@ -45,7 +45,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         [CheckPermission(Permission = SearchPredefinedPermissions.RebuildIndex)]
         public IHttpActionResult GetDocumentIndex(string documentType, string documentId)
         {
-            var criteria = new SearchCriteria(documentType) { Ids = new[] { documentId } };
+            var criteria = new BaseSearchCriteria(documentType) { Ids = new[] { documentId } };
             var result = _searchProvider.Search<DocumentDictionary>(_searchConnection.Scope, criteria);
             return Ok(result?.Documents);
         }

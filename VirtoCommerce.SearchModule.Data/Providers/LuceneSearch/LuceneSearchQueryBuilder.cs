@@ -9,7 +9,7 @@ using Lucene.Net.Search;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search;
-using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Core.Model.Search.Criteria;
 using Version = Lucene.Net.Util.Version;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
@@ -43,7 +43,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
 
             AddIdsQuery(criteria, query);
             AddRawQuery(criteria, query);
-            AddKeywordQuery(criteria as KeywordSearchCriteria, query);
+            AddKeywordQuery(criteria, query);
 
             return query;
         }
@@ -112,7 +112,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             }
         }
 
-        protected virtual void AddKeywordQuery(KeywordSearchCriteria criteria, BooleanQuery query)
+        protected virtual void AddKeywordQuery(ISearchCriteria criteria, BooleanQuery query)
         {
             if (!string.IsNullOrEmpty(criteria?.SearchPhrase))
             {

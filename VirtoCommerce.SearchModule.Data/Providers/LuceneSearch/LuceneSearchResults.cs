@@ -8,7 +8,7 @@ using SpellChecker.Net.Search.Spell;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
-using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Core.Model.Search.Criteria;
 using VirtoCommerce.SearchModule.Data.Services;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
@@ -294,15 +294,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         /// <param name="criteria">The criteria.</param>
         private void CreateSuggestions(IndexReader reader, ISearchCriteria criteria)
         {
-            var keywordSearchCriteria = criteria as KeywordSearchCriteria;
-            if (keywordSearchCriteria != null)
+            if (!string.IsNullOrEmpty(criteria?.SearchPhrase))
             {
-                var c = keywordSearchCriteria;
-                var phrase = c.SearchPhrase;
-                if (!string.IsNullOrEmpty(phrase))
-                {
-                    Suggestions = SuggestSimilar(reader, "_content", phrase);
-                }
+                Suggestions = SuggestSimilar(reader, "_content", criteria?.SearchPhrase);
             }
         }
 

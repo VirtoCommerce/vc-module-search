@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
-using VirtoCommerce.SearchModule.Core.Model.Search.Criterias;
+using VirtoCommerce.SearchModule.Core.Model.Search.Criteria;
 using Xunit;
 
 namespace VirtoCommerce.SearchModule.Test
@@ -46,7 +46,7 @@ namespace VirtoCommerce.SearchModule.Test
             var provider = GetSearchProvider(providerType, _scope);
             SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
-            var criteria = new KeywordSearchCriteria(_documentType)
+            var criteria = new BaseSearchCriteria(_documentType)
             {
                 RecordsToRetrieve = 10,
             };
@@ -75,7 +75,7 @@ namespace VirtoCommerce.SearchModule.Test
             var provider = GetSearchProvider(providerType, _scope);
             SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
-            var criteria = new KeywordSearchCriteria(_documentType)
+            var criteria = new BaseSearchCriteria(_documentType)
             {
                 Sort = new SearchSort("name"),
                 RecordsToRetrieve = 1,
@@ -89,7 +89,7 @@ namespace VirtoCommerce.SearchModule.Test
             var productName = results.Documents.First()["name"] as string;
             Assert.Equal("Black Sox", productName);
 
-            criteria = new KeywordSearchCriteria(_documentType)
+            criteria = new BaseSearchCriteria(_documentType)
             {
                 Sort = new SearchSort("name", true),
                 RecordsToRetrieve = 1,
@@ -113,7 +113,7 @@ namespace VirtoCommerce.SearchModule.Test
             var provider = GetSearchProvider(providerType, _scope);
             SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
-            var criteria = new KeywordSearchCriteria(_documentType)
+            var criteria = new BaseSearchCriteria(_documentType)
             {
                 Ids = new[] { "red3", "another" },
                 RecordsToRetrieve = 10,
@@ -144,7 +144,7 @@ namespace VirtoCommerce.SearchModule.Test
             var provider = GetSearchProvider(providerType, _scope);
             SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
-            var criteria = new KeywordSearchCriteria(_documentType)
+            var criteria = new BaseSearchCriteria(_documentType)
             {
                 RawQuery = rawQuery,
                 RecordsToRetrieve = 10,
@@ -165,7 +165,7 @@ namespace VirtoCommerce.SearchModule.Test
             var provider = GetSearchProvider(providerType, _scope);
             SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
-            var criteria = new KeywordSearchCriteria(_documentType)
+            var criteria = new BaseSearchCriteria(_documentType)
             {
                 SearchPhrase = " shirt ",
                 RecordsToRetrieve = 10,
@@ -177,7 +177,7 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.Equal(3, results.TotalCount);
 
 
-            criteria = new KeywordSearchCriteria(_documentType)
+            criteria = new BaseSearchCriteria(_documentType)
             {
                 SearchPhrase = "red shirt",
                 RecordsToRetrieve = 1,
@@ -198,7 +198,7 @@ namespace VirtoCommerce.SearchModule.Test
             var provider = GetSearchProvider(providerType, _scope);
             SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
-            var criteria = new KeywordSearchCriteria(_documentType)
+            var criteria = new BaseSearchCriteria(_documentType)
             {
                 Currency = "USD",
                 RecordsToRetrieve = 10,
@@ -231,7 +231,7 @@ namespace VirtoCommerce.SearchModule.Test
             var provider = GetSearchProvider(providerType, _scope);
             SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
-            var criteria = new KeywordSearchCriteria(_documentType)
+            var criteria = new BaseSearchCriteria(_documentType)
             {
                 RecordsToRetrieve = 10,
             };
@@ -254,7 +254,7 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.Equal(0, results.TotalCount);
 
 
-            criteria = new KeywordSearchCriteria(_documentType)
+            criteria = new BaseSearchCriteria(_documentType)
             {
                 RecordsToRetrieve = 10,
             };
@@ -278,7 +278,7 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.Equal(5, results.TotalCount);
 
 
-            criteria = new KeywordSearchCriteria(_documentType)
+            criteria = new BaseSearchCriteria(_documentType)
             {
                 RecordsToRetrieve = 10,
             };
@@ -302,7 +302,7 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.Equal(2, results.TotalCount);
 
 
-            criteria = new KeywordSearchCriteria(_documentType)
+            criteria = new BaseSearchCriteria(_documentType)
             {
                 RecordsToRetrieve = 10,
             };
@@ -325,7 +325,7 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.Equal(4, results.TotalCount);
 
 
-            criteria = new KeywordSearchCriteria(_documentType)
+            criteria = new BaseSearchCriteria(_documentType)
             {
                 Currency = "USD",
                 Pricelists = new[] { "default" },
@@ -350,7 +350,7 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.Equal(3, results.TotalCount);
 
 
-            criteria = new KeywordSearchCriteria(_documentType)
+            criteria = new BaseSearchCriteria(_documentType)
             {
                 Currency = "USD",
                 Pricelists = new[] { "default", "sale" },
@@ -365,7 +365,7 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.Equal(3, results.TotalCount);
 
 
-            criteria = new KeywordSearchCriteria(_documentType)
+            criteria = new BaseSearchCriteria(_documentType)
             {
                 Currency = "USD",
                 Pricelists = new[] { "sale", "default" },
@@ -380,7 +380,7 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.Equal(4, results.TotalCount);
 
 
-            criteria = new KeywordSearchCriteria(_documentType)
+            criteria = new BaseSearchCriteria(_documentType)
             {
                 Currency = "USD",
                 Pricelists = new[] { "supersale", "sale", "default" },
@@ -404,7 +404,7 @@ namespace VirtoCommerce.SearchModule.Test
             var provider = GetSearchProvider(providerType, _scope);
             SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
-            var criteria = new KeywordSearchCriteria(_documentType)
+            var criteria = new BaseSearchCriteria(_documentType)
             {
                 Currency = "USD",
                 Pricelists = new[] { "default" },
@@ -483,7 +483,7 @@ namespace VirtoCommerce.SearchModule.Test
             var provider = GetSearchProvider(providerType, _scope);
             SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
-            var criteria = new KeywordSearchCriteria(_documentType)
+            var criteria = new BaseSearchCriteria(_documentType)
             {
                 Currency = "USD",
                 Pricelists = new[] { "default", "sale" },
@@ -513,7 +513,7 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.True(priceCount2 == 3, $"Returns {priceCount2} facets of 100_to_700 prices instead of 3");
 
 
-            criteria = new KeywordSearchCriteria(_documentType)
+            criteria = new BaseSearchCriteria(_documentType)
             {
                 Currency = "USD",
                 Pricelists = new[] { "sale", "default" },
@@ -543,7 +543,7 @@ namespace VirtoCommerce.SearchModule.Test
             var provider = GetSearchProvider(providerType, _scope);
             SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
-            var criteria = new KeywordSearchCriteria(_documentType)
+            var criteria = new BaseSearchCriteria(_documentType)
             {
                 RecordsToRetrieve = 10,
             };

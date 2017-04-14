@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 
-namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
+namespace VirtoCommerce.SearchModule.Core.Model.Search.Criteria
 {
     public interface ISearchCriteria
     {
@@ -47,6 +47,29 @@ namespace VirtoCommerce.SearchModule.Core.Model.Search.Criterias
         /// </summary>
         /// <value>The records to retrieve.</value>
         int RecordsToRetrieve { get; set; }
+
+        /// <summary>
+        /// Gets or sets the search phrase.
+        /// </summary>
+        /// <value>The search phrase.</value>
+        string SearchPhrase { get; set; }
+
+        /// <summary>
+        /// Gets or sets the locale.
+        /// </summary>
+        /// <value>The locale.</value>
+        string Locale { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is fuzzy search.
+        /// </summary>
+        /// <value><c>true</c> if this instance is fuzzy search; otherwise, <c>false</c>.</value>
+        bool IsFuzzySearch { get; set; }
+
+        /// <summary>
+        /// Supported values: 0, 1, 2, null (=auto)
+        /// </summary>
+        int? Fuzziness { get; set; }
 
 
         /// <summary>
