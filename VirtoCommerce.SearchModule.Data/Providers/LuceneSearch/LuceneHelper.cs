@@ -51,30 +51,30 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 index = Field.Index.NO;
             }
 
-            field.Name = field.Name.ToLowerInvariant();
+            var fieldName = field.Name.ToLowerInvariant();
 
-            if (field.Name == "__key")
+            if (fieldName == "__key")
             {
                 foreach (var value in field.Values)
                 {
-                    doc.Add(new Field(field.Name, value.ToString(), store, index));
+                    doc.Add(new Field(fieldName, value.ToString(), store, index));
                 }
             }
-            else if (field.Name == "__object")
+            else if (fieldName == "__object")
             {
                 if (field.Value != null)
                 {
                     var value = SerializeObject(field.Value);
 
                     // index full web serialized object
-                    doc.Add(new Field(field.Name, value, store, index));
+                    doc.Add(new Field(fieldName, value, store, index));
                 }
             }
             else if (field.Value is string)
             {
                 foreach (var value in field.Values)
                 {
-                    doc.Add(new Field(field.Name, value.ToString(), store, index));
+                    doc.Add(new Field(fieldName, value.ToString(), store, index));
                     doc.Add(new Field("_content", value.ToString(), Field.Store.NO, Field.Index.ANALYZED));
                 }
             }
@@ -82,7 +82,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             {
                 foreach (var value in field.Values)
                 {
-                    var numericField = new NumericField(field.Name, store, index != Field.Index.NO);
+                    var numericField = new NumericField(fieldName, store, index != Field.Index.NO);
                     numericField.SetDoubleValue(double.Parse(value.ToString()));
                     doc.Add(numericField);
                 }
@@ -93,7 +93,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 {
                     doc.Add(
                         new Field(
-                            field.Name, DateTools.DateToString((DateTime)value, DateTools.Resolution.SECOND), store, index));
+                            fieldName, DateTools.DateToString((DateTime)value, DateTools.Resolution.SECOND), store, index));
                 }
             }
             else // try detecting the type
@@ -104,7 +104,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 {
                     foreach (var value in field.Values)
                     {
-                        var numericField = new NumericField(field.Name, store, index != Field.Index.NO);
+                        var numericField = new NumericField(fieldName, store, index != Field.Index.NO);
                         numericField.SetDoubleValue(double.Parse(value.ToString()));
                         doc.Add(numericField);
                     }
@@ -113,7 +113,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 {
                     foreach (var value in field.Values)
                     {
-                        doc.Add(new Field(field.Name, value.ToString(), store, index));
+                        doc.Add(new Field(fieldName, value.ToString(), store, index));
                     }
                 }
             }

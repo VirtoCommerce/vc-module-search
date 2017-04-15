@@ -34,7 +34,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         {
             QueryContainer query = null;
 
-            var fieldName = filter.Key.ToLower();
+            var fieldName = filter.Key.ToLowerInvariant();
 
             if (filter is AttributeFilter)
             {
@@ -75,7 +75,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
             if (pricelists.IsNullOrEmpty())
             {
-                var fieldName = JoinNonEmptyStrings("_", field, currency).ToLower();
+                var fieldName = JoinNonEmptyStrings("_", field, currency).ToLowerInvariant();
                 result = Query<T>.Range(r => r.Field(fieldName).GreaterThanOrEquals(lowerBound).LessThan(upperBound));
             }
             else if (index < pricelists.Count)
@@ -84,12 +84,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                 QueryContainer previousPricelistQuery = null;
                 if (index > 0)
                 {
-                    var previousFieldName = JoinNonEmptyStrings("_", field, currency, pricelists[index - 1]).ToLower();
+                    var previousFieldName = JoinNonEmptyStrings("_", field, currency, pricelists[index - 1]).ToLowerInvariant();
                     previousPricelistQuery = Query<T>.Range(r => r.Field(previousFieldName).GreaterThan(0));
                 }
 
                 // Create positive query for current pricelist
-                var currentFieldName = JoinNonEmptyStrings("_", field, currency, pricelists[index]).ToLower();
+                var currentFieldName = JoinNonEmptyStrings("_", field, currency, pricelists[index]).ToLowerInvariant();
                 var currentPricelistQuery = Query<T>.Range(r => r.Field(currentFieldName).GreaterThanOrEquals(lowerBound).LessThan(upperBound));
 
                 // Get query for next pricelist

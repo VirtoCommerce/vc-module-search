@@ -57,7 +57,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                     {
                         facetGroup.FacetType = FacetTypes.Attribute;
 
-                        var key = filter.Key.ToLower();
+                        var key = filter.Key.ToLowerInvariant();
                         if (facets.ContainsKey(key))
                         {
                             var facet = facets[key] as SingleBucketAggregate;
@@ -83,7 +83,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                             {
                                 facetGroup.FacetType = FacetTypes.Attribute;
 
-                                var key = filter.Key.ToLower();
+                                var key = filter.Key.ToLowerInvariant();
                                 if (facets.ContainsKey(key))
                                 {
                                     var facet = facets[key] as SingleBucketAggregate;
@@ -103,7 +103,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                                 var rangeFilter = filter as PriceRangeFilter;
                                 if (rangeFilter.Currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase))
                                 {
-                                    var key = string.Format(CultureInfo.InvariantCulture, "{0}-{1}", filter.Key, group.Key).ToLower();
+                                    var key = string.Format(CultureInfo.InvariantCulture, "{0}-{1}", filter.Key, group.Key).ToLowerInvariant();
                                     if (facets.ContainsKey(key))
                                     {
                                         var facet = facets[key] as SingleBucketAggregate;
@@ -119,7 +119,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                             {
                                 facetGroup.FacetType = FacetTypes.Range;
 
-                                var key = string.Format(CultureInfo.InvariantCulture, "{0}-{1}", filter.Key, group.Key).ToLower();
+                                var key = string.Format(CultureInfo.InvariantCulture, "{0}-{1}", filter.Key, group.Key).ToLowerInvariant();
                                 if (facets.ContainsKey(key))
                                 {
                                     var facet = facets[key] as SingleBucketAggregate;
@@ -135,7 +135,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                             {
                                 facetGroup.FacetType = FacetTypes.Category;
 
-                                var key = string.Format(CultureInfo.InvariantCulture, "{0}-{1}", filter.Key, group.Key).ToLower();
+                                var key = string.Format(CultureInfo.InvariantCulture, "{0}-{1}", filter.Key, group.Key).ToLowerInvariant();
                                 if (facets.ContainsKey(key))
                                 {
                                     var facet = facets[key] as SingleBucketAggregate;

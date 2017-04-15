@@ -77,7 +77,7 @@ namespace VirtoCommerce.SearchModule.Test
 
             var criteria = new BaseSearchCriteria(_documentType)
             {
-                Sort = new SearchSort(new[] { "non-existent-field", "name" }),
+                Sort = new SearchSort(new[] { "non-existent-field", "Name" }),
                 RecordsToRetrieve = 1,
             };
 
@@ -91,7 +91,7 @@ namespace VirtoCommerce.SearchModule.Test
 
             criteria = new BaseSearchCriteria(_documentType)
             {
-                Sort = new SearchSort("name", true),
+                Sort = new SearchSort("Name", true),
                 RecordsToRetrieve = 1,
             };
 

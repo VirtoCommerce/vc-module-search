@@ -287,7 +287,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         protected virtual IList<IFieldDescriptor> GetAvailableFields(string indexName, string documentType)
         {
             return GetMappedProperties(indexName, documentType)
-                .Select(kvp => new FieldDescriptor { Name = kvp.Value.Name.Name, DataType = kvp.Value.Type.Name } as IFieldDescriptor)
+                .Select(kvp => new FieldDescriptor { Name = kvp.Key.Name, DataType = kvp.Value.Type.Name } as IFieldDescriptor)
                 .ToList();
         }
 
@@ -310,13 +310,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             for (var index = 0; index < document.FieldCount; index++)
             {
                 var field = document[index];
-                var key = field.Name.ToLower();
+                var fieldName = field.Name.ToLowerInvariant();
 
-                if (result.ContainsKey(key))
+                if (result.ContainsKey(fieldName))
                 {
                     var newValues = new List<object>();
 
-                    var currentValue = result[key];
+                    var currentValue = result[fieldName];
                     var currentValues = currentValue as object[];
 
                     if (currentValues != null)
@@ -329,12 +329,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                     }
 
                     newValues.AddRange(field.Values);
-                    result[key] = newValues.ToArray();
+                    result[fieldName] = newValues.ToArray();
                 }
                 else
                 {
                     var dictionary = properties as IDictionary<PropertyName, IProperty>;
-                    if (dictionary != null && !dictionary.ContainsKey(field.Name))
+                    if (dictionary != null && !dictionary.ContainsKey(fieldName))
                     {
                         // Create new property mapping
 
@@ -345,11 +345,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                             type = typeof(double);
                         }
 
-                        properties.Add(field.Name, PropertyHelper.InferProperty(type));
-                        SetupProperty(properties[field.Name], field, documentType);
+                        properties.Add(fieldName, PropertyHelper.InferProperty(type));
+                        SetupProperty(properties[fieldName], field, documentType);
                     }
 
-                    result.Add(key, field.Values.Length > 1 ? field.Values : field.Value);
+                    result.Add(fieldName, field.Values.Length > 1 ? field.Values : field.Value);
                 }
             }
 

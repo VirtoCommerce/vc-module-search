@@ -149,7 +149,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             {
                 // workaround since there is no wildcard filter in current lucene version
                 var outline = value.Outline.TrimEnd('*');
-                var nodeQuery = new PrefixFilter(new Term(field, outline.ToLower()));
+                var nodeQuery = new PrefixFilter(new Term(field, outline.ToLowerInvariant()));
                 query.Add(new FilterClause(nodeQuery, Occur.MUST));
             }
             return query;
@@ -177,7 +177,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
 
             if (pricelists.IsNullOrEmpty())
             {
-                var fieldName = string.Join("_", field, currency).ToLower();
+                var fieldName = string.Join("_", field, currency).ToLowerInvariant();
                 var filter = new TermRangeFilter(fieldName, lowerBound, upperBound, lowerBoundIncluded, upperBoundIncluded);
                 result.Add(new FilterClause(filter, Occur.MUST));
             }
@@ -186,13 +186,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 // Create negative query for previous pricelist
                 if (index > 0)
                 {
-                    var previousFieldName = string.Join("_", field, currency, pricelists[index - 1]).ToLower();
+                    var previousFieldName = string.Join("_", field, currency, pricelists[index - 1]).ToLowerInvariant();
                     var previousPricelistFilter = new TermRangeFilter(previousFieldName, NumericUtils.LongToPrefixCoded(long.MinValue), NumericUtils.LongToPrefixCoded(long.MaxValue), true, false);
                     result.Add(new FilterClause(previousPricelistFilter, Occur.MUST_NOT));
                 }
 
                 // Create positive query for current pricelist
-                var currentFieldName = string.Join("_", field, currency, pricelists[index]).ToLower();
+                var currentFieldName = string.Join("_", field, currency, pricelists[index]).ToLowerInvariant();
                 var currentPricelistFilter = new TermRangeFilter(currentFieldName, lowerBound, upperBound, lowerBoundIncluded, upperBoundIncluded);
 
                 // Get query for next pricelist

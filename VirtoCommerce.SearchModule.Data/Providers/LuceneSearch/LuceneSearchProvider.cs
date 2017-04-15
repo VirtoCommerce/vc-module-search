@@ -260,7 +260,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                     if (criteria.Sort != null)
                     {
                         var fields = criteria.Sort.GetSort();
-                        var sort = new Sort(fields.Select(field => new SortField(field.FieldName, field.DataType, field.IsDescending)).ToArray());
+                        var sort = new Sort(fields.Select(field => new SortField(field.FieldName.ToLowerInvariant(), field.DataType, field.IsDescending)).ToArray());
                         docs = searcher.Search(query, filter, numDocs, sort);
                     }
                     else

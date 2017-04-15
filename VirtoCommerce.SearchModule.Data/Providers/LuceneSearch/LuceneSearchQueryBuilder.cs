@@ -133,7 +133,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 var fields = new List<string> { "__content" };
                 if (criteria.Locale != null)
                 {
-                    var contentField = $"__content_{criteria.Locale.ToLower()}";
+                    var contentField = $"__content_{criteria.Locale.ToLowerInvariant()}";
                     fields.Add(contentField);
                 }
 
@@ -160,7 +160,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         {
             if (values.Count > 0)
             {
-                fieldName = fieldName.ToLower();
+                fieldName = fieldName.ToLowerInvariant();
 
                 if (values.Count > 1)
                 {
@@ -186,7 +186,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 {
                     if (!string.IsNullOrEmpty(values[0]))
                     {
-                        AddWildcardQuery(fieldName, query, values[0].ToLower());
+                        AddWildcardQuery(fieldName, query, values[0].ToLowerInvariant());
                     }
                 }
             }
@@ -200,8 +200,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         /// <param name="value">The filter.</param>
         protected virtual void AddWildcardQuery(string fieldName, BooleanQuery query, string value)
         {
-            fieldName = fieldName.ToLower();
-            var nodeQuery = new WildcardQuery(new Term(fieldName, value.ToLower()));
+            fieldName = fieldName.ToLowerInvariant();
+            var nodeQuery = new WildcardQuery(new Term(fieldName, value.ToLowerInvariant()));
             query.Add(nodeQuery, Occur.MUST);
         }
     }

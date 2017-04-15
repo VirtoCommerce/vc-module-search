@@ -83,7 +83,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
                 if (!string.IsNullOrEmpty(criteria.Locale))
                 {
-                    searchFields.Add(string.Concat("__content_", criteria.Locale.ToLower()));
+                    searchFields.Add(string.Concat("__content_", criteria.Locale.ToLowerInvariant()));
                 }
 
                 result = GetKeywordQuery<T>(criteria, searchFields.ToArray());
@@ -144,7 +144,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                     result.Add(
                         new SortField
                         {
-                            Field = field.FieldName,
+                            Field = field.FieldName.ToLowerInvariant(),
                             Order = field.IsDescending ? SortOrder.Descending : SortOrder.Ascending,
                             Missing = "_last",
                             IgnoreUnmappedFields = true
@@ -198,7 +198,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
             foreach (var filter in criteria.Filters)
             {
-                var fieldName = filter.Key.ToLower();
+                var fieldName = filter.Key.ToLowerInvariant();
                 var attributeFilter = filter as AttributeFilter;
                 var priceRangeFilter = filter as PriceRangeFilter;
                 var rangeFilter = filter as RangeFilter;
@@ -343,7 +343,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
         protected virtual QueryContainer CreateWildcardQuery(string fieldName, string value, bool lowerCaseValue)
         {
-            return new WildcardQuery { Field = fieldName.ToLower(), Value = lowerCaseValue ? value.ToLower() : value };
+            return new WildcardQuery { Field = fieldName.ToLowerInvariant(), Value = lowerCaseValue ? value.ToLowerInvariant() : value };
         }
 
         protected virtual List<QueryContainer> GetExistingFilters<T>(ISearchCriteria criteria, string field)
