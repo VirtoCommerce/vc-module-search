@@ -225,6 +225,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         /// <exception cref="SearchException"></exception>
         public virtual ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria) where T : class
         {
+            if (criteria == null)
+                throw new ArgumentNullException(nameof(criteria));
+
             ISearchResults<T> result;
 
             var directoryInfo = new DirectoryInfo(GetDirectoryPath(GetFolderName(scope, criteria.DocumentType)));
@@ -234,7 +237,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 var dir = FSDirectory.Open(directoryInfo);
                 var searcher = new IndexSearcher(dir);
 
-                var q = (LuceneSearchQuery)GetQueryBuilder(criteria).BuildQuery<T>(scope, criteria);
+                var q = (LuceneSearchQuery)GetQueryBuilder(criteria).BuildQuery<T>(scope, criteria, null);
 
                 // filter out empty value
                 var filter = q.Filter.ToString().Equals("BooleanFilter()") ? null : q.Filter;

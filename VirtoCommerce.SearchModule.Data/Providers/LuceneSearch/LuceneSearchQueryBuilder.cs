@@ -23,8 +23,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         /// </summary>
         /// <param name="scope"></param>
         /// <param name="criteria">The criteria.</param>
+        /// <param name="availableFields"></param>
         /// <returns></returns>
-        public virtual object BuildQuery<T>(string scope, ISearchCriteria criteria)
+        public virtual object BuildQuery<T>(string scope, ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
             where T : class
         {
             var result = new LuceneSearchQuery

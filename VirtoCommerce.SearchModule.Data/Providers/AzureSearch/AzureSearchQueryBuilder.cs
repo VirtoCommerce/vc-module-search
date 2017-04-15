@@ -16,7 +16,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
     {
         public string DocumentType => string.Empty;
 
-        public virtual object BuildQuery<T>(string scope, ISearchCriteria criteria)
+        public virtual object BuildQuery<T>(string scope, ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
             where T : class
         {
             var result = new AzureSearchQuery
@@ -24,10 +24,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                 SearchText = GetSearchText(criteria),
                 SearchParameters = new SearchParameters
                 {
-                    QueryType = GetQueryType(criteria),
-                    Filter = GetFilters(criteria),
-                    Facets = GetFacets(criteria),
-                    OrderBy = GetSorting(criteria),
+                    QueryType = GetQueryType(criteria, availableFields),
+                    Filter = GetFilters(criteria, availableFields),
+                    Facets = GetFacets(criteria, availableFields),
+                    OrderBy = GetSorting(criteria, availableFields),
                     Skip = criteria.StartingRecord,
                     Top = criteria.RecordsToRetrieve,
                     IncludeTotalResultCount = true,
@@ -39,7 +39,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
         }
 
 
-        protected virtual QueryType GetQueryType(ISearchCriteria criteria)
+        protected virtual QueryType GetQueryType(ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
         {
             return string.IsNullOrEmpty(criteria?.RawQuery) ? QueryType.Simple : QueryType.Full;
         }
@@ -49,20 +49,20 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             return criteria?.RawQuery ?? criteria?.SearchPhrase;
         }
 
-        protected virtual string GetFilters(ISearchCriteria criteria)
+        protected virtual string GetFilters(ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
         {
             IList<string> filters = new List<string>();
 
-            AddFilters(criteria, filters);
+            AddFilters(criteria, filters, availableFields);
 
             var result = string.Join(" and ", filters.Where(f => !string.IsNullOrEmpty(f)));
             return result;
         }
 
-        protected virtual void AddFilters(ISearchCriteria criteria, IList<string> filters)
+        protected virtual void AddFilters(ISearchCriteria criteria, IList<string> filters, IList<IFieldDescriptor> availableFields)
         {
             AddIdsFilter(criteria, filters);
-            AddCurrentFilters(criteria, filters);
+            AddCurrentFilters(criteria, filters, availableFields);
         }
 
         protected virtual void AddIdsFilter(ISearchCriteria criteria, IList<string> filters)
@@ -74,7 +74,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             }
         }
 
-        protected virtual void AddCurrentFilters(ISearchCriteria criteria, IList<string> filters)
+        protected virtual void AddCurrentFilters(ISearchCriteria criteria, IList<string> filters, IList<IFieldDescriptor> availableFields)
         {
             foreach (var filter in criteria.CurrentFilters)
             {
@@ -86,7 +86,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
                 if (attributeFilter != null)
                 {
-                    expression = GetAttributeFilterExpression(attributeFilter, criteria);
+                    expression = GetAttributeFilterExpression(attributeFilter, criteria, availableFields);
                 }
                 else if (rangeFilter != null)
                 {
@@ -104,9 +104,25 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             }
         }
 
-        protected virtual string GetAttributeFilterExpression(AttributeFilter filter, ISearchCriteria criteria)
+        protected virtual string GetAttributeFilterExpression(AttributeFilter filter, ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
         {
-            return GetEqualsFilterExpression(filter.Key, filter.Values.Select(v => v.Value), true);
+            string result;
+
+            var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key).ToLower();
+            var availableField = availableFields?.FirstOrDefault(f => f.Name.EqualsInvariant(azureFieldName));
+
+            if (availableField != null)
+            {
+                result = availableField.DataType.StartsWith("Collection(")
+                    ? GetContainsFilterExpression(filter.Key, filter.Values.Select(v => v.Value))
+                    : GetEqualsFilterExpression(filter.Key, filter.Values.Select(v => v.Value), true);
+            }
+            else
+            {
+                result = $"{AzureSearchHelper.KeyFieldName} eq ''";
+            }
+
+            return result;
         }
 
         protected virtual string GetContainsFilterExpression(string rawName, IEnumerable<string> rawValues)
@@ -261,7 +277,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             return $"'{rawValue.Replace("'", "''")}'";
         }
 
-        protected virtual IList<string> GetSorting(ISearchCriteria criteria)
+        protected virtual IList<string> GetSorting(ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
         {
             IList<string> result = null;
 
@@ -271,19 +287,25 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
                 foreach (var field in fields)
                 {
-                    if (result == null)
-                    {
-                        result = new List<string>();
-                    }
+                    var azureFieldName = AzureSearchHelper.ToAzureFieldName(field.FieldName);
+                    var availableField = availableFields?.FirstOrDefault(f => f.Name.EqualsInvariant(azureFieldName));
 
-                    result.Add(string.Join(" ", AzureSearchHelper.ToAzureFieldName(field.FieldName), field.IsDescending ? "desc" : "asc"));
+                    if (availableField != null)
+                    {
+                        if (result == null)
+                        {
+                            result = new List<string>();
+                        }
+
+                        result.Add(string.Join(" ", azureFieldName, field.IsDescending ? "desc" : "asc"));
+                    }
                 }
             }
 
             return result;
         }
 
-        protected virtual IList<string> GetFacets(ISearchCriteria criteria)
+        protected virtual IList<string> GetFacets(ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
         {
             var result = new List<string>();
 

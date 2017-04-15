@@ -16,7 +16,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
         #region ISearchQueryBuilder Members
 
-        public virtual object BuildQuery<T>(string scope, ISearchCriteria criteria)
+        public virtual object BuildQuery<T>(string scope, ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
             where T : class
         {
             var result = new SearchRequest(scope, criteria.DocumentType)

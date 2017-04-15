@@ -231,6 +231,7 @@ namespace VirtoCommerce.SearchModule.Test
             var provider = GetSearchProvider(providerType, _scope);
             SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
+            // Filtering by non-existent field name leads to empty result
             var criteria = new BaseSearchCriteria(_documentType)
             {
                 RecordsToRetrieve = 10,
@@ -238,9 +239,29 @@ namespace VirtoCommerce.SearchModule.Test
 
             var stringFilter = new AttributeFilter
             {
+                Key = "non-existent-field",
+                Values = new[] { new AttributeFilterValue { Value = "value-does-not-matter" } }
+            };
+
+            criteria.Apply(stringFilter);
+
+            var results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(0, results.DocCount);
+            Assert.Equal(0, results.TotalCount);
+
+
+            // Filtering by non-existent field value leads to empty result
+            criteria = new BaseSearchCriteria(_documentType)
+            {
+                RecordsToRetrieve = 10,
+            };
+
+            stringFilter = new AttributeFilter
+            {
                 Key = "Color",
                 Values = new[]
-                {
+               {
                     new AttributeFilterValue { Value = "White" }, // Non-existent value
                     new AttributeFilterValue { Value = "Green" }, // Non-existent value
                 }
@@ -248,7 +269,7 @@ namespace VirtoCommerce.SearchModule.Test
 
             criteria.Apply(stringFilter);
 
-            var results = provider.Search<DocumentDictionary>(_scope, criteria);
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
 
             Assert.Equal(0, results.DocCount);
             Assert.Equal(0, results.TotalCount);

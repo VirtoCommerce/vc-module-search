@@ -134,10 +134,15 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
         public virtual ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria) where T : class
         {
+            if (criteria == null)
+                throw new ArgumentNullException(nameof(criteria));
+
             var indexName = GetIndexName(scope, criteria.DocumentType);
 
             // Build query
-            var command = GetQueryBuilder(criteria).BuildQuery<T>(indexName, criteria) as SearchRequest;
+            var availableFields = GetAvailableFields(indexName, criteria.DocumentType);
+            var queryBuilder = GetQueryBuilder(criteria);
+            var command = queryBuilder.BuildQuery<T>(indexName, criteria, availableFields) as SearchRequest;
 
             ISearchResponse<T> searchResponse;
 
@@ -278,6 +283,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         }
 
         #region Helper Methods
+
+        protected virtual IList<IFieldDescriptor> GetAvailableFields(string indexName, string documentType)
+        {
+            return GetMappedProperties(indexName, documentType)
+                .Select(kvp => new FieldDescriptor { Name = kvp.Value.Name.Name, DataType = kvp.Value.Type.Name } as IFieldDescriptor)
+                .ToList();
+        }
 
         protected virtual ISearchQueryBuilder GetQueryBuilder(ISearchCriteria criteria)
         {

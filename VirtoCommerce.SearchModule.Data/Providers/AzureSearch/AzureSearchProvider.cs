@@ -157,20 +157,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
         public virtual ISearchResults<T> Search<T>(string scope, ISearchCriteria criteria)
             where T : class
         {
-            // Remove non-existent filds from sorting
-            if (criteria?.Sort != null)
-            {
-                var providerFields = GetMapping(scope, criteria.DocumentType).Select(f => f.Name).ToList();
-                var validSortingFields = criteria.Sort.GetSort()
-                    .Where(f => providerFields.Contains(AzureSearchHelper.ToAzureFieldName(f.FieldName)))
-                    .ToArray();
-                criteria.Sort = new SearchSort(validSortingFields);
-            }
+            if (criteria == null)
+                throw new ArgumentNullException(nameof(criteria));
 
+            var availableFields = GetAvailableFields(scope, criteria.DocumentType);
             var queryBuilder = GetQueryBuilder(criteria);
-            var query = queryBuilder.BuildQuery<T>(scope, criteria) as AzureSearchQuery;
+            var query = queryBuilder.BuildQuery<T>(scope, criteria, availableFields) as AzureSearchQuery;
 
-            var indexName = GetIndexName(scope, criteria?.DocumentType);
+            var indexName = GetIndexName(scope, criteria.DocumentType);
             var indexClient = GetSearchIndexClient(indexName);
 
             var searchResult = indexClient.Documents.Search<DocumentDictionary>(query?.SearchText, query?.SearchParameters);
@@ -181,6 +175,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
         #endregion
 
+        protected virtual IList<IFieldDescriptor> GetAvailableFields(string scope, string documentType)
+        {
+            return GetMapping(scope, documentType)
+                .Select(f => new FieldDescriptor { Name = f.Name, DataType = f.Type.ToString() } as IFieldDescriptor)
+                .ToList();
+        }
 
         protected virtual ISearchQueryBuilder GetQueryBuilder(ISearchCriteria criteria)
         {

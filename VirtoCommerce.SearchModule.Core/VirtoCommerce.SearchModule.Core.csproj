@@ -89,6 +89,8 @@
     <Compile Include="Model\Search\Facet.cs" />
     <Compile Include="Model\Search\FacetGroup.cs" />
     <Compile Include="Model\Search\FacetLabel.cs" />
+    <Compile Include="Model\Search\FieldDescriptor.cs" />
+    <Compile Include="Model\Search\IFieldDescriptor.cs" />
     <Compile Include="Model\Search\ISearchQueryBuilder.cs" />
     <Compile Include="Model\Search\ISearchResults.cs" />
     <Compile Include="Model\Search\SearchSort.cs" />
