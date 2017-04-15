@@ -111,7 +111,7 @@ namespace VirtoCommerce.SearchModule.Test
 
             var criteria = new BaseSearchCriteria(_documentType)
             {
-                Ids = new[] { "item-2", "item-3" },
+                Ids = new[] { "Item-2", "Item-3" },
                 RecordsToRetrieve = 10,
             };
 
@@ -120,8 +120,8 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.Equal(2, results.DocCount);
             Assert.Equal(2, results.TotalCount);
 
-            Assert.True(results.Documents.Any(d => (string)d.Id == "item-2"), "Cannot find 'item-2'");
-            Assert.True(results.Documents.Any(d => (string)d.Id == "item-3"), "Cannot find 'item-3'");
+            Assert.True(results.Documents.Any(d => (string)d.Id == "Item-2"), "Cannot find 'Item-2'");
+            Assert.True(results.Documents.Any(d => (string)d.Id == "Item-3"), "Cannot find 'Item-3'");
         }
 
         [Theory]
@@ -535,7 +535,50 @@ namespace VirtoCommerce.SearchModule.Test
         [Theory]
         [InlineData("Lucene")]
         [InlineData("Elastic")]
-        //[InlineData("Azure")] // Azure does not support filters for individual facets
+        [InlineData("Azure")]
+        public void CanGetPriceFacetsForDisjointPricelists(string providerType)
+        {
+            var provider = GetSearchProvider(providerType, _scope);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
+
+            var criteria = new BaseSearchCriteria(_documentType)
+            {
+                Currency = "USD",
+                Pricelists = new[] { "supersale", "sale" },
+                RecordsToRetrieve = 10,
+            };
+
+            var priceRangeFacet = new PriceRangeFilter
+            {
+                Currency = "USD",
+                Values = new[]
+                {
+                    new RangeFilterValue {Id = "under_90", Lower = "", Upper = "90"},
+                    new RangeFilterValue {Id = "90_to_100", Lower = "90", Upper = "100"},
+                    new RangeFilterValue {Id = "over_100", Lower = "100", Upper = ""},
+                }
+            };
+
+            criteria.Add(priceRangeFacet);
+
+            var results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(6, results.DocCount);
+
+            var priceCount = GetFacetCount(results, "Price", "under_90");
+            Assert.True(priceCount == 1, $"Returns {priceCount} facets of under_90 prices instead of 1");
+
+            var priceCount2 = GetFacetCount(results, "Price", "90_to_100");
+            Assert.True(priceCount2 == 1, $"Returns {priceCount2} facets of 90_to_100 prices instead of 1");
+
+            var priceCount3 = GetFacetCount(results, "Price", "over_100");
+            Assert.True(priceCount3 == 0, $"Returns {priceCount2} facets of over_100 prices instead of 0");
+        }
+
+        [Theory]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
+        //[InlineData("Azure")] // Azure does not support complex facets with filters
         public void CanGetPriceFacetsForMultiplePricelists(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
@@ -562,7 +605,7 @@ namespace VirtoCommerce.SearchModule.Test
 
             var results = provider.Search<DocumentDictionary>(_scope, criteria);
 
-            Assert.True(results.DocCount == 6, $"Returns {results.DocCount} instead of 6");
+            Assert.Equal(6, results.DocCount);
 
             var priceCount = GetFacetCount(results, "Price", "0_to_100");
             Assert.True(priceCount == 2, $"Returns {priceCount} facets of 0_to_100 prices instead of 2");
@@ -589,7 +632,6 @@ namespace VirtoCommerce.SearchModule.Test
 
             var priceSaleCount2 = GetFacetCount(results, "Price", "100_to_700");
             Assert.True(priceSaleCount2 == 2, $"Returns {priceSaleCount2} facets of 100_to_700 prices instead of 3");
-
         }
 
         [Theory]

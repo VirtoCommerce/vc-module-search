@@ -40,90 +40,147 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             return searchResult.Results.Select(r => RenameFields(r.Document)).ToList();
         }
 
-        private static FacetGroup[] ConvertFacets(FacetResults facets, ISearchCriteria criteria)
+        private static IList<FacetGroup> ConvertFacets(FacetResults facets, ISearchCriteria criteria)
         {
-            var result = new List<FacetGroup>();
+            var result = criteria.Filters.Select(f => ConvertFacet(f, facets, criteria))
+                .Where(f => f != null && f.Facets.Any())
+                .ToList();
 
-            if (facets != null)
+            return result;
+        }
+
+        private static FacetGroup ConvertFacet(ISearchFilter filter, FacetResults facets, ISearchCriteria criteria)
+        {
+            FacetGroup result = null;
+
+            var attributeFilter = filter as AttributeFilter;
+            var rangeFilter = filter as RangeFilter;
+            var priceRangeFilter = filter as PriceRangeFilter;
+
+            if (attributeFilter != null)
             {
-                foreach (var filter in criteria.Filters)
+                result = ConvertAttributeFacet(attributeFilter, facets);
+            }
+            else if (rangeFilter != null)
+            {
+                result = ConvertRangeFacet(rangeFilter, facets);
+            }
+            else if (priceRangeFilter != null)
+            {
+                result = ConvertPriceFacet(priceRangeFilter, facets, criteria);
+            }
+
+            return result;
+        }
+
+        private static FacetGroup ConvertAttributeFacet(AttributeFilter filter, FacetResults facets)
+        {
+            FacetGroup result = null;
+
+            if (filter != null)
+            {
+                var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key);
+                var facetResults = facets[azureFieldName];
+
+                if (facetResults != null && facetResults.Any())
                 {
-                    var attributeFilter = filter as AttributeFilter;
-                    var rangeFilter = filter as RangeFilter;
-                    var priceRangeFilter = filter as PriceRangeFilter;
-
-                    var azureFieldName = priceRangeFilter != null
-                        ? AzureSearchHelper.ToAzureFieldName($"{filter.Key}_{criteria.Currency}_{criteria.Pricelists?.FirstOrDefault()}").ToLowerInvariant()
-                        : AzureSearchHelper.ToAzureFieldName(filter.Key).ToLowerInvariant();
-
-                    if (facets.ContainsKey(azureFieldName))
+                    result = new FacetGroup(filter.Key, filter.GetLabels())
                     {
-                        var facetResults = facets[azureFieldName];
-                        if (facetResults != null && facetResults.Count > 0)
+                        FacetType = FacetTypes.Attribute
+                    };
+
+                    var values = filter.GetValues();
+
+                    if (values != null)
+                    {
+                        foreach (var group in values.GroupBy(v => v.Id))
                         {
-                            var groupLabels = filter.GetLabels();
-                            var values = filter.GetValues();
-                            var facetGroup = new FacetGroup(filter.Key, groupLabels);
-
-                            // Return all facet terms for attribute filter if values are not defined
-                            if (values == null && attributeFilter != null)
-                            {
-                                facetGroup.FacetType = FacetTypes.Attribute;
-
-                                foreach (var facetResult in facetResults)
-                                {
-                                    var newFacet = new Facet(facetGroup, ToStringInvariant(facetResult.Value), facetResult.Count, null);
-                                    facetGroup.Facets.Add(newFacet);
-                                }
-                            }
-
-                            if (values != null)
-                            {
-                                foreach (var group in values.GroupBy(v => v.Id))
-                                {
-                                    var valueLabels = group.GetValueLabels();
-
-                                    if (attributeFilter != null)
-                                    {
-                                        facetGroup.FacetType = FacetTypes.Attribute;
-
-                                        var facetResult = facetResults.FirstOrDefault(r => ToStringInvariant(r.Value).EqualsInvariant(group.Key));
-                                        if (facetResult != null)
-                                        {
-                                            var newFacet = new Facet(facetGroup, group.Key, facetResult.Count, valueLabels);
-                                            facetGroup.Facets.Add(newFacet);
-                                        }
-                                    }
-
-                                    if (rangeFilter != null || priceRangeFilter != null && priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
-                                    {
-                                        facetGroup.FacetType = rangeFilter != null ? FacetTypes.Range : FacetTypes.PriceRange;
-
-                                        var rangeFilterValue = group.First() as RangeFilterValue;
-                                        var lower = rangeFilterValue.Lower == null ? null : rangeFilterValue.Lower.Length == 0 ? null : rangeFilterValue.Lower == "0" ? null : rangeFilterValue.Lower;
-                                        var upper = rangeFilterValue.Upper;
-
-                                        var facetResult = facetResults.FirstOrDefault(r => r.From?.ToString() == lower && r.To?.ToString() == upper);
-                                        if (facetResult != null && facetResult.Count > 0)
-                                        {
-                                            var newFacet = new Facet(facetGroup, group.Key, facetResult.Count, valueLabels);
-                                            facetGroup.Facets.Add(newFacet);
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Add facet group only if it has items
-                            if (facetGroup.Facets.Any())
-                            {
-                                result.Add(facetGroup);
-                            }
+                            var facetResult = facetResults.FirstOrDefault(r => ToStringInvariant(r.Value).EqualsInvariant(group.Key));
+                            AddFacet(result, facetResult, group.Key, group.GetValueLabels());
+                        }
+                    }
+                    else
+                    {
+                        // Return all facet results if values are not defined
+                        foreach (var facetResult in facetResults)
+                        {
+                            var newFacet = new Facet(result, ToStringInvariant(facetResult.Value), facetResult.Count, null);
+                            result.Facets.Add(newFacet);
                         }
                     }
                 }
             }
 
-            return result.ToArray();
+            return result;
+        }
+
+        private static FacetGroup ConvertRangeFacet(RangeFilter filter, FacetResults facets)
+        {
+            FacetGroup result = null;
+
+            if (filter != null)
+            {
+                var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key);
+                var facetResults = facets[azureFieldName];
+
+                if (facetResults != null && facetResults.Any())
+                {
+                    result = new FacetGroup(filter.Key, filter.GetLabels())
+                    {
+                        FacetType = FacetTypes.Range
+                    };
+
+                    foreach (var group in filter.Values.GroupBy(v => v.Id))
+                    {
+                        var facetResult = GetRangeFacetResult(group.First(), facetResults);
+                        AddFacet(result, facetResult, group.Key, group.GetValueLabels());
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private static FacetGroup ConvertPriceFacet(PriceRangeFilter filter, FacetResults facets, ISearchCriteria criteria)
+        {
+            FacetGroup result = null;
+
+            if (filter != null && filter.Currency.EqualsInvariant(criteria?.Currency))
+            {
+                result = new FacetGroup(filter.Key, filter.GetLabels())
+                {
+                    FacetType = FacetTypes.PriceRange
+                };
+
+                foreach (var group in filter.Values.GroupBy(v => v.Id))
+                {
+                    // Search all price facets and take first suitable result
+                    var azureFieldNames = AzureSearchHelper.GetPriceFieldNames(filter.Key, criteria?.Currency, criteria?.Pricelists);
+                    var facetResults = azureFieldNames.SelectMany(f => facets[f]).ToList();
+                    var facetResult = GetRangeFacetResult(group.First(), facetResults);
+
+                    AddFacet(result, facetResult, group.Key, group.GetValueLabels());
+                }
+            }
+
+            return result;
+        }
+
+        private static FacetResult GetRangeFacetResult(RangeFilterValue filterValue, IEnumerable<FacetResult> facetResults)
+        {
+            var lower = filterValue.Lower == null ? null : filterValue.Lower.Length == 0 ? null : filterValue.Lower == "0" ? null : filterValue.Lower;
+            var upper = filterValue.Upper;
+
+            return facetResults.FirstOrDefault(r => r.Count > 0 && r.From?.ToString() == lower && r.To?.ToString() == upper);
+        }
+
+        private static void AddFacet(FacetGroup facetGroup, FacetResult facetResult, string key, FacetLabel[] labels)
+        {
+            if (facetResult != null && facetResult.Count > 0)
+            {
+                var newFacet = new Facet(facetGroup, key, facetResult.Count, labels);
+                facetGroup.Facets.Add(newFacet);
+            }
         }
 
         private static DocumentDictionary RenameFields(DocumentDictionary document)

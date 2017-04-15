@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
@@ -45,6 +48,31 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             }
 
             return builder.ToString();
+        }
+
+        public static IList<string> GetPriceFieldNames(string fieldName, string currency, IList<string> pricelists)
+        {
+            var actualPricelists = new List<string>();
+
+            if (pricelists != null)
+            {
+                actualPricelists.AddRange(pricelists
+                    .Where(p => !string.IsNullOrEmpty(p))
+                    .Distinct(StringComparer.OrdinalIgnoreCase));
+            }
+
+            if (!actualPricelists.Any())
+            {
+                actualPricelists.Add(null);
+            }
+
+            var azureFieldNames = actualPricelists.Select(p =>
+                ToAzureFieldName(
+                    JoinNonEmptyStrings("_", false, fieldName, currency, p)
+                )
+            ).ToList();
+
+            return azureFieldNames;
         }
     }
 }

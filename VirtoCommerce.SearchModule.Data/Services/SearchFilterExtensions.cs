@@ -13,12 +13,9 @@ namespace VirtoCommerce.SearchModule.Data.Services
             FacetLabel[] result = null;
 
             var attributeFilter = filter as AttributeFilter;
-            if (attributeFilter != null)
+            if (attributeFilter?.DisplayNames != null)
             {
-                if (attributeFilter.DisplayNames != null)
-                {
-                    result = attributeFilter.DisplayNames.Select(d => new FacetLabel { Language = d.Language, Label = d.Name }).ToArray();
-                }
+                result = attributeFilter.DisplayNames.Select(d => new FacetLabel { Language = d.Language, Label = d.Name }).ToArray();
             }
 
             return result;
@@ -26,31 +23,31 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         public static ISearchFilterValue[] GetValues(this ISearchFilter filter)
         {
+            ISearchFilterValue[] result = null;
+
             var attributeFilter = filter as AttributeFilter;
+            var rangeFilter = filter as RangeFilter;
+            var priceRangeFilter = filter as PriceRangeFilter;
+            var categoryFilter = filter as CategoryFilter;
+
             if (attributeFilter != null)
             {
-                return attributeFilter.Values != null ? attributeFilter.Values.OfType<ISearchFilterValue>().ToArray() : null;
+                result = attributeFilter.Values?.OfType<ISearchFilterValue>().ToArray();
             }
-
-            var rangeFilter = filter as RangeFilter;
-            if (rangeFilter != null)
+            else if (rangeFilter != null)
             {
-                return rangeFilter.Values != null ? rangeFilter.Values.OfType<ISearchFilterValue>().ToArray() : null;
+                result = rangeFilter.Values?.OfType<ISearchFilterValue>().ToArray();
             }
-
-            var priceRangeFilter = filter as PriceRangeFilter;
-            if (priceRangeFilter != null)
+            else if (priceRangeFilter != null)
             {
-                return priceRangeFilter.Values != null ? priceRangeFilter.Values.OfType<ISearchFilterValue>().ToArray() : null;
+                result = priceRangeFilter.Values?.OfType<ISearchFilterValue>().ToArray();
             }
-
-            var categoryFilter = filter as CategoryFilter;
-            if (categoryFilter != null)
+            else if (categoryFilter != null)
             {
-                return categoryFilter.Values != null ? categoryFilter.Values.OfType<ISearchFilterValue>().ToArray() : null;
+                result = categoryFilter.Values?.OfType<ISearchFilterValue>().ToArray();
             }
 
-            return null;
+            return result;
         }
 
         public static FacetLabel[] GetValueLabels(this IEnumerable<ISearchFilterValue> values)
@@ -81,15 +78,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
             }
 
             var rangeFilterValue = value as RangeFilterValue;
-            if (rangeFilterValue != null)
+            if (rangeFilterValue?.Displays != null)
             {
-                if (rangeFilterValue.Displays != null)
-                {
-                    var labels = rangeFilterValue.Displays
-                        .Select(d => new FacetLabel { Language = d.Language, Label = d.Value })
-                        .ToArray();
-                    result.AddRange(labels);
-                }
+                var labels = rangeFilterValue.Displays
+                    .Select(d => new FacetLabel { Language = d.Language, Label = d.Value })
+                    .ToArray();
+                result.AddRange(labels);
             }
 
             return result;
