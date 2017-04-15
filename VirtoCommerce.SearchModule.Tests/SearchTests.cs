@@ -41,7 +41,7 @@ namespace VirtoCommerce.SearchModule.Test
         [InlineData("Lucene")]
         [InlineData("Elastic")]
         [InlineData("Azure")]
-        public void CanGetOutlines(string providerType)
+        public void CanGetStringCollection(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);
             SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
@@ -56,14 +56,10 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.Equal(6, results.DocCount);
             Assert.Equal(6, results.TotalCount);
 
-            int outlineCount;
-            var outlineObject = results.Documents.First()["__outline"]; // can be JArray or object[] depending on provider used
-            if (outlineObject is JArray)
-                outlineCount = (outlineObject as JArray).Count;
-            else
-                outlineCount = ((object[])outlineObject).Length;
+            var stringCollection = results.Documents.First()["catalog"]; // can be JArray or object[] depending on provider used
+            var itemsCount = (stringCollection as JArray)?.Count ?? ((object[])stringCollection).Length;
 
-            Assert.True(outlineCount == 2, $"Returns {outlineCount} outlines instead of 2");
+            Assert.True(itemsCount == 2, $"Returns {itemsCount} collection items instead of 2");
         }
 
         [Theory]
@@ -115,7 +111,7 @@ namespace VirtoCommerce.SearchModule.Test
 
             var criteria = new BaseSearchCriteria(_documentType)
             {
-                Ids = new[] { "red3", "another" },
+                Ids = new[] { "item-2", "item-3" },
                 RecordsToRetrieve = 10,
             };
 
@@ -124,8 +120,8 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.Equal(2, results.DocCount);
             Assert.Equal(2, results.TotalCount);
 
-            Assert.True(results.Documents.Any(d => (string)d.Id == "red3"), "Cannot find 'red3'");
-            Assert.True(results.Documents.Any(d => (string)d.Id == "another"), "Cannot find 'another'");
+            Assert.True(results.Documents.Any(d => (string)d.Id == "item-2"), "Cannot find 'item-2'");
+            Assert.True(results.Documents.Any(d => (string)d.Id == "item-3"), "Cannot find 'item-3'");
         }
 
         [Theory]
@@ -261,7 +257,7 @@ namespace VirtoCommerce.SearchModule.Test
             {
                 Key = "Color",
                 Values = new[]
-               {
+                {
                     new AttributeFilterValue { Value = "White" }, // Non-existent value
                     new AttributeFilterValue { Value = "Green" }, // Non-existent value
                 }
@@ -284,7 +280,7 @@ namespace VirtoCommerce.SearchModule.Test
             {
                 Key = "Color",
                 Values = new[]
-              {
+                {
                     new AttributeFilterValue { Value = "Red" },
                     new AttributeFilterValue { Value = "Blue" },
                     new AttributeFilterValue { Value = "Black" },

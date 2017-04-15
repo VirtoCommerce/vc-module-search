@@ -25,11 +25,11 @@ namespace VirtoCommerce.SearchModule.Test
         {
             provider.RemoveAll(scope, documentType);
 
-            provider.Index(scope, documentType, CreateDocument("12345", "Sample Product", "Red", 2, new[] { new Price("USD", "default", 123.23m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
-            provider.Index(scope, documentType, CreateDocument("red3", "Red Shirt 2", "Red", 4, new[] { new Price("USD", "default", 200m), new Price("USD", "sale", 99m), new Price("EUR", "sale", 300m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
-            provider.Index(scope, documentType, CreateDocument("sad121", "Red Shirt", "Red", 3, new[] { new Price("USD", "default", 10m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
-            provider.Index(scope, documentType, CreateDocument("32894hjf", "Black Sox", "Black", 10, new[] { new Price("USD", "default", 243.12m), new Price("USD", "supersale", 89m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
-            provider.Index(scope, documentType, CreateDocument("another", "Black Sox2", "Silver", 20, new[] { new Price("USD", "default", 700m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }));
+            provider.Index(scope, documentType, CreateDocument("Item-1", "Sample Product", "Red", 2, false, new Price("USD", "default", 123.23m)));
+            provider.Index(scope, documentType, CreateDocument("Item-2", "Red Shirt 2", "Red", 4, false, new Price("USD", "default", 200m), new Price("USD", "sale", 99m), new Price("EUR", "sale", 300m)));
+            provider.Index(scope, documentType, CreateDocument("Item-3", "Red Shirt", "Red", 3, false, new Price("USD", "default", 10m)));
+            provider.Index(scope, documentType, CreateDocument("Item-4", "Black Sox", "Black", 10, false, new Price("USD", "default", 243.12m), new Price("USD", "supersale", 89m)));
+            provider.Index(scope, documentType, CreateDocument("Item-5", "Black Sox2", "Silver", 20, false, new Price("USD", "default", 700m)));
 
             if (addExtraFields)
             {
@@ -38,7 +38,7 @@ namespace VirtoCommerce.SearchModule.Test
                 Thread.Sleep(2000);
             }
 
-            provider.Index(scope, documentType, CreateDocument("jdashf", "Blue Shirt", "Blue", 8, new[] { new Price("USD", "default", 23.12m) }, new[] { "sony/186d61d8-d843-4675-9f77-ec5ef603fda3", "apple/186d61d8-d843-4675-9f77-ec5ef603fda3" }, addExtraFields));
+            provider.Index(scope, documentType, CreateDocument("item-6", "Blue Shirt", "Blue", 8, addExtraFields, new Price("USD", "default", 23.12m)));
 
             provider.Commit(scope);
             provider.Close(scope, documentType);
@@ -47,48 +47,41 @@ namespace VirtoCommerce.SearchModule.Test
             Thread.Sleep(2000);
         }
 
-        public static ResultDocument CreateDocument(string key, string name, string color, int size, Price[] prices, string[] outlines, bool addExtraFields = false)
+
+        private static ResultDocument CreateDocument(string key, string name, string color, int size, bool addExtraFields, params Price[] prices)
         {
             var doc = new ResultDocument();
 
+            // Fields with special meaning
             doc.Add(new DocumentField("__key", key, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("__type", "product", new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("__sort", "1", new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("status", "visible", new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("is", "visible", new[] { IndexStore.No, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
-            doc.Add(new DocumentField("is", "priced", new[] { IndexStore.No, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
-            doc.Add(new DocumentField("is", color, new[] { IndexStore.No, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
-            doc.Add(new DocumentField("is", key, new[] { IndexStore.No, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
-            doc.Add(new DocumentField("code", key, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("name", name, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("startdate", DateTime.UtcNow.AddDays(-1), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("enddate", DateTime.MaxValue, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+            doc.Add(new DocumentField("__content", name, new[] { IndexStore.Yes, IndexType.Analyzed, IndexDataType.StringCollection }));
+            doc.Add(new DocumentField("__content", color, new[] { IndexStore.Yes, IndexType.Analyzed, IndexDataType.StringCollection }));
+
+            doc.Add(new DocumentField("Code", key, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+            doc.Add(new DocumentField("Name", name, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+            doc.Add(new DocumentField("Color", color, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+            doc.Add(new DocumentField("Size", size, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+            doc.Add(new DocumentField("IndexDate", DateTime.UtcNow, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+
+            doc.Add(new DocumentField("Catalog", "Goods", new[] { IndexStore.Yes, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
+            doc.Add(new DocumentField("Catalog", "Stuff", new[] { IndexStore.Yes, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
+
+            doc.Add(new DocumentField("Is", "priced", new[] { IndexStore.No, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
+            doc.Add(new DocumentField("Is", color, new[] { IndexStore.No, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
+            doc.Add(new DocumentField("Is", key, new[] { IndexStore.No, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
 
             foreach (var price in prices)
             {
-                doc.Add(new DocumentField($"price_{price.Currency}_{price.Pricelist}".ToLowerInvariant(), price.Amount, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-                doc.Add(new DocumentField($"price_{price.Currency}".ToLowerInvariant(), price.Amount, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+                doc.Add(new DocumentField($"Price_{price.Currency}_{price.Pricelist}", price.Amount, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+                doc.Add(new DocumentField($"Price_{price.Currency}", price.Amount, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             }
 
-            doc.Add(new DocumentField("color", color, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-            doc.Add(new DocumentField("catalog", "goods", new[] { IndexStore.Yes, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
-            doc.Add(new DocumentField("size", size, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-
-            if (addExtraFields) // adds extra properties to test mapping updates for indexer
+            // Adds extra fields to test mapping updates for indexer
+            if (addExtraFields)
             {
-                doc.Add(new DocumentField("name 2", name, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
-                doc.Add(new DocumentField("startdate(2)", DateTime.UtcNow.AddDays(-1), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+                doc.Add(new DocumentField("Name 2", name, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+                doc.Add(new DocumentField("Date (2)", DateTime.UtcNow.AddDays(-1), new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             }
-
-            if (outlines != null)
-            {
-                foreach (var outline in outlines)
-                {
-                    doc.Add(new DocumentField("__outline", outline, new[] { IndexStore.Yes, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
-                }
-            }
-
-            doc.Add(new DocumentField("__content", name, new[] { IndexStore.Yes, IndexType.Analyzed }));
 
             return doc;
         }
