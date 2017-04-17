@@ -1,8 +1,5 @@
 ﻿using System;
-using System.IO;
 using Lucene.Net.Documents;
-using Newtonsoft.Json;
-using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
@@ -64,10 +61,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             {
                 if (field.Value != null)
                 {
-                    var value = SerializeObject(field.Value);
-
                     // index full web serialized object
-                    doc.Add(new Field(fieldName, value, store, index));
+                    doc.Add(new Field(fieldName, (string)field.Value, store, index));
                 }
             }
             else if (field.Value is string)
@@ -116,26 +111,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                         doc.Add(new Field(fieldName, value.ToString(), store, index));
                     }
                 }
-            }
-        }
-
-        private static string SerializeObject(object obj)
-        {
-            using (var memStream = new MemoryStream())
-            {
-                var serializer = new JsonSerializer
-                {
-                    DefaultValueHandling = DefaultValueHandling.Ignore,
-                    NullValueHandling = NullValueHandling.Ignore,
-                    Formatting = Formatting.None,
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                    TypeNameHandling = TypeNameHandling.None,
-                };
-
-                obj.SerializeJson(memStream, serializer);
-                memStream.Seek(0, SeekOrigin.Begin);
-                var value = memStream.ReadToString();
-                return value;
             }
         }
     }

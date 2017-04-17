@@ -84,7 +84,6 @@
     <Compile Include="Model\SearchException.cs" />
     <Compile Include="Model\SearchProviders.cs" />
     <Compile Include="Model\Search\Criteria\ISearchCriteria.cs" />
-    <Compile Include="Model\Search\Criteria\KeywordSearchCriteria.cs" />
     <Compile Include="Model\Search\Criteria\BaseSearchCriteria.cs" />
     <Compile Include="Model\Search\Facet.cs" />
     <Compile Include="Model\Search\FacetGroup.cs" />

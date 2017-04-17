@@ -38,7 +38,7 @@ namespace VirtoCommerce.SearchModule.Test
                 Thread.Sleep(2000);
             }
 
-            provider.Index(scope, documentType, CreateDocument("item-6", "Blue Shirt", "Blue", 8, addExtraFields, new Price("USD", "default", 23.12m)));
+            provider.Index(scope, documentType, CreateDocument("Item-6", "Blue Shirt", "Blue", 8, addExtraFields, new Price("USD", "default", 23.12m)));
 
             provider.Commit(scope);
             provider.Close(scope, documentType);
@@ -66,7 +66,7 @@ namespace VirtoCommerce.SearchModule.Test
             doc.Add(new DocumentField("Catalog", "Goods", new[] { IndexStore.Yes, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
             doc.Add(new DocumentField("Catalog", "Stuff", new[] { IndexStore.Yes, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
 
-            doc.Add(new DocumentField("Is", "priced", new[] { IndexStore.No, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
+            doc.Add(new DocumentField("Is", "Priced", new[] { IndexStore.No, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
             doc.Add(new DocumentField("Is", color, new[] { IndexStore.No, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
             doc.Add(new DocumentField("Is", key, new[] { IndexStore.No, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
 
