@@ -49,6 +49,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             }
 
             var fieldName = field.Name.ToLowerInvariant();
+            var isIndexed = !field.ContainsAttribute(IndexType.No);
 
             if (fieldName == "__key")
             {
@@ -57,20 +58,16 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                     doc.Add(new Field(fieldName, value.ToString(), store, index));
                 }
             }
-            else if (fieldName == "__object")
-            {
-                if (field.Value != null)
-                {
-                    // index full web serialized object
-                    doc.Add(new Field(fieldName, (string)field.Value, store, index));
-                }
-            }
             else if (field.Value is string)
             {
                 foreach (var value in field.Values)
                 {
                     doc.Add(new Field(fieldName, value.ToString(), store, index));
-                    doc.Add(new Field("_content", value.ToString(), Field.Store.NO, Field.Index.ANALYZED));
+
+                    if (isIndexed)
+                    {
+                        doc.Add(new Field("_content", value.ToString(), Field.Store.NO, Field.Index.ANALYZED));
+                    }
                 }
             }
             else if (field.Value is decimal) // parse prices

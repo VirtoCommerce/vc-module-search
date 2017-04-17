@@ -70,6 +70,8 @@ namespace VirtoCommerce.SearchModule.Test
             doc.Add(new DocumentField("Is", color, new[] { IndexStore.No, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
             doc.Add(new DocumentField("Is", key, new[] { IndexStore.No, IndexType.NotAnalyzed, IndexDataType.StringCollection }));
 
+            doc.Add(new DocumentField("StoredField", "This value should not be processed in any way, it is just stored in the index.", new[] { IndexStore.Yes, IndexType.No }));
+
             foreach (var price in prices)
             {
                 doc.Add(new DocumentField($"Price_{price.Currency}_{price.Pricelist}", price.Amount, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));

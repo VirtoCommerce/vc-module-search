@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using Microsoft.Azure.Search;
 using Microsoft.Azure.Search.Models;
-using Microsoft.Rest.Azure;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
@@ -83,9 +85,17 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                                 }
                             }
                         }
-                        catch (CloudException ex)
+                        catch (IndexBatchException ex)
                         {
-                            throw new IndexBuildException(ex.Message, ex);
+                            var builder = new StringBuilder();
+                            builder.AppendLine(ex.Message);
+
+                            foreach (var result in ex.IndexingResults.Where(r => !r.Succeeded))
+                            {
+                                builder.AppendLine(string.Format(CultureInfo.InvariantCulture, "Key: {0}, Error: {1}", result.Key, result.ErrorMessage));
+                            }
+
+                            throw new IndexBuildException(builder.ToString(), ex);
                         }
 
                         // Remove pending documents
@@ -252,7 +262,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             var providerFieldType = GetProviderFieldType(documentType, fieldName, originalFieldType);
 
             var isString = providerFieldType == DataType.String;
-            var isAnalyzed = field.ContainsAttribute(IndexType.Analyzed) || !field.ContainsAttribute(IndexType.NotAnalyzed);
+            var isIndexed = !field.ContainsAttribute(IndexType.No);
+            var isAnalyzed = field.ContainsAttribute(IndexType.Analyzed) || isIndexed && !field.ContainsAttribute(IndexType.NotAnalyzed);
             var isStored = field.ContainsAttribute(IndexStore.Yes) || !field.ContainsAttribute(IndexStore.No);
             var isCollection = field.ContainsAttribute(IndexDataType.StringCollection) && isString;
 
@@ -266,9 +277,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                 IsKey = fieldName == AzureSearchHelper.KeyFieldName,
                 IsRetrievable = isStored,
                 IsSearchable = isString && isAnalyzed,
-                IsFilterable = true,
-                IsFacetable = true,
-                IsSortable = !isCollection,
+                IsFilterable = isIndexed,
+                IsFacetable = isIndexed,
+                IsSortable = isIndexed && !isCollection,
             };
 
             return providerField;
@@ -349,6 +360,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             var updatedIndex = Client.Indexes.CreateOrUpdate(indexName, index);
 
             // TODO: Need to wait some time until changes are applied
+            Thread.Sleep(5000);
 
             AddMappingToCache(indexName, documentType, updatedIndex.Fields);
         }
