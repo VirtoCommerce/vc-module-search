@@ -131,9 +131,6 @@ namespace VirtoCommerce.SearchModule.Test
         [InlineData("Lucene", "__content:Red __content:sox", 0)]
         [InlineData("Elastic", "__content:Red __content:sox", 0)]
         [InlineData("Azure", "f___content:Red f___content:sox", 0)]
-        [InlineData("Lucene", "is:priced", 6)]
-        [InlineData("Elastic", "is:priced", 6)]
-        [InlineData("Azure", "f_is:priced", 6)]
         [InlineData("Elastic", "price_usd:[100 TO 199]", 1)]
         public void CanSearchByRawQuery(string providerType, string rawQuery, long expectedDocumentsCount)
         {
