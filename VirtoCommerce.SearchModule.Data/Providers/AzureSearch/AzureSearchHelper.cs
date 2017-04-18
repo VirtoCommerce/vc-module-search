@@ -52,7 +52,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             return builder.ToString();
         }
 
-        public static IList<string> GetPriceFieldNames(string fieldName, string currency, IList<string> pricelists)
+        public static IList<string> GetPriceFieldNames(string fieldName, string currency, IList<string> pricelists, bool alwaysAddEmptyPricelist)
         {
             var actualPricelists = new List<string>();
 
@@ -63,9 +63,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                     .Distinct(StringComparer.OrdinalIgnoreCase));
             }
 
-            if (!actualPricelists.Any())
+            if (alwaysAddEmptyPricelist || !actualPricelists.Any())
             {
-                actualPricelists.Add(null);
+                actualPricelists.Insert(0, null);
             }
 
             var azureFieldNames = actualPricelists.Select(p =>

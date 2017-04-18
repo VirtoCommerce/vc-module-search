@@ -155,7 +155,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                 foreach (var group in filter.Values.GroupBy(v => v.Id))
                 {
                     // Search all price facets and take first suitable result
-                    var azureFieldNames = AzureSearchHelper.GetPriceFieldNames(filter.Key, criteria?.Currency, criteria?.Pricelists);
+                    var azureFieldNames = AzureSearchHelper.GetPriceFieldNames(filter.Key, criteria?.Currency, criteria?.Pricelists, false);
                     var facetResults = azureFieldNames.SelectMany(f => facets.ContainsKey(f) ? facets[f] : Enumerable.Empty<FacetResult>()).ToList();
                     var facetResult = GetRangeFacetResult(group.First(), facetResults);
 

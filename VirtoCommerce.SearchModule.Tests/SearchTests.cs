@@ -365,10 +365,11 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.Equal(4, results.TotalCount);
 
 
+            // Filter for non-existent pricelist should be ignored
             criteria = new BaseSearchCriteria(_documentType)
             {
                 Currency = "USD",
-                Pricelists = new[] { "default" },
+                Pricelists = new[] { "default", "non-existent-pricelist" },
                 RecordsToRetrieve = 10,
             };
 

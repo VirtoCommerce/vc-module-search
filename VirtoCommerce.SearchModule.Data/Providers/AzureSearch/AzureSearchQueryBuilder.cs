@@ -94,7 +94,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                 }
                 else if (priceRangeFilter != null && priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
                 {
-                    expression = GetPriceRangeFilterExpression(priceRangeFilter, criteria);
+                    expression = GetPriceRangeFilterExpression(priceRangeFilter, criteria, availableFields);
                 }
 
                 if (!string.IsNullOrEmpty(expression))
@@ -152,51 +152,55 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             return result;
         }
 
-        protected virtual string GetPriceRangeFilterExpression(PriceRangeFilter filter, ISearchCriteria criteria)
+        protected virtual string GetPriceRangeFilterExpression(PriceRangeFilter filter, ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
         {
             string result = null;
 
             if (filter.Currency.EqualsInvariant(criteria.Currency))
             {
-                var expressions = filter.Values
-                    .Select(v => GetPriceRangeFilterValueExpression(0, filter, v, criteria))
-                    .Where(e => !string.IsNullOrEmpty(e))
-                    .ToArray();
+                var priceFieldNames = AzureSearchHelper.GetPriceFieldNames(filter.Key, criteria.Currency, criteria.Pricelists, true)
+                    .Where(availableFields.Contains)
+                    .ToList();
 
-                result = AzureSearchHelper.JoinNonEmptyStrings(" or ", true, expressions);
+                if (priceFieldNames.Any())
+                {
+                    var expressions = filter.Values
+                        .Select(v => GetPriceRangeFilterValueExpression(1, priceFieldNames, filter, v))
+                        .Where(e => !string.IsNullOrEmpty(e))
+                        .ToArray();
+
+                    result = AzureSearchHelper.JoinNonEmptyStrings(" or ", true, expressions);
+                }
             }
 
             return result;
         }
 
-        protected virtual string GetPriceRangeFilterValueExpression(int pricelistIndex, PriceRangeFilter filter, RangeFilterValue filterValue, ISearchCriteria criteria)
+        protected virtual string GetPriceRangeFilterValueExpression(int priceFieldIndex, IList<string> priceFieldNames, PriceRangeFilter filter, RangeFilterValue filterValue)
         {
             string result = null;
 
-            if (criteria.Pricelists.IsNullOrEmpty())
+            if (priceFieldNames.Count == 1)
             {
-                var fieldName = string.Join("_", filter.Key, criteria.Currency);
-                var azureFieldName = AzureSearchHelper.ToAzureFieldName(fieldName);
+                var azureFieldName = priceFieldNames.First();
                 result = GetRangeFilterValueExpression(filterValue, azureFieldName);
             }
-            else if (pricelistIndex < criteria.Pricelists.Count)
+            else if (priceFieldIndex < priceFieldNames.Count)
             {
                 // Get negative expression for previous pricelist
                 string previousPricelistExpression = null;
-                if (pricelistIndex > 0)
+                if (priceFieldIndex > 1)
                 {
-                    var previousFieldName = string.Join("_", filter.Key, criteria.Currency, criteria.Pricelists[pricelistIndex - 1]);
-                    var previousAzureFieldName = AzureSearchHelper.ToAzureFieldName(previousFieldName);
+                    var previousAzureFieldName = priceFieldNames[priceFieldIndex - 1];
                     previousPricelistExpression = $"not({previousAzureFieldName} gt 0)";
                 }
 
                 // Get positive expression for current pricelist
-                var currentFieldName = string.Join("_", filter.Key, criteria.Currency, criteria.Pricelists[pricelistIndex]);
-                var currentAzureFieldName = AzureSearchHelper.ToAzureFieldName(currentFieldName);
+                var currentAzureFieldName = priceFieldNames[priceFieldIndex];
                 var currentPricelistExpresion = GetRangeFilterValueExpression(filterValue, currentAzureFieldName);
 
                 // Get expression for next pricelist
-                var nextPricelistExpression = GetPriceRangeFilterValueExpression(pricelistIndex + 1, filter, filterValue, criteria);
+                var nextPricelistExpression = GetPriceRangeFilterValueExpression(priceFieldIndex + 1, priceFieldNames, filter, filterValue);
 
                 var currentExpression = AzureSearchHelper.JoinNonEmptyStrings(" or ", true, currentPricelistExpresion, nextPricelistExpression);
                 result = AzureSearchHelper.JoinNonEmptyStrings(" and ", false, previousPricelistExpression, currentExpression);
@@ -371,7 +375,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
         protected virtual IList<string> GetPriceRangeFilterFacets(PriceRangeFilter filter, ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
         {
-            var azureFieldNames = AzureSearchHelper.GetPriceFieldNames(filter.Key, criteria?.Currency, criteria?.Pricelists);
+            var azureFieldNames = AzureSearchHelper.GetPriceFieldNames(filter.Key, criteria?.Currency, criteria?.Pricelists, false);
             return azureFieldNames.Select(f => GetRangeFilterFacet(f, filter.Values, criteria, availableFields)).ToArray();
         }
 
