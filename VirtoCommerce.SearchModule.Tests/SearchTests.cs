@@ -512,6 +512,7 @@ namespace VirtoCommerce.SearchModule.Test
             };
 
             criteria.Add(nonExistentFieldAttributeFacet);
+            criteria.Add(nonExistentFieldRangeFacet);
             criteria.Add(attributeFacet);
             criteria.Add(rangeFacet);
             criteria.Add(priceRangeFacetUsd);
