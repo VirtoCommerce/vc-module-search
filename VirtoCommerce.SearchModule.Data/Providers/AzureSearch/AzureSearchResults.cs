@@ -80,7 +80,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             if (filter != null)
             {
                 var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key);
-                var facetResults = facets[azureFieldName];
+                var facetResults = facets.ContainsKey(azureFieldName) ? facets[azureFieldName] : null;
 
                 if (facetResults != null && facetResults.Any())
                 {
@@ -121,7 +121,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             if (filter != null)
             {
                 var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key);
-                var facetResults = facets[azureFieldName];
+                var facetResults = facets.ContainsKey(azureFieldName) ? facets[azureFieldName] : null;
 
                 if (facetResults != null && facetResults.Any())
                 {
@@ -156,7 +156,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                 {
                     // Search all price facets and take first suitable result
                     var azureFieldNames = AzureSearchHelper.GetPriceFieldNames(filter.Key, criteria?.Currency, criteria?.Pricelists);
-                    var facetResults = azureFieldNames.SelectMany(f => facets[f]).ToList();
+                    var facetResults = azureFieldNames.SelectMany(f => facets.ContainsKey(f) ? facets[f] : Enumerable.Empty<FacetResult>()).ToList();
                     var facetResult = GetRangeFacetResult(group.First(), facetResults);
 
                     AddFacet(result, facetResult, group.Key, group.GetValueLabels());

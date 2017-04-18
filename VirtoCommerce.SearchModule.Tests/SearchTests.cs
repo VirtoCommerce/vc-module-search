@@ -444,11 +444,19 @@ namespace VirtoCommerce.SearchModule.Test
             var provider = GetSearchProvider(providerType, _scope);
             SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
 
+            // Facets for non-existent fields and pricelists should be ignored
+
             var criteria = new BaseSearchCriteria(_documentType)
             {
                 Currency = "USD",
-                Pricelists = new[] { "default" },
+                Pricelists = new[] { "default", "non-existent-pricelist" },
                 RecordsToRetrieve = 0,
+            };
+
+            var nonExistentFieldAttributeFacet = new AttributeFilter
+            {
+                Key = "non-existent-field",
+                Values = new[] { new AttributeFilterValue { Id = "Red", Value = "Red" } }
             };
 
             var attributeFacet = new AttributeFilter
@@ -460,6 +468,12 @@ namespace VirtoCommerce.SearchModule.Test
                     new AttributeFilterValue { Id = "Blue", Value = "Blue" },
                     new AttributeFilterValue { Id = "Black", Value = "Black" },
                 }
+            };
+
+            var nonExistentFieldRangeFacet = new RangeFilter
+            {
+                Key = "non-existent-field",
+                Values = new[] { new RangeFilterValue { Id = "5_to_10", Lower = "5", Upper = "10" } }
             };
 
             var rangeFacet = new RangeFilter
@@ -497,6 +511,7 @@ namespace VirtoCommerce.SearchModule.Test
                 }
             };
 
+            criteria.Add(nonExistentFieldAttributeFacet);
             criteria.Add(attributeFacet);
             criteria.Add(rangeFacet);
             criteria.Add(priceRangeFacetUsd);

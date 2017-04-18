@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.SearchModule.Core.Model.Search;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 {
@@ -73,6 +75,16 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             ).ToList();
 
             return azureFieldNames;
+        }
+
+        public static bool Contains(this IList<IFieldDescriptor> fields, string name)
+        {
+            return fields?.Get(name) != null;
+        }
+
+        public static IFieldDescriptor Get(this IList<IFieldDescriptor> fields, string name)
+        {
+            return fields?.FirstOrDefault(f => f.Name.EqualsInvariant(name));
         }
     }
 }

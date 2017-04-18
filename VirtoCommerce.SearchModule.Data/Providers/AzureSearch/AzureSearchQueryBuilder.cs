@@ -109,7 +109,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             string result;
 
             var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key);
-            var availableField = availableFields?.FirstOrDefault(f => f.Name.EqualsInvariant(azureFieldName));
+            var availableField = availableFields.Get(azureFieldName);
 
             if (availableField != null)
             {
@@ -288,9 +288,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                 foreach (var field in fields)
                 {
                     var azureFieldName = AzureSearchHelper.ToAzureFieldName(field.FieldName);
-                    var availableField = availableFields?.FirstOrDefault(f => f.Name.EqualsInvariant(azureFieldName));
-
-                    if (availableField != null)
+                    if (availableFields.Contains(azureFieldName))
                     {
                         if (result == null)
                         {
@@ -320,15 +318,15 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
                 if (attributeFilter != null)
                 {
-                    facet = GetAttributeFilterFacet(attributeFilter, criteria);
+                    facet = GetAttributeFilterFacet(attributeFilter, criteria, availableFields);
                 }
                 else if (rangeFilter != null)
                 {
-                    facet = GetRangeFilterFacet(rangeFilter, criteria);
+                    facet = GetRangeFilterFacet(rangeFilter, criteria, availableFields);
                 }
                 else if (priceRangeFilter != null && priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
                 {
-                    facets = GetPriceRangeFilterFacets(priceRangeFilter, criteria);
+                    facets = GetPriceRangeFilterFacets(priceRangeFilter, criteria, availableFields);
                 }
 
                 if (!string.IsNullOrEmpty(facet))
@@ -345,43 +343,57 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             return result;
         }
 
-        protected virtual string GetAttributeFilterFacet(AttributeFilter filter, ISearchCriteria criteria)
+        protected virtual string GetAttributeFilterFacet(AttributeFilter filter, ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
         {
-            var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key);
-            var builder = new StringBuilder(azureFieldName);
+            string result = null;
 
-            if (filter.FacetSize != null)
+            var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key);
+            if (availableFields.Contains(azureFieldName))
             {
-                builder.AppendFormat(CultureInfo.InvariantCulture, ",count:{0}", filter.FacetSize);
+                var builder = new StringBuilder(azureFieldName);
+
+                if (filter.FacetSize != null)
+                {
+                    builder.AppendFormat(CultureInfo.InvariantCulture, ",count:{0}", filter.FacetSize);
+                }
+
+                result = builder.ToString();
             }
 
-            return builder.ToString();
+            return result;
         }
 
-        protected virtual string GetRangeFilterFacet(RangeFilter filter, ISearchCriteria criteria)
+        protected virtual string GetRangeFilterFacet(RangeFilter filter, ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
         {
             var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key);
-            return GetRangeFilterFacet(azureFieldName, filter.Values, criteria);
+            return GetRangeFilterFacet(azureFieldName, filter.Values, criteria, availableFields);
         }
 
-        protected virtual IList<string> GetPriceRangeFilterFacets(PriceRangeFilter filter, ISearchCriteria criteria)
+        protected virtual IList<string> GetPriceRangeFilterFacets(PriceRangeFilter filter, ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
         {
             var azureFieldNames = AzureSearchHelper.GetPriceFieldNames(filter.Key, criteria?.Currency, criteria?.Pricelists);
-            return azureFieldNames.Select(f => GetRangeFilterFacet(f, filter.Values, criteria)).ToArray();
+            return azureFieldNames.Select(f => GetRangeFilterFacet(f, filter.Values, criteria, availableFields)).ToArray();
         }
 
-        protected virtual string GetRangeFilterFacet(string azureFieldName, RangeFilterValue[] filterValues, ISearchCriteria criteria)
+        protected virtual string GetRangeFilterFacet(string azureFieldName, RangeFilterValue[] filterValues, ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
         {
-            var edgeValues = filterValues
-                .SelectMany(v => new[] { ConvertToDecimal(v.Lower), ConvertToDecimal(v.Upper) })
-                .Where(v => v > 0m)
-                .Distinct()
-                .OrderBy(v => v)
-                .ToArray();
+            string result = null;
 
-            var values = string.Join("|", edgeValues);
+            if (availableFields.Contains(azureFieldName))
+            {
+                var edgeValues = filterValues
+                    .SelectMany(v => new[] { ConvertToDecimal(v.Lower), ConvertToDecimal(v.Upper) })
+                    .Where(v => v > 0m)
+                    .Distinct()
+                    .OrderBy(v => v)
+                    .ToArray();
 
-            return $"{azureFieldName},values:{values}";
+                var values = string.Join("|", edgeValues);
+
+                result = $"{azureFieldName},values:{values}";
+            }
+
+            return result;
         }
 
         protected virtual decimal? ConvertToDecimal(string input)
