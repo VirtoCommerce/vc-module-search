@@ -462,11 +462,23 @@ namespace VirtoCommerce.SearchModule.Test
             var attributeFacet = new AttributeFilter
             {
                 Key = "Color",
+                FacetSize = 0,
                 Values = new[]
                 {
                     new AttributeFilterValue { Id = "Red", Value = "Red" },
                     new AttributeFilterValue { Id = "Blue", Value = "Blue" },
                     new AttributeFilterValue { Id = "Black", Value = "Black" },
+                }
+            };
+
+            var stringCollectionAttributeFacet = new AttributeFilter
+            {
+                Key = "Catalog",
+                FacetSize = 0,
+                Values = new[]
+                {
+                    new AttributeFilterValue { Id = "Goods", Value = "Goods" },
+                    new AttributeFilterValue { Id = "Stuff", Value = "Stuff" },
                 }
             };
 
@@ -514,6 +526,7 @@ namespace VirtoCommerce.SearchModule.Test
             criteria.Add(nonExistentFieldAttributeFacet);
             criteria.Add(nonExistentFieldRangeFacet);
             criteria.Add(attributeFacet);
+            criteria.Add(stringCollectionAttributeFacet);
             criteria.Add(rangeFacet);
             criteria.Add(priceRangeFacetUsd);
             criteria.Add(priceRangeFacetEur);
@@ -521,10 +534,16 @@ namespace VirtoCommerce.SearchModule.Test
             var results = provider.Search<DocumentDictionary>(_scope, criteria);
 
             Assert.Equal(0, results.DocCount);
-            Assert.Equal(3, results.Facets.Count);
+            Assert.Equal(4, results.Facets.Count);
 
             var redCount = GetFacetCount(results, "Color", "Red");
             Assert.True(redCount == 3, $"Returns {redCount} facets of red instead of 3");
+
+            var goodsCount = GetFacetCount(results, "Catalog", "Goods");
+            Assert.True(goodsCount == 6, $"Returns {goodsCount} facets of Goods instead of 6");
+
+            var stuffCount = GetFacetCount(results, "Catalog", "Stuff");
+            Assert.True(stuffCount == 6, $"Returns {stuffCount} facets of Stuff instead of 6");
 
             var sizeCount = GetFacetCount(results, "Size", "0_to_5");
             Assert.True(sizeCount == 3, $"Returns {sizeCount} facets of 0_to_5 size instead of 3");
