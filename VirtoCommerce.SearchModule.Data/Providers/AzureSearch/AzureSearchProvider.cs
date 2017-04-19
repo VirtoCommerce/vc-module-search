@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using Microsoft.Azure.Search;
 using Microsoft.Azure.Search.Models;
+using Microsoft.Rest.Azure;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
@@ -73,29 +74,41 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                         var batch = IndexBatch.Upload(simpleDocuments);
                         var indexClient = GetSearchIndexClient(indexName);
 
-                        try
+                        // Retry if cannot index documents after updating the mapping
+                        for (var i = 9; i >= 0; i--)
                         {
-                            var result = indexClient.Documents.Index(batch);
-
-                            foreach (var r in result.Results)
+                            try
                             {
-                                if (!r.Succeeded)
+                                var result = indexClient.Documents.Index(batch);
+
+                                foreach (var r in result.Results)
                                 {
-                                    throw new IndexBuildException(r.ErrorMessage);
+                                    if (!r.Succeeded)
+                                    {
+                                        throw new IndexBuildException(r.ErrorMessage);
+                                    }
                                 }
-                            }
-                        }
-                        catch (IndexBatchException ex)
-                        {
-                            var builder = new StringBuilder();
-                            builder.AppendLine(ex.Message);
 
-                            foreach (var result in ex.IndexingResults.Where(r => !r.Succeeded))
+                                break;
+                            }
+                            catch (IndexBatchException ex)
                             {
-                                builder.AppendLine(string.Format(CultureInfo.InvariantCulture, "Key: {0}, Error: {1}", result.Key, result.ErrorMessage));
-                            }
+                                var builder = new StringBuilder();
+                                builder.AppendLine(ex.Message);
 
-                            throw new IndexBuildException(builder.ToString(), ex);
+                                foreach (var result in ex.IndexingResults.Where(r => !r.Succeeded))
+                                {
+                                    builder.AppendLine(string.Format(CultureInfo.InvariantCulture, "Key: {0}, Error: {1}", result.Key, result.ErrorMessage));
+                                }
+
+                                throw new IndexBuildException(builder.ToString(), ex);
+                            }
+                            catch (CloudException cloudException)
+                                when (i > 0 && cloudException.Message.Contains("Make sure to only use property names that are defined by the type"))
+                            {
+                                // Need to wait some time until new mapping is applied
+                                Thread.Sleep(1000);
+                            }
                         }
 
                         // Remove pending documents
@@ -358,9 +371,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
         {
             var index = CreateIndexDefinition(indexName, providerFields);
             var updatedIndex = Client.Indexes.CreateOrUpdate(indexName, index);
-
-            // TODO: Need to wait some time until changes are applied
-            Thread.Sleep(5000);
 
             AddMappingToCache(indexName, documentType, updatedIndex.Fields);
         }
