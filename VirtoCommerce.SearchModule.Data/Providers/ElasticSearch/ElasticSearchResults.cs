@@ -5,7 +5,6 @@ using System.Linq;
 using Nest;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search;
-using VirtoCommerce.SearchModule.Core.Model.Search.Criteria;
 using VirtoCommerce.SearchModule.Data.Services;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch

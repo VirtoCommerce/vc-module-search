@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using VirtoCommerce.SearchModule.Core.Model.Search.Criteria;
-
 namespace VirtoCommerce.SearchModule.Core.Model.Search
 {
     public interface ISearchQueryBuilder

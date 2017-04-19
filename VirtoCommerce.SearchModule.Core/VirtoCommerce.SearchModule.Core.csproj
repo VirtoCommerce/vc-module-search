@@ -83,13 +83,13 @@
     <Compile Include="Model\SearchEventArgs.cs" />
     <Compile Include="Model\SearchException.cs" />
     <Compile Include="Model\SearchProviders.cs" />
-    <Compile Include="Model\Search\Criteria\ISearchCriteria.cs" />
-    <Compile Include="Model\Search\Criteria\BaseSearchCriteria.cs" />
+    <Compile Include="Model\Search\BaseSearchCriteria.cs" />
     <Compile Include="Model\Search\Facet.cs" />
     <Compile Include="Model\Search\FacetGroup.cs" />
     <Compile Include="Model\Search\FacetLabel.cs" />
     <Compile Include="Model\Search\FieldDescriptor.cs" />
     <Compile Include="Model\Search\IFieldDescriptor.cs" />
+    <Compile Include="Model\Search\ISearchCriteria.cs" />
     <Compile Include="Model\Search\ISearchQueryBuilder.cs" />
     <Compile Include="Model\Search\ISearchResults.cs" />
     <Compile Include="Model\Search\SearchSort.cs" />

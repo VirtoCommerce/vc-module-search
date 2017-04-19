@@ -7,7 +7,6 @@ using Microsoft.Azure.Search.Models;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search;
-using VirtoCommerce.SearchModule.Core.Model.Search.Criteria;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 {

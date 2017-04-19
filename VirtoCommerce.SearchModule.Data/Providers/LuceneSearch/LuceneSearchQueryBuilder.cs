@@ -9,7 +9,6 @@ using Lucene.Net.Search;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search;
-using VirtoCommerce.SearchModule.Core.Model.Search.Criteria;
 using Version = Lucene.Net.Util.Version;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch

@@ -9,7 +9,7 @@ using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.Platform.Core.Web.Security;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
-using VirtoCommerce.SearchModule.Core.Model.Search.Criteria;
+using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Web.Model;
 using VirtoCommerce.SearchModule.Web.Model.PushNotifications;
 using VirtoCommerce.SearchModule.Web.Security;

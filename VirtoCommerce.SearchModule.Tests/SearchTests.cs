@@ -4,7 +4,6 @@ using Newtonsoft.Json.Linq;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
-using VirtoCommerce.SearchModule.Core.Model.Search.Criteria;
 using Xunit;
 
 namespace VirtoCommerce.SearchModule.Test
