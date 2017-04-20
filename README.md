@@ -28,7 +28,7 @@ provider=AzureSearch;server=servicename;key=accesskey;scope=default
 This provider stores documents in the cloud search service <a href="https://azure.microsoft.com/en-us/services/search/" target="_blank">Azure Search</a>.
 * **server** is the name of the search service instance in your Azure account (https://SERVICENAME.search.windows.net).
 * **key** is the primary or secondary admin key for this search service.
-* **scope** is a commont name (prefix) of all indexes. Each document type is stored in a seaprate index. Full index name is `scope-documenttype`. One search service can serve multiple indexes.
+* **scope** is a common name (prefix) of all indexes. Each document type is stored in a separate index. Full index name is `scope-documenttype`. One search service can serve multiple indexes.
 
 ### Elasticsearch
 ```
@@ -36,7 +36,7 @@ provider=Elasticsearch;server=localhost:9200;scope=default
 ```
 This provider stores documents on a standalone <a href="https://www.elastic.co/products/elasticsearch" target="_blank">Elasticsearch</a> server.
 * **server** is a network address of the server.
-* **scope** is a commont name (prefix) of all indexes. Each document type is stored in a seaprate index. Full index name is `scope-documenttype`. One server can serve multiple indexes.
+* **scope** is a common name (prefix) of all indexes. Each document type is stored in a separate index. Full index name is `scope-documenttype`. One server can serve multiple indexes.
 
 ### Lucene
 ```
