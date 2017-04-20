@@ -1,4 +1,4 @@
-# VirtoCommerce.Search
+﻿# VirtoCommerce.Search
 VirtoCommerce.Search module provides indexed search functionality with Lucene and ElasticSearch engines.
 Key features:
 * Lucene search engine support
@@ -19,7 +19,16 @@ Installing the module:
 
 # Settings
 ## VirtoCommerce.Search.SearchConnectionString
-Search configuration string. The string consists of two parts. First part is provider=XXXX, which specifies which provider to use for search. The remainder of the string is passed to provider's constructor. Currently 2 search providers supported: Elasticsearch and Lucene.
+Search configuration string. The string consists of two parts. First part is provider=XXXX, which specifies which provider to use for search. The remainder of the string is passed to provider's constructor. Currently 3 search providers are supported: Azure Search, Elasticsearch and Lucene.
+
+### Azure Search
+```
+provider=AzureSearch;server=servicename;key=accesskey;scope=default
+```
+This provider stores documents in the cloud search service <a href="https://azure.microsoft.com/en-us/services/search/" target="_blank">Azure Search</a>.
+* **server** is the name of the search service instance in your Azure account (https://SERVICENAME.search.windows.net).
+* **key** is the primary or secondary admin key for this search service.
+* **scope** is a commont name (prefix) of all indexes. Each document type is stored in a seaprate index. Full index name is `scope-documenttype`. One search service can serve multiple indexes.
 
 ### Elasticsearch
 ```
@@ -27,7 +36,7 @@ provider=Elasticsearch;server=localhost:9200;scope=default
 ```
 This provider stores documents on a standalone <a href="https://www.elastic.co/products/elasticsearch" target="_blank">Elasticsearch</a> server.
 * **server** is a network address of the server.
-* **scope** is a name of the index. One server can serve multiple indexes.
+* **scope** is a commont name (prefix) of all indexes. Each document type is stored in a seaprate index. Full index name is `scope-documenttype`. One server can serve multiple indexes.
 
 ### Lucene
 ```
@@ -39,9 +48,8 @@ This provider stores documents in a local file system.
 * **scope** is a name of the index. In fact, this is the name of a subdirectory inside the root directory which can contain multiple indexes.
 
 # Available resources
-* Module related service implementations as a <a href="https://www.nuget.org/packages/VirtoCommerce.SearchModule.Data" target="_blank">NuGet package</a>
-* API client as a <a href="https://www.nuget.org/packages/VirtoCommerce.SearchModule.Client" target="_blank">NuGet package</a>
-* API client documentation http://demo.virtocommerce.com/admin/docs/ui/index#!/Search_module
+* [VirtoCommerce.SearchModule.Core](https://www.nuget.org/packages/VirtoCommerce.SearchModule.Core) - a NuGet package with module related abstractions.
+* [VirtoCommerce.SearchModule.Data](https://www.nuget.org/packages/VirtoCommerce.SearchModule.Data) - a NuGet package with module related service implementations.
 
 # License
 Copyright (c) Virtosoftware Ltd.  All rights reserved.
