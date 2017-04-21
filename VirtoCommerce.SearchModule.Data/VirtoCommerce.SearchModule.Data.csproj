@@ -136,7 +136,6 @@
     <Compile Include="Providers\LuceneSearch\LuceneSearchQuery.cs" />
     <Compile Include="Providers\LuceneSearch\LuceneSearchQueryBuilder.cs" />
     <Compile Include="Providers\LuceneSearch\LuceneSearchResults.cs" />
-    <Compile Include="Services\SearchFilterExtensions.cs" />
     <Compile Include="Services\SearchIndexController.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -23,6 +23,8 @@
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>bin\Debug\VirtoCommerce.SearchModule.Core.xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,6 +35,8 @@
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>bin\Release\VirtoCommerce.SearchModule.Core.xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -63,6 +67,7 @@
     <Compile Include="Model\Indexing\DocumentDictionary.cs" />
     <Compile Include="Model\Indexing\DocumentField.cs" />
     <Compile Include="Model\Indexing\IDocument.cs" />
+    <Compile Include="Model\Indexing\IDocumentBuilder.cs" />
     <Compile Include="Model\Indexing\IDocumentField.cs" />
     <Compile Include="Model\Indexing\IDocuments.cs" />
     <Compile Include="Model\Indexing\IndexProgressInfo.cs" />
@@ -82,6 +87,7 @@
     <Compile Include="Model\SearchConnection.cs" />
     <Compile Include="Model\SearchEventArgs.cs" />
     <Compile Include="Model\SearchException.cs" />
+    <Compile Include="Model\SearchFilterExtensions.cs" />
     <Compile Include="Model\SearchProviders.cs" />
     <Compile Include="Model\Search\BaseSearchCriteria.cs" />
     <Compile Include="Model\Search\Facet.cs" />

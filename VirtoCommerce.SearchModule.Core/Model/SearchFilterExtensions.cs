@@ -4,7 +4,7 @@ using System.Linq;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search;
 
-namespace VirtoCommerce.SearchModule.Data.Services
+namespace VirtoCommerce.SearchModule.Core.Model
 {
     public static class SearchFilterExtensions
     {
