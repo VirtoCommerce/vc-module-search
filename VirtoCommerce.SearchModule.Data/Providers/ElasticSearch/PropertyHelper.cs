@@ -4,17 +4,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Nest;
+using VirtoCommerce.SearchModule.Core.Model.Indexing;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
     internal class PropertyHelper
     {
-        public static IProperty InferProperty(Type type)
+        public static IProperty InferProperty(IDocumentField field)
         {
+            var type = field.Value?.GetType() ?? typeof(object);
+
             type = GetUnderlyingType(type);
 
             if (type == typeof(string))
-                return new StringProperty();
+            {
+                var isIndexed = !field.ContainsAttribute(IndexType.No);
+                var isAnalyzed = field.ContainsAttribute(IndexType.Analyzed) || isIndexed && !field.ContainsAttribute(IndexType.NotAnalyzed);
+
+                if (isAnalyzed)
+                    return new TextProperty();
+
+                return new KeywordProperty();
+            }
 
             if (type.IsEnumType())
                 return new NumberProperty(NumberType.Integer);
@@ -48,14 +59,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                         return new BooleanProperty();
                     case "Char":
                     case "Guid":
-                        return new StringProperty();
+                        return new KeywordProperty();
                 }
             }
 
             if (type == typeof(GeoLocation))
                 return new GeoPointProperty();
 
-            if (type.IsGeneric() && type.GetGenericTypeDefinition() == typeof(CompletionField<>))
+            if (type.IsGeneric() && type.GetGenericTypeDefinition() == typeof(CompletionField))
                 return new CompletionProperty();
 
             if (type == typeof(Attachment))

@@ -21,7 +21,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             Facets = CreateFacets(criteria, response.Aggregations);
         }
 
-        public IDictionary<string, IAggregate> ProviderAggregations
+        public IReadOnlyDictionary<string, IAggregate> ProviderAggregations
         {
             get;
         }
@@ -38,7 +38,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
         public IList<string> Suggestions { get; }
 
-        private static FacetGroup[] CreateFacets(ISearchCriteria criteria, IDictionary<string, IAggregate> facets)
+        private static FacetGroup[] CreateFacets(ISearchCriteria criteria, IReadOnlyDictionary<string, IAggregate> facets)
         {
             var result = new List<FacetGroup>();
 
@@ -63,7 +63,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                             var termAgg = facet?.Aggregations?[key] as BucketAggregate;
                             if (termAgg != null)
                             {
-                                foreach (var term in termAgg.Items.OfType<KeyedBucket>())
+                                foreach (var term in termAgg.Items.OfType<KeyedBucket<string>>())
                                 {
                                     var newFacet = new Facet(facetGroup, term.Key, term.DocCount, null);
                                     facetGroup.Facets.Add(newFacet);
@@ -87,7 +87,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                                 {
                                     var facet = facets[key] as SingleBucketAggregate;
                                     var termAgg = facet?.Aggregations?[key] as BucketAggregate;
-                                    var term = termAgg?.Items.OfType<KeyedBucket>().FirstOrDefault(t => t.Key.Equals(group.Key, StringComparison.OrdinalIgnoreCase));
+                                    var term = termAgg?.Items.OfType<KeyedBucket<string>>().FirstOrDefault(t => t.Key.Equals(group.Key, StringComparison.OrdinalIgnoreCase));
                                     if (term != null)
                                     {
                                         var newFacet = new Facet(facetGroup, group.Key, term.DocCount, valueLabels);

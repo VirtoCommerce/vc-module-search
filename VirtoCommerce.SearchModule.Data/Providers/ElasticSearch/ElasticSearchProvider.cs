@@ -336,15 +336,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                     if (dictionary != null && !dictionary.ContainsKey(fieldName))
                     {
                         // Create new property mapping
-
-                        var type = field.Value?.GetType() ?? typeof(object);
-
-                        if (type == typeof(decimal))
-                        {
-                            type = typeof(double);
-                        }
-
-                        properties.Add(fieldName, PropertyHelper.InferProperty(type));
+                        properties.Add(fieldName, PropertyHelper.InferProperty(field));
                         SetupProperty(properties[fieldName], field, documentType);
                     }
 
@@ -483,53 +475,71 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
         protected virtual void SetupProperty(IProperty property, IDocumentField field, string documentType)
         {
-            //property.DocValues = !field.ContainsAttribute(IndexStore.No);
+            if (property != null)
+            {
+                var textProperty = property as TextProperty;
+                var keywordProperty = property as KeywordProperty;
 
-            SetupStringProperty(property as StringProperty, field, documentType);
+                if (textProperty != null)
+                {
+                    SetupTextProperty(textProperty, field, documentType);
+                }
+                else if (keywordProperty != null)
+                {
+                    SetupKeywordProperty(keywordProperty, field, documentType);
+                }
+            }
         }
 
+        [Obsolete("Use SetupTextProperty() or SetupKeywordProperty()", true)]
         protected virtual void SetupStringProperty(StringProperty stringProperty, IDocumentField field, string documentType)
         {
-            if (stringProperty != null)
-            {
-                stringProperty.Store = field.ContainsAttribute(IndexStore.Yes);
-                stringProperty.Index = field.ContainsAttribute(IndexType.NotAnalyzed) ? FieldIndexOption.NotAnalyzed : field.ContainsAttribute(IndexType.Analyzed) ? FieldIndexOption.Analyzed : FieldIndexOption.No;
+        }
 
-                // for not analyzed fields use KeywordAnalyzer instead
-                if (stringProperty.Index == FieldIndexOption.NotAnalyzed)
-                {
-                    stringProperty.Analyzer = KeywordAnalyzerName;
-                    stringProperty.Index = FieldIndexOption.Analyzed;
-                }
+        protected virtual void SetupKeywordProperty(KeywordProperty keywordProperty, IDocumentField field, string documentType)
+        {
+            if (keywordProperty != null)
+            {
+                keywordProperty.Store = !field.ContainsAttribute(IndexStore.No);
+                keywordProperty.Index = !field.ContainsAttribute(IndexType.No);
+            }
+        }
+
+        protected virtual void SetupTextProperty(TextProperty textProperty, IDocumentField field, string documentType)
+        {
+            if (textProperty != null)
+            {
+                textProperty.Store = !field.ContainsAttribute(IndexStore.No);
+                textProperty.Index = !field.ContainsAttribute(IndexType.No);
 
                 if (field.Name.StartsWith("__content", StringComparison.OrdinalIgnoreCase))
                 {
-                    stringProperty.Analyzer = ContentAnalyzerName;
+                    textProperty.Analyzer = ContentAnalyzerName;
                 }
 
                 if (Regex.Match(field.Name, "__content_en.*").Success)
                 {
-                    stringProperty.Analyzer = "english";
+                    textProperty.Analyzer = "english";
                 }
                 else if (Regex.Match(field.Name, "__content_de.*").Success)
                 {
-                    stringProperty.Analyzer = "german";
+                    textProperty.Analyzer = "german";
                 }
                 else if (Regex.Match(field.Name, "__content_ru.*").Success)
                 {
-                    stringProperty.Analyzer = "russian";
+                    textProperty.Analyzer = "russian";
                 }
                 else if (Regex.Match(field.Name, "__content_fr.*").Success)
                 {
-                    stringProperty.Analyzer = "french";
+                    textProperty.Analyzer = "french";
                 }
                 else if (Regex.Match(field.Name, "__content_sv.*").Success)
                 {
-                    stringProperty.Analyzer = "swedish";
+                    textProperty.Analyzer = "swedish";
                 }
                 else if (Regex.Match(field.Name, "__content_nb.*").Success)
                 {
-                    stringProperty.Analyzer = "norwegian";
+                    textProperty.Analyzer = "norwegian";
                 }
             }
         }
