@@ -65,7 +65,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                             {
                                 foreach (var term in termAgg.Items.OfType<KeyedBucket<object>>())
                                 {
-                                    var newFacet = new Facet(facetGroup, term.Key.ToString(), term.DocCount, null);
+                                    var newFacet = new Facet(facetGroup, ToStringInvariant(term.Key), term.DocCount, null);
                                     facetGroup.Facets.Add(newFacet);
                                 }
                             }
@@ -87,7 +87,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                                 {
                                     var facet = facets[key] as SingleBucketAggregate;
                                     var termAgg = facet?.Aggregations?[key] as BucketAggregate;
-                                    var term = termAgg?.Items.OfType<KeyedBucket<object>>().FirstOrDefault(t => t.Key.ToString().EqualsInvariant(group.Key));
+                                    var term = termAgg?.Items.OfType<KeyedBucket<object>>().FirstOrDefault(t => ToStringInvariant(t.Key).EqualsInvariant(group.Key));
                                     if (term != null)
                                     {
                                         var newFacet = new Facet(facetGroup, group.Key, term.DocCount, valueLabels);
@@ -157,6 +157,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             }
 
             return result.ToArray();
+        }
+
+        private static string ToStringInvariant(object value)
+        {
+            return string.Format(CultureInfo.InvariantCulture, "{0}", value);
         }
     }
 }
