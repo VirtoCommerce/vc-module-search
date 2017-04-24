@@ -38,7 +38,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
             if (filter is AttributeFilter)
             {
-                query = new TermQuery { Field = fieldName, Value = ((AttributeFilterValue)value).Value.ToLowerInvariant() };
+                query = new TermQuery { Field = fieldName, Value = ((AttributeFilterValue)value).Value };
             }
             else if (filter is RangeFilter)
             {

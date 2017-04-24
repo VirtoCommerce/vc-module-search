@@ -146,7 +146,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                             Field = field.FieldName.ToLowerInvariant(),
                             Order = field.IsDescending ? SortOrder.Descending : SortOrder.Ascending,
                             Missing = "_last",
-                            IgnoreUnmappedFields = true
+                            UnmappedType = FieldType.Long,
                         });
                 }
             }
@@ -234,7 +234,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                 Aggregations = new TermsAggregation(field)
                 {
                     Field = field,
-                    Size = facetSize
+                    Size = facetSize == null ? null : facetSize > 0 ? facetSize : int.MaxValue,
                 },
             };
 

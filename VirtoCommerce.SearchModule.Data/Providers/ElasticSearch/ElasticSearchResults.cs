@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Nest;
+using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search;
@@ -63,9 +63,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                             var termAgg = facet?.Aggregations?[key] as BucketAggregate;
                             if (termAgg != null)
                             {
-                                foreach (var term in termAgg.Items.OfType<KeyedBucket<string>>())
+                                foreach (var term in termAgg.Items.OfType<KeyedBucket<object>>())
                                 {
-                                    var newFacet = new Facet(facetGroup, term.Key, term.DocCount, null);
+                                    var newFacet = new Facet(facetGroup, term.Key.ToString(), term.DocCount, null);
                                     facetGroup.Facets.Add(newFacet);
                                 }
                             }
@@ -87,7 +87,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                                 {
                                     var facet = facets[key] as SingleBucketAggregate;
                                     var termAgg = facet?.Aggregations?[key] as BucketAggregate;
-                                    var term = termAgg?.Items.OfType<KeyedBucket<string>>().FirstOrDefault(t => t.Key.Equals(group.Key, StringComparison.OrdinalIgnoreCase));
+                                    var term = termAgg?.Items.OfType<KeyedBucket<object>>().FirstOrDefault(t => t.Key.ToString().EqualsInvariant(group.Key));
                                     if (term != null)
                                     {
                                         var newFacet = new Facet(facetGroup, group.Key, term.DocCount, valueLabels);
@@ -100,7 +100,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                                 facetGroup.FacetType = FacetTypes.PriceRange;
 
                                 var rangeFilter = filter as PriceRangeFilter;
-                                if (rangeFilter.Currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase))
+                                if (rangeFilter.Currency.EqualsInvariant(criteria.Currency))
                                 {
                                     var key = string.Format(CultureInfo.InvariantCulture, "{0}-{1}", filter.Key, group.Key).ToLowerInvariant();
                                     if (facets.ContainsKey(key))

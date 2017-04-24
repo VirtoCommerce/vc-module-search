@@ -500,7 +500,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         {
             if (keywordProperty != null)
             {
-                keywordProperty.Store = !field.ContainsAttribute(IndexStore.No);
+                keywordProperty.Store = field.ContainsAttribute(IndexStore.Yes);
                 keywordProperty.Index = !field.ContainsAttribute(IndexType.No);
             }
         }
@@ -509,7 +509,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         {
             if (textProperty != null)
             {
-                textProperty.Store = !field.ContainsAttribute(IndexStore.No);
+                textProperty.Store = field.ContainsAttribute(IndexStore.Yes);
                 textProperty.Index = !field.ContainsAttribute(IndexType.No);
 
                 if (field.Name.StartsWith("__content", StringComparison.OrdinalIgnoreCase))

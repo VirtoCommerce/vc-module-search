@@ -18,13 +18,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
             if (type == typeof(string))
             {
-                var isIndexed = !field.ContainsAttribute(IndexType.No);
-                var isAnalyzed = field.ContainsAttribute(IndexType.Analyzed) || isIndexed && !field.ContainsAttribute(IndexType.NotAnalyzed);
+                if (field.ContainsAttribute(IndexType.NotAnalyzed))
+                    return new KeywordProperty();
 
-                if (isAnalyzed)
-                    return new TextProperty();
-
-                return new KeywordProperty();
+                return new TextProperty();
             }
 
             if (type.IsEnumType())
