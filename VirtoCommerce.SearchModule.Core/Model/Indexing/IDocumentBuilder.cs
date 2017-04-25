@@ -1,6 +1,6 @@
 ﻿namespace VirtoCommerce.SearchModule.Core.Model.Indexing
 {
-    public interface IDocumentBuilder<in TItem, in TContext>
+    public interface IDocumentBuilder<in TItem>
     {
         /// <summary>
         /// Takes information from item and context and adds fields to document
@@ -9,6 +9,6 @@
         /// <param name="item"></param>
         /// <param name="context"></param>
         /// <returns>False if document should not be indexed</returns>
-        bool UpdateDocument(IDocument document, TItem item, TContext context);
+        bool UpdateDocument(IDocument document, TItem item, object context);
     }
 }

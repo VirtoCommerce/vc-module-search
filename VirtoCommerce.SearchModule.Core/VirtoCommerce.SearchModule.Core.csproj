@@ -66,6 +66,7 @@
     <Compile Include="Model\Filters\RangeFilter.cs" />
     <Compile Include="Model\Indexing\DocumentDictionary.cs" />
     <Compile Include="Model\Indexing\DocumentField.cs" />
+    <Compile Include="Model\Indexing\IBatchDocumentBuilder.cs" />
     <Compile Include="Model\Indexing\IDocument.cs" />
     <Compile Include="Model\Indexing\IDocumentBuilder.cs" />
     <Compile Include="Model\Indexing\IDocumentField.cs" />
