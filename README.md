@@ -17,6 +17,10 @@ Installing the module:
 * Automatically: in VC Manager go to Configuration -> Modules -> Search module -> Install
 * Manually: download module zip package from https://github.com/VirtoCommerce/vc-module-search/releases. In VC Manager go to Configuration -> Modules -> Advanced -> upload module package -> Install.
 
+If you have developed your own module with customized search providers, query builders or criteria you should update NuGet packages in your solution and recompile your module.
+
+After updating to this version you should rebuild the index.
+
 # Settings
 ## VirtoCommerce.Search.SearchConnectionString
 Search configuration string. The string consists of two parts. First part is provider=XXXX, which specifies which provider to use for search. The remainder of the string is passed to provider's constructor. Currently 2 search providers supported: Elasticsearch and Lucene.
@@ -37,6 +41,14 @@ provider=Lucene;server=~/App_Data/Lucene;scope=default
 This provider stores documents in a local file system.
 * **server** is a virtual or physical path to the root directory where indexed documents are stored.
 * **scope** is a name of the index. In fact, this is the name of a subdirectory inside the root directory which can contain multiple indexes.
+
+### Azure search
+Change the search connection string to the following value:
+```
+provider=AzureSearch;server=SERVICENAME;key=ACCESSKEY;scope=default
+```
+* **SERVICENAME** is the name of your Azure Search instance (https://SERVICENAME.search.windows.net)
+* **ACCESSKEY** is the primary or secondary admin key
 
 # Available resources
 * Module related service implementations as a <a href="https://www.nuget.org/packages/VirtoCommerce.SearchModule.Data" target="_blank">NuGet package</a>
