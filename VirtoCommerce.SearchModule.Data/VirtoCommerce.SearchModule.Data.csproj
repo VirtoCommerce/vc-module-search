@@ -37,6 +37,9 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Antlr4.Runtime.Standard, Version=4.7.0.0, Culture=neutral, PublicKeyToken=e78b2c5abd1fcb3f, processorArchitecture=MSIL">
+      <HintPath>..\packages\Antlr4.Runtime.Standard.4.7.0\lib\net35\Antlr4.Runtime.Standard.dll</HintPath>
+    </Reference>
     <Reference Include="Elasticsearch.Net, Version=5.0.0.0, Culture=neutral, PublicKeyToken=96c599bbe3e70f5d, processorArchitecture=MSIL">
       <HintPath>..\packages\Elasticsearch.Net.5.3.0\lib\net46\Elasticsearch.Net.dll</HintPath>
     </Reference>
@@ -137,6 +140,12 @@
     <Compile Include="Providers\LuceneSearch\LuceneSearchQueryBuilder.cs" />
     <Compile Include="Providers\LuceneSearch\LuceneSearchResults.cs" />
     <Compile Include="Services\SearchIndexController.cs" />
+    <Compile Include="Services\SearchPhraseParsing\SearchPhraseListener.cs" />
+    <Compile Include="Services\SearchPhraseParsing\SearchPhraseParser.cs" />
+    <Compile Include="Services\SearchPhraseParsing\Antlr\SearchPhraseBaseListener.cs" />
+    <Compile Include="Services\SearchPhraseParsing\Antlr\SearchPhraseLexer.cs" />
+    <Compile Include="Services\SearchPhraseParsing\Antlr\SearchPhraseListener.cs" />
+    <Compile Include="Services\SearchPhraseParsing\Antlr\SearchPhraseParser.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
@@ -145,6 +154,9 @@
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Services\SearchPhraseParsing\Antlr\SearchPhrase.g4" />
+    <None Include="Services\SearchPhraseParsing\Antlr\SearchPhrase.tokens" />
+    <None Include="Services\SearchPhraseParsing\Antlr\SearchPhraseLexer.tokens" />
     <None Include="VirtoCommerce.SearchModule.Data.nuspec">
       <SubType>Designer</SubType>
     </None>
@@ -154,6 +166,9 @@
       <Project>{a7afed7f-ff37-462d-b35f-de6467d04f14}</Project>
       <Name>VirtoCommerce.SearchModule.Core</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Services\SearchPhraseParsing\Antlr\readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

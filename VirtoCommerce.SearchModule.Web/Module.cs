@@ -13,6 +13,7 @@ using VirtoCommerce.SearchModule.Data.Providers.AzureSearch;
 using VirtoCommerce.SearchModule.Data.Providers.ElasticSearch;
 using VirtoCommerce.SearchModule.Data.Providers.LuceneSearch;
 using VirtoCommerce.SearchModule.Data.Services;
+using VirtoCommerce.SearchModule.Data.Services.SearchPhraseParsing;
 using VirtoCommerce.SearchModule.Web.BackgroundJobs;
 
 namespace VirtoCommerce.SearchModule.Web
@@ -32,6 +33,7 @@ namespace VirtoCommerce.SearchModule.Web
         {
             base.Initialize();
 
+            _container.RegisterType<ISearchPhraseParser, SearchPhraseParser>();
             _container.RegisterType<ISearchIndexController, SearchIndexController>();
 
             string connectionString = null;

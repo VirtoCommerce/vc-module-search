@@ -97,6 +97,7 @@
     <Compile Include="Model\Search\FieldDescriptor.cs" />
     <Compile Include="Model\Search\IFieldDescriptor.cs" />
     <Compile Include="Model\Search\ISearchCriteria.cs" />
+    <Compile Include="Model\Search\ISearchPhraseParser.cs" />
     <Compile Include="Model\Search\ISearchQueryBuilder.cs" />
     <Compile Include="Model\Search\ISearchResults.cs" />
     <Compile Include="Model\Search\SearchSort.cs" />

@@ -24,6 +24,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         private static readonly object _providerlock = new object();
 
         private readonly ISearchConnection _connection;
+        private readonly ISearchPhraseParser _searchPhraseParser;
         private readonly Dictionary<string, List<Document>> _pendingDocuments = new Dictionary<string, List<Document>>();
         private bool _isInitialized;
         private string _location = string.Empty;
@@ -33,13 +34,15 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         /// </summary>
         /// <param name="queryBuilders">The query builders.</param>
         /// <param name="connection">The connection.</param>
-        public LuceneSearchProvider(ISearchQueryBuilder[] queryBuilders, ISearchConnection connection)
+        /// <param name="searchPhraseParser"></param>
+        public LuceneSearchProvider(ISearchQueryBuilder[] queryBuilders, ISearchConnection connection, ISearchPhraseParser searchPhraseParser)
         {
             AutoCommit = true;
             AutoCommitCount = 100;
 
             QueryBuilders = queryBuilders;
             _connection = connection;
+            _searchPhraseParser = searchPhraseParser;
             Init();
         }
 
@@ -227,7 +230,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             if (criteria == null)
                 throw new ArgumentNullException(nameof(criteria));
 
-            ISearchResults<T> result;
+            _searchPhraseParser?.ParseAndApply(criteria);
+
+            ISearchResults<T> result = null;
 
             var directoryInfo = new DirectoryInfo(GetDirectoryPath(GetFolderName(scope, criteria.DocumentType)));
 
@@ -277,10 +282,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 // Cleanup here
                 searcher.IndexReader.Dispose();
                 searcher.Dispose();
-            }
-            else
-            {
-                result = null;
             }
 
             return result;
