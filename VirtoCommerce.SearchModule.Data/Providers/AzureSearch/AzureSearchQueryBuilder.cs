@@ -91,7 +91,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                 {
                     expression = GetRangeFilterExpression(rangeFilter, criteria);
                 }
-                else if (priceRangeFilter != null && priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
+                else if (priceRangeFilter != null)
                 {
                     expression = GetPriceRangeFilterExpression(priceRangeFilter, criteria, availableFields);
                 }
@@ -155,9 +155,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
         {
             string result = null;
 
-            if (filter.Currency.EqualsInvariant(criteria.Currency))
+            if (string.IsNullOrEmpty(criteria.Currency) || filter.Currency.EqualsInvariant(criteria.Currency))
             {
-                var priceFieldNames = AzureSearchHelper.GetPriceFieldNames(filter.Key, criteria.Currency, criteria.Pricelists, true)
+                var priceFieldNames = AzureSearchHelper.GetPriceFieldNames(filter.Key, filter.Currency, criteria.Pricelists, true)
                     .Where(availableFields.Contains)
                     .ToList();
 

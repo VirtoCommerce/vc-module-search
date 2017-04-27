@@ -73,11 +73,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             {
                 foreach (var filter in criteria.CurrentFilters)
                 {
-                    // Skip currencies that are not part of the filter
-                    var priceRangeFilter = filter as PriceRangeFilter;
-                    if (priceRangeFilter != null) // special filtering 
+                    if (!string.IsNullOrEmpty(criteria.Currency))
                     {
-                        if (!priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
+                        // Skip price range filters with currencies not equal to criteria currency
+                        if ((filter as PriceRangeFilter)?.Currency.EqualsInvariant(criteria.Currency) != true)
                         {
                             continue;
                         }

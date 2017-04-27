@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
 using Nest;
+using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Search;
 
@@ -164,15 +164,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             {
                 foreach (var filter in criteria.CurrentFilters)
                 {
-                    // Skip currencies that are not part of the filter
-                    if (filter.GetType() == typeof(PriceRangeFilter)) // special filtering 
+                    if (!string.IsNullOrEmpty(criteria.Currency))
                     {
-                        var priceRangeFilter = filter as PriceRangeFilter;
-                        if (priceRangeFilter != null)
+                        // Skip price range filters with currencies not equal to criteria currency
+                        if ((filter as PriceRangeFilter)?.Currency.EqualsInvariant(criteria.Currency) != true)
                         {
-                            var currency = priceRangeFilter.Currency;
-                            if (!currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase))
-                                continue;
+                            continue;
                         }
                     }
 
@@ -209,7 +206,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                 else if (priceRangeFilter != null)
                 {
                     var currency = priceRangeFilter.Currency;
-                    if (currency.Equals(criteria.Currency, StringComparison.OrdinalIgnoreCase))
+                    if (currency.EqualsInvariant(criteria.Currency))
                     {
                         AddPriceAggregationQueries<T>(container, fieldName, priceRangeFilter.Values, criteria);
                     }
@@ -251,7 +248,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
             foreach (var value in values)
             {
-                var query = ElasticSearchHelper.CreatePriceRangeFilter<T>(criteria, fieldName, value);
+                var query = ElasticSearchHelper.CreatePriceRangeFilter<T>(criteria, fieldName, criteria.Currency, value);
 
                 if (query != null)
                 {
@@ -352,7 +349,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
             foreach (var f in criteria.CurrentFilters)
             {
-                if (!f.Key.Equals(field, StringComparison.OrdinalIgnoreCase))
+                if (!f.Key.EqualsInvariant(field))
                 {
                     var q = ElasticSearchHelper.CreateQuery<T>(criteria, f);
                     existingFilters.Add(q);

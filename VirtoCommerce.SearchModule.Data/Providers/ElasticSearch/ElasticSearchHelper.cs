@@ -49,7 +49,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             }
             else if (filter is PriceRangeFilter)
             {
-                query = CreatePriceRangeFilter<T>(criteria, fieldName, value as RangeFilterValue);
+                var currency = ((PriceRangeFilter)filter).Currency;
+                query = CreatePriceRangeFilter<T>(criteria, fieldName, currency, value as RangeFilterValue);
             }
 
             return query;
@@ -60,12 +61,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         /// </summary>
         /// <param name="criteria">The criteria.</param>
         /// <param name="field">The field.</param>
+        /// <param name="currency">The currency.</param>
         /// <param name="value">The value.</param>
         /// <returns></returns>
-        public static QueryContainer CreatePriceRangeFilter<T>(ISearchCriteria criteria, string field, RangeFilterValue value)
+        public static QueryContainer CreatePriceRangeFilter<T>(ISearchCriteria criteria, string field, string currency, RangeFilterValue value)
             where T : class
         {
-            return CreatePriceRangeFilterValueQuery<T>(criteria.Pricelists, 0, field, criteria.Currency, value.Lower.AsDouble(), value.Upper.AsDouble());
+            return CreatePriceRangeFilterValueQuery<T>(criteria.Pricelists, 0, field, currency, value.Lower.AsDouble(), value.Upper.AsDouble());
         }
 
         private static QueryContainer CreatePriceRangeFilterValueQuery<T>(IList<string> pricelists, int index, string field, string currency, double? lowerBound, double? upperBound)

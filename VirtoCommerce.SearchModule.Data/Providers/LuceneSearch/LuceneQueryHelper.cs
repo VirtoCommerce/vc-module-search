@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Util;
@@ -97,7 +98,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             }
             else if (filter is PriceRangeFilter)
             {
-                result = CreatePriceRangeFilter(criteria, fieldName, value as RangeFilterValue);
+                var currency = ((PriceRangeFilter)filter).Currency;
+                result = CreatePriceRangeFilter(criteria, fieldName, currency, value as RangeFilterValue);
             }
             else if (filter is CategoryFilter)
             {
@@ -160,14 +162,15 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         /// </summary>
         /// <param name="criteria">The search criteria.</param>
         /// <param name="field">The field.</param>
+        /// <param name="currency">The currency.</param>
         /// <param name="value">The value.</param>
         /// <returns></returns>
-        public static Filter CreatePriceRangeFilter(ISearchCriteria criteria, string field, RangeFilterValue value)
+        public static Filter CreatePriceRangeFilter(ISearchCriteria criteria, string field, string currency, RangeFilterValue value)
         {
             var lowerBound = value.Lower != null ? ConvertToSearchable(value.Lower) : NumericUtils.LongToPrefixCoded(long.MinValue);
             var upperBound = value.Upper != null ? ConvertToSearchable(value.Upper) : NumericUtils.LongToPrefixCoded(long.MaxValue);
 
-            return CreatePriceRangeFilterValueQuery(criteria.Pricelists, 0, field, criteria.Currency, lowerBound, upperBound, true, false);
+            return CreatePriceRangeFilterValueQuery(criteria.Pricelists, 0, field, currency, lowerBound, upperBound, true, false);
         }
 
 
@@ -177,7 +180,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
 
             if (pricelists.IsNullOrEmpty())
             {
-                var fieldName = string.Join("_", field, currency).ToLowerInvariant();
+                var fieldName = JoinNonEmptyStrings("_", field, currency).ToLowerInvariant();
                 var filter = new TermRangeFilter(fieldName, lowerBound, upperBound, lowerBoundIncluded, upperBoundIncluded);
                 result.Add(new FilterClause(filter, Occur.MUST));
             }
@@ -186,13 +189,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 // Create negative query for previous pricelist
                 if (index > 0)
                 {
-                    var previousFieldName = string.Join("_", field, currency, pricelists[index - 1]).ToLowerInvariant();
+                    var previousFieldName = JoinNonEmptyStrings("_", field, currency, pricelists[index - 1]).ToLowerInvariant();
                     var previousPricelistFilter = new TermRangeFilter(previousFieldName, NumericUtils.LongToPrefixCoded(long.MinValue), NumericUtils.LongToPrefixCoded(long.MaxValue), true, false);
                     result.Add(new FilterClause(previousPricelistFilter, Occur.MUST_NOT));
                 }
 
                 // Create positive query for current pricelist
-                var currentFieldName = string.Join("_", field, currency, pricelists[index]).ToLowerInvariant();
+                var currentFieldName = JoinNonEmptyStrings("_", field, currency, pricelists[index]).ToLowerInvariant();
                 var currentPricelistFilter = new TermRangeFilter(currentFieldName, lowerBound, upperBound, lowerBoundIncluded, upperBoundIncluded);
 
                 // Get query for next pricelist
@@ -212,5 +215,26 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             return result;
         }
 
+        public static string JoinNonEmptyStrings(string separator, params string[] values)
+        {
+            var builder = new StringBuilder();
+            var valuesCount = 0;
+
+            foreach (var value in values)
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    if (valuesCount > 0)
+                    {
+                        builder.Append(separator);
+                    }
+
+                    builder.Append(value);
+                    valuesCount++;
+                }
+            }
+
+            return builder.ToString();
+        }
     }
 }
