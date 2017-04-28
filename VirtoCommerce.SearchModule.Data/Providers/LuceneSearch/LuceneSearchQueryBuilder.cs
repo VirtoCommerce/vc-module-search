@@ -76,7 +76,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                     if (!string.IsNullOrEmpty(criteria.Currency))
                     {
                         // Skip price range filters with currencies not equal to criteria currency
-                        if ((filter as PriceRangeFilter)?.Currency.EqualsInvariant(criteria.Currency) != true)
+                        var priceRangeFilter = filter as PriceRangeFilter;
+                        if (priceRangeFilter != null && !priceRangeFilter.Currency.EqualsInvariant(criteria.Currency))
                         {
                             continue;
                         }
