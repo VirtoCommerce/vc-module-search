@@ -46,7 +46,7 @@ namespace VirtoCommerce.SearchModule.Test
         public void TestRangeFilter()
         {
             var parser = Getparser();
-            var result = parser.Parse("size:[10 TO 20]");
+            var result = parser.Parse("size:(10 TO 20]");
 
             Assert.NotNull(result);
             Assert.Equal(string.Empty, result.SearchPhrase);
@@ -64,13 +64,59 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.NotNull(value);
             Assert.Equal("10", value.Lower);
             Assert.Equal("20", value.Upper);
+            Assert.False(value.IncludeLower);
+            Assert.True(value.IncludeUpper);
+
+
+            result = parser.Parse("size:(TO 10]");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.SearchPhrase);
+            Assert.NotNull(result.CurrentFilters);
+            Assert.Equal(1, result.CurrentFilters.Count);
+
+            filter = result.CurrentFilters.First() as RangeFilter;
+
+            Assert.NotNull(filter);
+            Assert.Equal("size", filter.Key);
+            Assert.NotNull(filter.Values);
+            Assert.Equal(1, filter.Values.Length);
+
+            value = filter.Values.First();
+            Assert.NotNull(value);
+            Assert.Equal(string.Empty, value.Lower);
+            Assert.Equal("10", value.Upper);
+            Assert.False(value.IncludeLower);
+            Assert.True(value.IncludeUpper);
+
+
+            result = parser.Parse("size:(10 TO]");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.SearchPhrase);
+            Assert.NotNull(result.CurrentFilters);
+            Assert.Equal(1, result.CurrentFilters.Count);
+
+            filter = result.CurrentFilters.First() as RangeFilter;
+
+            Assert.NotNull(filter);
+            Assert.Equal("size", filter.Key);
+            Assert.NotNull(filter.Values);
+            Assert.Equal(1, filter.Values.Length);
+
+            value = filter.Values.First();
+            Assert.NotNull(value);
+            Assert.Equal("10", value.Lower);
+            Assert.Equal(string.Empty, value.Upper);
+            Assert.False(value.IncludeLower);
+            Assert.True(value.IncludeUpper);
         }
 
         [Fact]
         public void TestPriceRangeFilter()
         {
             var parser = Getparser();
-            var result = parser.Parse("price:[100 TO 200]");
+            var result = parser.Parse("price:[100 TO 200)");
 
             Assert.NotNull(result);
             Assert.Equal(string.Empty, result.SearchPhrase);
@@ -88,6 +134,8 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.NotNull(value);
             Assert.Equal("100", value.Lower);
             Assert.Equal("200", value.Upper);
+            Assert.True(value.IncludeLower);
+            Assert.False(value.IncludeUpper);
         }
 
         [Fact]

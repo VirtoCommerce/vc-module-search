@@ -210,7 +210,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
         protected virtual string GetRangeFilterValueExpression(RangeFilterValue filterValue, string azureFieldName)
         {
-            return GetRangeFilterExpression(azureFieldName, filterValue.Lower, "ge", filterValue.Upper, "lt");
+            var lowerCondition = filterValue.IncludeLower ? "ge" : "gt";
+            var upperCondition = filterValue.IncludeUpper ? "le" : "lt";
+            return GetRangeFilterExpression(azureFieldName, filterValue.Lower, lowerCondition, filterValue.Upper, upperCondition);
         }
 
         protected virtual string GetRangeFilterExpression(string rawName, DateTime? lowerBound, bool lowerBoundIncluded, DateTime? upperBound, bool upperBoundIncluded)

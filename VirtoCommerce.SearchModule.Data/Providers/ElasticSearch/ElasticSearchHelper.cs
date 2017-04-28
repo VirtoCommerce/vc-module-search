@@ -42,10 +42,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             }
             else if (filter is RangeFilter)
             {
-                var rangeFilterValue = value as RangeFilterValue;
-                var lower = string.IsNullOrEmpty(rangeFilterValue?.Lower) ? null : rangeFilterValue.Lower;
-                var upper = string.IsNullOrEmpty(rangeFilterValue?.Upper) ? null : rangeFilterValue.Upper;
-                query = new TermRangeQuery { Field = fieldName, GreaterThanOrEqualTo = lower, LessThan = upper };
+                query = CreateTermRangeQuery(fieldName, value as RangeFilterValue);
             }
             else if (filter is PriceRangeFilter)
             {
@@ -54,6 +51,38 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             }
 
             return query;
+        }
+
+        public static TermRangeQuery CreateTermRangeQuery(string fieldName, RangeFilterValue value)
+        {
+            var lower = string.IsNullOrEmpty(value.Lower) ? null : value.Lower;
+            var upper = string.IsNullOrEmpty(value.Upper) ? null : value.Upper;
+            return CreateTermRangeQuery(fieldName, lower, upper, value.IncludeLower, value.IncludeUpper);
+        }
+
+        public static TermRangeQuery CreateTermRangeQuery(string fieldName, string lower, string upper, bool includeLower, bool includeUpper)
+        {
+            var termRangeQuery = new TermRangeQuery { Field = fieldName };
+
+            if (includeLower)
+            {
+                termRangeQuery.GreaterThanOrEqualTo = lower;
+            }
+            else
+            {
+                termRangeQuery.GreaterThan = lower;
+            }
+
+            if (includeUpper)
+            {
+                termRangeQuery.LessThanOrEqualTo = upper;
+            }
+            else
+            {
+                termRangeQuery.LessThan = upper;
+            }
+
+            return termRangeQuery;
         }
 
         /// <summary>
@@ -67,10 +96,10 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         public static QueryContainer CreatePriceRangeFilter<T>(ISearchCriteria criteria, string field, string currency, RangeFilterValue value)
             where T : class
         {
-            return CreatePriceRangeFilterValueQuery<T>(criteria.Pricelists, 0, field, currency, value.Lower.AsDouble(), value.Upper.AsDouble());
+            return CreatePriceRangeFilterValueQuery<T>(criteria.Pricelists, 0, field, currency, value.Lower.AsDouble(), value.Upper.AsDouble(), value.IncludeLower, value.IncludeUpper);
         }
 
-        private static QueryContainer CreatePriceRangeFilterValueQuery<T>(IList<string> pricelists, int index, string field, string currency, double? lowerBound, double? upperBound)
+        public static QueryContainer CreatePriceRangeFilterValueQuery<T>(IList<string> pricelists, int index, string field, string currency, double? lower, double? upper, bool includeLower, bool includeUpper)
             where T : class
         {
             QueryContainer result = null;
@@ -78,7 +107,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             if (pricelists.IsNullOrEmpty())
             {
                 var fieldName = JoinNonEmptyStrings("_", field, currency).ToLowerInvariant();
-                result = Query<T>.Range(r => r.Field(fieldName).GreaterThanOrEquals(lowerBound).LessThan(upperBound));
+                result = CreateNumericRangeQuery<T>(fieldName, lower, upper, includeLower, includeUpper);
             }
             else if (index < pricelists.Count)
             {
@@ -87,20 +116,31 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                 if (index > 0)
                 {
                     var previousFieldName = JoinNonEmptyStrings("_", field, currency, pricelists[index - 1]).ToLowerInvariant();
-                    previousPricelistQuery = Query<T>.Range(r => r.Field(previousFieldName).GreaterThan(0));
+                    previousPricelistQuery = CreateNumericRangeQuery<T>(previousFieldName, 0, null, false, false);
                 }
 
                 // Create positive query for current pricelist
                 var currentFieldName = JoinNonEmptyStrings("_", field, currency, pricelists[index]).ToLowerInvariant();
-                var currentPricelistQuery = Query<T>.Range(r => r.Field(currentFieldName).GreaterThanOrEquals(lowerBound).LessThan(upperBound));
+                var currentPricelistQuery = CreateNumericRangeQuery<T>(currentFieldName, lower, upper, includeLower, includeUpper);
 
                 // Get query for next pricelist
-                var nextPricelistQuery = CreatePriceRangeFilterValueQuery<T>(pricelists, index + 1, field, currency, lowerBound, upperBound);
+                var nextPricelistQuery = CreatePriceRangeFilterValueQuery<T>(pricelists, index + 1, field, currency, lower, upper, includeLower, includeUpper);
 
                 result = !previousPricelistQuery & (currentPricelistQuery | nextPricelistQuery);
             }
 
             return result;
+        }
+
+        public static QueryContainer CreateNumericRangeQuery<T>(string fieldName, double? lower, double? upper, bool includeLower, bool includeUpper)
+            where T : class
+        {
+            var range = new NumericRangeQueryDescriptor<T>().Field(fieldName);
+
+            range = includeLower ? range.GreaterThanOrEquals(lower) : range.GreaterThan(lower);
+            range = includeUpper ? range.LessThanOrEquals(upper) : range.LessThan(upper);
+
+            return Query<T>.Range(r => range);
         }
 
         public static string JoinNonEmptyStrings(string separator, params string[] values)
@@ -126,20 +166,19 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         }
     }
 
-    public static class DoubleExtensions
+    public static class StringExtensions
     {
         public static double? AsDouble(this string input)
         {
-            if (string.IsNullOrEmpty(input))
-                return new double?();
+            double? result = null;
 
-            double convertedValue;
-            if (double.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out convertedValue))
+            double value;
+            if (double.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
             {
-                return convertedValue;
+                result = value;
             }
 
-            return new double?();
+            return result;
         }
     }
 }

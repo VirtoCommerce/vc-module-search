@@ -10,7 +10,7 @@ namespace VirtoCommerce.SearchModule.Data.Services.SearchPhraseParsing
     [CLSCompliant(false)]
     public class SearchPhraseListener : SearchPhraseBaseListener
     {
-        private static string[] _rangeValueDelimiter = new[] { "TO" };
+        private static readonly string[] _rangeValueDelimiter = { "TO" };
 
         public IList<string> Keywords { get; } = new List<string>();
         public IList<ISearchFilter> Filters { get; } = new List<ISearchFilter>();
@@ -45,7 +45,7 @@ namespace VirtoCommerce.SearchModule.Data.Services.SearchPhraseParsing
                 }
                 else if (rangeValueContext != null)
                 {
-                    if (fieldName.EqualsInvariant("price") || fieldName.StartsWith("price_", StringComparison.InvariantCulture))
+                    if (fieldName.EqualsInvariant("price") || fieldName.StartsWith("price_", StringComparison.OrdinalIgnoreCase))
                     {
                         var nameParts = fieldName.Split('_');
                         searchFilter = new PriceRangeFilter
@@ -82,6 +82,8 @@ namespace VirtoCommerce.SearchModule.Data.Services.SearchPhraseParsing
             {
                 Lower = bounds.First(),
                 Upper = bounds.Last(),
+                IncludeLower = value.StartsWith("["),
+                IncludeUpper = value.EndsWith("]"),
             };
         }
     }

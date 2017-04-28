@@ -182,6 +182,86 @@ namespace VirtoCommerce.SearchModule.Test
         }
 
         [Theory]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
+        [InlineData("Azure")]
+        public void CanUseFiltersInSearchPhrase(string providerType)
+        {
+            var provider = GetSearchProvider(providerType, _scope);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
+
+            var criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "Color:Red" };
+            var results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(3, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "Size:[2 TO 4]" };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(3, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "Size:[2 TO 4)" };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(2, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "Size:(2 TO 4]" };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(2, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "Size:(2 TO 4)" };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(1, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "price_usd:[10 TO 200]", Pricelists = new[] { "default" } };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(4, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "price_usd:[10 TO 200)", Pricelists = new[] { "default" } };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(3, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "price_usd:(10 TO 200]", Pricelists = new[] { "default" } };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(3, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "price_usd:(10 TO 200)", Pricelists = new[] { "default" } };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(2, results.TotalCount);
+
+            // Open-ended ranges
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "Size:[TO 10]" };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(5, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "Size:(TO 10)" };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(4, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "Size:[10 TO]" };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(2, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "Size:(10 TO]" };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(1, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "price_usd:(TO 200]", Pricelists = new[] { "default" } };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(4, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "price_usd:[TO 200)", Pricelists = new[] { "default" } };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(3, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "price_usd:[200 TO)", Pricelists = new[] { "default" } };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(3, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0, SearchPhrase = "price_usd:(200 TO)", Pricelists = new[] { "default" } };
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(2, results.TotalCount);
+        }
+
+        [Theory]
         [InlineData("Lucene", 5)]
         [InlineData("Elastic", 5)]
         [InlineData("Azure", 3)] // Azure does not support collections with non-string elements

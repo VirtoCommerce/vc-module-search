@@ -64,6 +64,7 @@
     <Compile Include="Model\Filters\ISearchFilterValue.cs" />
     <Compile Include="Model\Filters\PriceRangeFilter.cs" />
     <Compile Include="Model\Filters\RangeFilter.cs" />
+    <Compile Include="Model\Filters\RangeFilterValue.cs" />
     <Compile Include="Model\Indexing\DocumentDictionary.cs" />
     <Compile Include="Model\Indexing\DocumentField.cs" />
     <Compile Include="Model\Indexing\IBatchDocumentBuilder.cs" />
