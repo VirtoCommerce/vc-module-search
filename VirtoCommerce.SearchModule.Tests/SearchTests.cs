@@ -475,6 +475,30 @@ namespace VirtoCommerce.SearchModule.Test
                 RecordsToRetrieve = 10,
             };
 
+            var dateFilter = new AttributeFilter
+            {
+                Key = "Date",
+                Values = new[]
+                {
+                    new AttributeFilterValue { Value = "2017-04-29T15:24:31.180Z" },
+                    new AttributeFilterValue { Value = "2017-04-28T15:24:31.180Z" },
+                    new AttributeFilterValue { Value = "2017-04-27T15:24:31.180Z" },
+                }
+            };
+
+            criteria.Apply(dateFilter);
+
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+
+            Assert.Equal(2, results.DocCount);
+            Assert.Equal(2, results.TotalCount);
+
+
+            criteria = new BaseSearchCriteria(_documentType)
+            {
+                RecordsToRetrieve = 10,
+            };
+
             var rangefilter = new RangeFilter
             {
                 Key = "Size",

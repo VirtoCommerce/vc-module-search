@@ -261,10 +261,15 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
             if (parseValue)
             {
+                DateTime dateValue;
                 long integerValue;
                 double doubleValue;
 
-                if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out integerValue))
+                if (DateTime.TryParse(rawValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateValue))
+                {
+                    result = rawValue;
+                }
+                else if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out integerValue))
                 {
                     result = rawValue;
                 }
