@@ -83,7 +83,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             {
                 foreach (var value in field.Values)
                 {
-                    doc.Add(new Field(fieldName, DateTools.DateToString((DateTime)value, DateTools.Resolution.SECOND), store, index));
+                    var numericField = new NumericField(fieldName, store, index != Field.Index.NO);
+                    numericField.SetLongValue(((DateTime)value).Ticks);
+                    doc.Add(numericField);
                 }
             }
             else // try detecting the type

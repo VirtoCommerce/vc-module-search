@@ -14,55 +14,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
 {
     public class LuceneQueryHelper
     {
-        /// <summary>
-        /// Converts to searchable.
-        /// </summary>
-        /// <param name="value">The value.</param>
-        /// <param name="tryConvertToNumber">if set to <c>true</c> [try convert to number].</param>
-        /// <returns></returns>
-        public static string ConvertToSearchable(object value, bool tryConvertToNumber = true)
-        {
-            var stringValue = value?.ToString();
-
-            if (string.IsNullOrEmpty(stringValue))
-            {
-                return string.Empty;
-            }
-
-            if (tryConvertToNumber)
-            {
-                decimal decimalVal;
-                int intVal;
-
-                // Try converting to a known type
-                if (decimal.TryParse(stringValue, out decimalVal))
-                {
-                    value = decimalVal;
-                }
-                else if (int.TryParse(stringValue, out intVal))
-                {
-                    value = intVal;
-                }
-            }
-
-            if (value is string)
-            {
-                return stringValue;
-            }
-
-            if (value is decimal)
-            {
-                return NumericUtils.DoubleToPrefixCoded(Convert.ToDouble(value));
-            }
-
-            if (value.GetType() != typeof(int) || value.GetType() != typeof(long) || value.GetType() != typeof(double))
-            {
-                return stringValue;
-            }
-
-            return NumericUtils.DoubleToPrefixCoded((double)value);
-        }
-
         public static Filter CreateQuery(ISearchCriteria criteria, ISearchFilter filter, Occur clause)
         {
             Filter result = null;
@@ -121,9 +72,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         /// <returns></returns>
         public static Filter CreateTermsFilter(string field, AttributeFilterValue value)
         {
-            object val = value.Value;
             var query = new TermsFilter();
-            query.AddTerm(new Term(field, ConvertToSearchable(val)));
+            query.AddTerm(new Term(field, ConvertToSearchable(value.Value)));
             return query;
         }
 
@@ -140,20 +90,25 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             // If both bounds are empty, ignore this range
             if (!string.IsNullOrEmpty(value.Lower) || !string.IsNullOrEmpty(value.Upper))
             {
-                // Open-ended ranges can be only numeric
-                if (string.IsNullOrEmpty(value.Lower) || string.IsNullOrEmpty(value.Upper))
+                var lowerLong = ConvertToDateTimeTicks(value.Lower);
+                var upperLong = ConvertToDateTimeTicks(value.Upper);
+                if (lowerLong != null || upperLong != null)
                 {
-                    var lower = value.Lower.AsDouble();
-                    var upper = value.Upper.AsDouble();
-                    result = NumericRangeFilter.NewDoubleRange(field, lower, upper, value.IncludeLower, value.IncludeUpper);
+                    result = NumericRangeFilter.NewLongRange(field, lowerLong, upperLong, value.IncludeLower, value.IncludeUpper);
                 }
                 else
                 {
-                    var lower = ConvertToSearchable(value.Lower);
-                    var upper = ConvertToSearchable(value.Upper);
-                    result = new TermRangeFilter(field, lower, upper, value.IncludeLower, value.IncludeUpper);
+                    var lowerDouble = ConvertToDouble(value.Lower);
+                    var upperDouble = ConvertToDouble(value.Upper);
+                    if (lowerDouble != null || upperDouble != null)
+                    {
+                        result = NumericRangeFilter.NewDoubleRange(field, lowerDouble, upperDouble, value.IncludeLower, value.IncludeUpper);
+                    }
+                    else
+                    {
+                        result = new TermRangeFilter(field, value.Lower, value.Upper, value.IncludeLower, value.IncludeUpper);
+                    }
                 }
-
             }
 
             return result;
@@ -188,8 +143,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         /// <returns></returns>
         public static Filter CreatePriceRangeFilter(ISearchCriteria criteria, string field, string currency, RangeFilterValue value)
         {
-            var lower = value.Lower.AsDouble();
-            var upper = value.Upper.AsDouble();
+            var lower = ConvertToDouble(value.Lower);
+            var upper = ConvertToDouble(value.Upper);
 
             return CreatePriceRangeFilterValueQuery(criteria.Pricelists, 0, field, currency, lower, upper, value.IncludeLower, value.IncludeUpper);
         }
@@ -257,11 +212,38 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
 
             return builder.ToString();
         }
-    }
 
-    public static class StringExtensions
-    {
-        public static double? AsDouble(this string input)
+        public static string ConvertToSearchable(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+
+            var dateValue = ConvertToDateTimeTicks(value);
+            if (dateValue != null)
+            {
+                return NumericUtils.LongToPrefixCoded(dateValue.Value);
+            }
+
+            var dobuleValue = ConvertToDouble(value);
+            return dobuleValue != null ? NumericUtils.DoubleToPrefixCoded(dobuleValue.Value) : value;
+        }
+
+        public static long? ConvertToDateTimeTicks(string input)
+        {
+            long? result = null;
+
+            DateTime value;
+            if (DateTime.TryParse(input, CultureInfo.InvariantCulture, DateTimeStyles.None, out value))
+            {
+                result = value.Ticks;
+            }
+
+            return result;
+        }
+
+        public static double? ConvertToDouble(string input)
         {
             double? result = null;
 
