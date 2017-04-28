@@ -34,6 +34,7 @@ namespace VirtoCommerce.SearchModule.Web
             base.Initialize();
 
             _container.RegisterType<ISearchPhraseParser, SearchPhraseParser>();
+            _container.RegisterType<ISearchCriteriaPreprocessor, PhraseSearchCriteriaPreprocessor>(nameof(PhraseSearchCriteriaPreprocessor));
             _container.RegisterType<ISearchIndexController, SearchIndexController>();
 
             string connectionString = null;
@@ -56,17 +57,17 @@ namespace VirtoCommerce.SearchModule.Web
             if (searchConnection.Provider.EqualsInvariant(SearchProviders.Lucene.ToString()))
             {
                 _container.RegisterType<ISearchProvider, LuceneSearchProvider>();
-                _container.RegisterType<ISearchQueryBuilder, LuceneSearchQueryBuilder>();
+                _container.RegisterType<ISearchQueryBuilder, LuceneSearchQueryBuilder>(nameof(LuceneSearchQueryBuilder));
             }
             else if (searchConnection.Provider.EqualsInvariant(SearchProviders.Elasticsearch.ToString()))
             {
                 _container.RegisterType<ISearchProvider, ElasticSearchProvider>(new ContainerControlledLifetimeManager());
-                _container.RegisterType<ISearchQueryBuilder, ElasticSearchQueryBuilder>();
+                _container.RegisterType<ISearchQueryBuilder, ElasticSearchQueryBuilder>(nameof(ElasticSearchQueryBuilder));
             }
             else if (searchConnection.Provider.EqualsInvariant(SearchProviders.AzureSearch.ToString()))
             {
                 _container.RegisterType<ISearchProvider, AzureSearchProvider>(new ContainerControlledLifetimeManager());
-                _container.RegisterType<ISearchQueryBuilder, AzureSearchQueryBuilder>();
+                _container.RegisterType<ISearchQueryBuilder, AzureSearchQueryBuilder>(nameof(AzureSearchQueryBuilder));
             }
         }
 

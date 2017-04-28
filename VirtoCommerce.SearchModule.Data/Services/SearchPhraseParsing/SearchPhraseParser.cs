@@ -8,7 +8,7 @@ namespace VirtoCommerce.SearchModule.Data.Services.SearchPhraseParsing
 {
     public class SearchPhraseParser : ISearchPhraseParser
     {
-        public ISearchCriteria Parse(string input)
+        public virtual ISearchCriteria Parse(string input)
         {
             var stream = CharStreams.fromstring(input);
             var lexer = new SearchPhraseLexer(stream);
@@ -24,16 +24,6 @@ namespace VirtoCommerce.SearchModule.Data.Services.SearchPhraseParsing
             result.CurrentFilters.AddRange(listener.Filters);
 
             return result;
-        }
-
-        public void ParseAndApply(ISearchCriteria criteria)
-        {
-            if (!string.IsNullOrEmpty(criteria?.SearchPhrase))
-            {
-                var newCriteria = Parse(criteria.SearchPhrase);
-                criteria.SearchPhrase = newCriteria.SearchPhrase;
-                criteria.CurrentFilters.AddRange(newCriteria.CurrentFilters);
-            }
         }
     }
 }

@@ -21,7 +21,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         public const string NGramFilterName = "ngram_filter";
 
         private readonly ISearchConnection _connection;
-        private readonly ISearchPhraseParser _searchPhraseParser;
+        private readonly ISearchCriteriaPreprocessor[] _searchCriteriaPreprocessors;
         private readonly Dictionary<string, List<IDocument>> _pendingDocuments = new Dictionary<string, List<IDocument>>();
         private readonly Dictionary<string, Properties<IProperties>> _mappings = new Dictionary<string, Properties<IProperties>>();
 
@@ -111,11 +111,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             Init();
         }
 
-        public ElasticSearchProvider(ISearchQueryBuilder[] queryBuilders, ISearchConnection connection, ISearchPhraseParser searchPhraseParser)
+        public ElasticSearchProvider(ISearchQueryBuilder[] queryBuilders, ISearchConnection connection, ISearchCriteriaPreprocessor[] searchCriteriaPreprocessors)
         {
             QueryBuilders = queryBuilders;
             _connection = connection;
-            _searchPhraseParser = searchPhraseParser;
+            _searchCriteriaPreprocessors = searchCriteriaPreprocessors;
             Init();
 
 #if DEBUG
@@ -138,7 +138,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             if (criteria == null)
                 throw new ArgumentNullException(nameof(criteria));
 
-            _searchPhraseParser?.ParseAndApply(criteria);
+            _searchCriteriaPreprocessors.ForEach(p => p.Process(criteria));
 
             var indexName = GetIndexName(scope, criteria.DocumentType);
 

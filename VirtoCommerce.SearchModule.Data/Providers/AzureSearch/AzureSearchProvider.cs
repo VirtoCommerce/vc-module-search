@@ -17,14 +17,14 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
     public class AzureSearchProvider : ISearchProvider
     {
         private readonly ISearchConnection _connection;
-        private readonly ISearchPhraseParser _searchPhraseParser;
+        private readonly ISearchCriteriaPreprocessor[] _searchCriteriaPreprocessors;
         private readonly Dictionary<string, List<IDocument>> _pendingDocuments = new Dictionary<string, List<IDocument>>();
         private readonly Dictionary<string, IList<Field>> _mappings = new Dictionary<string, IList<Field>>();
 
-        public AzureSearchProvider(ISearchConnection connection, ISearchPhraseParser searchPhraseParser, ISearchQueryBuilder[] queryBuilders)
+        public AzureSearchProvider(ISearchConnection connection, ISearchCriteriaPreprocessor[] searchCriteriaPreprocessors, ISearchQueryBuilder[] queryBuilders)
         {
             _connection = connection;
-            _searchPhraseParser = searchPhraseParser;
+            _searchCriteriaPreprocessors = searchCriteriaPreprocessors;
             QueryBuilders = queryBuilders;
         }
 
@@ -184,7 +184,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             if (criteria == null)
                 throw new ArgumentNullException(nameof(criteria));
 
-            _searchPhraseParser?.ParseAndApply(criteria);
+            _searchCriteriaPreprocessors.ForEach(p => p.Process(criteria));
 
             var availableFields = GetAvailableFields(scope, criteria.DocumentType);
             var queryBuilder = GetQueryBuilder(criteria);
