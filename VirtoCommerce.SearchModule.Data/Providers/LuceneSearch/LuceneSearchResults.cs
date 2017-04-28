@@ -202,7 +202,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                     if (existing_filters == null)
                         existing_filters = new BooleanFilter();
 
-                    var q = LuceneQueryHelper.CreateQuery(criteria, f, Occur.SHOULD);
+                    var q = LuceneSearchHelper.CreateQuery(criteria, f, Occur.SHOULD);
                     existing_filters.Add(new FilterClause(q, Occur.MUST));
                 }
             }
@@ -220,7 +220,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                     foreach (var value in allValues)
                     {
                         var attributeValue = new AttributeFilterValue() { Id = value, Value = value };
-                        var valueFilter = LuceneQueryHelper.CreateQueryForValue(SearchCriteria, filter, attributeValue);
+                        var valueFilter = LuceneSearchHelper.CreateQueryForValue(SearchCriteria, filter, attributeValue);
 
                         if (valueFilter != null)
                         {
@@ -247,7 +247,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 foreach (var group in values.GroupBy(v => v.Id))
                 {
                     var value = group.FirstOrDefault();
-                    var valueFilter = LuceneQueryHelper.CreateQueryForValue(SearchCriteria, filter, value);
+                    var valueFilter = LuceneSearchHelper.CreateQueryForValue(SearchCriteria, filter, value);
 
                     if (valueFilter != null)
                     {

@@ -83,7 +83,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                         }
                     }
 
-                    var filterQuery = LuceneQueryHelper.CreateQuery(criteria, filter, Occur.SHOULD);
+                    var filterQuery = LuceneSearchHelper.CreateQuery(criteria, filter, Occur.SHOULD);
 
                     // now add other values that should also be counted?
 

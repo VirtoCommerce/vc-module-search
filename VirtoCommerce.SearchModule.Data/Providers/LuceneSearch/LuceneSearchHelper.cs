@@ -12,7 +12,7 @@ using VirtoCommerce.SearchModule.Core.Model.Search;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
 {
-    public class LuceneQueryHelper
+    public class LuceneSearchHelper
     {
         public static Filter CreateQuery(ISearchCriteria criteria, ISearchFilter filter, Occur clause)
         {

@@ -145,7 +145,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 _pendingDocuments.Add(folderName, new List<Document>());
             }
 
-            _pendingDocuments[folderName].Add(LuceneHelper.ConvertDocument(document));
+            _pendingDocuments[folderName].Add(ConvertDocument(document));
 
             // Make sure to auto commit changes when limit is reached, still need to call close before changes are written
             if (AutoCommit && _pendingDocuments.Count > AutoCommitCount)
@@ -297,6 +297,110 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
 
             return queryBuilder;
         }
+        /// <summary>
+        ///     Converts the search document to lucene document
+        /// </summary>
+        /// <param name="document">The document.</param>
+        /// <returns></returns>
+        protected virtual Document ConvertDocument(IDocument document)
+        {
+            var doc = new Document();
+            for (var index = 0; index < document.FieldCount; index++)
+            {
+                var field = document[index];
+                AddFieldToDocument(doc, field);
+            }
+
+            return doc;
+        }
+
+        protected virtual void AddFieldToDocument(Document doc, IDocumentField field)
+        {
+            if (field?.Value == null)
+            {
+                return;
+            }
+
+            var store = Field.Store.YES;
+            var index = Field.Index.NOT_ANALYZED;
+
+            if (field.ContainsAttribute(IndexStore.No))
+            {
+                store = Field.Store.NO;
+            }
+
+            if (field.ContainsAttribute(IndexType.Analyzed))
+            {
+                index = Field.Index.ANALYZED;
+            }
+            else if (field.ContainsAttribute(IndexType.No))
+            {
+                index = Field.Index.NO;
+            }
+
+            var fieldName = field.Name.ToLowerInvariant();
+            var isIndexed = !field.ContainsAttribute(IndexType.No);
+
+            if (fieldName == "__key")
+            {
+                foreach (var value in field.Values)
+                {
+                    doc.Add(new Field(fieldName, value.ToString(), store, index));
+                }
+            }
+            else if (field.Value is string)
+            {
+                foreach (var value in field.Values)
+                {
+                    doc.Add(new Field(fieldName, value.ToString(), store, index));
+
+                    if (isIndexed)
+                    {
+                        doc.Add(new Field("_content", value.ToString(), Field.Store.NO, Field.Index.ANALYZED));
+                    }
+                }
+            }
+            else if (field.Value is decimal) // parse prices
+            {
+                foreach (var value in field.Values)
+                {
+                    var numericField = new NumericField(fieldName, store, index != Field.Index.NO);
+                    numericField.SetDoubleValue(double.Parse(value.ToString()));
+                    doc.Add(numericField);
+                }
+            }
+            else if (field.Value is DateTime) // parse dates
+            {
+                foreach (var value in field.Values)
+                {
+                    var numericField = new NumericField(fieldName, store, index != Field.Index.NO);
+                    numericField.SetLongValue(((DateTime)value).Ticks);
+                    doc.Add(numericField);
+                }
+            }
+            else // try detecting the type
+            {
+                // TODO: instead of auto detecting, use meta data information
+                decimal t;
+                if (decimal.TryParse(field.Value.ToString(), out t))
+                {
+                    foreach (var value in field.Values)
+                    {
+                        var numericField = new NumericField(fieldName, store, index != Field.Index.NO);
+                        numericField.SetDoubleValue(double.Parse(value.ToString()));
+                        doc.Add(numericField);
+                    }
+                }
+                else
+                {
+                    foreach (var value in field.Values)
+                    {
+                        doc.Add(new Field(fieldName, value.ToString(), store, index));
+                    }
+                }
+            }
+        }
+
 
         /// <summary>
         ///     Closes the specified documentType.

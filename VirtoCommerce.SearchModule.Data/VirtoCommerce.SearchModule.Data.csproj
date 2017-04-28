@@ -134,8 +134,7 @@
     <Compile Include="Providers\ElasticSearch\ElasticSearchProvider.cs" />
     <Compile Include="Providers\ElasticSearch\ElasticSearchQueryBuilder.cs" />
     <Compile Include="Providers\EnumerableExtensions.cs" />
-    <Compile Include="Providers\LuceneSearch\LuceneHelper.cs" />
-    <Compile Include="Providers\LuceneSearch\LuceneQueryHelper.cs" />
+    <Compile Include="Providers\LuceneSearch\LuceneSearchHelper.cs" />
     <Compile Include="Providers\LuceneSearch\LuceneSearchProvider.cs" />
     <Compile Include="Providers\LuceneSearch\LuceneSearchQuery.cs" />
     <Compile Include="Providers\LuceneSearch\LuceneSearchQueryBuilder.cs" />
