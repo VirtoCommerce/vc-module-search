@@ -294,6 +294,57 @@ namespace VirtoCommerce.SearchModule.Test
             Assert.Equal(expectedDocumentsCount, results.TotalCount);
         }
 
+
+        [Theory]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
+        [InlineData("Azure")]
+        public void CanFilterByDate(string providerType)
+        {
+            var provider = GetSearchProvider(providerType, _scope);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
+
+            var criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0 };
+            criteria.Apply(CreateRangeFilter("Date", "2017-04-23T15:24:31.180Z", "2017-04-28T15:24:31.180Z", true, true));
+            var results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(6, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0 };
+            criteria.Apply(CreateRangeFilter("Date", "2017-04-23T15:24:31.180Z", "2017-04-28T15:24:31.180Z", false, true));
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(5, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0 };
+            criteria.Apply(CreateRangeFilter("Date", "2017-04-23T15:24:31.180Z", "2017-04-28T15:24:31.180Z", true, false));
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(5, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0 };
+            criteria.Apply(CreateRangeFilter("Date", "2017-04-23T15:24:31.180Z", "2017-04-28T15:24:31.180Z", false, false));
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(4, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0 };
+            criteria.Apply(CreateRangeFilter("Date", null, "2017-04-28T15:24:31.180Z", true, true));
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(6, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0 };
+            criteria.Apply(CreateRangeFilter("Date", null, "2017-04-28T15:24:31.180Z", true, false));
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(5, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0 };
+            criteria.Apply(CreateRangeFilter("Date", "2017-04-23T15:24:31.180Z", null, true, false));
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(6, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0 };
+            criteria.Apply(CreateRangeFilter("Date", "2017-04-23T15:24:31.180Z", null, false, false));
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(5, results.TotalCount);
+        }
+
         [Theory]
         [InlineData("Lucene")]
         [InlineData("Elastic")]

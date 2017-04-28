@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model;
+using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
 using VirtoCommerce.SearchModule.Data.Providers.AzureSearch;
@@ -54,6 +55,24 @@ namespace VirtoCommerce.SearchModule.Test
                 throw new ArgumentException($"Search provider '{searchProvider}' is not supported", nameof(searchProvider));
 
             return provider;
+        }
+
+        protected virtual ISearchFilter CreateRangeFilter(string key, string lower, string upper, bool includeLower, bool includeUpper)
+        {
+            return new RangeFilter
+            {
+                Key = key,
+                Values = new[]
+                {
+                    new RangeFilterValue
+                    {
+                        Lower = lower,
+                        Upper = upper,
+                        IncludeLower = includeLower,
+                        IncludeUpper = includeUpper,
+                    }
+                },
+            };
         }
 
         protected long GetFacetCount(ISearchResults<DocumentDictionary> results, string fieldName, string facetKey)
