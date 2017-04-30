@@ -62,15 +62,25 @@ public interface ISearchPhraseListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitKeyword([NotNull] SearchPhraseParser.KeywordContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="SearchPhraseParser.filter"/>.
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.attributeFilter"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterFilter([NotNull] SearchPhraseParser.FilterContext context);
+	void EnterAttributeFilter([NotNull] SearchPhraseParser.AttributeFilterContext context);
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="SearchPhraseParser.filter"/>.
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.attributeFilter"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitFilter([NotNull] SearchPhraseParser.FilterContext context);
+	void ExitAttributeFilter([NotNull] SearchPhraseParser.AttributeFilterContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.rangeFilter"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterRangeFilter([NotNull] SearchPhraseParser.RangeFilterContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.rangeFilter"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitRangeFilter([NotNull] SearchPhraseParser.RangeFilterContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="SearchPhraseParser.fieldName"/>.
 	/// </summary>
@@ -101,5 +111,65 @@ public interface ISearchPhraseListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitRangeFilterValue([NotNull] SearchPhraseParser.RangeFilterValueContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.range"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterRange([NotNull] SearchPhraseParser.RangeContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.range"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitRange([NotNull] SearchPhraseParser.RangeContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.rangeStart"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterRangeStart([NotNull] SearchPhraseParser.RangeStartContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.rangeStart"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitRangeStart([NotNull] SearchPhraseParser.RangeStartContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.rangeEnd"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterRangeEnd([NotNull] SearchPhraseParser.RangeEndContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.rangeEnd"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitRangeEnd([NotNull] SearchPhraseParser.RangeEndContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.lower"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterLower([NotNull] SearchPhraseParser.LowerContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.lower"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitLower([NotNull] SearchPhraseParser.LowerContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.upper"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterUpper([NotNull] SearchPhraseParser.UpperContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.upper"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitUpper([NotNull] SearchPhraseParser.UpperContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.string"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterString([NotNull] SearchPhraseParser.StringContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.string"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitString([NotNull] SearchPhraseParser.StringContext context);
 }
 } // namespace VirtoCommerce.SearchModule.Data.Services.SearchPhraseParsing.Antlr

@@ -72,17 +72,29 @@ public partial class SearchPhraseBaseListener : ISearchPhraseListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitKeyword([NotNull] SearchPhraseParser.KeywordContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="SearchPhraseParser.filter"/>.
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.attributeFilter"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterFilter([NotNull] SearchPhraseParser.FilterContext context) { }
+	public virtual void EnterAttributeFilter([NotNull] SearchPhraseParser.AttributeFilterContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="SearchPhraseParser.filter"/>.
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.attributeFilter"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitFilter([NotNull] SearchPhraseParser.FilterContext context) { }
+	public virtual void ExitAttributeFilter([NotNull] SearchPhraseParser.AttributeFilterContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.rangeFilter"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterRangeFilter([NotNull] SearchPhraseParser.RangeFilterContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.rangeFilter"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitRangeFilter([NotNull] SearchPhraseParser.RangeFilterContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="SearchPhraseParser.fieldName"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -119,6 +131,78 @@ public partial class SearchPhraseBaseListener : ISearchPhraseListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitRangeFilterValue([NotNull] SearchPhraseParser.RangeFilterValueContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.range"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterRange([NotNull] SearchPhraseParser.RangeContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.range"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitRange([NotNull] SearchPhraseParser.RangeContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.rangeStart"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterRangeStart([NotNull] SearchPhraseParser.RangeStartContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.rangeStart"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitRangeStart([NotNull] SearchPhraseParser.RangeStartContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.rangeEnd"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterRangeEnd([NotNull] SearchPhraseParser.RangeEndContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.rangeEnd"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitRangeEnd([NotNull] SearchPhraseParser.RangeEndContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.lower"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterLower([NotNull] SearchPhraseParser.LowerContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.lower"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitLower([NotNull] SearchPhraseParser.LowerContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.upper"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterUpper([NotNull] SearchPhraseParser.UpperContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.upper"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitUpper([NotNull] SearchPhraseParser.UpperContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.string"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterString([NotNull] SearchPhraseParser.StringContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.string"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitString([NotNull] SearchPhraseParser.StringContext context) { }
 
 	/// <inheritdoc/>
 	/// <remarks>The default implementation does nothing.</remarks>

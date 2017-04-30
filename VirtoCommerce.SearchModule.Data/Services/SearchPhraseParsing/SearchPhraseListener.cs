@@ -18,73 +18,88 @@ namespace VirtoCommerce.SearchModule.Data.Services.SearchPhraseParsing
         public override void ExitKeyword(Antlr.SearchPhraseParser.KeywordContext context)
         {
             base.ExitKeyword(context);
-            Keywords.Add(context.GetText());
+            Keywords.Add(Unescape(context.GetText()));
         }
 
-        public override void ExitFilter(Antlr.SearchPhraseParser.FilterContext context)
+        public override void ExitAttributeFilter(Antlr.SearchPhraseParser.AttributeFilterContext context)
         {
-            base.ExitFilter(context);
+            base.ExitAttributeFilter(context);
 
-            if (context.ChildCount == 3)
+            var fieldNameContext = context.GetChild<Antlr.SearchPhraseParser.FieldNameContext>(0);
+            var attributeValueContext = context.GetChild<Antlr.SearchPhraseParser.AttributeFilterValueContext>(0);
+
+            if (fieldNameContext != null && attributeValueContext != null)
             {
-                var fieldName = context.children[0].GetText();
+                var values = attributeValueContext.children.OfType<Antlr.SearchPhraseParser.StringContext>().ToArray();
 
-                ISearchFilter searchFilter = null;
-
-                var attributeValueContext = context.GetChild<Antlr.SearchPhraseParser.AttributeFilterValueContext>(0);
-                var rangeValueContext = context.GetChild<Antlr.SearchPhraseParser.RangeFilterValueContext>(0);
-
-                if (attributeValueContext != null)
+                var filter = new AttributeFilter
                 {
-                    var value = attributeValueContext.GetText();
-                    searchFilter = new AttributeFilter
-                    {
-                        Key = fieldName,
-                        Values = new[] { new AttributeFilterValue { Value = value } },
-                    };
-                }
-                else if (rangeValueContext != null)
-                {
-                    if (fieldName.EqualsInvariant("price") || fieldName.StartsWith("price_", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var nameParts = fieldName.Split('_');
-                        searchFilter = new PriceRangeFilter
-                        {
-                            Currency = nameParts.Length > 1 ? nameParts[1] : null,
-                            Values = new[] { GetRangeFilterValue(rangeValueContext) },
-                        };
-                    }
-                    else
-                    {
-                        searchFilter = new RangeFilter
-                        {
-                            Key = fieldName,
-                            Values = new[] { GetRangeFilterValue(rangeValueContext) },
-                        };
-                    }
-                }
+                    Key = Unescape(fieldNameContext.GetText()),
+                    Values = values.Select(v => new AttributeFilterValue { Value = Unescape(v.GetText()) }).ToArray(),
+                };
 
-                if (searchFilter != null)
-                {
-                    Filters.Add(searchFilter);
-                }
+                Filters.Add(filter);
             }
         }
 
-        protected virtual RangeFilterValue GetRangeFilterValue(Antlr.SearchPhraseParser.RangeFilterValueContext context)
+        public override void ExitRangeFilter(Antlr.SearchPhraseParser.RangeFilterContext context)
         {
-            var value = context.GetText();
-            var bounds = value.Split(_rangeValueDelimiter, StringSplitOptions.None)
-                .Select(b => b.Trim(' ', '[', ']', '(', ')'))
-                .ToArray();
+            base.ExitRangeFilter(context);
+
+            var fieldNameContext = context.GetChild<Antlr.SearchPhraseParser.FieldNameContext>(0);
+            var rangeValueContext = context.GetChild<Antlr.SearchPhraseParser.RangeFilterValueContext>(0);
+
+            if (fieldNameContext != null && rangeValueContext != null)
+            {
+                var values = rangeValueContext.children
+                    .OfType<Antlr.SearchPhraseParser.RangeContext>()
+                    .Select(GetRangeFilterValue)
+                    .ToArray();
+
+                ISearchFilter filter;
+
+                var fieldName = Unescape(fieldNameContext.GetText());
+                if (fieldName.EqualsInvariant("price") || fieldName.StartsWith("price_", StringComparison.OrdinalIgnoreCase))
+                {
+                    var nameParts = fieldName.Split('_');
+                    filter = new PriceRangeFilter
+                    {
+                        Currency = nameParts.Length > 1 ? nameParts[1] : null,
+                        Values = values,
+                    };
+                }
+                else
+                {
+                    filter = new RangeFilter
+                    {
+                        Key = fieldName,
+                        Values = values,
+                    };
+                }
+
+                Filters.Add(filter);
+            }
+        }
+
+        protected virtual RangeFilterValue GetRangeFilterValue(Antlr.SearchPhraseParser.RangeContext context)
+        {
+            var lower = context.GetChild<Antlr.SearchPhraseParser.LowerContext>(0)?.GetText();
+            var upper = context.GetChild<Antlr.SearchPhraseParser.UpperContext>(0)?.GetText();
+            var rangeStart = context.GetChild<Antlr.SearchPhraseParser.RangeStartContext>(0)?.GetText();
+            var rangeEnd = context.GetChild<Antlr.SearchPhraseParser.RangeEndContext>(0)?.GetText();
 
             return new RangeFilterValue
             {
-                Lower = bounds.First(),
-                Upper = bounds.Last(),
-                IncludeLower = value.StartsWith("["),
-                IncludeUpper = value.EndsWith("]"),
+                Lower = Unescape(lower),
+                Upper = Unescape(upper),
+                IncludeLower = rangeStart.EqualsInvariant("["),
+                IncludeUpper = rangeEnd.EqualsInvariant("]"),
             };
+        }
+
+        protected virtual string Unescape(string value)
+        {
+            return string.IsNullOrEmpty(value) ? value : value.Trim('"').Replace("\\r", "\r").Replace("\\n", "\n").Replace("\\t", "\t").Replace("\\\\", "\\");
         }
     }
 }
