@@ -11,96 +11,88 @@ namespace VirtoCommerce.SearchModule.Data.Services
 {
     public class SearchIndexController : ISearchIndexController
     {
-        private readonly ISearchIndexBuilder[] _indexBuilders;
-        private readonly ISettingsManager _settingManager;
+        private readonly ISettingsManager _settingsManager;
         private readonly ISearchProvider _searchProvider;
+        private readonly ISearchIndexBuilder[] _indexBuilders;
 
-        public SearchIndexController(ISettingsManager settingManager, ISearchProvider searchProvider, params ISearchIndexBuilder[] indexBuilders)
+        public SearchIndexController(ISettingsManager settingsManager, ISearchProvider searchProvider, ISearchIndexBuilder[] indexBuilders)
         {
-            _settingManager = settingManager;
-            _indexBuilders = indexBuilders;
+            _settingsManager = settingsManager;
             _searchProvider = searchProvider;
+            _indexBuilders = indexBuilders;
         }
 
-        #region ISearchIndexController
-
-        public void RemoveIndex(string scope, string documentType, string[] documentsIds = null)
+        public void RemoveIndex(string scope, string documentType, string[] documentIds = null)
         {
             if (scope == null)
-            {
-                throw new ArgumentNullException("scope");
-            }
-            if (!documentsIds.IsNullOrEmpty() && string.IsNullOrEmpty(documentType))
-            {
-                throw new ArgumentNullException("documentType");
-            }
+                throw new ArgumentNullException(nameof(scope));
+            if (string.IsNullOrEmpty(documentType) && !documentIds.IsNullOrEmpty())
+                throw new ArgumentNullException(nameof(documentType));
 
-            var indexBuilders = string.IsNullOrEmpty(documentType) ? _indexBuilders : _indexBuilders.Where(b => b.DocumentType.EqualsInvariant(documentType));
             // if documentType not specified delete index so mapping is also removed
-            if (documentsIds.IsNullOrEmpty())
+            if (documentIds.IsNullOrEmpty())
             {
                 _searchProvider.RemoveAll(scope, documentType ?? string.Empty);
             }
 
+            var indexBuilders = string.IsNullOrEmpty(documentType) ? _indexBuilders : _indexBuilders.Where(b => b.DocumentType.EqualsInvariant(documentType));
+
             foreach (var indexBuilder in indexBuilders)
             {
-                if(documentsIds.IsNullOrEmpty())
+                if (documentIds.IsNullOrEmpty())
                 {
                     indexBuilder.RemoveAll(scope);
                     var lastBuildTimeName = string.Format(CultureInfo.InvariantCulture, "VirtoCommerce.Search.LastBuildTime_{0}_{1}", scope, indexBuilder.DocumentType);
-                    _settingManager.SetValue(lastBuildTimeName, (string)null);
+                    _settingsManager.SetValue(lastBuildTimeName, (string)null);
                 }
                 else
                 {
-                    indexBuilder.RemoveDocuments(scope, documentsIds);
+                    indexBuilder.RemoveDocuments(scope, documentIds);
                 }
-                        
             }
-
         }
 
-        public void BuildIndex(string scope, string documentType, Action<IndexProgressInfo> progressCallback, string[] documentsIds = null)
+        public void BuildIndex(string scope, string documentType, Action<IndexProgressInfo> progressCallback, string[] documentIds = null)
         {
             if (scope == null)
-            {
-                throw new ArgumentNullException("scope");
-            }
-            if(!documentsIds.IsNullOrEmpty() && string.IsNullOrEmpty(documentType))
-            {
-                throw new ArgumentNullException("documentType");
-            }        
+                throw new ArgumentNullException(nameof(scope));
+            if (string.IsNullOrEmpty(documentType) && !documentIds.IsNullOrEmpty())
+                throw new ArgumentNullException(nameof(documentType));
+
             var progressInfo = new IndexProgressInfo();
-        
+
             var nowUtc = DateTime.UtcNow;
             var validBuilders = string.IsNullOrEmpty(documentType) ? _indexBuilders : _indexBuilders.Where(b => b.DocumentType.EqualsInvariant(documentType)).ToArray();
-          
+
             foreach (var indexBuilder in validBuilders)
             {
                 try
                 {
                     var partitions = new List<Partition>();
                     var lastBuildTimeName = string.Format(CultureInfo.InvariantCulture, "VirtoCommerce.Search.LastBuildTime_{0}_{1}", scope, indexBuilder.DocumentType);
-                    var lastBuildTime = _settingManager.GetValue(lastBuildTimeName, DateTime.MinValue);
+                    var lastBuildTime = _settingsManager.GetValue(lastBuildTimeName, DateTime.MinValue);
 
-                    progressInfo.Description = string.Format("{0}: index size evaluation {1}", indexBuilder.DocumentType, lastBuildTime == DateTime.MinValue ? string.Empty : string.Format("Since from {0:MM/dd/yyyy hh:mm:ss}", lastBuildTime));
+                    progressInfo.Description = $"{indexBuilder.DocumentType}: index size evaluation {(lastBuildTime == DateTime.MinValue ? string.Empty : $"Since from {lastBuildTime:MM/dd/yyyy hh:mm:ss}")}";
                     progressCallback(progressInfo);
 
-                    if (!documentsIds.IsNullOrEmpty())
+                    if (!documentIds.IsNullOrEmpty())
                     {
-                        var partition = new Partition(OperationType.Index, documentsIds);
+                        var partition = new Partition(OperationType.Index, documentIds);
                         partitions.Add(partition);
                     }
                     else
                     {
                         partitions.AddRange(indexBuilder.GetPartitions(false, lastBuildTime, nowUtc));
                     }
-                    var total = partitions.Sum(x => x.Keys.Count());
+
+                    var total = partitions.Sum(x => x.Keys.Length);
                     var processedCount = 0;
-                    progressInfo.TotalCount += total; 
+                    progressInfo.TotalCount += total;
+
                     foreach (var partition in partitions)
                     {
-                        processedCount += partition.Keys.Count();
-                        progressInfo.Description = string.Format("{0} : index documents {1} of {2}", indexBuilder.DocumentType, processedCount, total);
+                        processedCount += partition.Keys.Length;
+                        progressInfo.Description = $"{indexBuilder.DocumentType} : index documents {processedCount} of {total}";
                         progressCallback(progressInfo);
 
                         // create index docs
@@ -110,21 +102,21 @@ namespace VirtoCommerce.SearchModule.Data.Services
                         var docsArray = docs.ToArray();
                         indexBuilder.PublishDocuments(scope, docsArray);
                     }
-                    var lastBuildTime2 = _settingManager.GetValue(lastBuildTimeName, DateTime.MinValue);
+
+                    var lastBuildTime2 = _settingsManager.GetValue(lastBuildTimeName, DateTime.MinValue);
                     if (lastBuildTime2 >= lastBuildTime)
                     {
-                        _settingManager.SetValue(lastBuildTimeName, nowUtc);
+                        _settingsManager.SetValue(lastBuildTimeName, nowUtc);
                     }
+
                     progressInfo.ProcessedCount += processedCount;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     progressInfo.Errors.Add(ex.ToString());
                     progressCallback(progressInfo);
                 }
             }
-      
         }
-        #endregion
     }
 }
