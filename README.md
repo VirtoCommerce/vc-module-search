@@ -47,6 +47,65 @@ This provider stores documents in a local file system.
 * **server** is a virtual or physical path to the root directory where indexed documents are stored.
 * **scope** is a name of the index. In fact, this is the name of a subdirectory inside the root directory which can contain multiple indexes.
 
+# Search criteria preprocessors
+Before building a search query each search provider passes search criteria to several search criteria preprocessors, which can modify the original search criteria. This module registers the preprocessor which parses the `ISearchCriteria.SearchPhrase` string and converts any found filters to real filters which then are added to the `ISearchCriteria.CurrentFilters` collection. Every found filter is removed from the search phrase.
+
+## Search phrase syntax
+The search phrase can contain keywords, attribute filters, range filters and price range filters.
+
+### Keyword
+Keyword is not converted to a filter and can be a simple string or a quoted string.
+* Simple string: any characters, except the following: `space`, `tab`, `"`, `:`, `,`, `[`, `]`, `(`, `)`
+* Quoted string: any characters enclosed in double quotes. The double quote character inside the string can be escaped as `\"`. Other supported escape sequences are `\\`, `\r`, `\n`, '\t`.
+
+Examples:
+```
+simple_string
+"quoted \" \r \n \t \\ string"
+```
+
+### Attribute filter
+Attribute filter is defined as a field name followed by a colon and one or more field values separated with comma:
+
+`field` `:` `value1` `,` `value2` ... `,` `valueN`
+
+For field name and values the same rules apply as for keywords.
+
+Examples:
+```
+color:red
+color:green,"light blue"
+"screen size":5.5,6
+date:"2017-01-01T00:00:00.000Z"
+```
+
+### Range filter
+Range filter is defined as a field name followed by a colon and one or more ranges separated with comma.
+Range is defined as two range bounds separated by ` TO ` and enclosed in square brackets or parenthesis.
+Square bracket includes the range bound value and a parenthesis excludes it. You can mix square brackets and parenthesis in the same range. One of the bounds can be omitted.
+
+`field` `:` `[lower1 TO upper1]` `,` `(lower2 TO upper2)` ... `,` `rangeN`
+
+For field name and range bounds the same rules apply as for keywords.
+
+Examples:
+```
+size:[5 TO 10]
+size:[TO 10),(20 TO]
+"screen size":(5.5 TO 6]
+date:["2017-01-01T00:00:00.000Z" TO "2017-12-31T23:59:59.999Z"]
+```
+
+### Price range filter
+Price range filter is a range filter which has a field name `price` and numeric range bounds. Also, the field name can contain currency name separated from `price` with underscore.
+
+Examples:
+```
+price:[TO 100)
+price:[TO 100),[500 TO]
+price_usd:[100 TO 500)
+```
+
 # Available resources
 * [VirtoCommerce.SearchModule.Core](https://www.nuget.org/packages/VirtoCommerce.SearchModule.Core) - a NuGet package with module related abstractions.
 * [VirtoCommerce.SearchModule.Data](https://www.nuget.org/packages/VirtoCommerce.SearchModule.Data) - a NuGet package with module related service implementations.
