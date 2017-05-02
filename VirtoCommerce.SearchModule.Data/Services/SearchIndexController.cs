@@ -22,14 +22,14 @@ namespace VirtoCommerce.SearchModule.Data.Services
             _indexBuilders = indexBuilders;
         }
 
-        public void RemoveIndex(string scope, string documentType, string[] documentIds = null)
+        public virtual void RemoveIndex(string scope, string documentType, string[] documentIds = null)
         {
             if (scope == null)
                 throw new ArgumentNullException(nameof(scope));
             if (string.IsNullOrEmpty(documentType) && !documentIds.IsNullOrEmpty())
                 throw new ArgumentNullException(nameof(documentType));
 
-            // if documentType not specified delete index so mapping is also removed
+            // If documentType is not specified, delete index so mapping is also removed
             if (documentIds.IsNullOrEmpty())
             {
                 _searchProvider.RemoveAll(scope, documentType ?? string.Empty);
@@ -52,7 +52,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             }
         }
 
-        public void BuildIndex(string scope, string documentType, Action<IndexProgressInfo> progressCallback, string[] documentIds = null)
+        public virtual void BuildIndex(string scope, string documentType, Action<IndexProgressInfo> progressCallback, string[] documentIds = null)
         {
             if (scope == null)
                 throw new ArgumentNullException(nameof(scope));
