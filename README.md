@@ -1,9 +1,8 @@
 ﻿# VirtoCommerce.Search
-VirtoCommerce.Search module provides indexed search functionality with Lucene and ElasticSearch engines.
-Key features:
-* Lucene search engine support
-* ElasticSearch engine support
-* Microsoft Azure support
+VirtoCommerce.Search module defines common abstractions for indexed search functionality and contains implementations for the following search engines:
+* Lucene
+* Elasticsearch
+* Azure Search
 
 ![image](https://cloud.githubusercontent.com/assets/5801549/15715109/f338fc1a-2825-11e6-84a6-3c437274a51c.png)
 
@@ -49,6 +48,11 @@ This provider stores documents in a local file system.
 
 # Search criteria preprocessors
 Before building a search query each search provider passes search criteria to several search criteria preprocessors, which can modify the original search criteria. This module registers the preprocessor which parses the `ISearchCriteria.SearchPhrase` string and converts any found filters to real filters which then are added to the `ISearchCriteria.CurrentFilters` collection. Every found filter is removed from the search phrase.
+
+Preprocessors should be registered in the `IModule.Initialize()` method:
+```
+_container.RegisterType<ISearchCriteriaPreprocessor, PhraseSearchCriteriaPreprocessor>(nameof(PhraseSearchCriteriaPreprocessor));
+```
 
 ## Search phrase syntax
 The search phrase can contain keywords, attribute filters, range filters and price range filters.
