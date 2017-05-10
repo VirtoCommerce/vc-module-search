@@ -62,6 +62,7 @@ namespace VirtoCommerce.SearchModule.Test
         protected ISettingsManager GetSettingsManager()
         {
             var mock = new Mock<ISettingsManager>();
+            mock.Setup(s => s.GetValue("VirtoCommerce.Search.Elasticsearch.IndexTotalFieldsLimit", 1000)).Returns(1000);
             return mock.Object;
         }
 
