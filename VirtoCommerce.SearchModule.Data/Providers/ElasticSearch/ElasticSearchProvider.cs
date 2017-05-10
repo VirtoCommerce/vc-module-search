@@ -370,15 +370,19 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
         protected virtual void CreateIndex(string indexName, string documentType)
         {
+            Client.CreateIndex(indexName, i => i.Settings(s => SetupIndexSettings(s, documentType)));
+        }
+
+        protected virtual IndexSettingsDescriptor SetupIndexSettings(IndexSettingsDescriptor settings, string documentType)
+        {
             // https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html#mapping-limit-settings
             var fieldsLimit = _settingsManager.GetValue("VirtoCommerce.Search.Elasticsearch.IndexTotalFieldsLimit", 1000);
 
-            Client.CreateIndex(indexName, i => i
-                .Settings(s => s
-                    .Setting("index.mapping.total_fields.limit", fieldsLimit)
-                    .Analysis(a => a
-                        .TokenFilters(tokenFilters => SetupTokenFilters(tokenFilters, documentType))
-                        .Analyzers(analyzers => SetupAnalyzers(analyzers, documentType)))));
+            return settings
+                .Setting("index.mapping.total_fields.limit", fieldsLimit)
+                .Analysis(a => a
+                    .TokenFilters(tokenFilters => SetupTokenFilters(tokenFilters, documentType))
+                    .Analyzers(analyzers => SetupAnalyzers(analyzers, documentType)));
         }
 
         protected virtual AnalyzersDescriptor SetupAnalyzers(AnalyzersDescriptor analyzers, string documentType)
