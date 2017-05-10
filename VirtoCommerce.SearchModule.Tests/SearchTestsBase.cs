@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using Moq;
 using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Filters;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
@@ -38,7 +40,7 @@ namespace VirtoCommerce.SearchModule.Test
 
                 var connection = new SearchConnection(elasticsearchHost, scope);
                 var queryBuilder = new ElasticSearchQueryBuilder() as ISearchQueryBuilder;
-                provider = new ElasticSearchProvider(new[] { queryBuilder }, connection, searchCriteriaPreprocessors) { EnableTrace = true };
+                provider = new ElasticSearchProvider(connection, searchCriteriaPreprocessors, new[] { queryBuilder }, GetSettingsManager()) { EnableTrace = true };
             }
 
             if (searchProvider == "Azure")
@@ -55,6 +57,12 @@ namespace VirtoCommerce.SearchModule.Test
                 throw new ArgumentException($"Search provider '{searchProvider}' is not supported", nameof(searchProvider));
 
             return provider;
+        }
+
+        protected ISettingsManager GetSettingsManager()
+        {
+            var mock = new Mock<ISettingsManager>();
+            return mock.Object;
         }
 
         protected virtual ISearchFilter CreateRangeFilter(string key, string lower, string upper, bool includeLower, bool includeUpper)

@@ -67,6 +67,18 @@
                 </description>
             </setting>
         </group>
+        <group name="Search|Elasticsearch">
+            <setting>
+                <name>VirtoCommerce.Search.Elasticsearch.IndexTotalFieldsLimit</name>
+                <valueType>integer</valueType>
+                <defaultValue>1000</defaultValue>
+                <title>Maximum number of fields in an index</title>
+                <description>
+                    index.mapping.total_fields.limit
+                    https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html#mapping-limit-settings
+                </description>
+            </setting>
+        </group>
     </settings>
 
     <permissions>

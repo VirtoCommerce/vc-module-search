@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Nest;
+using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
@@ -22,6 +23,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
         private readonly ISearchConnection _connection;
         private readonly ISearchCriteriaPreprocessor[] _searchCriteriaPreprocessors;
+        private readonly ISettingsManager _settingsManager;
         private readonly Dictionary<string, List<IDocument>> _pendingDocuments = new Dictionary<string, List<IDocument>>();
         private readonly Dictionary<string, Properties<IProperties>> _mappings = new Dictionary<string, Properties<IProperties>>();
 
@@ -106,16 +108,18 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
         #endregion
 
+        [Obsolete("Will be removed in one of the next versions")]
         public ElasticSearchProvider()
         {
             Init();
         }
 
-        public ElasticSearchProvider(ISearchQueryBuilder[] queryBuilders, ISearchConnection connection, ISearchCriteriaPreprocessor[] searchCriteriaPreprocessors)
+        public ElasticSearchProvider(ISearchConnection connection, ISearchCriteriaPreprocessor[] searchCriteriaPreprocessors, ISearchQueryBuilder[] queryBuilders, ISettingsManager settingsManager)
         {
-            QueryBuilders = queryBuilders;
             _connection = connection;
             _searchCriteriaPreprocessors = searchCriteriaPreprocessors;
+            QueryBuilders = queryBuilders;
+            _settingsManager = settingsManager;
             Init();
 
 #if DEBUG
@@ -366,8 +370,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
         protected virtual void CreateIndex(string indexName, string documentType)
         {
+            // https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html#mapping-limit-settings
+            var fieldsLimit = _settingsManager.GetValue("VirtoCommerce.Search.Elasticsearch.IndexTotalFieldsLimit", 1000);
+
             Client.CreateIndex(indexName, i => i
                 .Settings(s => s
+                    .Setting("index.mapping.total_fields.limit", fieldsLimit)
                     .Analysis(a => a
                         .TokenFilters(tokenFilters => SetupTokenFilters(tokenFilters, documentType))
                         .Analyzers(analyzers => SetupAnalyzers(analyzers, documentType)))));
