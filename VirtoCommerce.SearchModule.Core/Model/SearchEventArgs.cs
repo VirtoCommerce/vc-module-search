@@ -2,6 +2,7 @@
 
 namespace VirtoCommerce.SearchModule.Core.Model
 {
+    [Obsolete("Will be removed in one of the next versions")]
     public class SearchEventArgs : EventArgs
     {
         private string _Message = String.Empty;

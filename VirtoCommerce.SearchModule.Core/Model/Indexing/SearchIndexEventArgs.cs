@@ -1,5 +1,8 @@
-﻿namespace VirtoCommerce.SearchModule.Core.Model.Indexing
+﻿using System;
+
+namespace VirtoCommerce.SearchModule.Core.Model.Indexing
 {
+    [Obsolete("Will be removed in one of the next versions")]
     public class SearchIndexEventArgs : SearchEventArgs
     {
         private double _CompletePercentage = 0;
@@ -33,5 +36,5 @@
             this.Message = message;
             this.CompletedPercentage = percentage;
         }
-    }    
+    }
 }

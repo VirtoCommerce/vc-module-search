@@ -2,6 +2,7 @@
 
 namespace VirtoCommerce.SearchModule.Core.Model.Indexing
 {
+    [Obsolete("Will be removed in one of the next versions")]
     public class IndexNotFoundException : SearchException
     {
         /// <summary>
@@ -23,5 +24,4 @@ namespace VirtoCommerce.SearchModule.Core.Model.Indexing
         {
         }
     }
-
 }
