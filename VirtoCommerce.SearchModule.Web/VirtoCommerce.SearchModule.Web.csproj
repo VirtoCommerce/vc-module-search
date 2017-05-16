@@ -119,6 +119,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\logo.png" />
+    <Content Include="Localizations\de.VirtoCommerce.Search.json" />
     <None Include="module.ignore" />
     <Content Include="Scripts\blades\index-detail.js" />
     <Content Include="Scripts\blades\index-detail.tpl.html" />
