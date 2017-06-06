@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using Nest;
 using VirtoCommerce.Platform.Core.Common;
@@ -9,9 +10,20 @@ using VirtoCommerce.SearchModule.Core.Model.Search;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 {
-    public class ElasticSearchHelper
+    public static class ElasticSearchHelper
     {
-        public static QueryContainer CreateQuery<T>(ISearchCriteria criteria, ISearchFilter filter)
+        public static string ToElasticFieldName(string fieldName)
+        {
+            return fieldName.ToLowerInvariant();
+        }
+
+        public static IFieldDescriptor Get(this IList<IFieldDescriptor> fields, string rawName)
+        {
+            var azureFieldName = ToElasticFieldName(rawName);
+            return fields?.FirstOrDefault(f => f.Name.EqualsInvariant(azureFieldName));
+        }
+
+        public static QueryContainer CreateQuery<T>(ISearchCriteria criteria, ISearchFilter filter, IList<IFieldDescriptor> availableFields)
             where T : class
         {
             QueryContainer result = null;
@@ -19,9 +31,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             var values = filter.GetValues();
             if (values != null)
             {
+                var field = availableFields.Get(filter.Key);
+
                 foreach (var value in values)
                 {
-                    var valueQuery = CreateQueryForValue<T>(criteria, filter, value);
+                    var valueQuery = CreateQueryForValue<T>(criteria, filter, value, field);
                     result |= valueQuery;
                 }
             }
@@ -29,16 +43,23 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             return result;
         }
 
-        public static QueryContainer CreateQueryForValue<T>(ISearchCriteria criteria, ISearchFilter filter, ISearchFilterValue value)
+        public static QueryContainer CreateQueryForValue<T>(ISearchCriteria criteria, ISearchFilter filter, ISearchFilterValue value, IFieldDescriptor field)
             where T : class
         {
             QueryContainer query = null;
 
-            var fieldName = filter.Key.ToLowerInvariant();
+            var fieldName = ToElasticFieldName(filter.Key);
 
             if (filter is AttributeFilter)
             {
-                query = new TermQuery { Field = fieldName, Value = ((AttributeFilterValue)value).Value };
+                var termValue = ((AttributeFilterValue)value).Value;
+
+                if (field?.DataType.EqualsInvariant("boolean") == true)
+                {
+                    termValue = termValue.ToLowerInvariant();
+                }
+
+                query = new TermQuery { Field = fieldName, Value = termValue };
             }
             else if (filter is RangeFilter)
             {
@@ -89,25 +110,25 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
         /// Creates the price range filter.
         /// </summary>
         /// <param name="criteria">The criteria.</param>
-        /// <param name="field">The field.</param>
+        /// <param name="fieldName">The field name.</param>
         /// <param name="currency">The currency.</param>
         /// <param name="value">The value.</param>
         /// <returns></returns>
-        public static QueryContainer CreatePriceRangeFilter<T>(ISearchCriteria criteria, string field, string currency, RangeFilterValue value)
+        public static QueryContainer CreatePriceRangeFilter<T>(ISearchCriteria criteria, string fieldName, string currency, RangeFilterValue value)
             where T : class
         {
-            return CreatePriceRangeFilterValueQuery<T>(criteria.Pricelists, 0, field, currency, value.Lower.AsDouble(), value.Upper.AsDouble(), value.IncludeLower, value.IncludeUpper);
+            return CreatePriceRangeFilterValueQuery<T>(criteria.Pricelists, 0, fieldName, currency, value.Lower.AsDouble(), value.Upper.AsDouble(), value.IncludeLower, value.IncludeUpper);
         }
 
-        public static QueryContainer CreatePriceRangeFilterValueQuery<T>(IList<string> pricelists, int index, string field, string currency, double? lower, double? upper, bool includeLower, bool includeUpper)
+        public static QueryContainer CreatePriceRangeFilterValueQuery<T>(IList<string> pricelists, int index, string fieldName, string currency, double? lower, double? upper, bool includeLower, bool includeUpper)
             where T : class
         {
             QueryContainer result = null;
 
             if (pricelists.IsNullOrEmpty())
             {
-                var fieldName = JoinNonEmptyStrings("_", field, currency).ToLowerInvariant();
-                result = CreateNumericRangeQuery<T>(fieldName, lower, upper, includeLower, includeUpper);
+                var priceFieldName = JoinNonEmptyStrings("_", fieldName, currency).ToLowerInvariant();
+                result = CreateNumericRangeQuery<T>(priceFieldName, lower, upper, includeLower, includeUpper);
             }
             else if (index < pricelists.Count)
             {
@@ -115,16 +136,16 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                 QueryContainer previousPricelistQuery = null;
                 if (index > 0)
                 {
-                    var previousFieldName = JoinNonEmptyStrings("_", field, currency, pricelists[index - 1]).ToLowerInvariant();
+                    var previousFieldName = JoinNonEmptyStrings("_", fieldName, currency, pricelists[index - 1]).ToLowerInvariant();
                     previousPricelistQuery = CreateNumericRangeQuery<T>(previousFieldName, 0, null, false, false);
                 }
 
                 // Create positive query for current pricelist
-                var currentFieldName = JoinNonEmptyStrings("_", field, currency, pricelists[index]).ToLowerInvariant();
+                var currentFieldName = JoinNonEmptyStrings("_", fieldName, currency, pricelists[index]).ToLowerInvariant();
                 var currentPricelistQuery = CreateNumericRangeQuery<T>(currentFieldName, lower, upper, includeLower, includeUpper);
 
                 // Get query for next pricelist
-                var nextPricelistQuery = CreatePriceRangeFilterValueQuery<T>(pricelists, index + 1, field, currency, lower, upper, includeLower, includeUpper);
+                var nextPricelistQuery = CreatePriceRangeFilterValueQuery<T>(pricelists, index + 1, fieldName, currency, lower, upper, includeLower, includeUpper);
 
                 result = !previousPricelistQuery & (currentPricelistQuery | nextPricelistQuery);
             }

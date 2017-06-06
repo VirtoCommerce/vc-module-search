@@ -60,15 +60,16 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
         protected virtual void AddFilters(ISearchCriteria criteria, IList<string> filters, IList<IFieldDescriptor> availableFields)
         {
-            AddIdsFilter(criteria, filters);
+            AddIdsFilter(criteria, filters, availableFields);
             AddCurrentFilters(criteria, filters, availableFields);
         }
 
-        protected virtual void AddIdsFilter(ISearchCriteria criteria, IList<string> filters)
+        protected virtual void AddIdsFilter(ISearchCriteria criteria, IList<string> filters, IList<IFieldDescriptor> availableFields)
         {
             if (criteria?.Ids != null && criteria.Ids.Any())
             {
-                var filter = GetEqualsFilterExpression(AzureSearchHelper.RawKeyFieldName, criteria.Ids, false);
+                var availableField = availableFields.Get(AzureSearchHelper.RawKeyFieldName);
+                var filter = GetEqualsFilterExpression(availableField, criteria.Ids);
                 filters.Add(filter);
             }
         }
@@ -89,7 +90,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                 }
                 else if (rangeFilter != null)
                 {
-                    expression = GetRangeFilterExpression(rangeFilter, criteria);
+                    expression = GetRangeFilterExpression(rangeFilter, criteria, availableFields);
                 }
                 else if (priceRangeFilter != null)
                 {
@@ -107,47 +108,54 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
         {
             string result;
 
-            var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key);
-            var availableField = availableFields.Get(azureFieldName);
-
+            var availableField = availableFields.Get(filter.Key);
             if (availableField != null)
             {
                 result = availableField.DataType.StartsWith("Collection(")
-                    ? GetContainsFilterExpression(filter.Key, filter.Values.Select(v => v.Value))
-                    : GetEqualsFilterExpression(filter.Key, filter.Values.Select(v => v.Value), true);
+                    ? GetContainsFilterExpression(availableField, filter.Values.Select(v => v.Value))
+                    : GetEqualsFilterExpression(availableField, filter.Values.Select(v => v.Value));
             }
             else
             {
-                result = $"{AzureSearchHelper.KeyFieldName} eq ''";
+                result = AzureSearchHelper.NonExistentFieldFilter;
             }
 
             return result;
         }
 
-        protected virtual string GetContainsFilterExpression(string rawName, IEnumerable<string> rawValues)
+        protected virtual string GetContainsFilterExpression(IFieldDescriptor availableField, IEnumerable<string> rawValues)
         {
-            var azureFieldName = AzureSearchHelper.ToAzureFieldName(rawName);
+            var azureFieldName = availableField.Name;
             var values = rawValues.Where(v => !string.IsNullOrEmpty(v)).Select(GetStringFilterValue).ToArray();
             return AzureSearchHelper.JoinNonEmptyStrings(" or ", true, values.Select(v => $"{azureFieldName}/any(v: v eq {v})").ToArray());
         }
 
-        protected virtual string GetEqualsFilterExpression(string rawName, IEnumerable<string> rawValues, bool parseValues)
+        protected virtual string GetEqualsFilterExpression(IFieldDescriptor availableField, IEnumerable<string> rawValues)
         {
-            var azureFieldName = AzureSearchHelper.ToAzureFieldName(rawName);
-            var values = rawValues.Where(v => !string.IsNullOrEmpty(v)).Select(v => GetFilterValue(v, parseValues)).ToArray();
+            var azureFieldName = availableField.Name;
+            var values = rawValues.Where(v => !string.IsNullOrEmpty(v)).Select(v => GetFilterValue(availableField, v)).ToArray();
             return AzureSearchHelper.JoinNonEmptyStrings(" or ", true, values.Select(v => $"{azureFieldName} eq {v}").ToArray());
         }
 
-        protected virtual string GetRangeFilterExpression(RangeFilter filter, ISearchCriteria criteria)
+        protected virtual string GetRangeFilterExpression(RangeFilter filter, ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
         {
-            var azureFieldName = AzureSearchHelper.ToAzureFieldName(filter.Key);
+            string result;
 
-            var expressions = filter.Values
-                .Select(v => GetRangeFilterValueExpression(v, azureFieldName))
-                .Where(e => !string.IsNullOrEmpty(e))
-                .ToArray();
+            var availableField = availableFields.Get(filter.Key);
+            if (availableField != null)
+            {
+                var expressions = filter.Values
+                    .Select(v => GetRangeFilterValueExpression(v, availableField.Name))
+                    .Where(e => !string.IsNullOrEmpty(e))
+                    .ToArray();
 
-            var result = AzureSearchHelper.JoinNonEmptyStrings(" or ", true, expressions);
+                result = AzureSearchHelper.JoinNonEmptyStrings(" or ", true, expressions);
+            }
+            else
+            {
+                result = AzureSearchHelper.NonExistentFieldFilter;
+            }
+
             return result;
         }
 
@@ -255,31 +263,24 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             return result;
         }
 
-        protected virtual string GetFilterValue(string rawValue, bool parseValue)
+        protected virtual string GetFilterValue(IFieldDescriptor availableField, string rawValue)
         {
-            string result = null;
+            string result;
 
-            if (parseValue)
+            if (availableField?.DataType == DataType.Boolean.ToString())
             {
-                DateTime dateValue;
-                long integerValue;
-                double doubleValue;
-
-                if (DateTime.TryParse(rawValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateValue))
-                {
-                    result = rawValue;
-                }
-                else if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out integerValue))
-                {
-                    result = rawValue;
-                }
-                else if (double.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out doubleValue))
-                {
-                    result = rawValue;
-                }
+                result = rawValue.ToLowerInvariant();
+            }
+            else if (availableField?.DataType != DataType.String.ToString())
+            {
+                result = rawValue;
+            }
+            else
+            {
+                result = GetStringFilterValue(rawValue);
             }
 
-            return result ?? GetStringFilterValue(rawValue);
+            return result;
         }
 
         protected virtual string GetStringFilterValue(string rawValue)

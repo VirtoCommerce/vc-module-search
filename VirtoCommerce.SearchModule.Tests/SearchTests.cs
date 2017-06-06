@@ -594,6 +594,28 @@ namespace VirtoCommerce.SearchModule.Test
         [InlineData("Lucene")]
         [InlineData("Elastic")]
         [InlineData("Azure")]
+        public void CanFilterByBool(string providerType)
+        {
+            var provider = GetSearchProvider(providerType, _scope);
+            SearchTestsHelper.CreateSampleIndex(provider, _scope, _documentType);
+
+            // Value should be case insensitive
+
+            var criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0 };
+            criteria.Apply(new AttributeFilter { Key = "HasMultiplePrices", Values = new[] { new AttributeFilterValue { Value = "tRue" } } });
+            var results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(2, results.TotalCount);
+
+            criteria = new BaseSearchCriteria(_documentType) { RecordsToRetrieve = 0 };
+            criteria.Apply(new AttributeFilter { Key = "HasMultiplePrices", Values = new[] { new AttributeFilterValue { Value = "fAlse" } } });
+            results = provider.Search<DocumentDictionary>(_scope, criteria);
+            Assert.Equal(4, results.TotalCount);
+        }
+
+        [Theory]
+        [InlineData("Lucene")]
+        [InlineData("Elastic")]
+        [InlineData("Azure")]
         public void CanGetFacets(string providerType)
         {
             var provider = GetSearchProvider(providerType, _scope);

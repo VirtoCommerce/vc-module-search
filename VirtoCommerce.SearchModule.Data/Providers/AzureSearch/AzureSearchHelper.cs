@@ -13,6 +13,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
         public const string FieldNamePrefix = "f_";
         public const string RawKeyFieldName = "__key";
         public const string KeyFieldName = FieldNamePrefix + RawKeyFieldName;
+        public const string NonExistentFieldFilter = KeyFieldName + " eq ''";
 
         public static string ToAzureFieldName(string fieldName)
         {
@@ -77,14 +78,15 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
             return azureFieldNames;
         }
 
-        public static bool Contains(this IList<IFieldDescriptor> fields, string name)
+        public static bool Contains(this IList<IFieldDescriptor> fields, string azureFieldName)
         {
-            return fields?.Get(name) != null;
+            return fields?.Any(f => f.Name.EqualsInvariant(azureFieldName)) == true;
         }
 
-        public static IFieldDescriptor Get(this IList<IFieldDescriptor> fields, string name)
+        public static IFieldDescriptor Get(this IList<IFieldDescriptor> fields, string rawName)
         {
-            return fields?.FirstOrDefault(f => f.Name.EqualsInvariant(name));
+            var azureFieldName = ToAzureFieldName(rawName);
+            return fields?.FirstOrDefault(f => f.Name.EqualsInvariant(azureFieldName));
         }
     }
 }

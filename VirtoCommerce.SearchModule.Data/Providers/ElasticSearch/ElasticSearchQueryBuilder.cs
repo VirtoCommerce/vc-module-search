@@ -21,8 +21,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             var result = new SearchRequest(scope, criteria.DocumentType)
             {
                 Query = GetQuery<T>(criteria),
-                PostFilter = GetPostFilter<T>(criteria),
-                Aggregations = GetAggregations<T>(criteria),
+                PostFilter = GetPostFilter<T>(criteria, availableFields),
+                Aggregations = GetAggregations<T>(criteria, availableFields),
                 Sort = GetSorting<T>(criteria.Sort),
                 From = criteria.StartingRecord,
                 Size = criteria.RecordsToRetrieve
@@ -154,7 +154,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             return result;
         }
 
-        protected virtual QueryContainer GetPostFilter<T>(ISearchCriteria criteria)
+        protected virtual QueryContainer GetPostFilter<T>(ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
             where T : class
         {
             QueryContainer result = null;
@@ -174,7 +174,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
                         }
                     }
 
-                    var filterQuery = ElasticSearchHelper.CreateQuery<T>(criteria, filter);
+                    var filterQuery = ElasticSearchHelper.CreateQuery<T>(criteria, filter, availableFields);
 
                     if (filterQuery != null)
                     {
@@ -188,64 +188,65 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
         #region Aggregations
 
-        protected virtual AggregationDictionary GetAggregations<T>(ISearchCriteria criteria)
+        protected virtual AggregationDictionary GetAggregations<T>(ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
             where T : class
         {
             var container = new Dictionary<string, AggregationContainer>();
 
             foreach (var filter in criteria.Filters)
             {
-                var fieldName = filter.Key.ToLowerInvariant();
+                var fieldName = ElasticSearchHelper.ToElasticFieldName(filter.Key);
+
                 var attributeFilter = filter as AttributeFilter;
                 var priceRangeFilter = filter as PriceRangeFilter;
                 var rangeFilter = filter as RangeFilter;
 
                 if (attributeFilter != null)
                 {
-                    AddAttributeAggregationQueries<T>(container, fieldName, attributeFilter.FacetSize, criteria);
+                    AddAttributeAggregationQueries<T>(container, fieldName, attributeFilter.FacetSize, criteria, availableFields);
                 }
                 else if (priceRangeFilter != null)
                 {
                     var currency = priceRangeFilter.Currency;
                     if (currency.EqualsInvariant(criteria.Currency))
                     {
-                        AddPriceAggregationQueries<T>(container, fieldName, priceRangeFilter.Values, criteria);
+                        AddPriceAggregationQueries<T>(container, fieldName, priceRangeFilter.Values, criteria, availableFields);
                     }
                 }
                 else if (rangeFilter != null)
                 {
-                    AddRangeAggregationQueries<T>(container, fieldName, rangeFilter.Values, criteria);
+                    AddRangeAggregationQueries<T>(container, fieldName, rangeFilter.Values, criteria, availableFields);
                 }
             }
 
             return container;
         }
 
-        protected virtual void AddAttributeAggregationQueries<T>(Dictionary<string, AggregationContainer> container, string field, int? facetSize, ISearchCriteria criteria)
+        protected virtual void AddAttributeAggregationQueries<T>(Dictionary<string, AggregationContainer> container, string fieldName, int? facetSize, ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
             where T : class
         {
-            var existingFilters = GetExistingFilters<T>(criteria, field);
+            var existingFilters = GetExistingFilters<T>(criteria, fieldName, availableFields);
 
-            var agg = new FilterAggregation(field)
+            var agg = new FilterAggregation(fieldName)
             {
                 Filter = new BoolQuery { Must = existingFilters },
-                Aggregations = new TermsAggregation(field)
+                Aggregations = new TermsAggregation(fieldName)
                 {
-                    Field = field,
+                    Field = fieldName,
                     Size = facetSize == null ? null : facetSize > 0 ? facetSize : int.MaxValue,
                 },
             };
 
-            container.Add(field, agg);
+            container.Add(fieldName, agg);
         }
 
-        protected virtual void AddPriceAggregationQueries<T>(Dictionary<string, AggregationContainer> container, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria)
+        protected virtual void AddPriceAggregationQueries<T>(Dictionary<string, AggregationContainer> container, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
             where T : class
         {
             if (values == null)
                 return;
 
-            var existingFilters = GetExistingFilters<T>(criteria, fieldName);
+            var existingFilters = GetExistingFilters<T>(criteria, fieldName, availableFields);
 
             foreach (var value in values)
             {
@@ -264,13 +265,13 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             }
         }
 
-        protected virtual void AddRangeAggregationQueries<T>(Dictionary<string, AggregationContainer> container, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria)
+        protected virtual void AddRangeAggregationQueries<T>(Dictionary<string, AggregationContainer> container, string fieldName, IEnumerable<RangeFilterValue> values, ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
             where T : class
         {
             if (values == null)
                 return;
 
-            var existingFilters = GetExistingFilters<T>(criteria, fieldName);
+            var existingFilters = GetExistingFilters<T>(criteria, fieldName, availableFields);
 
             foreach (var value in values)
             {
@@ -343,16 +344,16 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
             return new WildcardQuery { Field = fieldName.ToLowerInvariant(), Value = lowerCaseValue ? value.ToLowerInvariant() : value };
         }
 
-        protected virtual List<QueryContainer> GetExistingFilters<T>(ISearchCriteria criteria, string field)
+        protected virtual List<QueryContainer> GetExistingFilters<T>(ISearchCriteria criteria, string fieldName, IList<IFieldDescriptor> availableFields)
             where T : class
         {
             var existingFilters = new List<QueryContainer>();
 
             foreach (var f in criteria.CurrentFilters)
             {
-                if (!f.Key.EqualsInvariant(field))
+                if (!f.Key.EqualsInvariant(fieldName))
                 {
-                    var q = ElasticSearchHelper.CreateQuery<T>(criteria, f);
+                    var q = ElasticSearchHelper.CreateQuery<T>(criteria, f, availableFields);
                     existingFilters.Add(q);
                 }
             }

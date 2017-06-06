@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -12,9 +13,26 @@ using VirtoCommerce.SearchModule.Core.Model.Search;
 
 namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
 {
-    public class LuceneSearchHelper
+    public static class LuceneSearchHelper
     {
-        public static Filter CreateQuery(ISearchCriteria criteria, ISearchFilter filter, Occur clause)
+        public const string BooleanFieldSuffix = ".boolean";
+
+        public static string ToLuceneFieldName(string originalName)
+        {
+            return originalName.ToLowerInvariant();
+        }
+
+        public static string GetBooleanFieldName(string originalName)
+        {
+            return ToLuceneFieldName(originalName + BooleanFieldSuffix);
+        }
+
+        public static string ToStringInvariant(this object value)
+        {
+            return string.Format(CultureInfo.InvariantCulture, "{0}", value);
+        }
+
+        public static Filter CreateQuery(ISearchCriteria criteria, ISearchFilter filter, Occur clause, IList<IFieldDescriptor> availableFields)
         {
             Filter result = null;
 
@@ -24,7 +42,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 var query = new BooleanFilter();
                 foreach (var value in values)
                 {
-                    var valueQuery = CreateQueryForValue(criteria, filter, value);
+                    var valueQuery = CreateQueryForValue(criteria, filter, value, availableFields);
                     if (valueQuery != null)
                     {
                         query.Add(new FilterClause(valueQuery, Occur.SHOULD));
@@ -37,7 +55,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             return result;
         }
 
-        public static Filter CreateQueryForValue(ISearchCriteria criteria, ISearchFilter filter, ISearchFilterValue value)
+        public static Filter CreateQueryForValue(ISearchCriteria criteria, ISearchFilter filter, ISearchFilterValue value, IList<IFieldDescriptor> availableFields)
         {
             Filter result = null;
 
@@ -45,7 +63,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
 
             if (filter is AttributeFilter)
             {
-                result = CreateTermsFilter(fieldName, value as AttributeFilterValue);
+                result = CreateTermsFilter(fieldName, value as AttributeFilterValue, availableFields);
             }
             else if (filter is RangeFilter)
             {
@@ -67,13 +85,18 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         /// <summary>
         ///     Creates the query.
         /// </summary>
-        /// <param name="field">The field.</param>
+        /// <param name="fieldName">The field name.</param>
         /// <param name="value">The value.</param>
+        /// <param name="availableFields"></param>
         /// <returns></returns>
-        public static Filter CreateTermsFilter(string field, AttributeFilterValue value)
+        public static Filter CreateTermsFilter(string fieldName, AttributeFilterValue value, IList<IFieldDescriptor> availableFields)
         {
+            var booleanFieldName = GetBooleanFieldName(fieldName);
+            var booleanField = availableFields.FirstOrDefault(f => f.Name.EqualsInvariant(booleanFieldName));
+            var termValue = booleanField != null ? bool.Parse(value.Value).ToStringInvariant() : ConvertToSearchable(value.Value);
+
             var query = new TermsFilter();
-            query.AddTerm(new Term(field, ConvertToSearchable(value.Value)));
+            query.AddTerm(new Term(fieldName, termValue));
             return query;
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web.Hosting;
@@ -241,7 +242,9 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 var dir = FSDirectory.Open(directoryInfo);
                 var searcher = new IndexSearcher(dir);
 
-                var q = (LuceneSearchQuery)GetQueryBuilder(criteria).BuildQuery<T>(scope, criteria, null);
+                var reader = searcher.IndexReader;
+                var availableFields = GetAvailableFields(reader);
+                var q = (LuceneSearchQuery)GetQueryBuilder(criteria).BuildQuery<T>(scope, criteria, availableFields);
 
                 // filter out empty value
                 var filter = q.Filter.ToString().Equals("BooleanFilter()") ? null : q.Filter;
@@ -277,13 +280,22 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                     throw new SearchException("Search exception", ex);
                 }
 
-                result = new LuceneSearchResults<T>(searcher, searcher.IndexReader, docs, criteria, query) as ISearchResults<T>;
+                result = new LuceneSearchResults<T>(searcher, reader, docs, criteria, query, availableFields) as ISearchResults<T>;
 
                 // Cleanup here
-                searcher.IndexReader.Dispose();
+                reader.Dispose();
                 searcher.Dispose();
             }
 
+            return result;
+        }
+
+
+        protected virtual IList<IFieldDescriptor> GetAvailableFields(IndexReader reader)
+        {
+            var result = reader.GetFieldNames(IndexReader.FieldOption.ALL)
+                .Select(f => new FieldDescriptor { Name = f } as IFieldDescriptor)
+                .ToArray();
             return result;
         }
 
@@ -321,6 +333,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 return;
             }
 
+            var fieldName = LuceneSearchHelper.ToLuceneFieldName(field.Name);
             var store = Field.Store.YES;
             var index = Field.Index.NOT_ANALYZED;
 
@@ -338,7 +351,6 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 index = Field.Index.NO;
             }
 
-            var fieldName = field.Name.ToLowerInvariant();
             var isIndexed = !field.ContainsAttribute(IndexType.No);
 
             if (fieldName == "__key")
@@ -360,16 +372,18 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                     }
                 }
             }
-            else if (field.Value is decimal) // parse prices
+            else if (field.Value is bool)
             {
+                var booleanFieldName = LuceneSearchHelper.GetBooleanFieldName(field.Name);
+
                 foreach (var value in field.Values)
                 {
-                    var numericField = new NumericField(fieldName, store, index != Field.Index.NO);
-                    numericField.SetDoubleValue(double.Parse(value.ToString()));
-                    doc.Add(numericField);
+                    var stringValue = value.ToStringInvariant();
+                    doc.Add(new Field(fieldName, stringValue, store, index));
+                    doc.Add(new Field(booleanFieldName, stringValue, Field.Store.NO, Field.Index.NOT_ANALYZED));
                 }
             }
-            else if (field.Value is DateTime) // parse dates
+            else if (field.Value is DateTime)
             {
                 foreach (var value in field.Values)
                 {
@@ -378,16 +392,17 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                     doc.Add(numericField);
                 }
             }
-            else // try detecting the type
+            else
             {
-                // TODO: instead of auto detecting, use meta data information
                 decimal t;
                 if (decimal.TryParse(field.Value.ToString(), out t))
                 {
                     foreach (var value in field.Values)
                     {
+                        var stringValue = value.ToStringInvariant();
+
                         var numericField = new NumericField(fieldName, store, index != Field.Index.NO);
-                        numericField.SetDoubleValue(double.Parse(value.ToString()));
+                        numericField.SetDoubleValue(double.Parse(stringValue, NumberStyles.Float, CultureInfo.InvariantCulture));
                         doc.Add(numericField);
                     }
                 }

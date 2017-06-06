@@ -78,6 +78,9 @@ namespace VirtoCommerce.SearchModule.Test
                 doc.Add(new DocumentField($"Price_{price.Currency}", price.Amount, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
             }
 
+            var hasMultiplePrices = prices.Length > 1;
+            doc.Add(new DocumentField("HasMultiplePrices", hasMultiplePrices, new[] { IndexStore.Yes, IndexType.NotAnalyzed }));
+
             // Adds extra fields to test mapping updates for indexer
             if (addExtraFields)
             {

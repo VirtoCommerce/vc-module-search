@@ -22,11 +22,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         /// <param name="docs">The hits.</param>
         /// <param name="criteria">The criteria.</param>
         /// <param name="query">The query.</param>
-        public LuceneSearchResults(Searcher searcher, IndexReader reader, TopDocs docs, ISearchCriteria criteria, Query query)
+        /// <param name="availableFields"></param>
+        public LuceneSearchResults(Searcher searcher, IndexReader reader, TopDocs docs, ISearchCriteria criteria, Query query, IList<IFieldDescriptor> availableFields)
         {
             this.SearchCriteria = criteria;
             CreateDocuments(searcher, docs);
-            CreateFacets(reader, query);
+            CreateFacets(reader, query, availableFields);
             //CreateSuggestions(reader, criteria);
         }
 
@@ -123,7 +124,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         /// </summary>
         /// <param name="reader">The reader.</param>
         /// <param name="query">The query.</param>
-        private void CreateFacets(IndexReader reader, Query query)
+        /// <param name="availableFields"></param>
+        private void CreateFacets(IndexReader reader, Query query, IList<IFieldDescriptor> availableFields)
         {
             var groups = new List<FacetGroup>();
             var baseQueryFilter = new CachingWrapperFilter(new QueryWrapperFilter(query));
@@ -179,7 +181,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                         }
                     }
 
-                    var facetGroup = CalculateResultCount(reader, baseDocIdSet, filter, SearchCriteria);
+                    var facetGroup = CalculateResultCount(reader, baseDocIdSet, filter, SearchCriteria, availableFields);
                     if (facetGroup != null)
                     {
                         groups.Add(facetGroup);
@@ -190,7 +192,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             Facets = groups.ToArray();
         }
 
-        protected virtual FacetGroup CalculateResultCount(IndexReader reader, DocIdSet baseDocIdSet, ISearchFilter filter, ISearchCriteria criteria)
+        protected virtual FacetGroup CalculateResultCount(IndexReader reader, DocIdSet baseDocIdSet, ISearchFilter filter, ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
         {
             FacetGroup result = null;
 
@@ -202,7 +204,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                     if (existing_filters == null)
                         existing_filters = new BooleanFilter();
 
-                    var q = LuceneSearchHelper.CreateQuery(criteria, f, Occur.SHOULD);
+                    var q = LuceneSearchHelper.CreateQuery(criteria, f, Occur.SHOULD, availableFields);
                     existing_filters.Add(new FilterClause(q, Occur.MUST));
                 }
             }
@@ -220,7 +222,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                     foreach (var value in allValues)
                     {
                         var attributeValue = new AttributeFilterValue() { Id = value, Value = value };
-                        var valueFilter = LuceneSearchHelper.CreateQueryForValue(SearchCriteria, filter, attributeValue);
+                        var valueFilter = LuceneSearchHelper.CreateQueryForValue(SearchCriteria, filter, attributeValue, availableFields);
 
                         if (valueFilter != null)
                         {
@@ -247,7 +249,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                 foreach (var group in values.GroupBy(v => v.Id))
                 {
                     var value = group.FirstOrDefault();
-                    var valueFilter = LuceneSearchHelper.CreateQueryForValue(SearchCriteria, filter, value);
+                    var valueFilter = LuceneSearchHelper.CreateQueryForValue(SearchCriteria, filter, value, availableFields);
 
                     if (valueFilter != null)
                     {

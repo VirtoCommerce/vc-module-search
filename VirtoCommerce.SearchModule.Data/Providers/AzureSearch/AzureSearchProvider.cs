@@ -147,7 +147,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
         public virtual int Remove(string scope, string documentType, string key, string value)
         {
-            throw new NotImplementedException();
+            return 0;
         }
 
         public virtual bool RemoveAll(string scope, string documentType)

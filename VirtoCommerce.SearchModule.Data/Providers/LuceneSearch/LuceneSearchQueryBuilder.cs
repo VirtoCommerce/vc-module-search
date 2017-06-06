@@ -30,7 +30,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
             var result = new LuceneSearchQuery
             {
                 Query = GetQuery(criteria),
-                Filter = GetFilters(criteria),
+                Filter = GetFilters(criteria, availableFields),
             };
 
             return result;
@@ -49,11 +49,11 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         }
 
         [CLSCompliant(false)]
-        protected virtual BooleanFilter GetFilters(ISearchCriteria criteria)
+        protected virtual BooleanFilter GetFilters(ISearchCriteria criteria, IList<IFieldDescriptor> availableFields)
         {
             var filter = new BooleanFilter();
 
-            ApplyCurrentFilters(criteria, filter);
+            ApplyCurrentFilters(criteria, filter, availableFields);
 
             return filter;
         }
@@ -67,7 +67,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
         }
 
         [CLSCompliant(false)]
-        protected virtual void ApplyCurrentFilters(ISearchCriteria criteria, BooleanFilter queryFilter)
+        protected virtual void ApplyCurrentFilters(ISearchCriteria criteria, BooleanFilter queryFilter, IList<IFieldDescriptor> availableFields)
         {
             if (criteria.CurrentFilters != null)
             {
@@ -83,7 +83,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.LuceneSearch
                         }
                     }
 
-                    var filterQuery = LuceneSearchHelper.CreateQuery(criteria, filter, Occur.SHOULD);
+                    var filterQuery = LuceneSearchHelper.CreateQuery(criteria, filter, Occur.SHOULD, availableFields);
 
                     // now add other values that should also be counted?
 
