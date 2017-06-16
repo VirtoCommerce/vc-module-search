@@ -18,8 +18,8 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
     public class AzureSearchProvider : ISearchProvider
     {
         public const string ContentAnalyzerName = "content_analyzer";
-        public const string NGramFilterName = "ngram";
-        public const string EdgeNGramFilterName = "edge_ngram";
+        public const string NGramFilterName = "custom_ngram";
+        public const string EdgeNGramFilterName = "custom_edge_ngram";
 
         private readonly ISearchConnection _connection;
         private readonly ISearchCriteriaPreprocessor[] _searchCriteriaPreprocessors;
