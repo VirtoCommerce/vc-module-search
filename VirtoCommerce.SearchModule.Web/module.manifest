@@ -47,6 +47,31 @@
                 </description>
             </setting>
             <setting>
+                <name>VirtoCommerce.Search.TokenFilter</name>
+                <title>Token filter</title>
+                <description>Select which token filter should be used when indexing searchable fields (requires rebuilding an index)</description>
+                <valueType>string</valueType>
+                <allowedValues>
+                    <value>edge_ngram</value>
+                    <value>ngram</value>
+                </allowedValues>
+                <defaultValue>edge_ngram</defaultValue>
+            </setting>
+            <setting>
+                <name>VirtoCommerce.Search.NGramTokenFilter.MinGram</name>
+                <title>Min Gram</title>
+                <description>Minimum number of characters in a gram (requires rebuilding an index)</description>
+                <valueType>integer</valueType>
+                <defaultValue>3</defaultValue>
+            </setting>
+            <setting>
+                <name>VirtoCommerce.Search.NGramTokenFilter.MaxGram</name>
+                <title>Max Gram</title>
+                <description>Maximum number of characters in a gram (requires rebuilding an index)</description>
+                <valueType>integer</valueType>
+                <defaultValue>20</defaultValue>
+            </setting>
+            <setting>
                 <name>VirtoCommerce.Search.ScheduleJobs</name>
                 <valueType>boolean</valueType>
                 <defaultValue>true</defaultValue>

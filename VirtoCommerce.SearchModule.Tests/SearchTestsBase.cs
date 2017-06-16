@@ -50,7 +50,7 @@ namespace VirtoCommerce.SearchModule.Test
 
                 var connection = new SearchConnection(azureSearchServiceName, scope, accessKey: azureSearchAccessKey);
                 var queryBuilder = new AzureSearchQueryBuilder() as ISearchQueryBuilder;
-                provider = new AzureSearchProvider(connection, searchCriteriaPreprocessors, new[] { queryBuilder });
+                provider = new AzureSearchProvider(connection, searchCriteriaPreprocessors, new[] { queryBuilder }, GetSettingsManager());
             }
 
             if (provider == null)
@@ -62,7 +62,11 @@ namespace VirtoCommerce.SearchModule.Test
         protected ISettingsManager GetSettingsManager()
         {
             var mock = new Mock<ISettingsManager>();
+
+            mock.Setup(s => s.GetValue(It.IsAny<string>(), It.IsAny<string>())).Returns((string name, string defaultValue) => defaultValue);
+            mock.Setup(s => s.GetValue(It.IsAny<string>(), It.IsAny<bool>())).Returns((string name, bool defaultValue) => defaultValue);
             mock.Setup(s => s.GetValue(It.IsAny<string>(), It.IsAny<int>())).Returns((string name, int defaultValue) => defaultValue);
+
             return mock.Object;
         }
 

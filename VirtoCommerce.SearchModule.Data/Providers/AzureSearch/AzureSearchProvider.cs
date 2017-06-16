@@ -7,6 +7,7 @@ using System.Threading;
 using Microsoft.Azure.Search;
 using Microsoft.Azure.Search.Models;
 using Microsoft.Rest.Azure;
+using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Model.Indexing;
 using VirtoCommerce.SearchModule.Core.Model.Search;
@@ -16,15 +17,21 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
     [CLSCompliant(false)]
     public class AzureSearchProvider : ISearchProvider
     {
+        public const string ContentAnalyzerName = "content_analyzer";
+        public const string NGramFilterName = "ngram";
+        public const string EdgeNGramFilterName = "edge_ngram";
+
         private readonly ISearchConnection _connection;
         private readonly ISearchCriteriaPreprocessor[] _searchCriteriaPreprocessors;
+        private readonly ISettingsManager _settingsManager;
         private readonly Dictionary<string, List<IDocument>> _pendingDocuments = new Dictionary<string, List<IDocument>>();
         private readonly Dictionary<string, IList<Field>> _mappings = new Dictionary<string, IList<Field>>();
 
-        public AzureSearchProvider(ISearchConnection connection, ISearchCriteriaPreprocessor[] searchCriteriaPreprocessors, ISearchQueryBuilder[] queryBuilders)
+        public AzureSearchProvider(ISearchConnection connection, ISearchCriteriaPreprocessor[] searchCriteriaPreprocessors, ISearchQueryBuilder[] queryBuilders, ISettingsManager settingsManager)
         {
             _connection = connection;
             _searchCriteriaPreprocessors = searchCriteriaPreprocessors;
+            _settingsManager = settingsManager;
             QueryBuilders = queryBuilders;
         }
 
@@ -298,6 +305,12 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
                 IsSortable = isIndexed && !isCollection,
             };
 
+            if (providerField.IsSearchable)
+            {
+                providerField.IndexAnalyzer = ContentAnalyzerName;
+                providerField.SearchAnalyzer = AnalyzerName.StandardLucene;
+            }
+
             return providerField;
         }
 
@@ -340,13 +353,45 @@ namespace VirtoCommerce.SearchModule.Data.Providers.AzureSearch
 
         protected virtual Index CreateIndexDefinition(string indexName, IList<Field> providerFields)
         {
+            var minGram = GetMinGram();
+            var maxGram = GetMaxGram();
+
             var index = new Index
             {
                 Name = indexName,
                 Fields = providerFields.OrderBy(f => f.Name).ToArray(),
+                TokenFilters = new TokenFilter[]
+                {
+                    new NGramTokenFilterV2(NGramFilterName, minGram, maxGram),
+                    new EdgeNGramTokenFilterV2(EdgeNGramFilterName, minGram, maxGram)
+                },
+                Analyzers = new Analyzer[]
+                {
+                    new CustomAnalyzer
+                    {
+                        Name = ContentAnalyzerName,
+                        Tokenizer = TokenizerName.Standard,
+                        TokenFilters = new[] { TokenFilterName.Lowercase, GetTokenFilterName() }
+                    }
+                },
             };
 
             return index;
+        }
+
+        protected virtual string GetTokenFilterName()
+        {
+            return _settingsManager.GetValue("VirtoCommerce.Search.TokenFilter", EdgeNGramFilterName);
+        }
+
+        protected virtual int GetMinGram()
+        {
+            return _settingsManager.GetValue("VirtoCommerce.Search.NGramTokenFilter.MinGram", 3);
+        }
+
+        protected virtual int GetMaxGram()
+        {
+            return _settingsManager.GetValue("VirtoCommerce.Search.NGramTokenFilter.MaxGram", 20);
         }
 
         #endregion
