@@ -18,7 +18,7 @@
     <owners>
         <owner>Virto Commerce</owner>
     </owners>
-    <projectUrl>https://github.com/VirtoCommerce/vc-module-search</projectUrl>
+    <projectUrl>https://virtocommerce.com/apps/extensions/indexed-search-module</projectUrl>
     <iconUrl>https://github.com/VirtoCommerce/vc-module-search/raw/master/VirtoCommerce.SearchModule.Web/Content/logo.png</iconUrl>
     <releaseNotes>Added Azure Search provider. Updated Elasticsearch client to v5.3.0. Added search phrase parser.</releaseNotes>
     <copyright>Copyright © 2011-2017 Virto Commerce. All rights reserved</copyright>
