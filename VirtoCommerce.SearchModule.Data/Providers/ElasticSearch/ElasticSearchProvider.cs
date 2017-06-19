@@ -440,7 +440,7 @@ namespace VirtoCommerce.SearchModule.Data.Providers.ElasticSearch
 
         protected virtual int GetMinGram()
         {
-            return _settingsManager.GetValue("VirtoCommerce.Search.NGramTokenFilter.MinGram", 3);
+            return _settingsManager.GetValue("VirtoCommerce.Search.NGramTokenFilter.MinGram", 1);
         }
 
         protected virtual int GetMaxGram()
