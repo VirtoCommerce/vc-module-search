@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
@@ -23,9 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\VirtoCommerce.SearchModule.Core\VirtoCommerce.SearchModule.Core.csproj" />
-    <ProjectReference Include="..\VirtoCommerce.SearchModule.Data\VirtoCommerce.SearchModule.Data.csproj" />
-    <ProjectReference Include="..\VirtoCommerce.SearchModule.Web\VirtoCommerce.SearchModule.Web.csproj" />
+    <ProjectReference Include="..\..\src\VirtoCommerce.SearchModule.Core\VirtoCommerce.SearchModule.Core.csproj" />
+    <ProjectReference Include="..\..\src\VirtoCommerce.SearchModule.Data\VirtoCommerce.SearchModule.Data.csproj" />
+    <ProjectReference Include="..\..\src\VirtoCommerce.SearchModule.Web\VirtoCommerce.SearchModule.Web.csproj" />
   </ItemGroup>
 
 </Project>
