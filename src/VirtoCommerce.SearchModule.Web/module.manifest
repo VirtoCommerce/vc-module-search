@@ -12,6 +12,9 @@
     <owners>
         <owner>Virto Commerce</owner>
     </owners>
+	<groups>
+        <group>commerce</group>
+    </groups>
     <projectUrl>https://virtocommerce.com/apps/extensions/virto-core-module</projectUrl>
     <iconUrl>Modules/$(VirtoCommerce.Search)/Content/logoVC.png</iconUrl>
     <releaseNotes></releaseNotes>
