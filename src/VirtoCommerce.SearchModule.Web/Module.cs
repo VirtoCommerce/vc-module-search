@@ -32,14 +32,13 @@ namespace VirtoCommerce.SearchModule.Web
                         ThrottleQueueCount = settingsManager.GetValue(ModuleConstants.Settings.IndexingJobs.MaxQueueSize.Name, 25)
                     };
                 }
-                else
-                {
-                    return null;
-                }
+
+                return null;
             });
 
             serviceCollection.AddSingleton<IIndexingManager, IndexingManager>();
             serviceCollection.AddSingleton<IndexProgressHandler>();
+            serviceCollection.AddSingleton<ISearchProvider, DummySearchProvider>();
 
             var configuration = serviceCollection.BuildServiceProvider().GetService<IConfiguration>();
             serviceCollection.AddOptions<SearchOptions>().Bind(configuration.GetSection("Search")).ValidateDataAnnotations();
@@ -71,8 +70,6 @@ namespace VirtoCommerce.SearchModule.Web
         public void Uninstall()
         {
         }
-
-
     }
 }
 
