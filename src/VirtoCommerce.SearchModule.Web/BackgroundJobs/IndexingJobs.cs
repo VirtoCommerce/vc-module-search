@@ -87,14 +87,15 @@ namespace VirtoCommerce.SearchModule.Web.BackgroundJobs
             {
                 try
                 {
-                    if (await RunIndexJobAsync(userName, notificationId, false, o, IndexAllDocumentsAsync, cancellationToken))
-                    {
-                        // Indexation manager might re-use the jobs to scale out indexation.
-                        // Wait for all indexing jobs to complete, before telling interceptors we're ready.
-                        // This method is running as a job as well, so skip this job.
-                        // Scale out background indexation jobs are scheduled as low.
-                        await WaitForIndexationJobsToBeReadyAsync(JobPriority.Low, x => x.Method != _manualIndexAllJobMethod && x.Method != _indexChangesJobMethod);
-                    }
+                    var success = await RunIndexJobAsync(userName, notificationId, false, o, IndexAllDocumentsAsync, cancellationToken);
+
+                    // Indexation manager might re-use the jobs to scale out indexation.
+                    // Wait for all indexing jobs to complete, before telling interceptors we're ready.
+                    // This method is running as a job as well, so skip this job.
+                    // Scale out background indexation jobs are scheduled as low.
+                    await WaitForIndexationJobsToBeReadyAsync(JobPriority.Low, x => x.Method != _manualIndexAllJobMethod && x.Method != _indexChangesJobMethod);
+
+                    return success;
                 }
                 finally
                 {
@@ -116,21 +117,20 @@ namespace VirtoCommerce.SearchModule.Web.BackgroundJobs
                 try
                 {
                     // Create different notification for each option (document type)
-                    var executed = true;
+                    var success = true;
 
                     foreach (var options in o)
                     {
-                        executed = executed && await RunIndexJobAsync(null, null, true, new[] { options }, IndexChangesAsync, cancellationToken);
+                        success = success && await RunIndexJobAsync(null, null, true, new[] { options }, IndexChangesAsync, cancellationToken);
                     }
 
-                    if (executed)
-                    {
-                        // Indexation manager might re-use the jobs to scale out indexation.
-                        // Wait for all indexing jobs to complete, before telling interceptors we're ready.
-                        // This method is running as a job as well, so skip this job.
-                        // Scale out background indexation jobs are scheduled as low.
-                        await WaitForIndexationJobsToBeReadyAsync(JobPriority.Low, x => x.Method != _manualIndexAllJobMethod && x.Method != _indexChangesJobMethod);
-                    }
+                    // Indexation manager might re-use the jobs to scale out indexation.
+                    // Wait for all indexing jobs to complete, before telling interceptors we're ready.
+                    // This method is running as a job as well, so skip this job.
+                    // Scale out background indexation jobs are scheduled as low.
+                    await WaitForIndexationJobsToBeReadyAsync(JobPriority.Low, x => x.Method != _manualIndexAllJobMethod && x.Method != _indexChangesJobMethod);
+
+                    return success;
                 }
                 finally
                 {
@@ -253,13 +253,10 @@ namespace VirtoCommerce.SearchModule.Web.BackgroundJobs
             {
                 using (JobStorage.Current.GetConnection().AcquireDistributedLock("IndexationJob", TimeSpan.Zero))
                 {
-                    // Begin indexation
                     try
                     {
-                        foreach (var options in allOptions)
-                        {
-                            indexationFunc(options, new JobCancellationTokenWrapper(cancellationToken)).Wait();
-                        }
+                        var tasks = allOptions.Select(x => indexationFunc(x, new JobCancellationTokenWrapper(cancellationToken)));
+                        Task.WaitAll(tasks.ToArray());
 
                         success = true;
                     }
@@ -306,7 +303,7 @@ namespace VirtoCommerce.SearchModule.Web.BackgroundJobs
             SetLastIndexationDate(options.DocumentType, oldIndexationDate, newIndexationDate);
         }
 
-        private async Task WithInterceptorsAsync(ICollection<IndexingOptions> options, Func<ICollection<IndexingOptions>, Task> action)
+        private async Task<bool> WithInterceptorsAsync(ICollection<IndexingOptions> options, Func<ICollection<IndexingOptions>, Task<bool>> action)
         {
             try
             {
@@ -318,15 +315,17 @@ namespace VirtoCommerce.SearchModule.Web.BackgroundJobs
                     }
                 }
 
-                await action(options);
+                var result = await action(options);
 
                 if (!_interceptors.IsNullOrEmpty())
                 {
                     foreach (var interceptor in _interceptors)
                     {
-                        interceptor.OnEnd(options.ToArray());
+                        interceptor.OnEnd(options.ToArray(), result);
                     }
                 }
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -334,9 +333,10 @@ namespace VirtoCommerce.SearchModule.Web.BackgroundJobs
                 {
                     foreach (var interceptor in _interceptors)
                     {
-                        interceptor.OnEnd(options.ToArray(), ex);
+                        interceptor.OnEnd(options.ToArray(), false, ex);
                     }
                 }
+                throw;
             }
         }
 

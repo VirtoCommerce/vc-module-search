@@ -195,6 +195,8 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
                 progressCallback?.Invoke(new IndexingProgress(description, documentType, totalCount, processedCount, errors));
 
+                cancellationToken.ThrowIfCancellationRequested();
+
                 changes = await GetNextChangesAsync(feeds);
             }
 
