@@ -237,7 +237,6 @@ namespace VirtoCommerce.SearchModule.Web.BackgroundJobs
 
         #endregion
 
-        // TODO: Why this method is not async?
         private Task<bool> RunIndexJobAsync(string currentUserName, string notificationId, bool suppressInsignificantNotifications,
             IEnumerable<IndexingOptions> allOptions, Func<IndexingOptions, ICancellationToken, Task> indexationFunc,
             IJobCancellationToken cancellationToken)
