@@ -60,7 +60,7 @@ namespace VirtoCommerce.SearchModule.Web
                 }).ToArray());
 
             var settingsManager = appBuilder.ApplicationServices.GetService<ISettingsManager>();
-            var scheduleJobs = settingsManager.GetValue(ModuleConstants.Settings.IndexingJobs.Enable.Name, true);
+            var scheduleJobs = settingsManager.GetValue(ModuleConstants.Settings.IndexingJobs.Enable.Name, false);
             if (scheduleJobs)
             {
                 var cronExpression = settingsManager.GetValue(ModuleConstants.Settings.IndexingJobs.CronExpression.Name, (string)ModuleConstants.Settings.IndexingJobs.CronExpression.DefaultValue);
