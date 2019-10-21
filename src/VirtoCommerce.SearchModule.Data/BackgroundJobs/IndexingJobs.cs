@@ -192,10 +192,10 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                 
             }
 
-            var groupDeleteIndexIds = indexEntries.Where(x => x.EntryState == EntryState.Deleted && x.Id != null)
+            var groupDeleteIds = indexEntries.Where(x => x.EntryState == EntryState.Deleted && x.Id != null)
                                        .GroupBy(y => y.Type).ToArray();
 
-            if (!groupDeleteIndexIds.IsNullOrEmpty())
+            if (!groupDeleteIds.IsNullOrEmpty())
             {
                 foreach (var item in groupDeleteIndexIds)
                 {
