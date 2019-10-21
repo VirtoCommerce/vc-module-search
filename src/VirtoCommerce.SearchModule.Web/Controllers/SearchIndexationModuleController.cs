@@ -8,7 +8,7 @@ using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.SearchModule.Core;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
-using VirtoCommerce.SearchModule.Web.BackgroundJobs;
+using VirtoCommerce.SearchModule.Data.BackgroundJobs;
 
 namespace VirtoCommerce.SearchModule.Web.Controllers
 {

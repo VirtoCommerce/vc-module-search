@@ -6,7 +6,7 @@ using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.SearchModule.Core.Model;
 
-namespace VirtoCommerce.SearchModule.Web.BackgroundJobs
+namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 {
     public class IndexProgressHandler
     {

@@ -5,7 +5,7 @@ using VirtoCommerce.Platform.Core.Jobs;
 using VirtoCommerce.SearchModule.Core.Services;
 using VirtoCommerce.SearchModule.Core.Model;
 
-namespace VirtoCommerce.SearchModule.Web.BackgroundJobs
+namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 {
     /// <summary>
     /// Scales out indexation work through Hangfire.

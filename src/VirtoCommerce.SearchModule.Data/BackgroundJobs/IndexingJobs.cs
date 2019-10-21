@@ -20,7 +20,7 @@ using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 using Job = Hangfire.Common.Job;
 
-namespace VirtoCommerce.SearchModule.Web.BackgroundJobs
+namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 {
     public sealed class IndexingJobs
     {
@@ -175,6 +175,33 @@ namespace VirtoCommerce.SearchModule.Web.BackgroundJobs
                     break;
                 default:
                     throw new ArgumentException($@"Unknown priority: {priority}", nameof(priority));
+            }
+        }
+
+        public static void EnqueueIndexAndDeleteDocuments(IndexEntry[] indexEntries, string priority = JobPriority.Normal)
+        {
+            var groupIndexIds = indexEntries.Where(x => (x.EntryState == EntryState.Modified || x.EntryState == EntryState.Added) && x.Id != null)
+                                       .GroupBy(y => y.Type).ToArray();
+
+            if (!groupIndexIds.IsNullOrEmpty())
+            {
+                foreach (var item in groupIndexIds)
+                {
+                    EnqueueIndexDocuments(item.Key, item.Select(x => x.Id).Distinct().ToArray());
+                }
+                
+            }
+
+            var groupDeleteIndexIds = indexEntries.Where(x => x.EntryState == EntryState.Deleted && x.Id != null)
+                                       .GroupBy(y => y.Type).ToArray();
+
+            if (!groupDeleteIndexIds.IsNullOrEmpty())
+            {
+                foreach (var item in groupDeleteIndexIds)
+                {
+                    EnqueueDeleteDocuments(item.Key, item.Select(x => x.Id).Distinct().ToArray());
+                }
+
             }
         }
 
