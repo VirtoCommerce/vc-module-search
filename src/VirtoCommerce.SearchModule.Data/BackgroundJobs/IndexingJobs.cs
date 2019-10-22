@@ -197,7 +197,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
             if (!groupDeleteIds.IsNullOrEmpty())
             {
-                foreach (var item in groupDeleteIndexIds)
+                foreach (var item in groupDeleteIds)
                 {
                     EnqueueDeleteDocuments(item.Key, item.Select(x => x.Id).Distinct().ToArray());
                 }
