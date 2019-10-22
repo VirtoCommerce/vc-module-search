@@ -11,7 +11,7 @@ using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 using VirtoCommerce.SearchModule.Data.SearchPhraseParsing;
 using VirtoCommerce.SearchModule.Data.Services;
-using VirtoCommerce.SearchModule.Web.BackgroundJobs;
+using VirtoCommerce.SearchModule.Data.BackgroundJobs;
 
 namespace VirtoCommerce.SearchModule.Web
 {
@@ -60,7 +60,7 @@ namespace VirtoCommerce.SearchModule.Web
                 }).ToArray());
 
             var settingsManager = appBuilder.ApplicationServices.GetService<ISettingsManager>();
-            var scheduleJobs = settingsManager.GetValue(ModuleConstants.Settings.IndexingJobs.Enable.Name, true);
+            var scheduleJobs = settingsManager.GetValue(ModuleConstants.Settings.IndexingJobs.Enable.Name, false);
             if (scheduleJobs)
             {
                 var cronExpression = settingsManager.GetValue(ModuleConstants.Settings.IndexingJobs.CronExpression.Name, (string)ModuleConstants.Settings.IndexingJobs.CronExpression.DefaultValue);
