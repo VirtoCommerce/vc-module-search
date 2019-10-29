@@ -1,13 +1,16 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp2.2</TargetFramework>
+        <TargetFramework>netcoreapp3.0</TargetFramework>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <noWarn>1591</noWarn>
         <IsPackable>false</IsPackable>
         <!--This line is necessary to copy all dependencies in the bin folder-->
         <!--<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>-->
 		<IsPackable>False</IsPackable>
+		<ApplicationIcon />
+		<OutputType>Library</OutputType>
+		<StartupObject />
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -29,13 +32,11 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="HangFire" Version="1.6.22" />
-        <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.App" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
-        <PackageReference Include="VirtoCommerce.Platform.Core" Version="3.0.0-rc0001" />
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\..\..\vc-platform\src\VirtoCommerce.Platform.Core\VirtoCommerce.Platform.Core.csproj" />
+        <ProjectReference Include="..\..\..\..\vc-platform\src\VirtoCommerce.Platform.Data\VirtoCommerce.Platform.Data.csproj" />
         <ProjectReference Include="..\VirtoCommerce.SearchModule.Core\VirtoCommerce.SearchModule.Core.csproj" />
         <ProjectReference Include="..\VirtoCommerce.SearchModule.Data\VirtoCommerce.SearchModule.Data.csproj" />
     </ItemGroup>
