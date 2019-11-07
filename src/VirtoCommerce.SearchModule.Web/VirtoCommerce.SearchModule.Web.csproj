@@ -5,12 +5,9 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <noWarn>1591</noWarn>
         <IsPackable>false</IsPackable>
-        <!--This line is necessary to copy all dependencies in the bin folder-->
-        <!--<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>-->
-		<IsPackable>False</IsPackable>
-		<ApplicationIcon />
-		<OutputType>Library</OutputType>
-		<StartupObject />
+        <ApplicationIcon />
+        <OutputType>Library</OutputType>
+        <StartupObject />
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
