@@ -12,6 +12,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Hangfire;
+using VirtoCommerce.Platform.Core;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Jobs;
 using VirtoCommerce.Platform.Core.Settings;
@@ -110,34 +111,40 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         [Queue(JobPriority.Normal)]
         public async Task IndexChangesJob(string documentType, IJobCancellationToken cancellationToken)
         {
-            var allOptions = GetAllIndexingOptions(documentType);
+            var setupStep = await _settingsManager.GetValueAsync(PlatformConstants.Settings.Setup.SetupStep.Name, string.Empty);
 
-            await WithInterceptorsAsync(allOptions, async o =>
+            if (setupStep.EqualsInvariant("workspace"))
             {
-                try
-                {
-                    // Create different notification for each option (document type)
-                    var success = true;
 
-                    foreach (var options in o)
+                var allOptions = GetAllIndexingOptions(documentType);
+
+                await WithInterceptorsAsync(allOptions, async o =>
+                {
+                    try
                     {
-                        success = success && await RunIndexJobAsync(null, null, true, new[] { options }, IndexChangesAsync, cancellationToken);
+                        // Create different notification for each option (document type)
+                        var success = true;
+
+                        foreach (var options in o)
+                        {
+                            success = success && await RunIndexJobAsync(null, null, true, new[] { options }, IndexChangesAsync, cancellationToken);
+                        }
+
+                        // Indexation manager might re-use the jobs to scale out indexation.
+                        // Wait for all indexing jobs to complete, before telling interceptors we're ready.
+                        // This method is running as a job as well, so skip this job.
+                        // Scale out background indexation jobs are scheduled as low.
+                        await WaitForIndexationJobsToBeReadyAsync(JobPriority.Low, x => x.Method != _manualIndexAllJobMethod && x.Method != _indexChangesJobMethod);
+
+                        return success;
                     }
-
-                    // Indexation manager might re-use the jobs to scale out indexation.
-                    // Wait for all indexing jobs to complete, before telling interceptors we're ready.
-                    // This method is running as a job as well, so skip this job.
-                    // Scale out background indexation jobs are scheduled as low.
-                    await WaitForIndexationJobsToBeReadyAsync(JobPriority.Low, x => x.Method != _manualIndexAllJobMethod && x.Method != _indexChangesJobMethod);
-
-                    return success;
-                }
-                finally
-                {
-                    // Report indexation summary
-                    _progressHandler.Finish();
-                }
-            });
+                    finally
+                    {
+                        // Report indexation summary
+                        _progressHandler.Finish();
+                    }
+                });
+            }
         }
 
         #region Scale-out indexation actions for indexing worker
@@ -189,7 +196,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                 {
                     EnqueueIndexDocuments(item.Key, item.Select(x => x.Id).Distinct().ToArray());
                 }
-                
+
             }
 
             var groupDeleteIds = indexEntries.Where(x => x.EntryState == EntryState.Deleted && x.Id != null)
