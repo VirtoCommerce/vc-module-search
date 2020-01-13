@@ -2,7 +2,7 @@
 <module>
     <id>VirtoCommerce.Search</id>
     <version>3.0.0</version>
-	<version-tag>rc.2</version-tag>
+	<version-tag>rc3</version-tag>
     <platformVersion>3.0.0</platformVersion>
     <title>Search module</title>
     <description>Search module</description>
@@ -18,7 +18,7 @@
     <projectUrl>https://virtocommerce.com/apps/extensions/virto-core-module</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/VirtoCommerce/vc-module-search/release/3.0.0/src/VirtoCommerce.SearchModule.Web/Content/logoVC.png</iconUrl>
     <releaseNotes></releaseNotes>
-    <copyright>Copyright © 2011-2019 Virto Commerce. All rights reserved</copyright>
+    <copyright>Copyright © 2011-2020 Virto Commerce. All rights reserved</copyright>
     <tags>security core</tags>
 
     <assemblyFile>VirtoCommerce.SearchModule.Web.dll</assemblyFile>
