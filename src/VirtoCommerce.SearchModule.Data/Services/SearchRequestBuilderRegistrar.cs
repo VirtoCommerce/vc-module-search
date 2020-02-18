@@ -22,6 +22,14 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         public void Register<TSearchRequestBuilder>(string documentType, Func<TSearchRequestBuilder> factory) where TSearchRequestBuilder : class, ISearchRequestBuilder
         {
+            if (!_searchRequestBuilders.TryAdd(documentType, factory))
+            {
+                throw new InvalidOperationException($"There is already registered Search Request Builder for the \"{documentType}\" document type.");
+            }
+        }
+
+        public void Override<TSearchRequestBuilder>(string documentType, Func<TSearchRequestBuilder> factory) where TSearchRequestBuilder : class, ISearchRequestBuilder
+        {
             _searchRequestBuilders.AddOrUpdate(documentType, factory, (key, oldValue) => factory);
         }
     }

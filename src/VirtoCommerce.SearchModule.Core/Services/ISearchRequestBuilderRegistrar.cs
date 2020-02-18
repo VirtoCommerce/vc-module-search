@@ -13,11 +13,20 @@ namespace VirtoCommerce.SearchModule.Core.Services
         ISearchRequestBuilder GetRequestBuilderByDocumentType(string documentType);
 
         /// <summary>
-        /// Register Search Request Builder factory for the given document type. Overrides existing registration for a document type.
+        /// Registers Search Request Builder factory for the given document type.
         /// </summary>
         /// <typeparam name="TSearchRequestBuilder"></typeparam>
-        /// <param name="documentType"></param>
-        /// <param name="factory"></param>
+        /// <param name="documentType">Document type for which we register Search Request Builder.</param>
+        /// <param name="factory"><typeparamref name="TSearchRequestBuilder"/> creation factory.</param>
+        /// <exception cref="InvalidOperationException">Thrown when Search Request Builder is already registered for the <paramref name="documentType"/>.</exception>
         void Register<TSearchRequestBuilder>(string documentType, Func<TSearchRequestBuilder> factory) where TSearchRequestBuilder : class, ISearchRequestBuilder;
+
+        /// <summary>
+        /// Overrides existing Search Request Builder registration for a document type.
+        /// </summary>
+        /// <typeparam name="TSearchRequestBuilder"></typeparam>
+        /// <param name="documentType">Document type for which we register Search Request Builder.</param>
+        /// <param name="factory"><typeparamref name="TSearchRequestBuilder"/> creation factory.</param>
+        void Override<TSearchRequestBuilder>(string documentType, Func<TSearchRequestBuilder> factory) where TSearchRequestBuilder : class, ISearchRequestBuilder;
     }
 }
