@@ -40,6 +40,7 @@ namespace VirtoCommerce.SearchModule.Web
             serviceCollection.AddSingleton<IndexProgressHandler>();
             serviceCollection.AddSingleton<ISearchProvider, DummySearchProvider>();
             serviceCollection.AddSingleton<ISearchRequestBuilderRegistrar, SearchRequestBuilderRegistrar>();
+            serviceCollection.AddSingleton<IIndexDocumentRegistrar, IndexDocumentRegistrar>();
 
             var configuration = serviceCollection.BuildServiceProvider().GetService<IConfiguration>();
             serviceCollection.AddOptions<SearchOptions>().Bind(configuration.GetSection("Search")).ValidateDataAnnotations();

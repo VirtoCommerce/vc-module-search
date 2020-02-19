@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using Moq;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
@@ -240,14 +241,18 @@ namespace VirtoCommerce.SearchModule.Tests
         {
             var primaryDocumentSource = documentSources?.FirstOrDefault();
 
-            var configuration = new IndexDocumentConfiguration
+            var documentRegistrar = new Mock<IIndexDocumentRegistrar>();
+            documentRegistrar.Setup(x => x.GetIndexDocumentConfigurations(It.IsAny<string>())).Returns(() => new List<IndexDocumentConfiguration>()
             {
-                DocumentType = DocumentType,
-                DocumentSource = CreateIndexDocumentSource(primaryDocumentSource),
-                RelatedSources = documentSources?.Skip(1).Select(CreateIndexDocumentSource).ToArray(),
-            };
+                new IndexDocumentConfiguration
+                {
+                    DocumentType = DocumentType,
+                    DocumentSource = CreateIndexDocumentSource(primaryDocumentSource),
+                    RelatedSources = documentSources?.Skip(1).Select(CreateIndexDocumentSource).ToArray(),
+                }
+            });
 
-            return new IndexingManager(searchProvider, new[] { configuration }, new Moq.Mock<IOptions<SearchOptions>>().Object);
+            return new IndexingManager(searchProvider, documentRegistrar.Object, new Moq.Mock<IOptions<SearchOptions>>().Object);
         }
 
         private static IndexDocumentSource CreateIndexDocumentSource(DocumentSource documentSource)

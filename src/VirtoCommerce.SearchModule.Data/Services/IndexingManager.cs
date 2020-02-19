@@ -18,12 +18,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
     public class IndexingManager : IIndexingManager
     {
         private readonly ISearchProvider _searchProvider;
-        private readonly IEnumerable<IndexDocumentConfiguration> _configs;
+        private readonly IIndexDocumentRegistrar _configs;
         private readonly ISettingsManager _settingsManager;
         private readonly IIndexingWorker _backgroundWorker;
         private readonly SearchOptions _searchOptions;
 
-        public IndexingManager(ISearchProvider searchProvider, IEnumerable<IndexDocumentConfiguration> configs, IOptions<SearchOptions> searchOptions,
+        public IndexingManager(ISearchProvider searchProvider, IIndexDocumentRegistrar configs, IOptions<SearchOptions> searchOptions,
             ISettingsManager settingsManager = null, IIndexingWorker backgroundWorker = null)
         {
             if (searchProvider == null)
@@ -33,6 +33,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             _searchOptions = searchOptions.Value;
             _searchProvider = searchProvider;
+            _configs = configs;
             _configs = configs;
             _settingsManager = settingsManager;
             _backgroundWorker = backgroundWorker;
@@ -90,7 +91,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 await _searchProvider.DeleteIndexAsync(documentType);
             }
 
-            var configs = _configs.Where(c => c.DocumentType.EqualsInvariant(documentType)).ToArray();
+            var configs = _configs.GetIndexDocumentConfigurations(documentType);
 
             foreach (var config in configs)
             {
@@ -101,7 +102,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
         public virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds)
         {
             // Todo: reuse general index api?
-            var configs = _configs.Where(c => c.DocumentType.EqualsInvariant(documentType)).ToArray();
+            var configs = _configs.GetIndexDocumentConfigurations(documentType);
             var result = new IndexingResult { Items = new List<IndexingResultItem>() };
 
             foreach (var config in configs)
