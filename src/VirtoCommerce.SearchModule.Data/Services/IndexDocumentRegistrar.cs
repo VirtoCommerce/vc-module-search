@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using VirtoCommerce.Platform.Core.Common;
@@ -9,45 +10,32 @@ namespace VirtoCommerce.SearchModule.Data.Services
 {
     public class IndexDocumentRegistrar : IIndexDocumentRegistrar
     {
-        private readonly List<IndexDocumentConfiguration> _indexDocument = new List<IndexDocumentConfiguration>();
+        private readonly ConcurrentDictionary<string, IndexDocumentConfiguration> _documentConfiguration = new ConcurrentDictionary<string, IndexDocumentConfiguration>();
         public IEnumerable<IndexDocumentConfiguration> GetIndexDocumentConfigurations()
         {
-            return _indexDocument;
+            return _documentConfiguration.Values;
         }
 
-        public IEnumerable<IndexDocumentConfiguration> GetIndexDocumentConfigurations(string documentType)
+        public IndexDocumentConfiguration GetIndexDocumentConfiguration(string documentType)
         {
-            var indexDocumentConfigurations = _indexDocument.Where(x => string.Equals(x.DocumentType, documentType, StringComparison.InvariantCultureIgnoreCase)).ToArray();
-            if (indexDocumentConfigurations.IsNullOrEmpty())
+            if (!_documentConfiguration.ContainsKey(documentType))
             {
-                throw new InvalidOperationException($"IndexDocumentConfiguration with document type :'{documentType}' not exists ");
+                throw new InvalidOperationException($"IndexDocumentConfiguration with document type '{documentType}' does not exist.");
             }
 
-            return indexDocumentConfigurations;
+            return _documentConfiguration[documentType];
         }
 
-        public void RegisterIndexDocumentConfiguration(string documentType, IndexDocumentSource documentSource)
+        public void RegisterIndexDocumentConfiguration(IndexDocumentConfiguration configuration)
         {
-            var existIndexDocumentConfiguration = GetIndexDocumentConfigurations(documentType);
-            if (existIndexDocumentConfiguration != null)
+
+            if (_documentConfiguration.ContainsKey(configuration.DocumentType))
             {
-                throw new InvalidOperationException($"IndexDocumentConfiguration with document type :'{documentType}' already exists ");
+                throw new InvalidOperationException($"IndexDocumentConfiguration with document type :'{configuration.DocumentType}' already exists ");
             }
 
-            _indexDocument.Add(new IndexDocumentConfiguration {DocumentType = documentType, DocumentSource = documentSource});
+            _documentConfiguration.TryAdd(configuration.DocumentType, configuration);
         }
 
-        public void RegisterRelatedSource(string documentType, IndexDocumentSource documentSource)
-        {
-            foreach (var configuration in GetIndexDocumentConfigurations(documentType))
-            {
-                if (configuration.RelatedSources == null)
-                {
-                    configuration.RelatedSources = new List<IndexDocumentSource>();
-                }
-
-                configuration.RelatedSources.Add(documentSource);
-            }
-        }
     }
 }

@@ -34,7 +34,6 @@ namespace VirtoCommerce.SearchModule.Data.Services
             _searchOptions = searchOptions.Value;
             _searchProvider = searchProvider;
             _configs = configs;
-            _configs = configs;
             _settingsManager = settingsManager;
             _backgroundWorker = backgroundWorker;
         }
@@ -91,33 +90,27 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 await _searchProvider.DeleteIndexAsync(documentType);
             }
 
-            var configs = _configs.GetIndexDocumentConfigurations(documentType);
+            var config = _configs.GetIndexDocumentConfiguration(documentType);
 
-            foreach (var config in configs)
-            {
-                await ProcessConfigurationAsync(config, options, progressCallback, cancellationToken);
-            }
+            await ProcessConfigurationAsync(config, options, progressCallback, cancellationToken);
         }
 
         public virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds)
         {
             // Todo: reuse general index api?
-            var configs = _configs.GetIndexDocumentConfigurations(documentType);
+            var config = _configs.GetIndexDocumentConfiguration(documentType);
             var result = new IndexingResult { Items = new List<IndexingResultItem>() };
 
-            foreach (var config in configs)
-            {
-                var secondaryDocBuilders = config.RelatedSources?
-                    .Where(s => s.DocumentBuilder != null)
-                    .Select(s => s.DocumentBuilder)
-                    .ToList();
+            var secondaryDocBuilders = config.RelatedSources?
+                .Where(s => s.DocumentBuilder != null)
+                .Select(s => s.DocumentBuilder)
+                .ToList();
 
-                var configResult = await IndexDocumentsAsync(documentType, documentIds,
-                    config.DocumentSource.DocumentBuilder, secondaryDocBuilders,
-                    new CancellationTokenWrapper(CancellationToken.None));
+            var configResult = await IndexDocumentsAsync(documentType, documentIds,
+                config.DocumentSource.DocumentBuilder, secondaryDocBuilders,
+                new CancellationTokenWrapper(CancellationToken.None));
 
-                result.Items.AddRange(configResult.Items ?? Enumerable.Empty<IndexingResultItem>());
-            }
+            result.Items.AddRange(configResult.Items ?? Enumerable.Empty<IndexingResultItem>());
 
             return result;
         }

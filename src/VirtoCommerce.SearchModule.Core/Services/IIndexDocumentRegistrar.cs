@@ -20,21 +20,14 @@ namespace VirtoCommerce.SearchModule.Core.Services
         /// <param name="documentType"></param>
         /// <returns>IEnumerable<IndexDocumentConfiguration></returns>
         /// <exception cref="InvalidOperationException">Thrown when IndexDocumentConfigurations with the requested document type is not registered. </exception>
-        IEnumerable<IndexDocumentConfiguration> GetIndexDocumentConfigurations(string documentType);
+        IndexDocumentConfiguration GetIndexDocumentConfiguration(string documentType);
 
         /// <summary>
         /// Registers Index Document Configurator for the given document type.
         /// </summary>
-        /// <param name="documentType"></param>
-        /// <param name="documentSource"></param>
+        /// <param name="indexDocumentConfiguration"></param>
         /// <exception cref="InvalidOperationException">Thrown when the requested document type is already registered. </exception>
-        void RegisterIndexDocumentConfiguration(string documentType, IndexDocumentSource documentSource);
+        void RegisterIndexDocumentConfiguration(IndexDocumentConfiguration indexDocumentConfiguration);
 
-        /// <summary>
-        /// Registers IndexDocumentSource as Related source for every Configuration with given document type
-        /// </summary>
-        /// <param name="documentType"></param>
-        /// <param name="documentSource"></param>
-        void RegisterRelatedSource(string documentType, IndexDocumentSource documentSource);
     }
 }
