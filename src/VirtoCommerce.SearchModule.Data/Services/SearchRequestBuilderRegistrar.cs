@@ -9,6 +9,10 @@ namespace VirtoCommerce.SearchModule.Data.Services
         private readonly ConcurrentDictionary<string, Func<ISearchRequestBuilder>> _searchRequestBuilders = new ConcurrentDictionary<string, Func<ISearchRequestBuilder>>();
         public ISearchRequestBuilder GetRequestBuilderByDocumentType(string documentType)
         {
+            if (documentType == null)
+            {
+                throw new ArgumentNullException(nameof(documentType));
+            }
 
             var factory = _searchRequestBuilders[documentType];
             if (factory == null)
