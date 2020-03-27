@@ -14,6 +14,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
 {
     [Route("api/search/indexes")]
     [Produces("application/json")]
+    [Authorize]
     public class SearchIndexationModuleController : Controller
     {
         private readonly IEnumerable<IndexDocumentConfiguration> _documentConfigs;
