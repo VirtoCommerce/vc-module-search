@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace VirtoCommerce.SearchModule.Core.Model
 {
-    public class RangeFilter : IFilter
+    public class RangeFilter : IFilter, INamedFilter
     {
         public string FieldName { get; set; }
         public IList<RangeFilterValue> Values { get; set; }
