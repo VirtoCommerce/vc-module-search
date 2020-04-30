@@ -61,10 +61,6 @@
         "search:index:rebuild": "Allows to delete search index and build it again."
     },
     "settings": {
-        "VirtoCommerce.Search.SearchConnectionString": {
-            "title": "Search configuration string (requires restart)",
-            "description": "provider=AzureSearch;server=ServiceName;key=AccessKey;scope=default, provider=Elasticsearch;server=localhost:9200;scope=default, provider=Lucene;server=~/App_Data/Lucene;scope=default"
-        },
         "VirtoCommerce.Search.IndexingJobs.Enable": {
             "title": "Schedule indexing jobs (requires restart)",
             "description": "Enable or disable periodic search index builders"
