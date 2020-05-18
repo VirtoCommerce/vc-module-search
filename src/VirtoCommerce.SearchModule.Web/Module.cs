@@ -1,15 +1,17 @@
 using System.Linq;
-using Hangfire;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using VirtoCommerce.Platform.Core.Bus;
 using VirtoCommerce.Platform.Core.Modularity;
 using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.Platform.Core.Settings;
+using VirtoCommerce.Platform.Core.Settings.Events;
 using VirtoCommerce.SearchModule.Core;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 using VirtoCommerce.SearchModule.Data.BackgroundJobs;
+using VirtoCommerce.SearchModule.Data.Handlers;
 using VirtoCommerce.SearchModule.Data.SearchPhraseParsing;
 using VirtoCommerce.SearchModule.Data.Services;
 
@@ -22,7 +24,7 @@ namespace VirtoCommerce.SearchModule.Web
         public void Initialize(IServiceCollection serviceCollection)
         {
             serviceCollection.AddTransient<ISearchPhraseParser, SearchPhraseParser>();
-            serviceCollection.AddSingleton<IIndexingWorker>(context =>
+            serviceCollection.AddScoped<IIndexingWorker>(context =>
             {
                 var settingsManager = context.GetService<ISettingsManager>();
                 if (settingsManager.GetValue(ModuleConstants.Settings.IndexingJobs.ScaleOut.Name, false))
@@ -36,13 +38,16 @@ namespace VirtoCommerce.SearchModule.Web
                 return null;
             });
 
-            serviceCollection.AddSingleton<IIndexingManager, IndexingManager>();
+            serviceCollection.AddScoped<IIndexingManager, IndexingManager>();
             serviceCollection.AddSingleton<IndexProgressHandler>();
             serviceCollection.AddSingleton<ISearchProvider, DummySearchProvider>();
             serviceCollection.AddSingleton<ISearchRequestBuilderRegistrar, SearchRequestBuilderRegistrar>();
 
             var configuration = serviceCollection.BuildServiceProvider().GetService<IConfiguration>();
             serviceCollection.AddOptions<SearchOptions>().Bind(configuration.GetSection("Search")).ValidateDataAnnotations();
+
+            serviceCollection.AddTransient<ObjectSettingEntryChangedEventHandler>();
+            serviceCollection.AddTransient<BackgroundJobsRunner>();
         }
 
         public void PostInitialize(IApplicationBuilder appBuilder)
@@ -59,17 +64,18 @@ namespace VirtoCommerce.SearchModule.Web
                     Name = x
                 }).ToArray());
 
-            var settingsManager = appBuilder.ApplicationServices.GetService<ISettingsManager>();
-            var scheduleJobs = settingsManager.GetValue(ModuleConstants.Settings.IndexingJobs.Enable.Name, true);
-            if (scheduleJobs)
-            {
-                var cronExpression = settingsManager.GetValue(ModuleConstants.Settings.IndexingJobs.CronExpression.Name, (string)ModuleConstants.Settings.IndexingJobs.CronExpression.DefaultValue);
-                RecurringJob.AddOrUpdate<IndexingJobs>(j => j.IndexChangesJob(null, JobCancellationToken.Null), cronExpression);
-            }
+            //Subscribe for Indexation job configuration changes
+            var inProcessBus = appBuilder.ApplicationServices.GetService<IHandlerRegistrar>();
+            inProcessBus.RegisterHandler<ObjectSettingChangedEvent>(async (message, token) => await appBuilder.ApplicationServices.GetService<ObjectSettingEntryChangedEventHandler>().Handle(message));
+
+            //Schedule periodic Indexation job
+            var jobsRunner = appBuilder.ApplicationServices.GetService<BackgroundJobsRunner>();
+            jobsRunner.StartStopIndexingJobs().GetAwaiter().GetResult();
         }
 
         public void Uninstall()
         {
+            // Method intentionally left empty.
         }
     }
 }
