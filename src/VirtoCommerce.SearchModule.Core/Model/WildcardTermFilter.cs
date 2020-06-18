@@ -9,5 +9,11 @@ namespace VirtoCommerce.SearchModule.Core.Model
         {
             return $"{FieldName}:{Value}";
         }
+
+        public object Clone()
+        {
+            var result = MemberwiseClone() as WildCardTermFilter;
+            return result;
+        }
     }
 }

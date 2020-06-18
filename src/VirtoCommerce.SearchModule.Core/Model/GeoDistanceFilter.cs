@@ -16,5 +16,13 @@ namespace VirtoCommerce.SearchModule.Core.Model
         /// </summary>
         public double Distance { get; set; }
 
+        public override object Clone()
+        {
+            var result = base.Clone() as GeoDistanceFilter;
+            result.Location = Location?.Clone() as GeoPoint;
+
+            return result;
+        }
+
     }
 }
