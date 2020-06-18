@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace VirtoCommerce.SearchModule.Core.Model
 {
@@ -10,6 +11,13 @@ namespace VirtoCommerce.SearchModule.Core.Model
         public override string ToString()
         {
             return FieldName != null && Values != null ? $"{FieldName}:{string.Join(",", Values)}" : string.Empty;
+        }
+        public object Clone()
+        {
+            var result = MemberwiseClone() as RangeFilter;
+            result.Values = Values?.Select(x => x.Clone()).OfType<RangeFilterValue>().ToList();
+
+            return result;
         }
     }
 }
