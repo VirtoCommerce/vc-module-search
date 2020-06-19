@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace VirtoCommerce.SearchModule.Core.Model
 {
@@ -10,5 +12,15 @@ namespace VirtoCommerce.SearchModule.Core.Model
         {
             return ChildFilters != null ? $"({string.Join(" AND ", ChildFilters)})" : string.Empty;
         }
+
+
+        public object Clone()
+        {
+            var result = MemberwiseClone() as AndFilter;
+            result.ChildFilters = ChildFilters?.Select(x => x.Clone()).OfType<IFilter>().ToList();
+          
+            return result;
+        }
+
     }
 }

@@ -8,5 +8,13 @@ namespace VirtoCommerce.SearchModule.Core.Model
         {
             return ChildFilter != null ? $"NOT({ChildFilter})" : string.Empty;
         }
+
+        public object Clone()
+        {
+            var result = MemberwiseClone() as NotFilter;
+            result.ChildFilter = ChildFilter?.Clone() as IFilter;
+
+            return result;
+        }
     }
 }

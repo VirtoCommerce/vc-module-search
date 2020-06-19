@@ -43,16 +43,14 @@ namespace VirtoCommerce.SearchModule.Core
                     Name = "VirtoCommerce.Search.IndexingJobs.Enable",
                     GroupName = "Search|Job",
                     ValueType = SettingValueType.Boolean,
-                    DefaultValue = true,
-                    RestartRequired = true
+                    DefaultValue = true
                 };
                 public static SettingDescriptor CronExpression = new SettingDescriptor
                 {
                     Name = "VirtoCommerce.Search.IndexingJobs.CronExpression",
                     GroupName = "Search|Job",
                     ValueType = SettingValueType.ShortText,
-                    DefaultValue = "0/5 * * * *",
-                    RestartRequired = true
+                    DefaultValue = "0/5 * * * *"
                 };
 
                 public static SettingDescriptor ScaleOut = new SettingDescriptor
@@ -60,8 +58,7 @@ namespace VirtoCommerce.SearchModule.Core
                     Name = "VirtoCommerce.Search.IndexingJobs.ScaleOut",
                     GroupName = "Search|Job",
                     ValueType = SettingValueType.Boolean,
-                    DefaultValue = false,
-                    RestartRequired = true
+                    DefaultValue = false
                 };
 
                 public static SettingDescriptor MaxQueueSize = new SettingDescriptor
@@ -69,8 +66,7 @@ namespace VirtoCommerce.SearchModule.Core
                     Name = "VirtoCommerce.Search.IndexingJobs.MaxQueueSize",
                     GroupName = "Search|Job",
                     ValueType = SettingValueType.Integer,
-                    DefaultValue = "25",
-                    RestartRequired = true
+                    DefaultValue = 25
                 };
 
                 public static IEnumerable<SettingDescriptor> AllSettings

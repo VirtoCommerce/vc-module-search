@@ -19,6 +19,11 @@ namespace VirtoCommerce.SearchModule.Core.Model
         public IList<string> SearchFields { get; set; }
 
         /// <summary>
+        /// Allows to retrieve only a specific set of fields in the result hits
+        /// </summary>
+        public IList<string> IncludeFields { get; set; }
+
+        /// <summary>
         /// Gets or sets a value indicating whether to use fuzzy search (true) or strict search (false)
         /// </summary>
         public bool IsFuzzySearch { get; set; }
