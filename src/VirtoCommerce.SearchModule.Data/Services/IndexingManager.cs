@@ -53,11 +53,13 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 var searchResponse = await _searchProvider.SearchAsync(documentType, searchRequest);
 
                 result.IndexedDocumentsCount = searchResponse.TotalCount;
-
                 if (searchResponse.Documents?.Any() == true)
                 {
                     var indexationDate = searchResponse.Documents[0].FirstOrDefault(kvp => kvp.Key.EqualsInvariant(KnownDocumentFields.IndexationDate));
-                    result.LastIndexationDate = Convert.ToDateTime(indexationDate.Value);
+                    if (DateTimeOffset.TryParse(indexationDate.Value.ToString(), out var lastIndexationDateTime))
+                    {
+                        result.LastIndexationDate = lastIndexationDateTime.DateTime;
+                    }
                 }
             }
             catch

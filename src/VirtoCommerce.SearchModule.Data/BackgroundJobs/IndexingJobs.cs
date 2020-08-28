@@ -392,7 +392,14 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
         private DateTime? GetLastIndexationDate(string documentType)
         {
-            return _settingsManager.GetValue(GetLastIndexationDateName(documentType), (DateTime?)null);
+            var result = _indexingManager.GetIndexStateAsync(documentType).GetAwaiter().GetResult().LastIndexationDate;
+            if (result != null)
+            {
+                //need to take the older date from the dates loaded from the index and settings.
+                //Because the actual last indexation date stored in the index may be later than last job run are stored in the settings. e.g after data import or direct database changes
+                result = new DateTime(Math.Min(result.Value.Ticks, _settingsManager.GetValue(GetLastIndexationDateName(documentType), DateTime.MaxValue).Ticks));
+            }
+            return result;
         }
 
         private void SetLastIndexationDate(string documentType, DateTime? oldValue, DateTime newValue)
