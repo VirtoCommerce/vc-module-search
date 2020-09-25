@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using VirtoCommerce.SearchModule.Core.Exceptions;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 
@@ -7,24 +8,24 @@ namespace VirtoCommerce.SearchModule.Data.Services
 {
     public class DummySearchProvider : ISearchProvider
     {
-        public async Task DeleteIndexAsync(string documentType)
+        public Task DeleteIndexAsync(string documentType)
         {
-            await Task.CompletedTask;
+            throw new SearchException("There is no a registered Search Provider!");
         }
 
-        public async Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents)
+        public Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents)
         {
-            return await Task.FromResult(new IndexingResult());
+            throw new SearchException("There is no a registered Search Provider!");
         }
 
-        public async Task<IndexingResult> RemoveAsync(string documentType, IList<IndexDocument> documents)
+        public Task<IndexingResult> RemoveAsync(string documentType, IList<IndexDocument> documents)
         {
-            return await Task.FromResult(new IndexingResult());
+            throw new SearchException("There is no a registered Search Provider!");
         }
 
-        public async Task<SearchResponse> SearchAsync(string documentType, SearchRequest request)
+        public Task<SearchResponse> SearchAsync(string documentType, SearchRequest request)
         {
-            return await Task.FromResult(new SearchResponse());
+            throw new SearchException("There is no a registered Search Provider!");
         }
     }
 }
