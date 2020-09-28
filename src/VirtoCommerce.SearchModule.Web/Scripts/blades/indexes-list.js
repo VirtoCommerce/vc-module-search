@@ -7,11 +7,6 @@ angular.module('virtoCommerce.searchModule')
             blade.refresh = function () {
                 blade.isLoading = true;
                 searchIndexationApi.get({}, function (response) {
-                    _.each(response, function (x) {
-                        if (x.provider === 'ElasticSearch' && x.indexedDocumentsCount === 10000) {
-                            x.indexedDocumentsCount = '10000+';
-                        }
-                    });
                     blade.currentEntities = response;
                     blade.isLoading = false;
                 });
