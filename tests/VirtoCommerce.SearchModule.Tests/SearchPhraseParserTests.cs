@@ -1,4 +1,5 @@
 using System.Linq;
+using FluentAssertions;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 using VirtoCommerce.SearchModule.Data.SearchPhraseParsing;
@@ -23,18 +24,20 @@ namespace VirtoCommerce.SearchModule.Tests
         [Fact]
         public void TestNegationFilter()
         {
+            // Arrange
             var parser = Getparser();
+
+            // Act
             var result = parser.Parse("!size:medium");
 
-            Assert.NotNull(result);
-            Assert.Equal(string.Empty, result.Keyword);
-            Assert.NotNull(result.Filters);
-            Assert.Equal(1, result.Filters.Count);
-
-            var filter = result.Filters.First() as NotFilter;
-            //todo
-            //Assert.NotNull(filter);
-            //Assert.NotNull(filter.ChildFilter);
+            // Assert
+            result.Should().NotBeNull();
+            result.Keyword.Should().BeEmpty();
+            result.Filters.Should().NotBeNull();
+            result.Filters.Count.Should().Be(1);
+            var firstFilter = result.Filters.First().As<NotFilter>();
+            firstFilter.Should().NotBeNull();
+            firstFilter.ChildFilter.Should().NotBeNull();
         }
 
         [Fact]
@@ -94,7 +97,6 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.True(value.IncludeLower);
             Assert.False(value.IncludeUpper);
 
-
             result = parser.Parse("size:(TO 10]");
 
             Assert.NotNull(result);
@@ -115,7 +117,6 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.Equal("10", value.Upper);
             Assert.False(value.IncludeLower);
             Assert.True(value.IncludeUpper);
-
 
             result = parser.Parse("size:(10 TO]");
 
@@ -176,7 +177,6 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.Equal("one two \r\n\t\\ three four", result.Keyword);
             Assert.Empty(result.Filters);
 
-
             // Attribute filter
             result = parser.Parse("\"color \\r\\n\\t\\\\ 2\":\"light \\r\\n\\t\\\\ blue\"");
 
@@ -194,7 +194,6 @@ namespace VirtoCommerce.SearchModule.Tests
             var value = filter.Values.First();
             Assert.NotNull(value);
             Assert.Equal("light \r\n\t\\ blue", value);
-
 
             // Range filter
             result = parser.Parse("date:[\"2017-04-23T15:24:31.180Z\" to \"2017-04-28T15:24:31.180Z\"]");
@@ -217,7 +216,6 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.True(rangeValue.IncludeLower);
             Assert.True(rangeValue.IncludeUpper);
         }
-
 
         private static ISearchPhraseParser Getparser()
         {
