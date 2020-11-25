@@ -31,7 +31,7 @@ angular.module('virtoCommerce.searchModule')
         }, {
             name: "search.commands.copy-to-clipboard",
             icon: 'fa fa-clipboard',
-            executeMethod: function (blade) {
+            executeMethod: function () {
                 var copyElement = document.getElementById("indexData");
                 var range = document.createRange();
                 range.selectNode(copyElement);
