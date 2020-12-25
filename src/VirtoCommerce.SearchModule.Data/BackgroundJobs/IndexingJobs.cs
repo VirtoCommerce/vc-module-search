@@ -189,7 +189,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                 {
                     EnqueueIndexDocuments(item.Key, item.Select(x => x.Id).Distinct().ToArray());
                 }
-                
+
             }
 
             var groupDeleteIds = indexEntries.Where(x => x.EntryState == EntryState.Deleted && x.Id != null)
@@ -430,20 +430,20 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                 var hasQueuedIndexingJobs = monitoringApi.Queues()
                     .FirstOrDefault(x => x.Name.Equals(queue, StringComparison.OrdinalIgnoreCase))
                     ?.FirstJobs
-                    .Where(x => jobPredicate == null || jobPredicate(x.Value.Job))
-                    .Any(x => x.Value.Job.Method.DeclaringType == typeof(IndexingJobs));
+                    .Where(x => jobPredicate == null || (x.Value != null && jobPredicate(x.Value.Job)))
+                    .Any(x => x.Value?.Job.Method.DeclaringType == typeof(IndexingJobs));
 
                 if (!hasQueuedIndexingJobs.GetValueOrDefault())
                 {
                     var hasFetchedIndexingJobs = monitoringApi.FetchedJobs(queue, 0, int.MaxValue)
-                        ?.Where(x => jobPredicate == null || jobPredicate(x.Value.Job))
-                        .Any(x => x.Value.Job.Method.DeclaringType == typeof(IndexingJobs));
+                        ?.Where(x => jobPredicate == null || (x.Value != null && jobPredicate(x.Value.Job)))
+                        .Any(x => x.Value?.Job.Method.DeclaringType == typeof(IndexingJobs));
 
                     if (!hasFetchedIndexingJobs.GetValueOrDefault())
                     {
                         var hasProcessingIndexingJobs = monitoringApi.ProcessingJobs(0, int.MaxValue)
-                            ?.Where(x => jobPredicate == null || jobPredicate(x.Value.Job))
-                            .Any(x => x.Value.Job.Method.DeclaringType == typeof(IndexingJobs));
+                            ?.Where(x => jobPredicate == null || (x.Value != null && jobPredicate(x.Value.Job)))
+                            .Any(x => x.Value?.Job.Method.DeclaringType == typeof(IndexingJobs));
 
                         if (!hasProcessingIndexingJobs.GetValueOrDefault())
                         {
