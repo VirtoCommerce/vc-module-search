@@ -58,7 +58,8 @@ namespace VirtoCommerce.SearchModule.Core
                     Name = "VirtoCommerce.Search.IndexingJobs.ScaleOut",
                     GroupName = "Search|Job",
                     ValueType = SettingValueType.Boolean,
-                    DefaultValue = false
+                    DefaultValue = false,
+                    IsHidden = true
                 };
 
                 public static SettingDescriptor MaxQueueSize = new SettingDescriptor
