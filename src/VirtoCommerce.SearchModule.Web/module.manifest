@@ -3,7 +3,7 @@
   <id>VirtoCommerce.Search</id>
   <version>3.9.0</version>
   <version-tag />
-  <platformVersion>3.14.0</platformVersion>
+  <platformVersion>3.0.0</platformVersion>
   <title>Search module</title>
   <description>Search module</description>
   <authors>

@@ -53,14 +53,15 @@ namespace VirtoCommerce.SearchModule.Core
                     DefaultValue = "0/5 * * * *"
                 };
 
+                /* // VP-6502: Temporary disabled indexing setting "Enable scale-out" until further investigation
                 public static SettingDescriptor ScaleOut = new SettingDescriptor
                 {
                     Name = "VirtoCommerce.Search.IndexingJobs.ScaleOut",
                     GroupName = "Search|Job",
                     ValueType = SettingValueType.Boolean,
-                    DefaultValue = false,
-                    IsHidden = true
+                    DefaultValue = false
                 };
+                */
 
                 public static SettingDescriptor MaxQueueSize = new SettingDescriptor
                 {
@@ -76,7 +77,7 @@ namespace VirtoCommerce.SearchModule.Core
                     {
                         yield return Enable;
                         yield return CronExpression;
-                        yield return ScaleOut;
+                        // yield return ScaleOut; // VP-6502: Temporary disabled indexing setting "Enable scale-out" until further investigation
                         yield return MaxQueueSize;
                     }
                 }

@@ -26,7 +26,9 @@ namespace VirtoCommerce.SearchModule.Web
             serviceCollection.AddTransient<ISearchPhraseParser, SearchPhraseParser>();
             serviceCollection.AddScoped<IIndexingWorker>(context =>
             {
+                /* // VP-6502: Temporary disabled indexing setting "Enable scale-out" until further investigation
                 var settingsManager = context.GetService<ISettingsManager>();
+
                 if (settingsManager.GetValue(ModuleConstants.Settings.IndexingJobs.ScaleOut.Name, false))
                 {
                     return new HangfireIndexingWorker
@@ -34,7 +36,7 @@ namespace VirtoCommerce.SearchModule.Web
                         ThrottleQueueCount = settingsManager.GetValue(ModuleConstants.Settings.IndexingJobs.MaxQueueSize.Name, 25)
                     };
                 }
-
+                */
                 return null;
             });
 
