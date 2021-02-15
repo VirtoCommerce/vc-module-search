@@ -7,7 +7,7 @@ angular.module('virtoCommerce.searchModule')
             blade.isLoading = false;
         };
 
-        blade.headIcon = 'fa-search';
+        blade.headIcon = 'fa fa-search';
 
         blade.toolbarCommands = [{
             name: "search.commands.rebuild-index",

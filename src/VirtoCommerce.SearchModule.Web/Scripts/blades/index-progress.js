@@ -1,4 +1,4 @@
-﻿angular.module('virtoCommerce.searchModule')
+angular.module('virtoCommerce.searchModule')
 .controller('virtoCommerce.searchModule.indexProgressController', ['$scope', 'virtoCommerce.searchModule.searchIndexation', function ($scope, searchIndexationApi) {
     var blade = $scope.blade;
 
@@ -23,6 +23,6 @@
     }];
 
     blade.title = blade.notification.title;
-    blade.headIcon = 'fa-search';
+    blade.headIcon = 'fa fa-search';
     blade.isLoading = false;
 }]);
