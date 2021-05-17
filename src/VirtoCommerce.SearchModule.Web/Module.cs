@@ -30,7 +30,7 @@ namespace VirtoCommerce.SearchModule.Web
             });
 
             serviceCollection.AddScoped<IIndexingManager, IndexingManager>();
-            serviceCollection.AddSingleton<IndexProgressHandler>();
+            serviceCollection.AddScoped<IndexProgressHandler>();
             serviceCollection.AddSingleton<ISearchProvider, DummySearchProvider>();
             serviceCollection.AddSingleton<ISearchRequestBuilderRegistrar, SearchRequestBuilderRegistrar>();
 
