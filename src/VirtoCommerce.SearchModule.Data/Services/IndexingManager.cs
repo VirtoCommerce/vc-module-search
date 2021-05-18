@@ -18,12 +18,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
     public class IndexingManager : IIndexingManager
     {
         private readonly ISearchProvider _searchProvider;
-        private readonly IEnumerable<IndexDocumentConfiguration> _configs;
+        private readonly IIndexDocumentRegistrar _configs;
         private readonly ISettingsManager _settingsManager;
         private readonly IIndexingWorker _backgroundWorker;
         private readonly SearchOptions _searchOptions;
 
-        public IndexingManager(ISearchProvider searchProvider, IEnumerable<IndexDocumentConfiguration> configs, IOptions<SearchOptions> searchOptions,
+        public IndexingManager(ISearchProvider searchProvider, IIndexDocumentRegistrar configs, IOptions<SearchOptions> searchOptions,
             ISettingsManager settingsManager = null, IIndexingWorker backgroundWorker = null)
         {
             if (searchProvider == null)
@@ -92,33 +92,27 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 await _searchProvider.DeleteIndexAsync(documentType);
             }
 
-            var configs = _configs.Where(c => c.DocumentType.EqualsInvariant(documentType)).ToArray();
+            var config = _configs.GetIndexDocumentConfiguration(documentType);
 
-            foreach (var config in configs)
-            {
-                await ProcessConfigurationAsync(config, options, progressCallback, cancellationToken);
-            }
+            await ProcessConfigurationAsync(config, options, progressCallback, cancellationToken);
         }
 
         public virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds)
         {
             // Todo: reuse general index api?
-            var configs = _configs.Where(c => c.DocumentType.EqualsInvariant(documentType)).ToArray();
+            var config = _configs.GetIndexDocumentConfiguration(documentType);
             var result = new IndexingResult { Items = new List<IndexingResultItem>() };
 
-            foreach (var config in configs)
-            {
-                var secondaryDocBuilders = config.RelatedSources?
-                    .Where(s => s.DocumentBuilder != null)
-                    .Select(s => s.DocumentBuilder)
-                    .ToList();
+            var secondaryDocBuilders = config.RelatedSources?
+                .Where(s => s.DocumentBuilder != null)
+                .Select(s => s.DocumentBuilder)
+                .ToList();
 
-                var configResult = await IndexDocumentsAsync(documentType, documentIds,
-                    config.DocumentSource.DocumentBuilder, secondaryDocBuilders,
-                    new CancellationTokenWrapper(CancellationToken.None));
+            var configResult = await IndexDocumentsAsync(documentType, documentIds,
+                config.DocumentSource.DocumentBuilder, secondaryDocBuilders,
+                new CancellationTokenWrapper(CancellationToken.None));
 
-                result.Items.AddRange(configResult.Items ?? Enumerable.Empty<IndexingResultItem>());
-            }
+            result.Items.AddRange(configResult.Items ?? Enumerable.Empty<IndexingResultItem>());
 
             return result;
         }
