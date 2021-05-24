@@ -18,7 +18,6 @@
     <None Remove="node_modules\**" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="HangFire" Version="1.7.14" />
     <PackageReference Include="VirtoCommerce.Platform.Core" Version="3.57.0" />
     <PackageReference Include="VirtoCommerce.Platform.Data" Version="3.57.0" />
   </ItemGroup>
