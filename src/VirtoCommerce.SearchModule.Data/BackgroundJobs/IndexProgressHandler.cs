@@ -59,7 +59,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             if (!progress.Errors.IsNullOrEmpty())
             {
                 _notification.Errors.AddRange(progress.Errors);
-                _notification.ErrorCount += _notification.Errors.Count;
+                _notification.ErrorCount = _notification.Errors.Count;
             }
 
             _notification.TotalCount = progress.TotalCount ?? 0;
@@ -87,7 +87,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                 ? "Indexation has been canceled"
                 : _suppressInsignificantNotifications
                     ? $"{_notification.DocumentType}: Indexation completed. Total: {_notification.TotalCount}, Processed: {_notification.ProcessedCount}, Errors: {_notification.ErrorCount}."
-                    : "Indexation completed" + (_notification.Errors?.Any() == true ? " with errors" : " successfully");
+                    : "Indexation completed" + (_notification.ErrorCount > 0 ? " with errors" : " successfully");
 
             _log.LogTrace(_notification.Description);
 

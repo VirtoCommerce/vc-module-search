@@ -23,39 +23,40 @@ angular.module(moduleTemplateName, [])
             templateUrl: '$(Platform)/Scripts/common/templates/home.tpl.html'
         });
     }])
-    .run(['$rootScope', 'platformWebApp.mainMenuService', 'platformWebApp.widgetService', '$state', 'platformWebApp.pushNotificationTemplateResolver', 'platformWebApp.bladeNavigationService', function ($rootScope, mainMenuService, widgetService, $state, pushNotificationTemplateResolver, bladeNavigationService) {
+    .run(['platformWebApp.mainMenuService', '$state', 'platformWebApp.pushNotificationTemplateResolver', 'platformWebApp.bladeNavigationService',
+        function (mainMenuService, $state, pushNotificationTemplateResolver, bladeNavigationService) {
 
-        // register notification template
-        pushNotificationTemplateResolver.register({
-            priority: 900,
-            satisfy: function (notify, place) { return place == 'history' && notify.notifyType == 'IndexProgressPushNotification'; },
-            template: 'Modules/$(VirtoCommerce.Search)/Scripts/notifications/historyIndex.tpl.html',
-            action: function (notify) {
-                var blade = {
-                    id: 'indexProgress',
-                    notification: notify,
-                    controller: 'virtoCommerce.searchModule.indexProgressController',
-                    template: 'Modules/$(VirtoCommerce.Search)/Scripts/blades/index-progress.tpl.html'
-                };
-                bladeNavigationService.showBlade(blade);
-            }
-        });
+            // register notification template
+            pushNotificationTemplateResolver.register({
+                priority: 900,
+                satisfy: function (notify, place) { return place === 'history' && notify.notifyType === 'IndexProgressPushNotification'; },
+                template: 'Modules/$(VirtoCommerce.Search)/Scripts/notifications/historyIndex.tpl.html',
+                action: function (notify) {
+                    var blade = {
+                        id: 'indexProgress',
+                        notification: notify,
+                        controller: 'virtoCommerce.searchModule.indexProgressController',
+                        template: 'Modules/$(VirtoCommerce.Search)/Scripts/blades/index-progress.tpl.html'
+                    };
+                    bladeNavigationService.showBlade(blade);
+                }
+            });
 
-        pushNotificationTemplateResolver.register({
-            priority: 900,
-            satisfy: function (notify, place) { return place == 'header-notification' && notify.notifyType == 'IndexProgressPushNotification'; },
-            template: 'Modules/$(VirtoCommerce.Search)/Scripts/notifications/headerNotification.tpl.html',
-            action: function (notify) { $state.go('workspace.pushNotificationsHistory', notify) }
-        });
+            pushNotificationTemplateResolver.register({
+                priority: 900,
+                satisfy: function (notify, place) { return place === 'header-notification' && notify.notifyType === 'IndexProgressPushNotification'; },
+                template: 'Modules/$(VirtoCommerce.Search)/Scripts/notifications/headerNotification.tpl.html',
+                action: function (notify) { $state.go('workspace.pushNotificationsHistory', notify) }
+            });
 
-        mainMenuService.addMenuItem({
-            path: 'browse/searchIndex',
-            icon: 'fa fa-search',
-            title: 'search.main-menu-title.search-index',
-            priority: 25,
-            action: function () {
-                $state.go('workspace.searchIndexModule');
-            }
-        });
-    }
+            mainMenuService.addMenuItem({
+                path: 'browse/searchIndex',
+                icon: 'fa fa-search',
+                title: 'search.main-menu-title.search-index',
+                priority: 25,
+                action: function () {
+                    $state.go('workspace.searchIndexModule');
+                }
+            });
+        }
     ]);
