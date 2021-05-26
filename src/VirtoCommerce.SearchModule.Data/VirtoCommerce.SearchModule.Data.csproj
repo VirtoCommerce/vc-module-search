@@ -14,8 +14,8 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
         <PackageReference Include="Antlr4.Runtime.Standard" Version="4.8.0" />
-        <PackageReference Include="HangFire" Version="1.7.9" />
-        <PackageReference Include="VirtoCommerce.Platform.Data" Version="3.30.0" />
+        <PackageReference Include="VirtoCommerce.Platform.Data" Version="3.57.0" />
+        <PackageReference Include="VirtoCommerce.Platform.Hangfire" Version="3.57.0" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\VirtoCommerce.SearchModule.Core\VirtoCommerce.SearchModule.Core.csproj" />
