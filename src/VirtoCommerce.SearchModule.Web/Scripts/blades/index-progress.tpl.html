@@ -6,7 +6,7 @@
                 <p ng-if="blade.notification.created" class="text no-data">
                     {{ 'search.blades.index-progress.labels.start' | translate }} — <i class="fa fa-clock-o"></i><span am-time-ago="blade.notification.created"></span>
                 </p>
-                <div ng-if="!blade.notification.finished" style="position: relative; margin-bottom: 40px">
+                <div ng-if="!blade.notification.finished" style="position: relative; margin-bottom: 45px; margin-top: -10px">
                     <div class="progress-bar progress-bar-background" style="position: absolute"></div>
                     <div class="progress-bar" ng-style="{'width': blade.progressPercentage + '%'}" style="position: absolute"></div>
                 </div>
