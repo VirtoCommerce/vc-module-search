@@ -1,4 +1,10 @@
-﻿/* widget for statistics */
+.progress-bar-background {
+    background-color: #EAEDF3;
+    width: 100%;
+    background-image: none;
+}
+
+/* widget for statistics */
 .list.__stats {
     height: 100%;
     line-height: 1.2;
