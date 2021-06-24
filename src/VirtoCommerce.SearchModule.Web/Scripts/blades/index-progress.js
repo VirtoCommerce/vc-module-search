@@ -4,6 +4,7 @@ angular.module('virtoCommerce.searchModule')
 
     $scope.$on("new-notification-event", function (event, notification) {
         if (blade.notification && notification.id == blade.notification.id) {
+            blade.progressPercentage = notification.processedCount / notification.totalCount * 100;
             angular.copy(notification, blade.notification);
             if (notification.finished && blade.parentRefresh) {
                 blade.parentRefresh();
