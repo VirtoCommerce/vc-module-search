@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using VirtoCommerce.SearchModule.Core.Model;
@@ -22,7 +23,14 @@ namespace VirtoCommerce.SearchModule.Core.Extenstions
                 {
                     if (!string.IsNullOrWhiteSpace(value))
                     {
-                        document.Add(new IndexDocumentField(name, value) { IsRetrievable = true, IsFilterable = true, IsCollection = true });
+                        document.Add(new IndexDocumentField(name, value)
+                        {
+                            IsRetrievable = true,
+                            IsFilterable = true,
+                            IsCollection = true,
+                            ValueType = IndexDocumentFieldValueType.String,
+                        });
+
                         document.AddSearchableValue(value);
                     }
                 }
@@ -39,7 +47,13 @@ namespace VirtoCommerce.SearchModule.Core.Extenstions
         {
             if (!string.IsNullOrWhiteSpace(value))
             {
-                document.Add(new IndexDocumentField(name, value) { IsRetrievable = true, IsFilterable = true });
+                document.Add(new IndexDocumentField(name, value)
+                {
+                    IsRetrievable = true,
+                    IsFilterable = true,
+                    ValueType = IndexDocumentFieldValueType.String,
+                });
+
                 document.AddSearchableValue(value);
             }
         }
@@ -53,15 +67,39 @@ namespace VirtoCommerce.SearchModule.Core.Extenstions
         {
             if (!string.IsNullOrWhiteSpace(value))
             {
-                document.Add(new IndexDocumentField(SearchableFieldName, value) { IsRetrievable = true, IsSearchable = true, IsCollection = true });
+                document.Add(new IndexDocumentField(SearchableFieldName, value)
+                {
+                    IsRetrievable = true,
+                    IsSearchable = true,
+                    IsCollection = true,
+                    ValueType = IndexDocumentFieldValueType.String,
+                });
             }
         }
 
+        [Obsolete("Use overload AddFilterableValue(this IndexDocument document, string name, object value, IndexDocumentFieldValueType valueType).")]
         public static void AddFilterableValue(this IndexDocument document, string name, object value)
         {
             if (value != null)
             {
-                document.Add(new IndexDocumentField(name, value) { IsRetrievable = true, IsFilterable = true });
+                document.Add(new IndexDocumentField(name, value)
+                {
+                    IsRetrievable = true,
+                    IsFilterable = true,
+                });
+            }
+        }
+
+        public static void AddFilterableValue(this IndexDocument document, string name, object value, IndexDocumentFieldValueType valueType)
+        {
+            if (value != null)
+            {
+                document.Add(new IndexDocumentField(name, value)
+                {
+                    IsRetrievable = true,
+                    IsFilterable = true,
+                    ValueType = valueType,
+                });
             }
         }
 
@@ -73,7 +111,13 @@ namespace VirtoCommerce.SearchModule.Core.Extenstions
                 {
                     if (!string.IsNullOrWhiteSpace(value))
                     {
-                        document.Add(new IndexDocumentField(name, value) { IsRetrievable = true, IsFilterable = true, IsCollection = true });
+                        document.Add(new IndexDocumentField(name, value)
+                        {
+                            IsRetrievable = true,
+                            IsFilterable = true,
+                            IsCollection = true,
+                            ValueType = IndexDocumentFieldValueType.String,
+                        });
                     }
                 }
             }
