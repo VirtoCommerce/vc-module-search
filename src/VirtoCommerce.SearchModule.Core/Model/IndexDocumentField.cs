@@ -40,6 +40,8 @@ namespace VirtoCommerce.SearchModule.Core.Model
         public bool IsSearchable { get; set; }
         public bool IsCollection { get; set; }
 
+        public IndexDocumentFieldValueType ValueType { get; set; }
+
         public void Merge(IndexDocumentField field)
         {
             foreach (var value in field.Values)
