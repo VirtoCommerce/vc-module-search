@@ -15,7 +15,7 @@ namespace VirtoCommerce.SearchModule.Core
                 public const string IndexAccess = "search:index:access";
                 public const string IndexRebuild = "search:index:rebuild";
 
-                public static string[] AllPermissions = new[]
+                public static string[] AllPermissions { get; } = new[]
                 {
                     IndexAccess,
                     IndexRebuild
