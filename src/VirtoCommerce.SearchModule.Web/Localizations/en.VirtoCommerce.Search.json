@@ -59,7 +59,8 @@
     }
   },
   "permissions": {
-    "search:index:rebuild": "Allows to delete search index and build it again."
+    "search:index:rebuild": "Allows to delete search index and build it again.",
+    "search:index:access": "Allows access to the Search Index menu."
   },
   "settings": {
     "VirtoCommerce.Search.IndexingJobs.Enable": {
