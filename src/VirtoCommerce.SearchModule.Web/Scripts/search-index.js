@@ -56,7 +56,8 @@ angular.module(moduleTemplateName, [])
                 priority: 25,
                 action: function () {
                     $state.go('workspace.searchIndexModule');
-                }
+                },
+                permission: 'search:index:access'
             });
         }
     ]);
