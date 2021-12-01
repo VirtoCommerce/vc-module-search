@@ -7,6 +7,10 @@ VirtoCommerce.Search module defines common abstractions for indexed search funct
 * Elasticsearch
 * Azure Search
 
+## Permissions
+* `search:index:access`: Allows access to the Search Index menu.
+* `search:index:rebuild`: Allows access to indexation functions (delete and build).
+
 # License
 Copyright (c) Virto Solutions LTD.  All rights reserved.
 
