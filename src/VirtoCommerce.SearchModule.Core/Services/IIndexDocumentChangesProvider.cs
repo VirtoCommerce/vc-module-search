@@ -27,5 +27,7 @@ namespace VirtoCommerce.SearchModule.Core.Services
         /// <param name="take"></param>
         /// <returns></returns>
         Task<IList<IndexDocumentChange>> GetChangesAsync(DateTime? startDate, DateTime? endDate, long skip, long take);
+
+        IEnumerable<IIndexDocumentBuilder> DocumentBuilders { get; }
     }
 }

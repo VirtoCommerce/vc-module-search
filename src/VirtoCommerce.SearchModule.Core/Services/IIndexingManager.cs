@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using VirtoCommerce.SearchModule.Core.Model;
 
@@ -30,8 +31,9 @@ namespace VirtoCommerce.SearchModule.Core.Services
         /// </summary>
         /// <param name="documentType">Document type to index.</param>
         /// <param name="documentIds">Ids of documents to index.</param>
+        /// <param name="builders">Index document builders to process the changed documents</param>
         /// <returns>Result of indexing operation.</returns>
-        Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds);
+        Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IList<IIndexDocumentBuilder> builders = null);
 
         /// <summary>
         /// Deletes a batch of documents from the index immediately. Intended to be used by IndexingJobs.
