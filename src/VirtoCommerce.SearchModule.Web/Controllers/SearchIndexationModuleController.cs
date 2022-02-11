@@ -96,11 +96,11 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
         }
 
         [HttpGet]
-        [Route("swapIndexEnabled")]
-        public ActionResult SwapIndexEnabled()
+        [Route("swapIndexSupported")]
+        public ActionResult SwapIndexSupported()
         {
-            var result = _searchProvider.SwapIndexEnabled;
-            return Ok(new { SwapIndexEnabled = result });
+            var result = _searchProvider.SwapIndexSupported;
+            return Ok(new { Result = result });
         }
 
         [HttpPost]

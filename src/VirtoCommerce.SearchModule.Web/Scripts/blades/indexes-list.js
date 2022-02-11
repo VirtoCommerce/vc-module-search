@@ -26,7 +26,7 @@ angular.module('virtoCommerce.searchModule')
                 }
             };
 
-            searchIndexationApi.swapIndexEnabled({}, function (response) {
+            searchIndexationApi.swapIndexSupported({}, function (response) {
                 blade.toolbarCommands = [{
                     name: 'platform.commands.refresh',
                     icon: 'fa fa-refresh',
@@ -48,7 +48,7 @@ angular.module('virtoCommerce.searchModule')
                     permission: 'search:index:rebuild'
                 }];
 
-                if (response.swapIndexEnabled) {
+                if (response.result) {
                     blade.toolbarCommands.push(blade.showBackupIndicesCommand);
                 }
             });
