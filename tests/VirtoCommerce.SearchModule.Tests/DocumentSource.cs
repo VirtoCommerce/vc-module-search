@@ -17,8 +17,6 @@ namespace VirtoCommerce.SearchModule.Tests
         public string Name { get; }
         public IList<string> DocumentIds { get; set; }
         public IList<IndexDocumentChange> Changes { get; set; }
-        public IIndexDocumentBuilder DocumentBuilder { get; set; }
-        public IEnumerable<IIndexDocumentBuilder> DocumentBuilders => null;
 
         public virtual Task<long> GetTotalChangesCountAsync(DateTime? startDate, DateTime? endDate)
         {

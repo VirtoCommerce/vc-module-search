@@ -131,16 +131,18 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
         public static void EnqueueIndexDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
         {
+            var buildersTypes = builders?.Select(x => x.GetType().FullName);
+
             switch (priority)
             {
                 case JobPriority.High:
-                    BackgroundJob.Enqueue<IndexingJobs>(x => x.IndexDocumentsHighPriorityAsync(documentType, documentIds, builders));
+                    BackgroundJob.Enqueue<IndexingJobs>(x => x.IndexDocumentsHighPriorityAsync(documentType, documentIds, buildersTypes));
                     break;
                 case JobPriority.Normal:
-                    BackgroundJob.Enqueue<IndexingJobs>(x => x.IndexDocumentsNormalPriorityAsync(documentType, documentIds, builders));
+                    BackgroundJob.Enqueue<IndexingJobs>(x => x.IndexDocumentsNormalPriorityAsync(documentType, documentIds, buildersTypes));
                     break;
                 case JobPriority.Low:
-                    BackgroundJob.Enqueue<IndexingJobs>(x => x.IndexDocumentsLowPriorityAsync(documentType, documentIds, builders));
+                    BackgroundJob.Enqueue<IndexingJobs>(x => x.IndexDocumentsLowPriorityAsync(documentType, documentIds, buildersTypes));
                     break;
                 default:
                     throw new ArgumentException($@"Unknown priority: {priority}", nameof(priority));
@@ -196,7 +198,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         // Make sure we wait for async methods to end, so that Hangfire retries if an exception occurs.
 
         [Queue(JobPriority.High)]
-        public async Task IndexDocumentsHighPriorityAsync(string documentType, string[] documentIds, IList<IIndexDocumentBuilder> builders)
+        public async Task IndexDocumentsHighPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builders)
         {
             if (!documentIds.IsNullOrEmpty())
             {
@@ -205,7 +207,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         }
 
         [Queue(JobPriority.Normal)]
-        public async Task IndexDocumentsNormalPriorityAsync(string documentType, string[] documentIds, IList<IIndexDocumentBuilder> builders)
+        public async Task IndexDocumentsNormalPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builders)
         {
             if (!documentIds.IsNullOrEmpty())
             {
@@ -214,7 +216,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         }
 
         [Queue(JobPriority.Low)]
-        public async Task IndexDocumentsLowPriorityAsync(string documentType, string[] documentIds, IList<IIndexDocumentBuilder> builders)
+        public async Task IndexDocumentsLowPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builders)
         {
             if (!documentIds.IsNullOrEmpty())
             {

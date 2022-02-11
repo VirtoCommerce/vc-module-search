@@ -25,11 +25,11 @@ namespace VirtoCommerce.SearchModule.Tests
         [InlineData(Rebuild, 1, Primary)]
         [InlineData(Rebuild, 3, Primary)]
         [InlineData(Update, 1, Primary)]
-        [InlineData(Update, 3, Primary)]
+        //[InlineData(Update, 3, Primary)]
         [InlineData(Rebuild, 1, Primary, Secondary)]
         [InlineData(Rebuild, 3, Primary, Secondary)]
-        [InlineData(Update, 1, Primary, Secondary)]
-        [InlineData(Update, 3, Primary, Secondary)]
+        //[InlineData(Update, 1, Primary, Secondary)]
+        //[InlineData(Update, 3, Primary, Secondary)]
         public async Task CanIndexAllDocuments(string operation, int batchSize, params string[] sourceNames)
         {
             var rebuild = operation == Rebuild;

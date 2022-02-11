@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
-using Microsoft.VisualBasic;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.SearchModule.Core;
@@ -112,7 +111,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             }
         }
 
-        public virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IList<IIndexDocumentBuilder> builders = null)
+        public virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> buildersTypes = null)
         {
             // Todo: reuse general index api?
             var configs = _configs.Where(c => c.DocumentType.EqualsInvariant(documentType)).ToArray();
@@ -120,27 +119,29 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             foreach (var config in configs)
             {
-                if (builders == null)
+                var documentBuilders = new List<IIndexDocumentBuilder>
                 {
-                    builders = new List<IIndexDocumentBuilder>
-                    {
-                        config.DocumentSource.DocumentBuilder
-                    };
+                    config.DocumentSource.DocumentBuilder
+                };
 
-                    var secondaryDocBuilders = config.RelatedSources?
-                        .Where(s => s.DocumentBuilder != null)
-                        .Select(s => s.DocumentBuilder)
-                        .ToList();
+                var secondaryDocBuilders = config.RelatedSources?
+                    .Where(s => s.DocumentBuilder != null)
+                    .Select(s => s.DocumentBuilder)
+                    .ToList();
 
-                    if (secondaryDocBuilders != null)
-                    {
-                        builders.AddRange(secondaryDocBuilders);
-                    }
+                if (secondaryDocBuilders != null)
+                {
+                    documentBuilders.AddRange(secondaryDocBuilders);
+                }
+
+                if (buildersTypes.Any())
+                {
+                    documentBuilders = documentBuilders.Where(x => buildersTypes.Contains(x.GetType().FullName)).ToList();
                 }
 
                 var configResult = await IndexDocumentsAsync(documentType,
                     documentIds,
-                    builders,
+                    documentBuilders,
                     new CancellationTokenWrapper(CancellationToken.None));
 
                 result.Items.AddRange(configResult.Items ?? Enumerable.Empty<IndexingResultItem>());
@@ -261,7 +262,8 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             var fullChanges = indexDocumentChanges.Where(x =>
                     x.ChangeType == IndexDocumentChangeType.Deleted ||
-                    (!x.Provider?.DocumentBuilders?.Any() ?? true)).ToArray();
+                    !_configs.GetBuildersForProvider(x.Provider?.GetType()).Any())
+                .ToArray();
 
             var partialChanges = indexDocumentChanges.Except(fullChanges);
 
@@ -303,7 +305,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             {
                 var builders = indexDocumentChanges
                     .Where(x => x.DocumentId == id)
-                    .SelectMany(x => x.Provider.DocumentBuilders);
+                    .SelectMany(x => _configs.GetBuildersForProvider(x.Provider.GetType()));
 
                 var stepResult = await IndexDocumentsAsync(batchOptions.DocumentType, new[] { id }, builders, cancellationToken);
 
@@ -422,7 +424,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             var primaryDocuments = documentIds.Select(x => new IndexDocument(x)).ToList();
 
-            if (primaryDocuments?.Any() == true)
+            if (primaryDocuments.Any())
             {
                 if (documentBuilders != null)
                 {
