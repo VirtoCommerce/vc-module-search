@@ -40,31 +40,20 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         public virtual async Task<IndexState> GetIndexStateAsync(string documentType)
         {
-            var result = new IndexState { DocumentType = documentType, Provider = _searchOptions.Provider, Scope = _searchOptions.Scope };
+            var result = await GetIndexStateAsync(documentType, getBackupIndexState: false);
 
-            var searchRequest = new SearchRequest
-            {
-                Sorting = new[] { new SortingField { FieldName = KnownDocumentFields.IndexationDate, IsDescending = true } },
-                Take = 1,
-            };
+            return result;
+        }
 
-            try
-            {
-                var searchResponse = await _searchProvider.SearchAsync(documentType, searchRequest);
+        public virtual async Task<IEnumerable<IndexState>> GetIndicesStateAsync(string documentType)
+        {
+            var result = new List<IndexState>();
 
-                result.IndexedDocumentsCount = searchResponse.TotalCount;
-                if (searchResponse.Documents?.Any() == true)
-                {
-                    var indexationDate = searchResponse.Documents[0].FirstOrDefault(kvp => kvp.Key.EqualsInvariant(KnownDocumentFields.IndexationDate));
-                    if (DateTimeOffset.TryParse(indexationDate.Value.ToString(), out var lastIndexationDateTime))
-                    {
-                        result.LastIndexationDate = lastIndexationDateTime.DateTime;
-                    }
-                }
-            }
-            catch
+            result.Add(await GetIndexStateAsync(documentType, getBackupIndexState: false));
+
+            if (_searchProvider.SwapIndexEnabled)
             {
-                // ignored
+                result.Add(await GetIndexStateAsync(documentType, getBackupIndexState: true));
             }
 
             return result;
@@ -86,6 +75,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             var documentType = options.DocumentType;
 
+            // each Search Engine implementation has its own way of handing index rebuild 
             if (options.DeleteExistingIndex)
             {
                 progressCallback?.Invoke(new IndexingProgress($"{documentType}: deleting index", documentType));
@@ -151,6 +141,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var batchOptions = new BatchIndexingOptions
             {
                 DocumentType = options.DocumentType,
+                Reindex = options.DeleteExistingIndex,
                 PrimaryDocumentBuilder = configuration.DocumentSource.DocumentBuilder,
                 SecondaryDocumentBuilders = configuration.RelatedSources
                     ?.Where(s => s.DocumentBuilder != null)
@@ -200,6 +191,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 cancellationToken.ThrowIfCancellationRequested();
 
                 changes = await GetNextChangesAsync(feeds);
+            }
+
+            // indexation complete, swap indexes back
+            if (options.DeleteExistingIndex)
+            {
+                 await _searchProvider.SwapIndexAsync(documentType);
             }
 
             progressCallback?.Invoke(new IndexingProgress($"{documentType}: indexation finished", documentType, totalCount ?? processedCount, processedCount));
@@ -258,10 +255,19 @@ namespace VirtoCommerce.SearchModule.Data.Services
             }
             else if (changeType == IndexDocumentChangeType.Modified)
             {
-                result = await IndexDocumentsAsync(batchOptions.DocumentType, documentIds, batchOptions.PrimaryDocumentBuilder, batchOptions.SecondaryDocumentBuilders, cancellationToken);
+                result = await IndexDocumentsAsync(batchOptions.DocumentType, documentIds, batchOptions.PrimaryDocumentBuilder, batchOptions.SecondaryDocumentBuilders, batchOptions.Reindex, cancellationToken);
             }
 
             return result;
+        }
+
+        protected virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, IList<string> documentIds, IIndexDocumentBuilder primaryDocumentBuilder, IEnumerable<IIndexDocumentBuilder> secondaryDocumentBuilders, bool reindex, ICancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var documents = await GetDocumentsAsync(documentIds, primaryDocumentBuilder, secondaryDocumentBuilders, cancellationToken);
+            var response = await _searchProvider.IndexAsync(documentType, documents, reindex);
+            return response;
         }
 
         protected virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, IList<string> documentIds, IIndexDocumentBuilder primaryDocumentBuilder, IEnumerable<IIndexDocumentBuilder> secondaryDocumentBuilders, ICancellationToken cancellationToken)
@@ -403,6 +409,45 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     }
                 }
             }
+        }
+
+        private async Task<IndexState> GetIndexStateAsync(string documentType, bool getBackupIndexState)
+        {
+            var result = new IndexState
+            {
+                DocumentType = documentType,
+                Provider = _searchOptions.Provider,
+                Scope = _searchOptions.Scope,
+                IsActive = !getBackupIndexState,
+            };
+
+            var searchRequest = new SearchRequest
+            {
+                UseBackupIndex = getBackupIndexState,
+                Sorting = new[] { new SortingField { FieldName = KnownDocumentFields.IndexationDate, IsDescending = true } },
+                Take = 1,
+            };
+
+            try
+            {
+                var searchResponse = await _searchProvider.SearchAsync(documentType, searchRequest);
+
+                result.IndexedDocumentsCount = searchResponse.TotalCount;
+                if (searchResponse.Documents?.Any() == true)
+                {
+                    var indexationDate = searchResponse.Documents[0].FirstOrDefault(kvp => kvp.Key.EqualsInvariant(KnownDocumentFields.IndexationDate));
+                    if (DateTimeOffset.TryParse(indexationDate.Value.ToString(), out var lastIndexationDateTime))
+                    {
+                        result.LastIndexationDate = lastIndexationDateTime.DateTime;
+                    }
+                }
+            }
+            catch
+            {
+                // ignored
+            }
+
+            return result;
         }
     }
 }

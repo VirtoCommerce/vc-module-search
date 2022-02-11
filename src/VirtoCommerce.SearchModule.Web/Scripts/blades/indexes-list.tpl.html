@@ -1,4 +1,4 @@
-﻿<div class="blade-static __bottom" ng-if="pageSettings.itemsPerPageCount < pageSettings.totalItems" ng-include="'pagerTemplate.html'"></div>
+<div class="blade-static __bottom" ng-if="pageSettings.itemsPerPageCount < pageSettings.totalItems" ng-include="'pagerTemplate.html'"></div>
 <div class="blade-content __medium-wide">
     <div class="blade-inner">
         <div class="inner-block" ng-init="setGridOptions('virtoCommerce.coreModule.searchIndex.indexes-list.grid', {
@@ -17,7 +17,8 @@
                 },
                 {
                     name: 'documentType',
-                    displayName: 'search.blades.document-type-list.labels.document-type'
+                    displayName: 'search.blades.document-type-list.labels.document-type',
+                    cellTemplate: 'document-type-list.cell.html'
                 },
                 {
                     name: 'lastIndexationDate',
@@ -41,6 +42,9 @@
             <div class="table-wrapper" ng-if="blade.currentEntities.length">
                 <div ui-grid="gridOptions" ui-grid-auto-resize ui-grid-save-state ui-grid-selection ui-grid-resize-columns ui-grid-move-columns ui-grid-pinning ui-grid-height></div>
                 <ul class="menu __context" role="menu" id="prl_menu">
+                    <li class="menu-item" ng-click="swapIndex(contextMenuEntity.documentType)" va-permission="'core:search:index:rebuild'" ng-if="blade.manageIndexMode">
+                        <i class="menu-ico fa fa-exchange"></i> {{ 'search.commands.swap-index' | translate }}
+                    </li>
                     <li class="menu-item" ng-click="rebuildIndex([contextMenuEntity])" va-permission="'core:search:index:rebuild'">
                         <i class="menu-ico fa fa-recycle"></i> {{ 'search.commands.rebuild-index' | translate }}
                     </li>
@@ -76,5 +80,15 @@
 <script type="text/ng-template" id="default-date.cell.html">
     <div ng-if="COL_FIELD" class="ui-grid-cell-contents"><span class="table-date" am-time-ago="COL_FIELD"></span></div>
     <div ng-if="!COL_FIELD" class="ui-grid-cell-contents">N/A</div>
+</script>
+<script type="text/ng-template" id="document-type-list.cell.html">
+    <div class="ui-grid-cell-contents">
+        <div class="inner-contents">
+            <div style="float: left;">{{ COL_FIELD }}</div>
+            <div class="table-status" style="float: left; margin-left: 5px; background:#3c763d" ng-if="grid.appScope.blade.manageIndexMode && row.entity.isActive">
+                {{ 'search.blades.document-type-list.labels.active' | translate }}
+            </div>
+        </div>
+    </div>
 </script>
 

@@ -4,9 +4,67 @@ angular.module('virtoCommerce.searchModule')
             var blade = $scope.blade;
             blade.isLoading = false;
 
+            blade.manageIndexMode = false;
+
+            blade.showBackupIndicesCommand = {
+                name: 'Show backup indices', icon: 'fas fa-eye',
+                canExecuteMethod: function () {
+                    return true;
+                },
+                executeMethod: function () {
+                    blade.manageIndexMode = !blade.manageIndexMode;
+                    blade.refresh();
+
+                    if (blade.manageIndexMode) {
+                        blade.showBackupIndicesCommand.name = 'search.commands.hide-backup-indices';
+                        blade.showBackupIndicesCommand.icon = 'fas fa-eye-slash';
+                    }
+                    else {
+                        blade.showBackupIndicesCommand.name = 'search.commands.show-backup-indices';
+                        blade.showBackupIndicesCommand.icon = 'fas fa-eye';
+                    }
+                }
+            };
+
+            searchIndexationApi.swapIndexEnabled({}, function (response) {
+                blade.toolbarCommands = [{
+                    name: 'platform.commands.refresh',
+                    icon: 'fa fa-refresh',
+                    canExecuteMethod: function () {
+                        return true;
+                    },
+                    executeMethod: function () {
+                        blade.refresh();
+                    }
+                }, {
+                    name: 'search.commands.rebuild-index',
+                    icon: 'fa fa-recycle',
+                    canExecuteMethod: function () {
+                        return $scope.gridApi && _.any($scope.gridApi.selection.getSelectedRows());
+                    },
+                    executeMethod: function () {
+                        $scope.rebuildIndex($scope.gridApi.selection.getSelectedRows());
+                    },
+                    permission: 'search:index:rebuild'
+                }];
+
+                if (response.swapIndexEnabled) {
+                    blade.toolbarCommands.push(blade.showBackupIndicesCommand);
+                }
+            });
+
             blade.refresh = function () {
                 blade.isLoading = true;
-                searchIndexationApi.get({}, function (response) {
+
+                var getIndicesTask;
+                if (blade.manageIndexMode) {
+                    getIndicesTask = searchIndexationApi.getAll;
+                }
+                else {
+                    getIndicesTask = searchIndexationApi.get;
+                }
+
+                getIndicesTask({}, function (response) {
                     blade.currentEntities = response;
                     blade.isLoading = false;
                 });
@@ -38,26 +96,13 @@ angular.module('virtoCommerce.searchModule')
                 dialogService.showDialog(dialog, 'Modules/$(VirtoCommerce.Search)/Scripts/dialogs/reindex-dialog.tpl.html', 'platformWebApp.confirmDialogController');
             }
 
-            blade.toolbarCommands = [{
-                name: 'platform.commands.refresh',
-                icon: 'fa fa-refresh',
-                canExecuteMethod: function () {
-                    return true;
-                },
-                executeMethod: function () {
+            $scope.swapIndex = function (documentType) {
+                $scope.loading = true;
+
+                searchIndexationApi.swapIndex({ documentType: documentType }, function (response) {
                     blade.refresh();
-                }
-            }, {
-                name: 'search.commands.rebuild-index',
-                icon: 'fa fa-recycle',
-                canExecuteMethod: function () {
-                    return $scope.gridApi && _.any($scope.gridApi.selection.getSelectedRows());
-                },
-                executeMethod: function () {
-                    $scope.rebuildIndex($scope.gridApi.selection.getSelectedRows());
-                },
-                permission: 'search:index:rebuild'
-            }];
+                });
+            }
 
             // ui-grid
             $scope.setGridOptions = function (gridId, gridOptions) {
