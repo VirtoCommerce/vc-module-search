@@ -51,7 +51,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             result.Add(await GetIndexStateAsync(documentType, getBackupIndexState: false));
 
-            if (_searchProvider.SwapIndexSupported)
+            if (_searchProvider.IsIndexSwappingSupported)
             {
                 result.Add(await GetIndexStateAsync(documentType, getBackupIndexState: true));
             }

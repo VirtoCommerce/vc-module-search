@@ -8,9 +8,9 @@ namespace VirtoCommerce.SearchModule.Data.Services
 {
     public class DummySearchProvider : ISearchProvider
     {
-        private string _error = "There's no registered Search Provider. Please install at least one Search Module implementation (Lucene, Elastic Search or Azure Search).";
+        private readonly string _error = "There's no registered Search Provider. Please install at least one Search Module implementation (Lucene, Elastic Search or Azure Search).";
 
-        bool ISearchProvider.SwapIndexSupported => throw new SearchException(_error);
+        bool ISearchProvider.IsIndexSwappingSupported => throw new SearchException(_error);
 
         public Task SwapIndexAsync(string documentType)
         {

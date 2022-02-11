@@ -11,7 +11,7 @@ namespace VirtoCommerce.SearchModule.Tests
     {
         public IDictionary<string, IndexDocument> IndexedDocuments { get; } = new Dictionary<string, IndexDocument>();
 
-        bool ISearchProvider.SwapIndexSupported => false;
+        bool ISearchProvider.IsIndexSwappingSupported => false;
 
         public Task SwapIndexAsync(string documentType)
         {
