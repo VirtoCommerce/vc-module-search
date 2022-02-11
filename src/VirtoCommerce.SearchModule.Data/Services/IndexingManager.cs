@@ -117,6 +117,8 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var configs = _configs.Where(c => c.DocumentType.EqualsInvariant(documentType)).ToArray();
             var result = new IndexingResult { Items = new List<IndexingResultItem>() };
 
+            var partialMode = false;
+
             foreach (var config in configs)
             {
                 var documentBuilders = new List<IIndexDocumentBuilder>
@@ -137,12 +139,14 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 if (buildersTypes.Any())
                 {
                     documentBuilders = documentBuilders.Where(x => buildersTypes.Contains(x.GetType().FullName)).ToList();
+                    partialMode = true;
                 }
 
                 var configResult = await IndexDocumentsAsync(documentType,
                     documentIds,
                     documentBuilders,
-                    new CancellationTokenWrapper(CancellationToken.None));
+                    new CancellationTokenWrapper(CancellationToken.None),
+                    partialMode);
 
                 result.Items.AddRange(configResult.Items ?? Enumerable.Empty<IndexingResultItem>());
             }
@@ -307,7 +311,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     .Where(x => x.DocumentId == id)
                     .SelectMany(x => _configs.GetBuildersForProvider(x.Provider.GetType()));
 
-                var stepResult = await IndexDocumentsAsync(batchOptions.DocumentType, new[] { id }, builders, cancellationToken);
+                var stepResult = await IndexDocumentsAsync(batchOptions.DocumentType, new[] { id }, builders, cancellationToken, true);
 
                 result.Items.AddRange(stepResult.Items);
             }
@@ -342,12 +346,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
             string documentType,
             IList<string> documentIds,
             IEnumerable<IIndexDocumentBuilder> documentBuilders,
-            ICancellationToken cancellationToken)
+            ICancellationToken cancellationToken, bool partialMode = false)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             var documents = await GetDocumentsAsync(documentIds, documentBuilders, cancellationToken);
-            var response = await _searchProvider.IndexAsync(documentType, documents);
+            var response = await _searchProvider.IndexAsync(documentType, documents, partialMode);
             return response;
         }
 

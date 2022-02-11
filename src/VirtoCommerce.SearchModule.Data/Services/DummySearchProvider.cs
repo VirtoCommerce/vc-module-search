@@ -13,7 +13,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             throw new SearchException("There is no a registered Search Provider!");
         }
 
-        public Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents)
+        public Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents, bool update = false)
         {
             throw new SearchException("There is no a registered Search Provider!");
         }
