@@ -194,7 +194,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             }
 
             // indexation complete, swap indexes back
-            if (options.DeleteExistingIndex)
+            if (options.DeleteExistingIndex && _searchProvider.IsIndexSwappingSupported)
             {
                  await _searchProvider.SwapIndexAsync(documentType);
             }

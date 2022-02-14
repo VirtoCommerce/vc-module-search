@@ -107,7 +107,11 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
         [Authorize(ModuleConstants.Security.Permissions.IndexRebuild)]
         public async Task<ActionResult> SwapIndexAsync([FromBody] IndexingOptions option)
         {
-            await _searchProvider.SwapIndexAsync(option.DocumentType);
+            if (_searchProvider.IsIndexSwappingSupported)
+            {
+                await _searchProvider.SwapIndexAsync(option.DocumentType);
+            }
+
             return Ok();
         }
     }
