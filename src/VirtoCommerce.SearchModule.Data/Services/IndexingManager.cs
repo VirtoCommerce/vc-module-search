@@ -194,10 +194,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             }
 
             // indexation complete, swap indexes back
-            if (options.DeleteExistingIndex && _searchProvider.IsIndexSwappingSupported)
-            {
-                 await _searchProvider.SwapIndexAsync(documentType);
-            }
+            await SwapIndices(options);
 
             progressCallback?.Invoke(new IndexingProgress($"{documentType}: indexation finished", documentType, totalCount ?? processedCount, processedCount));
         }
@@ -408,6 +405,17 @@ namespace VirtoCommerce.SearchModule.Data.Services
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Swap between active and backup indeces, if supported
+        /// </summary>
+        protected virtual async Task SwapIndices(IndexingOptions options)
+        {
+            if (options.DeleteExistingIndex && _searchProvider.IsIndexSwappingSupported)
+            {
+                await _searchProvider.SwapIndexAsync(options.DocumentType);
             }
         }
 
