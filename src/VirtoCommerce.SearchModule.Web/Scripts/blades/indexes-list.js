@@ -71,12 +71,16 @@ angular.module('virtoCommerce.searchModule')
             }
 
             $scope.rebuildIndex = function (documentTypes) {
+                // index only one documentType in collection
+                var documentTypesGroup = _.groupBy(documentTypes, function (x) { return x.documentType; });
+
                 var dialog = {
                     id: "confirmRebuildIndex",
                     callback: function (doReindex) {
-                        var options = _.map(documentTypes, function (x) {
+                        var options = _.map(documentTypesGroup, function (x) {
+                            var documentType = _.first(x);
                             return {
-                                documentType: x.documentType,
+                                documentType: documentType.documentType,
                                 deleteExistingIndex: doReindex
                             };
                         });
