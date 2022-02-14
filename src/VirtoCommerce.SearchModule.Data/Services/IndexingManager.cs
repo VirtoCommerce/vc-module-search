@@ -90,8 +90,8 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 options.BatchSize =
                     _settingsManager?.GetValue(ModuleConstants.Settings.General.IndexPartitionSize.Name, 50) ?? 50;
             if (options.BatchSize < 1)
-                throw new ArgumentException(@"Batch size cannon be less than 1",
-                    $"{nameof(options)}.{nameof(options.BatchSize)}");
+                throw new ArgumentException(@$"{nameof(options.BatchSize)} {options.BatchSize} cannon be less than 1",
+                    $"{nameof(options)}");
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -111,7 +111,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             }
         }
 
-        public virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> buildersTypes = null)
+        public virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> builders = null)
         {
             // Todo: reuse general index api?
             var configs = _configs.Where(c => c.DocumentType.EqualsInvariant(documentType)).ToArray();
@@ -136,9 +136,9 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     documentBuilders.AddRange(secondaryDocBuilders);
                 }
 
-                if (buildersTypes.Any())
+                if (builders.Any())
                 {
-                    documentBuilders = documentBuilders.Where(x => buildersTypes.Contains(x.GetType().FullName)).ToList();
+                    documentBuilders = documentBuilders.Where(x => builders.Contains(x.GetType().FullName)).ToList();
                     partialMode = true;
                 }
 
@@ -171,10 +171,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 throw new ArgumentNullException($"{nameof(configuration)}.{nameof(configuration.DocumentSource)}");
             if (configuration.DocumentSource.ChangesProvider == null)
                 throw new ArgumentNullException(
-                    $"{nameof(configuration)}.{nameof(configuration.DocumentSource)}.{nameof(configuration.DocumentSource.ChangesProvider)}");
+                    nameof(configuration),
+                    $"{nameof(configuration)}.{nameof(configuration.DocumentSource)}.{nameof(configuration.DocumentSource.ChangesProvider)} cannot be null");
             if (configuration.DocumentSource.DocumentBuilder == null)
                 throw new ArgumentNullException(
-                    $"{nameof(configuration)}.{nameof(configuration.DocumentSource)}.{nameof(configuration.DocumentSource.DocumentBuilder)}");
+                    nameof(configuration),
+                    $"{nameof(configuration)}.{nameof(configuration.DocumentSource)}.{nameof(configuration.DocumentSource.DocumentBuilder)} cannot be null");
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -271,6 +273,8 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             var partialChanges = indexDocumentChanges.Except(fullChanges);
 
+            var partialResult = await ProcessPartialDocumentsAsync(partialChanges, batchOptions, cancellationToken);
+
             var groups = GetLatestChangesForEachDocumentGroupedByChangeType(fullChanges);
             
             foreach (var group in groups)
@@ -286,8 +290,6 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     result.Items.AddRange(groupResult.Items);
                 }
             }
-
-            var partialResult = await ProcessPartialDocumentsAsync(partialChanges, batchOptions, cancellationToken);
 
             result.Items.AddRange(partialResult.Items);
 
