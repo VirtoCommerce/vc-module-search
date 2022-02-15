@@ -3,7 +3,10 @@
     "commands": {
       "apply-filter": "Save & apply",
       "rebuild-index": "Build Index",
-      "copy-to-clipboard": "Copy to Clipboard"
+      "copy-to-clipboard": "Copy to Clipboard",
+      "swap-index": "Swap indices",
+      "show-backup-indices": "Show backup indices",
+      "hide-backup-indices": "Hide backup indices"
     },
     "main-menu-title": {
       "search-index": "Search index"
@@ -36,7 +39,9 @@
           "scope": "Scope",
           "last-indexation-date": "Last indexed",
           "build-index": "Build index",
-          "rebuild-index": "Rebuild index"
+          "rebuild-index": "Rebuild index",
+          "swap-index": "Swap indices",
+          "active": "Active index"
         }
       }
     },

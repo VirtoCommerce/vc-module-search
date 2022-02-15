@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using VirtoCommerce.SearchModule.Core.Model;
 
 namespace VirtoCommerce.SearchModule.Core.Model
 {
@@ -62,5 +61,10 @@ namespace VirtoCommerce.SearchModule.Core.Model
         /// Gets or sets the search provider specific raw search query. If it has value, all other search criteria will be ignored.
         /// </summary>
         public string RawQuery { get; set; }
+
+        /// <summary>
+        /// Gets or sets the option to specifically use backup index. Returns empty result if backup index does not exist.
+        /// </summary>
+        public bool UseBackupIndex { get; set; }
     }
 }

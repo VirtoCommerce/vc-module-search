@@ -18,6 +18,11 @@ namespace VirtoCommerce.SearchModule.Core.Services
         Task<IndexState> GetIndexStateAsync(string documentType);
 
         /// <summary>
+        /// Return actual index stats for specific document type including backup indices if the Search Providers supports blue-green indexation.
+        /// </summary>
+        Task<IEnumerable<IndexState>> GetIndicesStateAsync(string documentType);
+
+        /// <summary>
         /// Indexing the specified documents with given options
         /// </summary>
         /// <param name="options"></param>

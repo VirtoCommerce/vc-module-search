@@ -34,11 +34,21 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
 
         [HttpGet]
         [Route("")]
-        public async Task<ActionResult<IndexState[]>> GetAllIndexes()
+        public async Task<ActionResult<IndexState[]>> GetIndicesAsync()
         {
             var documentTypes = _documentConfigs.Select(c => c.DocumentType).Distinct().ToList();
             var result = await Task.WhenAll(documentTypes.Select(_indexingManager.GetIndexStateAsync));
             return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("all")]
+        public async Task<ActionResult<IndexState[]>> GetAllIndicesAsync()
+        {
+            var documentTypes = _documentConfigs.Select(c => c.DocumentType).Distinct().ToList();
+            var indicesResult = await Task.WhenAll(documentTypes.Select(_indexingManager.GetIndicesStateAsync));
+            var results = indicesResult.SelectMany(x => x);
+            return Ok(results);
         }
 
         /// <summary>
@@ -82,6 +92,26 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
         public ActionResult CancelIndexationProcess(string taskId)
         {
             IndexingJobs.CancelIndexation();
+            return Ok();
+        }
+
+        [HttpGet]
+        [Route("swapIndexSupported")]
+        public ActionResult GetSwapIndexSupported()
+        {
+            return Ok(new { Result = _searchProvider.IsIndexSwappingSupported });
+        }
+
+        [HttpPost]
+        [Route("swapIndex")]
+        [Authorize(ModuleConstants.Security.Permissions.IndexRebuild)]
+        public async Task<ActionResult> SwapIndexAsync([FromBody] IndexingOptions option)
+        {
+            if (_searchProvider.IsIndexSwappingSupported)
+            {
+                await _searchProvider.SwapIndexAsync(option.DocumentType);
+            }
+
             return Ok();
         }
     }
