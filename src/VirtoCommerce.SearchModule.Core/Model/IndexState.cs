@@ -13,5 +13,7 @@ namespace VirtoCommerce.SearchModule.Core.Model
         public long? IndexedDocumentsCount { get; set; }
 
         public DateTime? LastIndexationDate { get; set; }
+
+        public bool IsActive { get; set; }
     }
 }
