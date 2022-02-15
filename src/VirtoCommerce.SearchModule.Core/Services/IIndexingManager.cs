@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using VirtoCommerce.SearchModule.Core.Model;
 
@@ -15,6 +16,11 @@ namespace VirtoCommerce.SearchModule.Core.Services
         /// <param name="documentType"></param>
         /// <returns></returns>
         Task<IndexState> GetIndexStateAsync(string documentType);
+
+        /// <summary>
+        /// Return actual index stats for specific document type including backup indices if the Search Providers supports blue-green indexation.
+        /// </summary>
+        Task<IEnumerable<IndexState>> GetIndicesStateAsync(string documentType);
 
         /// <summary>
         /// Indexing the specified documents with given options

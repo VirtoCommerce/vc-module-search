@@ -8,5 +8,6 @@ namespace VirtoCommerce.SearchModule.Data.Services
         public string DocumentType { get; set; }
         public IIndexDocumentBuilder PrimaryDocumentBuilder { get; set; }
         public IList<IIndexDocumentBuilder> SecondaryDocumentBuilders { get; set; }
+        public bool Reindex { get; set; }
     }
 }
