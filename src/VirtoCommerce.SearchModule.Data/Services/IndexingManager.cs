@@ -322,7 +322,10 @@ namespace VirtoCommerce.SearchModule.Data.Services
             {
                 var documentBuilders = new List<IIndexDocumentBuilder>() { batchOptions.PrimaryDocumentBuilder };
 
-                documentBuilders.AddRange(batchOptions.SecondaryDocumentBuilders);
+                if (batchOptions.SecondaryDocumentBuilders?.Any() ?? false)
+                {
+                    documentBuilders.AddRange(batchOptions.SecondaryDocumentBuilders);
+                }
 
                 result = await IndexDocumentsAsync(batchOptions.DocumentType, changedIds, documentBuilders, cancellationToken, reindex: batchOptions.Reindex);
             }

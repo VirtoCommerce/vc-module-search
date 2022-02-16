@@ -56,9 +56,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     var changes = await Provider.GetChangesAsync(StartDate, EndDate, Skip, Take);
                     if (changes.Any())
                     {
-                        foreach (var change in changes)
+                        if (StartDate != null && EndDate != null)
                         {
-                            change.Provider = Provider;
+                            foreach (var change in changes)
+                            {
+                                change.Provider = Provider;
+                            }
                         }
 
                         result = new ReadOnlyCollection<IndexDocumentChange>(changes);
