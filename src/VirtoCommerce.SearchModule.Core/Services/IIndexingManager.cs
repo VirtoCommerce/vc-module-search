@@ -36,9 +36,9 @@ namespace VirtoCommerce.SearchModule.Core.Services
         /// </summary>
         /// <param name="documentType">Document type to index.</param>
         /// <param name="documentIds">Ids of documents to index.</param>
-        /// <param name="builders">Index document builders types to process the changed documents</param>
+        /// <param name="builderTypes">Index document builder types to process the changed documents</param>
         /// <returns>Result of indexing operation.</returns>
-        Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> builders = null);
+        Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes = null);
 
         /// <summary>
         /// Deletes a batch of documents from the index immediately. Intended to be used by IndexingJobs.

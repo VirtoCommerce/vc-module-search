@@ -198,29 +198,29 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         // Make sure we wait for async methods to end, so that Hangfire retries if an exception occurs.
 
         [Queue(JobPriority.High)]
-        public async Task IndexDocumentsHighPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builders)
+        public async Task IndexDocumentsHighPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes)
         {
             if (!documentIds.IsNullOrEmpty())
             {
-                await _indexingManager.IndexDocumentsAsync(documentType, documentIds, builders);
+                await _indexingManager.IndexDocumentsAsync(documentType, documentIds, builderTypes);
             }
         }
 
         [Queue(JobPriority.Normal)]
-        public async Task IndexDocumentsNormalPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builders)
+        public async Task IndexDocumentsNormalPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes)
         {
             if (!documentIds.IsNullOrEmpty())
             {
-                await _indexingManager.IndexDocumentsAsync(documentType, documentIds, builders);
+                await _indexingManager.IndexDocumentsAsync(documentType, documentIds, builderTypes);
             }
         }
 
         [Queue(JobPriority.Low)]
-        public async Task IndexDocumentsLowPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builders)
+        public async Task IndexDocumentsLowPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes)
         {
             if (!documentIds.IsNullOrEmpty())
             {
-                await _indexingManager.IndexDocumentsAsync(documentType, documentIds, builders);
+                await _indexingManager.IndexDocumentsAsync(documentType, documentIds, builderTypes);
             }
         }
 

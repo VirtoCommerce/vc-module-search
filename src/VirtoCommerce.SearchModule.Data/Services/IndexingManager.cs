@@ -94,20 +94,17 @@ namespace VirtoCommerce.SearchModule.Data.Services
             }
         }
 
-        public virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> builders = null)
+        public virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes = null)
         {
             // Todo: reuse general index api?
             var configs = _configs.Where(c => c.DocumentType.EqualsInvariant(documentType)).ToArray();
             var result = new IndexingResult { Items = new List<IndexingResultItem>() };
 
-            var partialMode = false;
+            var partialUpdate = false;
 
             foreach (var config in configs)
             {
-                var documentBuilders = new List<IIndexDocumentBuilder>
-                {
-                    config.DocumentSource.DocumentBuilder
-                };
+                var documentBuilders = new List<IIndexDocumentBuilder> { config.DocumentSource.DocumentBuilder };
 
                 var secondaryDocBuilders = config.RelatedSources?
                     .Where(s => s.DocumentBuilder != null)
@@ -119,17 +116,20 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     documentBuilders.AddRange(secondaryDocBuilders);
                 }
 
-                if (builders.Any())
+                if (builderTypes.Any())
                 {
-                    documentBuilders = documentBuilders.Where(x => builders.Contains(x.GetType().FullName)).ToList();
-                    partialMode = true;
+                    documentBuilders = documentBuilders.Where(x => builderTypes.Contains(x.GetType().FullName))
+                        .ToList();
+                    partialUpdate = true;
                 }
+
+                var parameters = new IndexingParameters { PartialUpdate = partialUpdate };
 
                 var configResult = await IndexDocumentsAsync(documentType,
                     documentIds,
                     documentBuilders,
                     new CancellationTokenWrapper(CancellationToken.None),
-                    partialMode);
+                    parameters);
 
                 result.Items.AddRange(configResult.Items ?? Enumerable.Empty<IndexingResultItem>());
             }
@@ -252,6 +252,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             var indexDocumentChanges = changes as IndexDocumentChange[] ?? changes.ToArray();
 
+            // Full changes don't have changes provider specified because we don't set it for manual indexation.
             var fullChanges = indexDocumentChanges.Where(x =>
                     x.ChangeType == IndexDocumentChangeType.Deleted ||
                     !_configs.GetBuildersForProvider(x.Provider?.GetType()).Any())
@@ -299,7 +300,9 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     .Where(x => x.DocumentId == id)
                     .SelectMany(x => _configs.GetBuildersForProvider(x.Provider.GetType()));
 
-                var stepResult = await IndexDocumentsAsync(batchOptions.DocumentType, new[] { id }, builders, cancellationToken, true);
+                var parameters = new IndexingParameters { PartialUpdate = true };
+
+                var stepResult = await IndexDocumentsAsync(batchOptions.DocumentType, new[] { id }, builders, cancellationToken, parameters);
 
                 result.Items.AddRange(stepResult.Items);
             }
@@ -327,7 +330,9 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     documentBuilders.AddRange(batchOptions.SecondaryDocumentBuilders);
                 }
 
-                result = await IndexDocumentsAsync(batchOptions.DocumentType, changedIds, documentBuilders, cancellationToken, reindex: batchOptions.Reindex);
+                var parameters = new IndexingParameters { Reindex = batchOptions.Reindex };
+
+                result = await IndexDocumentsAsync(batchOptions.DocumentType, changedIds, documentBuilders, cancellationToken, parameters);
             }
 
             return result;
@@ -337,12 +342,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
             string documentType,
             IList<string> documentIds,
             IEnumerable<IIndexDocumentBuilder> documentBuilders,
-            ICancellationToken cancellationToken, bool partialMode = false, bool reindex = false)
+            ICancellationToken cancellationToken, IndexingParameters parameters)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             var documents = await GetDocumentsAsync(documentIds, documentBuilders, cancellationToken);
-            var response = await _searchProvider.IndexAsync(documentType, documents, partialMode, reindex);
+            var response = await _searchProvider.IndexAsync(documentType, documents, parameters);
             return response;
         }
 

@@ -23,7 +23,7 @@ namespace VirtoCommerce.SearchModule.Tests
             return Task.FromResult<object>(null);
         }
 
-        public Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents, bool partialUpdate = false, bool reindex = false)
+        public Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents, IndexingParameters parameters)
         {
             foreach (var document in documents.Where(d => d.Id.StartsWith("good")))
             {

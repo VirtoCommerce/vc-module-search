@@ -22,7 +22,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             throw new SearchException(_error);
         }
 
-        public Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents, bool partialUpdate = false, bool reindex = false)
+        public Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents, IndexingParameters parameters)
         {
             throw new SearchException(_error);
         }
