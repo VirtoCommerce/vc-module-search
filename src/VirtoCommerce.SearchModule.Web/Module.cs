@@ -17,25 +17,22 @@ using VirtoCommerce.SearchModule.Data.Services;
 
 namespace VirtoCommerce.SearchModule.Web
 {
-    public class Module : IModule
+    public class Module : IModule, IHasConfiguration
     {
         public ManifestModuleInfo ModuleInfo { get; set; }
+        public IConfiguration Configuration { get; set ; }
 
         public void Initialize(IServiceCollection serviceCollection)
         {
             serviceCollection.AddTransient<ISearchPhraseParser, SearchPhraseParser>();
-            serviceCollection.AddScoped<IIndexingWorker>(context =>
-            {
-                return null;
-            });
+            serviceCollection.AddScoped<IIndexingWorker>(_ => null);
 
             serviceCollection.AddScoped<IIndexingManager, IndexingManager>();
             serviceCollection.AddScoped<IndexProgressHandler>();
             serviceCollection.AddSingleton<ISearchProvider, DummySearchProvider>();
             serviceCollection.AddSingleton<ISearchRequestBuilderRegistrar, SearchRequestBuilderRegistrar>();
 
-            var configuration = serviceCollection.BuildServiceProvider().GetService<IConfiguration>();
-            serviceCollection.AddOptions<SearchOptions>().Bind(configuration.GetSection("Search")).ValidateDataAnnotations();
+            serviceCollection.AddOptions<SearchOptions>().Bind(Configuration.GetSection("Search")).ValidateDataAnnotations();
 
             serviceCollection.AddTransient<ObjectSettingEntryChangedEventHandler>();
             serviceCollection.AddTransient<BackgroundJobsRunner>();
