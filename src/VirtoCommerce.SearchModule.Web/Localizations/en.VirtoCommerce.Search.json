@@ -1,15 +1,15 @@
 {
   "search": {
     "commands": {
-      "apply-filter": "Save & apply",
-      "rebuild-index": "Build Index",
-      "copy-to-clipboard": "Copy to Clipboard",
+      "apply-filter": "Save and apply",
+      "rebuild-index": "Build index",
+      "copy-to-clipboard": "Copy to clipboard",
       "swap-index": "Swap indices",
       "show-backup-indices": "Show backup indices",
-      "hide-backup-indices": "Hide backup indices"
+      "hide-backup-indices": "Show backup indices"
     },
     "main-menu-title": {
-      "search-index": "Search index"
+      "search-index": "Search Index"
     },
     "blades": {
       "index-progress": {
@@ -17,24 +17,24 @@
           "start": "Start",
           "end": "End",
           "errors": "Errors",
-          "stats": "Indexed - {{ processedCount }} of {{ totalCount }} documents"
+          "stats": "Indexed {{ processedCount }} of {{ totalCount }} records"
         }
       },
       "index-detail": {
-        "title": "Search index",
+        "title": "Search Index",
         "title-new": "Search index missing",
         "subtitle": "Search index details",
         "labels": {
-          "no-index": "Index not found",
+          "no-index": "No data",
           "build-date": "Last indexed",
           "content": "Index content"
         }
       },
       "document-type-list": {
-        "title": "Document types",
+        "title": "Record types",
         "labels": {
-          "document-type": "Document type",
-          "indexed-docs-total": "Docs count",
+          "document-type": "Record type",
+          "indexed-docs-total": "Record count",
           "provider": "Provider",
           "scope": "Scope",
           "last-indexation-date": "Last indexed",
@@ -48,37 +48,37 @@
     "dialogs": {
       "reindex": {
         "title": "Build Search Index",
-        "msg1": "Choose how to update the Search Index. Options:",
-        "msg2": "Build: index for all data without recreating.",
-        "msg3": "Delete + build: Current search index will be deleted and built from scratch. Note that there WON'T BE ANY SEARCH RESULTS until the build process finishes.",
+        "msg1": "Please choose how you want to update the search index. There are two options available:",
+        "msg2": "Build: Index all data without recreating.",
+        "msg3": "Delete and build: Delete the existing search index and build a new one from scratch. Note: No search results will be available until the build process is over.",
         "index": "Build",
-        "reindex": "Delete + build"
+        "reindex": "Delete and build"
       }
     },
     "widgets": {
       "index": {
         "index-ok": "Indexed <span am-time-ago='indexDate'></span>",
-        "index-old": "Outdated. Index was built <span am-time-ago='indexDate'>",
+        "index-old": "This index is outdated, as it was built <span am-time-ago='indexDate'>",
         "no-index": "Search index missing"
       }
     }
   },
   "permissions": {
-    "search:index:rebuild": "Allows to delete search index and build it again.",
-    "search:index:access": "Allows access to the Search Index menu."
+    "search:index:rebuild": "Enables deleting the search index and building it once again.",
+    "search:index:access": "Enables access to the Search Index menu."
   },
   "settings": {
     "VirtoCommerce.Search.IndexingJobs.Enable": {
       "title": "Schedule indexing jobs",
-      "description": "Enable or disable periodic search index builders"
+      "description": "Enable or disable regular search index builders"
     },
     "VirtoCommerce.Search.IndexingJobs.CronExpression": {
-      "title": "Indexing jobs cron expression",
-      "description": "x minutes use '0/x * * * *', x hours use '0 */x * * *' you can set minutes also '15 */x * * *', x days '0 0 */x * *'"
+      "title": "Indexing job cron expression",
+      "description": "For X minutes, use '0/x * * * *'. For X hours, use '0 */x * * *'. You can also set X minutes as '15 */x * * *', and X days as '0 0 */x * *'."
     },
     "VirtoCommerce.Search.IndexPartitionSize": {
-      "title": "The maximum items count per indexing partition",
-      "description": "High value may will cause slow performance"
+      "title": "Maximum item count per indexing partition",
+      "description": "Providing high values may lead to slow performance"
     }
   }
 }
