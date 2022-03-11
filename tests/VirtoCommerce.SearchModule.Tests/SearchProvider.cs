@@ -11,7 +11,7 @@ namespace VirtoCommerce.SearchModule.Tests
     {
         public IDictionary<string, IndexDocument> IndexedDocuments { get; } = new Dictionary<string, IndexDocument>();
 
-        public Task SwapIndexAsync(string documentType)
+        public static Task SwapIndexAsync(string documentType)
         {
             return Task.CompletedTask;
         }
