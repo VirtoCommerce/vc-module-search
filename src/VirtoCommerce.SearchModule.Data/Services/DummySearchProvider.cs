@@ -6,12 +6,11 @@ using VirtoCommerce.SearchModule.Core.Services;
 
 namespace VirtoCommerce.SearchModule.Data.Services
 {
-    public class DummySearchProvider : ISearchProvider
+    public class DummySearchProvider : ISearchProvider, ISupportIndexSwap, ISupportPartialUpdate
     {
         private readonly string _error = "There's no registered Search Provider. Please install at least one Search Module implementation (Lucene, Elastic Search or Azure Search).";
 
-        bool ISearchProvider.IsIndexSwappingSupported => throw new SearchException(_error);
-
+        bool ISupportIndexSwap.IsIndexSwappingSupported => throw new SearchException(_error);
         public Task SwapIndexAsync(string documentType)
         {
             throw new SearchException(_error);
