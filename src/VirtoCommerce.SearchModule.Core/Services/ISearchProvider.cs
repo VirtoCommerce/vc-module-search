@@ -18,7 +18,7 @@ namespace VirtoCommerce.SearchModule.Core.Services
         /// If the prodivder supposrts index swapping then indextation will occur on the backup index.
         /// Use 'SwapIndex(documentType)' to swich indeces after all documents have been indexed.
         /// 2. Optional partial inxed partialUpdate. True value partialUpdate only passed fields and keeps unpassed</param>
-        Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents, IndexingParameters parameters);
+        Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents);
         Task<IndexingResult> RemoveAsync(string documentType, IList<IndexDocument> documents);
         Task<SearchResponse> SearchAsync(string documentType, SearchRequest request);
     }

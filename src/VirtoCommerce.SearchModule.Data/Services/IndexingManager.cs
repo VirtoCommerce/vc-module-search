@@ -354,9 +354,13 @@ namespace VirtoCommerce.SearchModule.Data.Services
             {
                 result = await supportIndexSwapProvider.IndexWithBackupAsync(documentType, documents);
             }
+            else if (parameters.PartialUpdate && _searchProvider is ISupportPartialUpdate supportPartialUpdateProvider)
+            {
+                result = await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents);
+            }
             else
             {
-                result = await _searchProvider.IndexAsync(documentType, documents, parameters);
+                result = await _searchProvider.IndexAsync(documentType, documents);
             }
 
             return result;
