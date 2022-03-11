@@ -10,7 +10,6 @@ namespace VirtoCommerce.SearchModule.Data.Services
     {
         private readonly string _error = "There's no registered Search Provider. Please install at least one Search Module implementation (Lucene, Elastic Search or Azure Search).";
 
-        bool ISupportIndexSwap.IsIndexSwappingSupported => throw new SearchException(_error);
         public Task SwapIndexAsync(string documentType)
         {
             throw new SearchException(_error);
@@ -21,7 +20,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             throw new SearchException(_error);
         }
 
-        public Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents, IndexingParameters parameters)
+        public Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents)
         {
             throw new SearchException(_error);
         }
@@ -34,6 +33,16 @@ namespace VirtoCommerce.SearchModule.Data.Services
         public Task<SearchResponse> SearchAsync(string documentType, SearchRequest request)
         {
             throw new SearchException(_error);
+        }
+
+        public Task<IndexingResult> IndexWithBackupAsync(string documentType, IList<IndexDocument> documents)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Task<IndexingResult> IndexPartialAsync(string documentType, IList<IndexDocument> documents)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }
