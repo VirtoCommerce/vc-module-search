@@ -307,12 +307,18 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
                 var documents = await GetDocumentsAsync(new[] { id }, builders, cancellationToken);
 
+                IndexingResult indexingResult;
+
                 if (_searchProvider is ISupportPartialUpdate supportPartialUpdateProvider)
                 {
-                    var stepResult = await supportPartialUpdateProvider.IndexPartialAsync(batchOptions.DocumentType, documents);
-
-                    result.Items.AddRange(stepResult.Items);
+                    indexingResult = await supportPartialUpdateProvider.IndexPartialAsync(batchOptions.DocumentType, documents);
                 }
+                else
+                {
+                    indexingResult = await _searchProvider.IndexAsync(batchOptions.DocumentType, documents);
+                }
+
+                result.Items.AddRange(indexingResult.Items);
             }
 
             return result;
