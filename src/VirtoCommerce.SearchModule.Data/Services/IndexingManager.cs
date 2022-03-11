@@ -52,7 +52,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             result.Add(await GetIndexStateAsync(documentType, getBackupIndexState: false));
 
-            if (_searchProvider.IsIndexSwappingSupported)
+            if (_searchProvider is ISupportIndexSwap swappingSupportedSearchProvider && swappingSupportedSearchProvider.IsIndexSwappingSupported)
             {
                 result.Add(await GetIndexStateAsync(documentType, getBackupIndexState: true));
             }
@@ -263,7 +263,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var partialResult = await ProcessPartialDocumentsAsync(partialChanges, batchOptions, cancellationToken);
 
             var groups = GetLatestChangesForEachDocumentGroupedByChangeType(fullChanges);
-            
+
             foreach (var group in groups)
             {
                 var changeType = group.Key;
@@ -291,7 +291,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var result = new IndexingResult { Items = new List<IndexingResultItem>() };
 
             var indexDocumentChanges = changes as IndexDocumentChange[] ?? changes.ToArray();
-            
+
             var changeIds = indexDocumentChanges.Select(x => x.DocumentId).Distinct();
 
             foreach (var id in changeIds)
@@ -347,8 +347,19 @@ namespace VirtoCommerce.SearchModule.Data.Services
             cancellationToken.ThrowIfCancellationRequested();
 
             var documents = await GetDocumentsAsync(documentIds, documentBuilders, cancellationToken);
-            var response = await _searchProvider.IndexAsync(documentType, documents, parameters);
-            return response;
+
+            IndexingResult result;
+
+            if (parameters.Reindex && _searchProvider is ISupportIndexSwap supportIndexSwapProvider)
+            {
+                result = await supportIndexSwapProvider.IndexWithBackupAsync(documentType, documents);
+            }
+            else
+            {
+                result = await _searchProvider.IndexAsync(documentType, documents, parameters);
+            }
+
+            return result;
         }
 
         protected virtual async Task<IIndexDocumentChangeFeed[]> GetChangeFeeds(
@@ -440,7 +451,8 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 {
                     document.Add(new IndexDocumentField(KnownDocumentFields.IndexationDate, DateTime.UtcNow)
                     {
-                        IsRetrievable = true, IsFilterable = true
+                        IsRetrievable = true,
+                        IsFilterable = true
                     });
                 }
             }
@@ -494,9 +506,9 @@ namespace VirtoCommerce.SearchModule.Data.Services
         /// </summary>
         protected virtual async Task SwapIndices(IndexingOptions options)
         {
-            if (options.DeleteExistingIndex && _searchProvider.IsIndexSwappingSupported)
+            if (options.DeleteExistingIndex && _searchProvider is ISupportIndexSwap swappingSupportedSearchProvider && swappingSupportedSearchProvider.IsIndexSwappingSupported)
             {
-                await _searchProvider.SwapIndexAsync(options.DocumentType);
+                await swappingSupportedSearchProvider.SwapIndexAsync(options.DocumentType);
             }
         }
 

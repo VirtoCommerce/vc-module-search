@@ -6,12 +6,6 @@ namespace VirtoCommerce.SearchModule.Core.Services
 {
     public interface ISearchProvider
     {
-        /// <summary>
-        /// Whether of not a searh index implementation supports index swapping (blue-green indexation)
-        /// </summary>
-        bool IsIndexSwappingSupported {get;}
-        Task SwapIndexAsync(string documentType);
-
         Task DeleteIndexAsync(string documentType);
 
         /// <summary>
