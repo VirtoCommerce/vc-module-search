@@ -99,7 +99,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
         [Route("swapIndexSupported")]
         public ActionResult GetSwapIndexSupported()
         {
-            return Ok(new { Result = _searchProvider is ISupportIndexSwap supportIndexSwapSearchProvider && supportIndexSwapSearchProvider.IsIndexSwappingSupported });
+            return Ok(new { Result = _searchProvider is ISupportIndexSwap });
         }
 
         [HttpPost]
@@ -107,7 +107,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
         [Authorize(ModuleConstants.Security.Permissions.IndexRebuild)]
         public async Task<ActionResult> SwapIndexAsync([FromBody] IndexingOptions option)
         {
-            if (_searchProvider is ISupportIndexSwap supportIndexSwapSearchProvider && supportIndexSwapSearchProvider.IsIndexSwappingSupported)
+            if (_searchProvider is ISupportIndexSwap supportIndexSwapSearchProvider)
             {
                 await supportIndexSwapSearchProvider.SwapIndexAsync(option.DocumentType);
             }
