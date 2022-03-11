@@ -123,15 +123,20 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     partialUpdate = true;
                 }
 
-                var parameters = new IndexingParameters { PartialUpdate = partialUpdate };
+                var documents = await GetDocumentsAsync(documentIds, documentBuilders, new CancellationTokenWrapper(CancellationToken.None));
 
-                var configResult = await IndexDocumentsAsync(documentType,
-                    documentIds,
-                    documentBuilders,
-                    new CancellationTokenWrapper(CancellationToken.None),
-                    parameters);
+                IndexingResult indexingResult;
 
-                result.Items.AddRange(configResult.Items ?? Enumerable.Empty<IndexingResultItem>());
+                if (partialUpdate && _searchProvider is ISupportPartialUpdate supportPartialUpdateProvider)
+                {
+                    indexingResult = await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents);
+                }
+                else
+                {
+                    indexingResult = await _searchProvider.IndexAsync(documentType, documents);
+                }
+
+                result.Items.AddRange(indexingResult.Items ?? Enumerable.Empty<IndexingResultItem>());
             }
 
             return result;
@@ -300,11 +305,14 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     .Where(x => x.DocumentId == id)
                     .SelectMany(x => _configs.GetBuildersForProvider(x.Provider.GetType()));
 
-                var parameters = new IndexingParameters { PartialUpdate = true };
+                var documents = await GetDocumentsAsync(new[] { id }, builders, cancellationToken);
 
-                var stepResult = await IndexDocumentsAsync(batchOptions.DocumentType, new[] { id }, builders, cancellationToken, parameters);
+                if (_searchProvider is ISupportPartialUpdate supportPartialUpdateProvider)
+                {
+                    var stepResult = await supportPartialUpdateProvider.IndexPartialAsync(batchOptions.DocumentType, documents);
 
-                result.Items.AddRange(stepResult.Items);
+                    result.Items.AddRange(stepResult.Items);
+                }
             }
 
             return result;
@@ -330,37 +338,16 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     documentBuilders.AddRange(batchOptions.SecondaryDocumentBuilders);
                 }
 
-                var parameters = new IndexingParameters { Reindex = batchOptions.Reindex };
+                var documents = await GetDocumentsAsync(changedIds, documentBuilders, cancellationToken);
 
-                result = await IndexDocumentsAsync(batchOptions.DocumentType, changedIds, documentBuilders, cancellationToken, parameters);
-            }
-
-            return result;
-        }
-
-        protected virtual async Task<IndexingResult> IndexDocumentsAsync(
-            string documentType,
-            IList<string> documentIds,
-            IEnumerable<IIndexDocumentBuilder> documentBuilders,
-            ICancellationToken cancellationToken, IndexingParameters parameters)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var documents = await GetDocumentsAsync(documentIds, documentBuilders, cancellationToken);
-
-            IndexingResult result;
-
-            if (parameters.Reindex && _searchProvider is ISupportIndexSwap supportIndexSwapProvider)
-            {
-                result = await supportIndexSwapProvider.IndexWithBackupAsync(documentType, documents);
-            }
-            else if (parameters.PartialUpdate && _searchProvider is ISupportPartialUpdate supportPartialUpdateProvider)
-            {
-                result = await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents);
-            }
-            else
-            {
-                result = await _searchProvider.IndexAsync(documentType, documents);
+                if (batchOptions.Reindex && _searchProvider is ISupportIndexSwap supportIndexswapProvider)
+                {
+                    result = await supportIndexswapProvider.IndexWithBackupAsync(batchOptions.DocumentType, documents);
+                }
+                else
+                {
+                    result = await _searchProvider.IndexAsync(batchOptions.DocumentType, documents);
+                }
             }
 
             return result;
