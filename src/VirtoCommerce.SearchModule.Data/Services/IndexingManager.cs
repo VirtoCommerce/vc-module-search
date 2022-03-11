@@ -52,7 +52,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             result.Add(await GetIndexStateAsync(documentType, getBackupIndexState: false));
 
-            if (_searchProvider is ISupportIndexSwap swappingSupportedSearchProvider && swappingSupportedSearchProvider.IsIndexSwappingSupported)
+            if (_searchProvider is ISupportIndexSwap)
             {
                 result.Add(await GetIndexStateAsync(documentType, getBackupIndexState: true));
             }
@@ -497,7 +497,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
         /// </summary>
         protected virtual async Task SwapIndices(IndexingOptions options)
         {
-            if (options.DeleteExistingIndex && _searchProvider is ISupportIndexSwap swappingSupportedSearchProvider && swappingSupportedSearchProvider.IsIndexSwappingSupported)
+            if (options.DeleteExistingIndex && _searchProvider is ISupportIndexSwap swappingSupportedSearchProvider)
             {
                 await swappingSupportedSearchProvider.SwapIndexAsync(options.DocumentType);
             }
