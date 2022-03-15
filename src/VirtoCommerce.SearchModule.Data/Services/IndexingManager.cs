@@ -116,7 +116,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     documentBuilders.AddRange(secondaryDocBuilders);
                 }
 
-                if (builderTypes.Any())
+                if (builderTypes.Any() && _searchProvider is ISupportPartialUpdate)
                 {
                     documentBuilders = documentBuilders.Where(x => builderTypes.Contains(x.GetType().FullName))
                         .ToList();
