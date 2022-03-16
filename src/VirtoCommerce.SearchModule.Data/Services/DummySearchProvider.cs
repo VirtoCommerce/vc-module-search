@@ -37,12 +37,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         public Task<IndexingResult> IndexWithBackupAsync(string documentType, IList<IndexDocument> documents)
         {
-            throw new System.NotImplementedException();
+            throw new SearchException(_error);
         }
 
         public Task<IndexingResult> IndexPartialAsync(string documentType, IList<IndexDocument> documents)
         {
-            throw new System.NotImplementedException();
+            throw new SearchException(_error);
         }
     }
 }
