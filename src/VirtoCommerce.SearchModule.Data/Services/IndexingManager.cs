@@ -258,10 +258,11 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var indexDocumentChanges = changes as IndexDocumentChange[] ?? changes.ToArray();
 
             // Full changes don't have changes provider specified because we don't set it for manual indexation.
-            var fullChanges = indexDocumentChanges.Where(x =>
+            var fullChanges = _searchProvider is ISupportPartialUpdate ? indexDocumentChanges.Where(x =>
                     x.ChangeType == IndexDocumentChangeType.Deleted ||
-                    !_configs.GetBuildersForProvider(x.Provider?.GetType()).Any())
-                .ToArray();
+                    !_configs.GetBuildersForProvider(x.Provider?.GetType()).Any()
+                    )
+                .ToArray() : indexDocumentChanges;
 
             var partialChanges = indexDocumentChanges.Except(fullChanges);
 
@@ -309,14 +310,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
                 IndexingResult indexingResult;
 
-                if (_searchProvider is ISupportPartialUpdate supportPartialUpdateProvider)
-                {
-                    indexingResult = await supportPartialUpdateProvider.IndexPartialAsync(batchOptions.DocumentType, documents);
-                }
-                else
-                {
-                    indexingResult = await _searchProvider.IndexAsync(batchOptions.DocumentType, documents);
-                }
+                indexingResult = await ((ISupportPartialUpdate)_searchProvider).IndexPartialAsync(batchOptions.DocumentType, documents);
 
                 result.Items.AddRange(indexingResult.Items);
             }
