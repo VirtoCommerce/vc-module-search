@@ -169,16 +169,28 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
         public static void EnqueueIndexAndDeleteDocuments(IndexEntry[] indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
         {
-            var groupIndexIds = indexEntries.Where(x => (x.EntryState == EntryState.Modified || x.EntryState == EntryState.Added) && x.Id != null)
+            var groupModifiedIds = indexEntries
+                .Where(x => x.EntryState == EntryState.Modified && x.Id != null)
                                        .GroupBy(y => y.Type).ToArray();
 
-            if (!groupIndexIds.IsNullOrEmpty())
+            if (!groupModifiedIds.IsNullOrEmpty())
             {
-                foreach (var item in groupIndexIds)
+                foreach (var item in groupModifiedIds)
                 {
                     EnqueueIndexDocuments(item.Key, item.Select(x => x.Id).Distinct().ToArray(), priority, builders);
                 }
+            }
 
+            var groupCreatedIds = indexEntries
+                .Where(x => x.EntryState == EntryState.Added && x.Id != null)
+                .GroupBy(y => y.Type).ToArray();
+
+            if (!groupCreatedIds.IsNullOrEmpty())
+            {
+                foreach (var item in groupCreatedIds)
+                {
+                    EnqueueIndexDocuments(item.Key, item.Select(x => x.Id).Distinct().ToArray(), priority);
+                }
             }
 
             var groupDeleteIds = indexEntries.Where(x => x.EntryState == EntryState.Deleted && x.Id != null)
