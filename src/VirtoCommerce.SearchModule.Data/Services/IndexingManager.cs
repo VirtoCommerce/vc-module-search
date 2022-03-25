@@ -438,10 +438,10 @@ namespace VirtoCommerce.SearchModule.Data.Services
             {
                 if (documentBuilders != null)
                 {
-                    var primaryDocumentIds = primaryDocuments.Select(d => d.Id).ToArray();
                     var secondaryDocuments =
-                        await GetSecondaryDocumentsAsync(documentBuilders, primaryDocumentIds, cancellationToken);
+                        await GetSecondaryDocumentsAsync(documentBuilders, documentIds, cancellationToken);
 
+                    primaryDocuments.AddRange(secondaryDocuments.Where(x => !documentIds.Contains(x.Id)));
                     MergeDocuments(primaryDocuments, secondaryDocuments);
                 }
 
@@ -472,6 +472,14 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 .Where(r => r != null)
                 .SelectMany(r => r.Where(d => d != null))
                 .ToList();
+
+            var newIds = result.Select(x => x.Id).Except(documentIds).ToList();
+
+            if (newIds.Any())
+            {
+                var newDocuments = await GetSecondaryDocumentsAsync(secondaryDocumentBuilders, newIds, cancellationToken);
+                result.AddRange(newDocuments);
+            }
 
             return result;
         }
