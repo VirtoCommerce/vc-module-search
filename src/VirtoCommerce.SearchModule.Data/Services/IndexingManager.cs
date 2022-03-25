@@ -123,7 +123,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     partialUpdate = true;
                 }
 
-                var documents = await GetDocumentsAsync(documentIds, documentBuilders, new CancellationTokenWrapper(CancellationToken.None));
+                var documents = await GetDocumentsAsync(documentIds, documentBuilders, new CancellationTokenWrapper(CancellationToken.None), partialUpdate);
 
                 IndexingResult indexingResult;
 
@@ -314,7 +314,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     .Where(x => x.DocumentId == id)
                     .SelectMany(x => _configs.GetBuildersForProvider(x.Provider.GetType()));
 
-                var documents = await GetDocumentsAsync(new[] { id }, builders, cancellationToken);
+                var documents = await GetDocumentsAsync(new[] { id }, builders, cancellationToken, true);
 
                 IndexingResult indexingResult;
 
@@ -428,7 +428,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
         }
 
         protected virtual async Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds,
-            IEnumerable<IIndexDocumentBuilder> documentBuilders, ICancellationToken cancellationToken)
+            IEnumerable<IIndexDocumentBuilder> documentBuilders, ICancellationToken cancellationToken, bool partialUpdate = false)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -441,7 +441,11 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     var secondaryDocuments =
                         await GetSecondaryDocumentsAsync(documentBuilders, documentIds, cancellationToken);
 
-                    primaryDocuments.AddRange(secondaryDocuments.Where(x => !documentIds.Contains(x.Id)));
+                    if (!partialUpdate)
+                    {
+                        primaryDocuments.AddRange(secondaryDocuments.Where(x => !documentIds.Contains(x.Id)));
+                    }
+
                     MergeDocuments(primaryDocuments, secondaryDocuments);
                 }
 
@@ -465,7 +469,9 @@ namespace VirtoCommerce.SearchModule.Data.Services
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var tasks = secondaryDocumentBuilders.Select(p => p.GetDocumentsAsync(documentIds));
+            var builders = secondaryDocumentBuilders.ToArray();
+
+            var tasks = builders.Select(p => p.GetDocumentsAsync(documentIds));
             var results = await Task.WhenAll(tasks);
 
             var result = results
@@ -477,8 +483,19 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             if (newIds.Any())
             {
-                var newDocuments = await GetSecondaryDocumentsAsync(secondaryDocumentBuilders, newIds, cancellationToken);
-                result.AddRange(newDocuments);
+                var newDocuments = await GetSecondaryDocumentsAsync(builders, newIds, cancellationToken);
+
+                var groups = newDocuments.GroupBy(x => x.Id);
+
+                foreach (var group in groups.Where(x => x.Any()))
+                {
+                    var first = new List<IndexDocument> {group.First()};
+                    var rest = group.Skip(1).ToList();
+
+                    MergeDocuments(first, rest);
+
+                    result.AddRange(first);
+                }
             }
 
             return result;
