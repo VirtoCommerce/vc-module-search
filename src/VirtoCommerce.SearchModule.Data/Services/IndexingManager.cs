@@ -487,15 +487,17 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
                 var groups = newDocuments.GroupBy(x => x.Id);
 
+                var first = new List<IndexDocument>();
+                var rest = new List<IndexDocument>();
+
                 foreach (var group in groups.Where(x => x.Any()))
                 {
-                    var first = new List<IndexDocument> {group.First()};
-                    var rest = group.Skip(1).ToList();
-
-                    MergeDocuments(first, rest);
-
-                    result.AddRange(first);
+                    first.Add(group.First());
+                    rest.AddRange(group.Skip(1).ToList());
                 }
+
+                MergeDocuments(first, rest);
+                result.AddRange(first);
             }
 
             return result;
