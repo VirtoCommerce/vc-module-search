@@ -465,7 +465,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         protected virtual async Task<IList<IndexDocument>> GetSecondaryDocumentsAsync(
             IEnumerable<IIndexDocumentBuilder> secondaryDocumentBuilders, IList<string> documentIds,
-            ICancellationToken cancellationToken)
+            ICancellationToken cancellationToken, int recursionDepth = 0)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -481,9 +481,11 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             var newIds = result.Select(x => x.Id).Except(documentIds).ToList();
 
-            if (newIds.Any())
+            if (recursionDepth < 2 && newIds.Any())
             {
-                var newDocuments = await GetSecondaryDocumentsAsync(builders, newIds, cancellationToken);
+                recursionDepth += 1;
+
+                var newDocuments = await GetSecondaryDocumentsAsync(builders, newIds, cancellationToken, recursionDepth);
 
                 var groups = newDocuments.GroupBy(x => x.Id);
 
@@ -493,7 +495,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 foreach (var group in groups.Where(x => x.Any()))
                 {
                     first.Add(group.First());
-                    rest.AddRange(group.Skip(1).ToList());
+                    rest.AddRange(group.Skip(1));
                 }
 
                 MergeDocuments(first, rest);
