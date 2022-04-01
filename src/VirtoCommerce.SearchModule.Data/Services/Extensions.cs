@@ -8,6 +8,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
 {
     public static class Extensions
     {
+        /// <summary>
+        /// Returns index document builder collection for the change provider type
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <param name="providerType"></param>
+        /// <returns></returns>
         public static IEnumerable<IIndexDocumentBuilder> GetBuildersForProvider(this IEnumerable<IndexDocumentConfiguration> configuration, Type providerType)
         {
             var result = new List<IIndexDocumentBuilder>();

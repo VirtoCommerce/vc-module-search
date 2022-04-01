@@ -104,26 +104,29 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             foreach (var config in configs)
             {
-                var documentBuilders = new List<IIndexDocumentBuilder> { config.DocumentSource.DocumentBuilder };
+                var primaryDocumentBuilder = config.DocumentSource.DocumentBuilder;
 
-                var secondaryDocBuilders = config.RelatedSources?
+                var additionalDocumentBuilders = config.RelatedSources?
                     .Where(s => s.DocumentBuilder != null)
                     .Select(s => s.DocumentBuilder)
-                    .ToList();
+                    .ToList() ?? new List<IIndexDocumentBuilder>();
 
-                if (secondaryDocBuilders != null)
+                if (builderTypes.Any() && additionalDocumentBuilders.Any() && _searchProvider is ISupportPartialUpdate)
                 {
-                    documentBuilders.AddRange(secondaryDocBuilders);
-                }
-
-                if (builderTypes.Any() && _searchProvider is ISupportPartialUpdate)
-                {
-                    documentBuilders = documentBuilders.Where(x => builderTypes.Contains(x.GetType().FullName))
+                    additionalDocumentBuilders = additionalDocumentBuilders.Where(x => builderTypes.Contains(x.GetType().FullName))
                         .ToList();
+
+                    // In case of changing main object itself, there would be only primary document builder,
+                    // but in the other cases, when changed additional dependent objects, primary builder should be nulled.
+                    if (!builderTypes.Contains(primaryDocumentBuilder.GetType().FullName))
+                    {
+                        primaryDocumentBuilder = null;
+                    }
+
                     partialUpdate = true;
                 }
 
-                var documents = await GetDocumentsAsync(documentIds, documentBuilders, new CancellationTokenWrapper(CancellationToken.None));
+                var documents = await GetDocumentsAsync(documentIds, primaryDocumentBuilder, additionalDocumentBuilders, new CancellationTokenWrapper(CancellationToken.None));
 
                 IndexingResult indexingResult;
 
@@ -258,10 +261,11 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var indexDocumentChanges = changes as IndexDocumentChange[] ?? changes.ToArray();
 
             // Full changes don't have changes provider specified because we don't set it for manual indexation.
-            var fullChanges = _searchProvider is ISupportPartialUpdate ? indexDocumentChanges.Where(x =>
-                    x.ChangeType == IndexDocumentChangeType.Deleted ||
+            var fullChanges = _searchProvider is ISupportPartialUpdate ? indexDocumentChanges
+                .Where(x =>
+                    x.ChangeType is IndexDocumentChangeType.Deleted or IndexDocumentChangeType.Created ||
                     !_configs.GetBuildersForProvider(x.Provider?.GetType()).Any()
-                    )
+                )
                 .ToArray() : indexDocumentChanges;
 
             var partialChanges = indexDocumentChanges.Except(fullChanges);
@@ -306,7 +310,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     .Where(x => x.DocumentId == id)
                     .SelectMany(x => _configs.GetBuildersForProvider(x.Provider.GetType()));
 
-                var documents = await GetDocumentsAsync(new[] { id }, builders, cancellationToken);
+                var documents = await GetDocumentsAsync(new[] { id }, null, builders, cancellationToken);
 
                 IndexingResult indexingResult;
 
@@ -331,18 +335,11 @@ namespace VirtoCommerce.SearchModule.Data.Services
             }
             else if (changeType == IndexDocumentChangeType.Modified)
             {
-                var documentBuilders = new List<IIndexDocumentBuilder>() { batchOptions.PrimaryDocumentBuilder };
+                var documents = await GetDocumentsAsync(changedIds, batchOptions.PrimaryDocumentBuilder, batchOptions.SecondaryDocumentBuilders, cancellationToken);
 
-                if (batchOptions.SecondaryDocumentBuilders?.Any() ?? false)
+                if (batchOptions.Reindex && _searchProvider is ISupportIndexSwap supportIndexSwapProvider)
                 {
-                    documentBuilders.AddRange(batchOptions.SecondaryDocumentBuilders);
-                }
-
-                var documents = await GetDocumentsAsync(changedIds, documentBuilders, cancellationToken);
-
-                if (batchOptions.Reindex && _searchProvider is ISupportIndexSwap supportIndexswapProvider)
-                {
-                    result = await supportIndexswapProvider.IndexWithBackupAsync(batchOptions.DocumentType, documents);
+                    result = await supportIndexSwapProvider.IndexWithBackupAsync(batchOptions.DocumentType, documents);
                 }
                 else
                 {
@@ -419,20 +416,31 @@ namespace VirtoCommerce.SearchModule.Data.Services
             return result;
         }
 
-        protected virtual async Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds,
-            IEnumerable<IIndexDocumentBuilder> documentBuilders, ICancellationToken cancellationToken)
+        protected virtual async Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds, IIndexDocumentBuilder primaryDocumentBuilder,
+            IEnumerable<IIndexDocumentBuilder> additionalDocumentBuilders, ICancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var primaryDocuments = documentIds.Select(x => new IndexDocument(x)).ToList();
+            List<IndexDocument> primaryDocuments;
 
-            if (primaryDocuments.Any())
+            if (primaryDocumentBuilder == null)
             {
-                if (documentBuilders != null)
+                primaryDocuments = documentIds.Select(x => new IndexDocument(x)).ToList();
+            }
+            else
+            {
+                primaryDocuments = (await primaryDocumentBuilder.GetDocumentsAsync(documentIds))
+                    ?.Where(x => x != null)
+                    .ToList();
+            }
+
+            if (primaryDocuments?.Any() == true)
+            {
+                if (additionalDocumentBuilders != null)
                 {
                     var primaryDocumentIds = primaryDocuments.Select(d => d.Id).ToArray();
                     var secondaryDocuments =
-                        await GetSecondaryDocumentsAsync(documentBuilders, primaryDocumentIds, cancellationToken);
+                        await GetSecondaryDocumentsAsync(additionalDocumentBuilders, primaryDocumentIds, cancellationToken);
 
                     MergeDocuments(primaryDocuments, secondaryDocuments);
                 }
