@@ -206,6 +206,38 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             }
         }
 
+        public static IEnumerable<IGrouping<string, IndexEntry>> GetGroupedByTypeAndDistinctedByChangeTypeIndexEntries(IEnumerable<IndexEntry> indexEntries)
+        {
+            var indexEntriesFilteredFromEmptyIds = indexEntries.Where(x => !string.IsNullOrEmpty(x.Id)).ToList();
+
+            var result = new List<IndexEntry>();
+
+            foreach (var indexEntryGroupedByType in indexEntriesFilteredFromEmptyIds.GroupBy(x => x.Type))
+            {
+                foreach (var indexEntryGroupedById in indexEntryGroupedByType.GroupBy(x => x.Id))
+                {
+                    var entryWasAdded = indexEntryGroupedById.Any(x => x.EntryState is EntryState.Added);
+                    var entryWasModified = indexEntryGroupedById.Any(x => x.EntryState is EntryState.Modified);
+                    var entryWasDeleted = indexEntryGroupedById.Any(x => x.EntryState is EntryState.Deleted);
+
+                    if (entryWasDeleted)
+                    {
+                        result.Add(indexEntryGroupedById.First(x => x.EntryState is EntryState.Deleted));
+                    }
+                    else if (entryWasAdded)
+                    {
+                        result.Add(indexEntryGroupedById.First(x => x.EntryState is EntryState.Added));
+                    }
+                    else if (entryWasModified)
+                    {
+                        result.Add(indexEntryGroupedById.First(x => x.EntryState is EntryState.Modified));
+                    }
+                }
+            }
+
+            return result.GroupBy(x => x.Type);
+        }
+
         // Use hard-code methods to easily set queue for Hangfire.
         // Make sure we wait for async methods to end, so that Hangfire retries if an exception occurs.
 
