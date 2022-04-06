@@ -45,7 +45,7 @@
                     <li class="menu-item" ng-click="swapIndex(contextMenuEntity.documentType)" va-permission="'core:search:index:rebuild'" ng-if="blade.manageIndexMode">
                         <i class="menu-ico fa fa-exchange"></i> {{ 'search.commands.swap-index' | translate }}
                     </li>
-                    <li class="menu-item" ng-click="rebuildIndex([contextMenuEntity])" va-permission="'core:search:index:rebuild'">
+                    <li class="menu-item" ng-click="rebuildIndex([contextMenuEntity])" va-permission="'core:search:index:rebuild'" ng-if="contextMenuEntity.isActive">
                         <i class="menu-ico fa fa-recycle"></i> {{ 'search.commands.rebuild-index' | translate }}
                     </li>
                 </ul>
@@ -55,11 +55,8 @@
     </div>
 </div>
 
-
-
 <script type="text/ng-template" id="documentType-list.row.html">
-    <div
-         class="ui-grid-cell"
+    <div class="ui-grid-cell"
          role="{{ col.isRowHeader ? 'rowheader' : 'gridcell' }}"
          data-target="prl_menu"
          ng-repeat="(colRenderIndex, col) in colContainer.renderedColumns track by col.uid"
@@ -91,4 +88,3 @@
         </div>
     </div>
 </script>
-
