@@ -110,6 +110,7 @@ angular.module('virtoCommerce.searchModule')
 
             // ui-grid
             $scope.setGridOptions = function (gridId, gridOptions) {
+                gridOptions.isRowSelectable = (row) => row.entity.isActive;
                 $scope.gridOptions = gridOptions;
                 gridOptionExtension.tryExtendGridOptions(gridId, gridOptions);
                 return gridOptions;
