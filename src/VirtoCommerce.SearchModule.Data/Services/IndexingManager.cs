@@ -333,7 +333,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             {
                 result = await DeleteDocumentsAsync(batchOptions.DocumentType, changedIds);
             }
-            else if (changeType == IndexDocumentChangeType.Modified)
+            else if (changeType is IndexDocumentChangeType.Modified or IndexDocumentChangeType.Created)
             {
                 var documents = await GetDocumentsAsync(changedIds, batchOptions.PrimaryDocumentBuilder, batchOptions.SecondaryDocumentBuilders, cancellationToken);
 
