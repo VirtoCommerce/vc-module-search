@@ -215,7 +215,7 @@ public class IndexingJobTests
 
     public class IndexEntriesEqualityComparer : EqualityComparer<IndexEntry>
     {
-        public override bool Equals(IndexEntry? x, IndexEntry? y)
+        public override bool Equals(IndexEntry x, IndexEntry y)
         {
             if (x == null && y == null)
             {
