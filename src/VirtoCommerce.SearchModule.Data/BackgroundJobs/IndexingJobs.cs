@@ -129,6 +129,12 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
         #region Scale-out indexation actions for indexing worker
 
+        [Obsolete("Method is obsolete. Use EnqueueIndexDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null) instead.")]
+        public static void EnqueueIndexDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal)
+        {
+            EnqueueIndexDocuments(documentType, documentIds, priority, null);
+        }
+
         public static void EnqueueIndexDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
         {
             var buildersTypes = builders?.Select(x => x.GetType().FullName);
@@ -165,6 +171,12 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                 default:
                     throw new ArgumentException($@"Unknown priority: {priority}", nameof(priority));
             }
+        }
+
+        [Obsolete("Method is obsolete. Use EnqueueIndexAndDeleteDocuments(IndexEntry[] indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null) instead.")]
+        public static void EnqueueIndexAndDeleteDocuments(IndexEntry[] indexEntries, string priority = JobPriority.Normal)
+        {
+            EnqueueIndexAndDeleteDocuments(indexEntries, priority, null);
         }
 
         public static void EnqueueIndexAndDeleteDocuments(IndexEntry[] indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)

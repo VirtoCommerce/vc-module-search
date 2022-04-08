@@ -52,7 +52,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             result.Add(await GetIndexStateAsync(documentType, getBackupIndexState: false));
 
-            if (_searchProvider.IsIndexSwappingSupported)
+            if (_searchProvider is ISupportIndexSwap)
             {
                 result.Add(await GetIndexStateAsync(documentType, getBackupIndexState: true));
             }
@@ -104,34 +104,42 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             foreach (var config in configs)
             {
-                var documentBuilders = new List<IIndexDocumentBuilder> { config.DocumentSource.DocumentBuilder };
+                var primaryDocumentBuilder = config.DocumentSource.DocumentBuilder;
 
-                var secondaryDocBuilders = config.RelatedSources?
+                var additionalDocumentBuilders = config.RelatedSources?
                     .Where(s => s.DocumentBuilder != null)
                     .Select(s => s.DocumentBuilder)
-                    .ToList();
+                    .ToList() ?? new List<IIndexDocumentBuilder>();
 
-                if (secondaryDocBuilders != null)
+                if (builderTypes.Any() && additionalDocumentBuilders.Any() && _searchProvider is ISupportPartialUpdate)
                 {
-                    documentBuilders.AddRange(secondaryDocBuilders);
-                }
-
-                if (builderTypes.Any())
-                {
-                    documentBuilders = documentBuilders.Where(x => builderTypes.Contains(x.GetType().FullName))
+                    additionalDocumentBuilders = additionalDocumentBuilders.Where(x => builderTypes.Contains(x.GetType().FullName))
                         .ToList();
+
+                    // In case of changing main object itself, there would be only primary document builder,
+                    // but in the other cases, when changed additional dependent objects, primary builder should be nulled.
+                    if (!builderTypes.Contains(primaryDocumentBuilder.GetType().FullName))
+                    {
+                        primaryDocumentBuilder = null;
+                    }
+
                     partialUpdate = true;
                 }
 
-                var parameters = new IndexingParameters { PartialUpdate = partialUpdate };
+                var documents = await GetDocumentsAsync(documentIds, primaryDocumentBuilder, additionalDocumentBuilders, new CancellationTokenWrapper(CancellationToken.None));
 
-                var configResult = await IndexDocumentsAsync(documentType,
-                    documentIds,
-                    documentBuilders,
-                    new CancellationTokenWrapper(CancellationToken.None),
-                    parameters);
+                IndexingResult indexingResult;
 
-                result.Items.AddRange(configResult.Items ?? Enumerable.Empty<IndexingResultItem>());
+                if (partialUpdate && _searchProvider is ISupportPartialUpdate supportPartialUpdateProvider)
+                {
+                    indexingResult = await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents);
+                }
+                else
+                {
+                    indexingResult = await _searchProvider.IndexAsync(documentType, documents);
+                }
+
+                result.Items.AddRange(indexingResult.Items ?? Enumerable.Empty<IndexingResultItem>());
             }
 
             return result;
@@ -253,17 +261,19 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var indexDocumentChanges = changes as IndexDocumentChange[] ?? changes.ToArray();
 
             // Full changes don't have changes provider specified because we don't set it for manual indexation.
-            var fullChanges = indexDocumentChanges.Where(x =>
-                    x.ChangeType == IndexDocumentChangeType.Deleted ||
-                    !_configs.GetBuildersForProvider(x.Provider?.GetType()).Any())
-                .ToArray();
+            var fullChanges = _searchProvider is ISupportPartialUpdate ? indexDocumentChanges
+                .Where(x =>
+                    x.ChangeType is IndexDocumentChangeType.Deleted or IndexDocumentChangeType.Created ||
+                    !_configs.GetBuildersForProvider(x.Provider?.GetType()).Any()
+                )
+                .ToArray() : indexDocumentChanges;
 
             var partialChanges = indexDocumentChanges.Except(fullChanges);
 
             var partialResult = await ProcessPartialDocumentsAsync(partialChanges, batchOptions, cancellationToken);
 
             var groups = GetLatestChangesForEachDocumentGroupedByChangeType(fullChanges);
-            
+
             foreach (var group in groups)
             {
                 var changeType = group.Key;
@@ -291,7 +301,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var result = new IndexingResult { Items = new List<IndexingResultItem>() };
 
             var indexDocumentChanges = changes as IndexDocumentChange[] ?? changes.ToArray();
-            
+
             var changeIds = indexDocumentChanges.Select(x => x.DocumentId).Distinct();
 
             foreach (var id in changeIds)
@@ -300,11 +310,13 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     .Where(x => x.DocumentId == id)
                     .SelectMany(x => _configs.GetBuildersForProvider(x.Provider.GetType()));
 
-                var parameters = new IndexingParameters { PartialUpdate = true };
+                var documents = await GetDocumentsAsync(new[] { id }, null, builders, cancellationToken);
 
-                var stepResult = await IndexDocumentsAsync(batchOptions.DocumentType, new[] { id }, builders, cancellationToken, parameters);
+                IndexingResult indexingResult;
 
-                result.Items.AddRange(stepResult.Items);
+                indexingResult = await ((ISupportPartialUpdate)_searchProvider).IndexPartialAsync(batchOptions.DocumentType, documents);
+
+                result.Items.AddRange(indexingResult.Items);
             }
 
             return result;
@@ -323,32 +335,19 @@ namespace VirtoCommerce.SearchModule.Data.Services
             }
             else if (changeType == IndexDocumentChangeType.Modified)
             {
-                var documentBuilders = new List<IIndexDocumentBuilder>() { batchOptions.PrimaryDocumentBuilder };
+                var documents = await GetDocumentsAsync(changedIds, batchOptions.PrimaryDocumentBuilder, batchOptions.SecondaryDocumentBuilders, cancellationToken);
 
-                if (batchOptions.SecondaryDocumentBuilders?.Any() ?? false)
+                if (batchOptions.Reindex && _searchProvider is ISupportIndexSwap supportIndexSwapProvider)
                 {
-                    documentBuilders.AddRange(batchOptions.SecondaryDocumentBuilders);
+                    result = await supportIndexSwapProvider.IndexWithBackupAsync(batchOptions.DocumentType, documents);
                 }
-
-                var parameters = new IndexingParameters { Reindex = batchOptions.Reindex };
-
-                result = await IndexDocumentsAsync(batchOptions.DocumentType, changedIds, documentBuilders, cancellationToken, parameters);
+                else
+                {
+                    result = await _searchProvider.IndexAsync(batchOptions.DocumentType, documents);
+                }
             }
 
             return result;
-        }
-
-        protected virtual async Task<IndexingResult> IndexDocumentsAsync(
-            string documentType,
-            IList<string> documentIds,
-            IEnumerable<IIndexDocumentBuilder> documentBuilders,
-            ICancellationToken cancellationToken, IndexingParameters parameters)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var documents = await GetDocumentsAsync(documentIds, documentBuilders, cancellationToken);
-            var response = await _searchProvider.IndexAsync(documentType, documents, parameters);
-            return response;
         }
 
         protected virtual async Task<IIndexDocumentChangeFeed[]> GetChangeFeeds(
@@ -417,20 +416,31 @@ namespace VirtoCommerce.SearchModule.Data.Services
             return result;
         }
 
-        protected virtual async Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds,
-            IEnumerable<IIndexDocumentBuilder> documentBuilders, ICancellationToken cancellationToken)
+        protected virtual async Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds, IIndexDocumentBuilder primaryDocumentBuilder,
+            IEnumerable<IIndexDocumentBuilder> additionalDocumentBuilders, ICancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var primaryDocuments = documentIds.Select(x => new IndexDocument(x)).ToList();
+            List<IndexDocument> primaryDocuments;
 
-            if (primaryDocuments.Any())
+            if (primaryDocumentBuilder == null)
             {
-                if (documentBuilders != null)
+                primaryDocuments = documentIds.Select(x => new IndexDocument(x)).ToList();
+            }
+            else
+            {
+                primaryDocuments = (await primaryDocumentBuilder.GetDocumentsAsync(documentIds))
+                    ?.Where(x => x != null)
+                    .ToList();
+            }
+
+            if (primaryDocuments?.Any() == true)
+            {
+                if (additionalDocumentBuilders != null)
                 {
                     var primaryDocumentIds = primaryDocuments.Select(d => d.Id).ToArray();
                     var secondaryDocuments =
-                        await GetSecondaryDocumentsAsync(documentBuilders, primaryDocumentIds, cancellationToken);
+                        await GetSecondaryDocumentsAsync(additionalDocumentBuilders, primaryDocumentIds, cancellationToken);
 
                     MergeDocuments(primaryDocuments, secondaryDocuments);
                 }
@@ -440,7 +450,8 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 {
                     document.Add(new IndexDocumentField(KnownDocumentFields.IndexationDate, DateTime.UtcNow)
                     {
-                        IsRetrievable = true, IsFilterable = true
+                        IsRetrievable = true,
+                        IsFilterable = true
                     });
                 }
             }
@@ -494,9 +505,9 @@ namespace VirtoCommerce.SearchModule.Data.Services
         /// </summary>
         protected virtual async Task SwapIndices(IndexingOptions options)
         {
-            if (options.DeleteExistingIndex && _searchProvider.IsIndexSwappingSupported)
+            if (options.DeleteExistingIndex && _searchProvider is ISupportIndexSwap swappingSupportedSearchProvider)
             {
-                await _searchProvider.SwapIndexAsync(options.DocumentType);
+                await swappingSupportedSearchProvider.SwapIndexAsync(options.DocumentType);
             }
         }
 

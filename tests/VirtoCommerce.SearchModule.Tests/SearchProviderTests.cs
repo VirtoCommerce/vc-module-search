@@ -21,17 +21,17 @@ namespace VirtoCommerce.SearchModule.Tests
 
             // Create index and add documents
             var primaryDocuments = GetPrimaryDocuments();
-            var response = await provider.IndexAsync(DocumentType, primaryDocuments, new IndexingParameters());
+            var response = await provider.IndexAsync(DocumentType, primaryDocuments);
 
             Assert.NotNull(response);
             Assert.NotNull(response.Items);
             Assert.Equal(primaryDocuments.Count, response.Items.Count);
             Assert.All(response.Items, i => Assert.True(i.Succeeded));
-            
+
 
             // Update index with new fields and add more documents
             var secondaryDocuments = GetSecondaryDocuments();
-            response = await provider.IndexAsync(DocumentType, secondaryDocuments, new IndexingParameters());
+            response = await provider.IndexAsync(DocumentType, secondaryDocuments);
 
             Assert.NotNull(response);
             Assert.NotNull(response.Items);
