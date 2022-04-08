@@ -6,11 +6,9 @@ using VirtoCommerce.SearchModule.Core.Services;
 
 namespace VirtoCommerce.SearchModule.Data.Services
 {
-    public class DummySearchProvider : ISearchProvider
+    public class DummySearchProvider : ISearchProvider, ISupportIndexSwap, ISupportPartialUpdate
     {
         private readonly string _error = "There's no registered Search Provider. Please install at least one Search Module implementation (Lucene, Elastic Search or Azure Search).";
-
-        bool ISearchProvider.IsIndexSwappingSupported => throw new SearchException(_error);
 
         public Task SwapIndexAsync(string documentType)
         {
@@ -22,7 +20,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             throw new SearchException(_error);
         }
 
-        public Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents, IndexingParameters parameters)
+        public Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents)
         {
             throw new SearchException(_error);
         }
@@ -33,6 +31,16 @@ namespace VirtoCommerce.SearchModule.Data.Services
         }
 
         public Task<SearchResponse> SearchAsync(string documentType, SearchRequest request)
+        {
+            throw new SearchException(_error);
+        }
+
+        public Task<IndexingResult> IndexWithBackupAsync(string documentType, IList<IndexDocument> documents)
+        {
+            throw new SearchException(_error);
+        }
+
+        public Task<IndexingResult> IndexPartialAsync(string documentType, IList<IndexDocument> documents)
         {
             throw new SearchException(_error);
         }

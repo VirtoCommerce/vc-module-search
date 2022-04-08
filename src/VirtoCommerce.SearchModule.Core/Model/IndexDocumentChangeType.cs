@@ -4,5 +4,6 @@ namespace VirtoCommerce.SearchModule.Core.Model
     {
         Modified,
         Deleted,
+        Created,
     }
 }

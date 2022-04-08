@@ -11,9 +11,7 @@ namespace VirtoCommerce.SearchModule.Tests
     {
         public IDictionary<string, IndexDocument> IndexedDocuments { get; } = new Dictionary<string, IndexDocument>();
 
-        bool ISearchProvider.IsIndexSwappingSupported => false;
-
-        public Task SwapIndexAsync(string documentType)
+        public static Task SwapIndexAsync(string documentType)
         {
             return Task.CompletedTask;
         }
@@ -23,7 +21,7 @@ namespace VirtoCommerce.SearchModule.Tests
             return Task.FromResult<object>(null);
         }
 
-        public Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents, IndexingParameters parameters)
+        public Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents)
         {
             foreach (var document in documents.Where(d => d.Id.StartsWith("good")))
             {
