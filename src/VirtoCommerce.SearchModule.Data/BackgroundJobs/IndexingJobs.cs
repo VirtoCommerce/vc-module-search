@@ -181,29 +181,61 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
         public static void EnqueueIndexAndDeleteDocuments(IndexEntry[] indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
         {
-            var groupIndexIds = indexEntries.Where(x => (x.EntryState == EntryState.Modified || x.EntryState == EntryState.Added) && x.Id != null)
-                                       .GroupBy(y => y.Type).ToArray();
+            var groupedEntriesByType = GetGroupedByTypeAndDistinctedByChangeTypeIndexEntries(indexEntries);
 
-            if (!groupIndexIds.IsNullOrEmpty())
+            foreach (var groupedEntryByType in groupedEntriesByType)
             {
-                foreach (var item in groupIndexIds)
+                var addedEntries = groupedEntryByType.Where(x => x.EntryState == EntryState.Added).ToList();
+                var modifiedEntries = groupedEntryByType.Where(x => x.EntryState == EntryState.Modified).ToList();
+                var deletedEntries = groupedEntryByType.Where(x => x.EntryState == EntryState.Deleted).ToList();
+
+                if (addedEntries.Any())
                 {
-                    EnqueueIndexDocuments(item.Key, item.Select(x => x.Id).Distinct().ToArray(), priority, builders);
+                    EnqueueIndexDocuments(groupedEntryByType.Key, addedEntries.Select(x => x.Id).ToArray(), priority, null);
                 }
 
-            }
-
-            var groupDeleteIds = indexEntries.Where(x => x.EntryState == EntryState.Deleted && x.Id != null)
-                                       .GroupBy(y => y.Type).ToArray();
-
-            if (!groupDeleteIds.IsNullOrEmpty())
-            {
-                foreach (var item in groupDeleteIds)
+                if (modifiedEntries.Any())
                 {
-                    EnqueueDeleteDocuments(item.Key, item.Select(x => x.Id).Distinct().ToArray());
+                    EnqueueIndexDocuments(groupedEntryByType.Key, modifiedEntries.Select(x => x.Id).ToArray(), priority, builders);
                 }
 
+                if (deletedEntries.Any())
+                {
+                    EnqueueDeleteDocuments(groupedEntryByType.Key, deletedEntries.Select(x => x.Id).ToArray(), priority);
+                }
             }
+        }
+
+        public static IEnumerable<IGrouping<string, IndexEntry>> GetGroupedByTypeAndDistinctedByChangeTypeIndexEntries(IEnumerable<IndexEntry> indexEntries)
+        {
+            var indexEntriesFilteredFromEmptyIds = indexEntries.Where(x => !string.IsNullOrEmpty(x.Id)).ToList();
+
+            var result = new List<IndexEntry>();
+
+            foreach (var indexEntryGroupedByType in indexEntriesFilteredFromEmptyIds.GroupBy(x => x.Type))
+            {
+                foreach (var indexEntryGroupedById in indexEntryGroupedByType.GroupBy(x => x.Id))
+                {
+                    var entryWasAdded = indexEntryGroupedById.Any(x => x.EntryState is EntryState.Added);
+                    var entryWasModified = indexEntryGroupedById.Any(x => x.EntryState is EntryState.Modified);
+                    var entryWasDeleted = indexEntryGroupedById.Any(x => x.EntryState is EntryState.Deleted);
+
+                    if (entryWasDeleted)
+                    {
+                        result.Add(indexEntryGroupedById.First(x => x.EntryState is EntryState.Deleted));
+                    }
+                    else if (entryWasAdded)
+                    {
+                        result.Add(indexEntryGroupedById.First(x => x.EntryState is EntryState.Added));
+                    }
+                    else if (entryWasModified)
+                    {
+                        result.Add(indexEntryGroupedById.First(x => x.EntryState is EntryState.Modified));
+                    }
+                }
+            }
+
+            return result.GroupBy(x => x.Type);
         }
 
         // Use hard-code methods to easily set queue for Hangfire.

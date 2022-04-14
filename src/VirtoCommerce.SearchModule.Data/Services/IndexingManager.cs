@@ -111,7 +111,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     .Select(s => s.DocumentBuilder)
                     .ToList() ?? new List<IIndexDocumentBuilder>();
 
-                if (builderTypes.Any() && additionalDocumentBuilders.Any() && _searchProvider is ISupportPartialUpdate)
+                if ((builderTypes?.Any() ?? false) && additionalDocumentBuilders.Any() && _searchProvider is ISupportPartialUpdate)
                 {
                     additionalDocumentBuilders = additionalDocumentBuilders.Where(x => builderTypes.Contains(x.GetType().FullName))
                         .ToList();
@@ -333,7 +333,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             {
                 result = await DeleteDocumentsAsync(batchOptions.DocumentType, changedIds);
             }
-            else if (changeType == IndexDocumentChangeType.Modified)
+            else if (changeType is IndexDocumentChangeType.Modified or IndexDocumentChangeType.Created)
             {
                 var documents = await GetDocumentsAsync(changedIds, batchOptions.PrimaryDocumentBuilder, batchOptions.SecondaryDocumentBuilders, cancellationToken);
 
