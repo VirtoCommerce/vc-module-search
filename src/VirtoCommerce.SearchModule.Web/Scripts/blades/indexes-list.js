@@ -66,6 +66,15 @@ angular.module('virtoCommerce.searchModule')
 
                 getIndicesTask({}, function (response) {
                     blade.currentEntities = response;
+
+                    if (blade.manageIndexMode) {
+                        var documentTypesGroup = _.groupBy(blade.currentEntities, function (x) { return x.documentType; });
+                        _.each(documentTypesGroup, function (typedDocs) {
+                            _.each(typedDocs, function (doc) {
+                                doc.canSwap = typedDocs.some(x => !x.indexedDocumentsCount) ? false : true;
+                            });
+                        });
+                    }
                     blade.isLoading = false;
                 });
             }
