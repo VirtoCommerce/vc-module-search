@@ -71,7 +71,7 @@ angular.module('virtoCommerce.searchModule')
                         var documentTypesGroup = _.groupBy(blade.currentEntities, function (x) { return x.documentType; });
                         _.each(documentTypesGroup, function (typedDocs) {
                             _.each(typedDocs, function (doc) {
-                                doc.canSwap = !typedDocs.some(x => !x.indexedDocumentsCount);
+                                doc.canSwap = typedDocs.every(x => x.indexedDocumentsCount);
                             });
                         });
                     }
