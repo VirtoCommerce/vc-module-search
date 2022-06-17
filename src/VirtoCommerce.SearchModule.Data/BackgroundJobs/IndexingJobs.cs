@@ -103,6 +103,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         // Recurring job for automatic changes indexation.
         // It should push separate notification for each document type if any changes were indexed for this type
         [Queue(JobPriority.Normal)]
+        [DisableConcurrentExecution(10)]
         public Task IndexChangesJob(string documentType, IJobCancellationToken cancellationToken)
         {
             var allOptions = GetAllIndexingOptions(documentType);
