@@ -34,7 +34,9 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         public void Start(string currentUserName, string notificationId, bool suppressInsignificantNotifications, PerformContext context)
         {
             _notification = GetNotification(currentUserName, notificationId);
+#pragma warning disable CA2254 // Template should be a static expression
             _log.LogTrace(_notification.Description);
+#pragma warning restore CA2254 // Template should be a static expression
             _context.SetTextColor(ConsoleTextColor.White);
             _context.WriteLine(_notification.Description);
 
