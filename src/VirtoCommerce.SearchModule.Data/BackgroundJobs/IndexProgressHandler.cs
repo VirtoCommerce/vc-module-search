@@ -23,6 +23,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         private bool _isCanceled;
         private PerformContext _context;
         private IProgressBar _progressBar;
+        private const double _maxPercent = 100;
 
         public IndexProgressHandler(ILogger<IndexProgressHandler> log, IPushNotificationManager pushNotificationManager)
         {
@@ -59,7 +60,9 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
         public void Progress(IndexingProgress progress)
         {
+#pragma warning disable CA2254 // Template should be a static expression
             _log.LogTrace(progress.Description);
+#pragma warning restore CA2254 // Template should be a static expression
 
             _totalCountMap[progress.DocumentType] = progress.TotalCount ?? 0;
             _processedCountMap[progress.DocumentType] = progress.ProcessedCount ?? 0;
@@ -76,7 +79,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             _notification.TotalCount = progress.TotalCount ?? 0;
             _notification.ProcessedCount = progress.ProcessedCount ?? 0;
 
-            _progressBar.SetValue((double)_notification.ProcessedCount * 100 / _notification.TotalCount);
+            _progressBar.SetValue(_notification.ProcessedCount * _maxPercent / _notification.TotalCount);
 
 
             if (!_suppressInsignificantNotifications || progress.TotalCount > 0 || progress.ProcessedCount > 0)
@@ -88,7 +91,9 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         public void Exception(Exception ex)
         {
             var errMsg = ex.ToString();
+#pragma warning disable CA2254 // Template should be a static expression
             _log.LogError(errMsg);
+#pragma warning restore CA2254 // Template should be a static expression
             _context.SetTextColor(ConsoleTextColor.Red);
             _context.WriteLine(errMsg);
             _notification.Errors.Add(errMsg);
@@ -101,7 +106,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             _notification.TotalCount = _totalCountMap.Values.Sum();
             _notification.ProcessedCount = _processedCountMap.Values.Sum();
 
-            _progressBar.SetValue((double)_notification.ProcessedCount * 100 / _notification.TotalCount);
+            _progressBar.SetValue(_notification.ProcessedCount * _maxPercent / _notification.TotalCount);
 
             _notification.Description = _isCanceled
                 ? "Indexation has been canceled"
