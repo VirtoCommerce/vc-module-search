@@ -20,7 +20,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             if (scheduleJobs)
             {
                 var cronExpression = _settingsManager.GetValue(ModuleConstants.Settings.IndexingJobs.CronExpression.Name, (string)ModuleConstants.Settings.IndexingJobs.CronExpression.DefaultValue);
-                RecurringJob.AddOrUpdate<IndexingJobs>(j => j.IndexChangesJob(null, JobCancellationToken.Null), cronExpression);
+                RecurringJob.AddOrUpdate<IndexingJobs>(j => j.IndexChangesJob(null, null, JobCancellationToken.Null), cronExpression);
             }
             else
             {

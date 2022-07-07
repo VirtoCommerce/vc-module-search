@@ -12,6 +12,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Hangfire;
+using Hangfire.Server;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Jobs;
 using VirtoCommerce.Platform.Core.Settings;
@@ -50,7 +51,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             var notification = IndexProgressHandler.CreateNotification(currentUserName, null);
 
             // Hangfire will set cancellation token.
-            BackgroundJob.Enqueue<IndexingJobs>(j => j.IndexAllDocumentsJob(currentUserName, notification.Id, options, JobCancellationToken.Null));
+            BackgroundJob.Enqueue<IndexingJobs>(j => j.IndexAllDocumentsJob(currentUserName, notification.Id, options, null, JobCancellationToken.Null));
 
             return notification;
         }
@@ -76,13 +77,13 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
         // One-time job for manual indexation
         [Queue(JobPriority.Normal)]
-        public Task IndexAllDocumentsJob(string userName, string notificationId, IndexingOptions[] options, IJobCancellationToken cancellationToken)
+        public Task IndexAllDocumentsJob(string userName, string notificationId, IndexingOptions[] options, PerformContext context, IJobCancellationToken cancellationToken)
         {
             return WithInterceptorsAsync(options, async o =>
              {
                  try
                  {
-                     var success = await RunIndexJobAsync(userName, notificationId, false, o, IndexAllDocumentsAsync, cancellationToken);
+                     var success = await RunIndexJobAsync(userName, notificationId, false, o, IndexAllDocumentsAsync, context, cancellationToken);
 
                      // Indexation manager might re-use the jobs to scale out indexation.
                      // Wait for all indexing jobs to complete, before telling interceptors we're ready.
@@ -103,7 +104,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         // Recurring job for automatic changes indexation.
         // It should push separate notification for each document type if any changes were indexed for this type
         [Queue(JobPriority.Normal)]
-        public Task IndexChangesJob(string documentType, IJobCancellationToken cancellationToken)
+        public Task IndexChangesJob(string documentType, PerformContext context, IJobCancellationToken cancellationToken)
         {
             var allOptions = GetAllIndexingOptions(documentType);
 
@@ -114,7 +115,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
                  foreach (var options in o)
                  {
-                     success = success && await RunIndexJobAsync(null, null, true, new[] { options }, IndexChangesAsync, cancellationToken);
+                     success = success && await RunIndexJobAsync(null, null, true, new[] { options }, IndexChangesAsync, context, cancellationToken);
                  }
 
                  // Indexation manager might re-use the jobs to scale out indexation.
@@ -298,13 +299,13 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         #endregion
 
         private Task<bool> RunIndexJobAsync(string currentUserName, string notificationId, bool suppressInsignificantNotifications,
-            IEnumerable<IndexingOptions> allOptions, Func<IndexingOptions, ICancellationToken, Task> indexationFunc,
+            IEnumerable<IndexingOptions> allOptions, Func<IndexingOptions, ICancellationToken, Task> indexationFunc, PerformContext context,
             IJobCancellationToken cancellationToken)
         {
             var success = false;
 
             // Reset progress handler to initial state
-            _progressHandler.Start(currentUserName, notificationId, suppressInsignificantNotifications);
+            _progressHandler.Start(currentUserName, notificationId, suppressInsignificantNotifications, context);
 
             // Make sure only one indexation job can run in the cluster.
             // CAUTION: locking mechanism assumes single threaded execution.
