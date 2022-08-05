@@ -48,6 +48,11 @@ namespace VirtoCommerce.SearchModule.Core.Model
         [JsonProperty("errorCount")]
         public long ErrorCount { get; set; }
         /// <summary>
+        /// Get hangfire indexation job id
+        /// </summary>
+        [JsonProperty("jobId")]
+        public string JobId { get; set; }
+        /// <summary>
         /// Gets or sets the errors that has occurred during processing.
         /// </summary>
         /// <value>
