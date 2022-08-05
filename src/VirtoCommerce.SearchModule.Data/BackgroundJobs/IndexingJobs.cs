@@ -52,7 +52,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             var notification = IndexProgressHandler.CreateNotification(currentUserName, null);
 
             // Hangfire will set cancellation token.
-            BackgroundJob.Enqueue<IndexingJobs>(j => j.IndexAllDocumentsJob(currentUserName, notification.Id, options, null, JobCancellationToken.Null));
+            notification.JobId = BackgroundJob.Enqueue<IndexingJobs>(j => j.IndexAllDocumentsJob(currentUserName, notification.Id, options, null, JobCancellationToken.Null));
 
             return notification;
         }
