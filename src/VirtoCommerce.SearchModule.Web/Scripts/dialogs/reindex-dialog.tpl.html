@@ -1,4 +1,4 @@
-﻿<div class="modal-header">
+<div class="modal-header">
     <h3 class="modal-title">{{ 'search.dialogs.reindex.title' | translate }}</h3>
 </div>
 <div class="modal-body">
@@ -12,6 +12,6 @@
 </div>
 <div class="modal-footer">
     <button class="btn" ng-click="no()">{{ 'search.dialogs.reindex.index' | translate }}</button>
-    <button class="btn __cancel" ng-click="yes()" va-permission="VirtoCommerce.Search:Index:Rebuild">{{ 'search.dialogs.reindex.reindex' | translate}}</button>
+    <button class="btn __cancel" ng-click="yes()" va-permission="search:index:rebuild">{{ 'search.dialogs.reindex.reindex' | translate}}</button>
     <button class="btn" ng-click="cancel()">{{ 'platform.commands.cancel' | translate }}</button>
 </div>
