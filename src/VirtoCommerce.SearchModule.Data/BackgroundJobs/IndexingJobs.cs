@@ -1,11 +1,3 @@
-// This indexing jobs implementation allows only one job to perform indexing.
-// If some job is started successfully, all other jobs will terminate with "Indexation is already in progress" error until the first job is finished.
-// The synchronization is done by using the Hangfire distributed lock infrastructure.
-// This supports scaled-out scenarios.
-//
-// This class also supports queueing index batches through the Hangfire job scheduler,
-// so that we can spread the indexation work over the entire web farm.
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +12,6 @@ using VirtoCommerce.Platform.Hangfire;
 using VirtoCommerce.SearchModule.Core;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
-using Job = Hangfire.Common.Job;
 
 namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 {
@@ -33,16 +24,14 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         private readonly IIndexingManager _indexingManager;
         private readonly ISettingsManager _settingsManager;
         private readonly IndexProgressHandler _progressHandler;
-        private readonly IIndexingInterceptor[] _interceptors;
 
         public IndexingJobs(IEnumerable<IndexDocumentConfiguration> documentsConfigs, IIndexingManager indexingManager, ISettingsManager settingsManager,
-            IndexProgressHandler progressHandler, IIndexingInterceptor[] interceptors = null)
+            IndexProgressHandler progressHandler)
         {
             _documentsConfigs = documentsConfigs;
             _indexingManager = indexingManager;
             _settingsManager = settingsManager;
             _progressHandler = progressHandler;
-            _interceptors = interceptors;
         }
 
         // Enqueue a background job with single notification object for all given options
@@ -79,26 +68,19 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         [Queue(JobPriority.Normal)]
         public Task IndexAllDocumentsJob(string userName, string notificationId, IndexingOptions[] options, PerformContext context, IJobCancellationToken cancellationToken)
         {
-            return WithInterceptorsAsync(options, async o =>
-             {
-                 try
-                 {
-                     var success = await RunIndexJobAsync(userName, notificationId, false, o, IndexAllDocumentsAsync, context, cancellationToken);
-
-                     // Indexation manager might re-use the jobs to scale out indexation.
-                     // Wait for all indexing jobs to complete, before telling interceptors we're ready.
-                     // This method is running as a job as well, so skip this job.
-                     // Scale out background indexation jobs are scheduled as low.
-                     await WaitForIndexationJobsToBeReadyAsync(JobPriority.Low, x => x.Method != _manualIndexAllJobMethod && x.Method != _indexChangesJobMethod);
-
-                     return success;
-                 }
-                 finally
-                 {
-                     // Report indexation summary
-                     _progressHandler.Finish();
-                 }
-             });
+            return Task.Factory.StartNew(async () =>
+            {
+                try
+                {
+                    return await RunIndexJobAsync(userName, notificationId, false, options, IndexAllDocumentsAsync, context,
+                        cancellationToken);
+                }
+                finally
+                {
+                    // Report indexation summary
+                    _progressHandler.Finish();
+                }
+            }).Result;
         }
 
         // Recurring job for automatic changes indexation.
@@ -106,26 +88,18 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         [Queue(JobPriority.Normal)]
         public Task IndexChangesJob(string documentType, PerformContext context, IJobCancellationToken cancellationToken)
         {
-            var allOptions = GetAllIndexingOptions(documentType);
+            return Task.Factory.StartNew(async () =>
+            {
+                var success = true;
 
-            return WithInterceptorsAsync(allOptions, async o =>
-             {
-                 // Create different notification for each option (document type)
-                 var success = true;
+                var allOptions = GetAllIndexingOptions(documentType);
+                foreach (var options in allOptions)
+                {
+                    success = success && await RunIndexJobAsync(null, null, true, new[] { options }, IndexChangesAsync, context, cancellationToken);
+                }
 
-                 foreach (var options in o)
-                 {
-                     success = success && await RunIndexJobAsync(null, null, true, new[] { options }, IndexChangesAsync, context, cancellationToken);
-                 }
-
-                 // Indexation manager might re-use the jobs to scale out indexation.
-                 // Wait for all indexing jobs to complete, before telling interceptors we're ready.
-                 // This method is running as a job as well, so skip this job.
-                 // Scale out background indexation jobs are scheduled as low.
-                 await WaitForIndexationJobsToBeReadyAsync(JobPriority.Low, x => x.Method != _manualIndexAllJobMethod && x.Method != _indexChangesJobMethod);
-
-                 return success;
-             });
+                return success;
+            }).Result;
         }
 
         #region Scale-out indexation actions for indexing worker
@@ -371,43 +345,6 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             SetLastIndexationDate(options.DocumentType, oldIndexationDate, newIndexationDate);
         }
 
-        private async Task<bool> WithInterceptorsAsync(ICollection<IndexingOptions> options, Func<ICollection<IndexingOptions>, Task<bool>> action)
-        {
-            try
-            {
-                if (!_interceptors.IsNullOrEmpty())
-                {
-                    foreach (var interceptor in _interceptors)
-                    {
-                        interceptor.OnBegin(options.ToArray());
-                    }
-                }
-
-                var result = await action(options);
-
-                if (!_interceptors.IsNullOrEmpty())
-                {
-                    foreach (var interceptor in _interceptors)
-                    {
-                        interceptor.OnEnd(options.ToArray(), result);
-                    }
-                }
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                if (!_interceptors.IsNullOrEmpty())
-                {
-                    foreach (var interceptor in _interceptors)
-                    {
-                        interceptor.OnEnd(options.ToArray(), false, ex);
-                    }
-                }
-                throw;
-            }
-        }
-
         private IList<IndexingOptions> GetAllIndexingOptions(string documentType)
         {
             var configs = _documentsConfigs.AsQueryable();
@@ -461,41 +398,6 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         private int GetBatchSize()
         {
             return _settingsManager.GetValue(ModuleConstants.Settings.General.IndexPartitionSize.Name, 50);
-        }
-
-        private static async Task WaitForIndexationJobsToBeReadyAsync(string queue, Func<Job, bool> jobPredicate)
-        {
-            var monitoringApi = JobStorage.Current.GetMonitoringApi();
-
-            while (true)
-            {
-                var hasQueuedIndexingJobs = monitoringApi.Queues()
-                    .FirstOrDefault(x => x.Name.Equals(queue, StringComparison.OrdinalIgnoreCase))
-                    ?.FirstJobs
-                    .Where(x => jobPredicate == null || jobPredicate(x.Value.Job))
-                    .Any(x => x.Value.Job.Method.DeclaringType == typeof(IndexingJobs));
-
-                if (!hasQueuedIndexingJobs.GetValueOrDefault())
-                {
-                    var hasFetchedIndexingJobs = monitoringApi.FetchedJobs(queue, 0, int.MaxValue)
-                        ?.Where(x => jobPredicate == null || jobPredicate(x.Value.Job))
-                        .Any(x => x.Value.Job.Method.DeclaringType == typeof(IndexingJobs));
-
-                    if (!hasFetchedIndexingJobs.GetValueOrDefault())
-                    {
-                        var hasProcessingIndexingJobs = monitoringApi.ProcessingJobs(0, int.MaxValue)
-                            ?.Where(x => jobPredicate == null || jobPredicate(x.Value.Job))
-                            .Any(x => x.Value.Job.Method.DeclaringType == typeof(IndexingJobs));
-
-                        if (!hasProcessingIndexingJobs.GetValueOrDefault())
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                await Task.Delay(100);
-            }
         }
     }
 }
