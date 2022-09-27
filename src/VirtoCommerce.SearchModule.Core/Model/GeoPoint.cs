@@ -52,7 +52,7 @@ namespace VirtoCommerce.SearchModule.Core.Model
 
         public override string ToString()
         {
-            return Latitude.ToString("#0.0#######", CultureInfo.InvariantCulture) + "," + Longitude.ToString("#0.0#######", CultureInfo.InvariantCulture);
+            return Latitude.ToString("#0.0#########", CultureInfo.InvariantCulture) + "," + Longitude.ToString("#0.0#########", CultureInfo.InvariantCulture);
         }
 
         public static GeoPoint Parse(string value)
@@ -74,8 +74,8 @@ namespace VirtoCommerce.SearchModule.Core.Model
             {
                 result = new GeoPoint
                 {
-                    Latitude = Math.Round(double.Parse(match.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture), 7) ,
-                    Longitude = Math.Round(double.Parse(match.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture), 7)
+                    Latitude = Math.Round(double.Parse(match.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture), 10) ,
+                    Longitude = Math.Round(double.Parse(match.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture), 10)
                 };
             }
             return result;
