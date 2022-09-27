@@ -8,6 +8,8 @@ namespace VirtoCommerce.SearchModule.Core.Model
     public class GeoPoint : ValueObject
     {
         private const int Digits = 10;
+        private const int LatitudeGroupIndex = 1;
+        private const int LongitudeGroupIndex = 1;
 
         public static readonly Regex Regexp = new Regex(@"^([-+]?(?:[1-8]?\d(?:\.\d+)?|90(?:\.0+)?)),\s*([-+]?(?:180(?:\.0+)?|(?:(?:1[0-7]\d)|(?:[1-9]?\d))(?:\.\d+)?))$", RegexOptions.Compiled);
         public GeoPoint()
@@ -76,8 +78,8 @@ namespace VirtoCommerce.SearchModule.Core.Model
             {
                 result = new GeoPoint
                 {
-                    Latitude = Math.Round(double.Parse(match.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture), Digits) ,
-                    Longitude = Math.Round(double.Parse(match.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture), Digits)
+                    Latitude = Math.Round(double.Parse(match.Groups[LatitudeGroupIndex].Value, NumberStyles.Float, CultureInfo.InvariantCulture), Digits) ,
+                    Longitude = Math.Round(double.Parse(match.Groups[LongitudeGroupIndex].Value, NumberStyles.Float, CultureInfo.InvariantCulture), Digits)
                 };
             }
             return result;
