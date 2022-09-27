@@ -9,7 +9,7 @@ namespace VirtoCommerce.SearchModule.Core.Model
     {
         private const int Digits = 10;
         private const int LatitudeGroupIndex = 1;
-        private const int LongitudeGroupIndex = 1;
+        private const int LongitudeGroupIndex = 2;
 
         public static readonly Regex Regexp = new Regex(@"^([-+]?(?:[1-8]?\d(?:\.\d+)?|90(?:\.0+)?)),\s*([-+]?(?:180(?:\.0+)?|(?:(?:1[0-7]\d)|(?:[1-9]?\d))(?:\.\d+)?))$", RegexOptions.Compiled);
         public GeoPoint()
