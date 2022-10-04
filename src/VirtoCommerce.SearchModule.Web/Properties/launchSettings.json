@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "VirtoCommerce.SearchModule.Web": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:9864;http://localhost:9865"
+    }
+  }
+}
