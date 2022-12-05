@@ -3,7 +3,10 @@
     "commands": {
       "apply-filter": "Сохранить & применить",
       "rebuild-index": "Построение Индексов",
-      "copy-to-clipboard": "Копировать в Буфер"
+      "copy-to-clipboard": "Копировать в Буфер",
+      "swap-index": "Сделать активным",
+      "show-backup-indices": "Показать активные индексы",
+      "hide-backup-indices": "Скрыть активные индексы"
     },
     "main-menu-title": {
       "search-index": "Поисковый индекс"
@@ -36,7 +39,9 @@
           "scope": "Объем",
           "last-indexation-date": "Дата последней индексации",
           "build-index": "Создать индекс",
-          "rebuild-index": "Перестроить индекс"
+          "rebuild-index": "Перестроить индекс",
+          "swap-index": "Сделать активным",
+          "active": "Активный индекс"
         }
       }
     },
@@ -56,6 +61,24 @@
         "index-old": "Информация устарела. Индекс был создан <span am-time-ago='indexDate'>",
         "no-index": "Поисковый индекс отсутствует"
       }
+    }
+  },
+  "permissions": {
+    "search:index:rebuild": "Разрешает удалить и создать поисковый индекс.",
+    "search:index:access": "Доступ к поисковому индексированию."
+  },
+  "settings": {
+    "VirtoCommerce.Search.IndexingJobs.Enable": {
+      "title": "Расписание заданий индексации",
+      "description": "Включить или отключить плановые задания для построения поискового индекса"
+    },
+    "VirtoCommerce.Search.IndexingJobs.CronExpression": {
+      "title": "Сron выражения для запуска задания индексации",
+      "description": "Для X минут, используйте '0/x * * * *'. Для X часов, используйте '0 */x * * *'. Вы также можете установить Х минут как '15 */x * * *', и X дней как '0 0 */x * *'."
+    },
+    "VirtoCommerce.Search.IndexPartitionSize": {
+      "title": "Максимальное количество элементов на секцию индексации",
+      "description": "Установка больших значений может привести к ухудшению производительности"
     }
   }
 }
