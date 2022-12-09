@@ -19,6 +19,5 @@
         <PackageReference Include="Hangfire.Console" Version="1.4.2" />
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
         <PackageReference Include="VirtoCommerce.Platform.Core" Version="3.200.0" />
-        <PackageReference Include="FluentAssertions" Version="5.10.3" />
     </ItemGroup>
 </Project>
