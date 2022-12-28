@@ -27,7 +27,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var builders = indexDocumentConfigurations
                 .Where(x => x.RelatedSources != null)
                 .SelectMany(x => x.RelatedSources)
-                .Where(x => x.ChangesProvider.GetType() == providerType)
+                .Where(x => x.ChangesProvider != null && x.ChangesProvider.GetType() == providerType)
                 .Select(x => x.DocumentBuilder);
 
             if (mainBuilder != null)

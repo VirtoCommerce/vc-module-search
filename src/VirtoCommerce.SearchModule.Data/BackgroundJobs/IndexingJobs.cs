@@ -377,7 +377,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             {
                 //need to take the older date from the dates loaded from the index and settings.
                 //Because the actual last indexation date stored in the index may be later than last job run are stored in the settings. e.g after data import or direct database changes
-                result = new DateTime(Math.Min(result.Value.Ticks, _settingsManager.GetValue(GetLastIndexationDateName(documentType), DateTime.MaxValue).Ticks));
+                result = new DateTime(Math.Min(result.Value.Ticks, _settingsManager.GetValue(GetLastIndexationDateName(documentType), DateTime.MaxValue).Ticks), DateTimeKind.Utc);
             }
             return result;
         }
