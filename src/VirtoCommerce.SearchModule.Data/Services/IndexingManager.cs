@@ -79,7 +79,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             var documentType = options.DocumentType;
 
-            // each Search Engine implementation has its own way of handing index rebuild 
+            // each Search Engine implementation has its own way of handing index rebuild
             if (options.DeleteExistingIndex)
             {
                 progressCallback?.Invoke(new IndexingProgress($"{documentType}: deleting index", documentType));
@@ -517,7 +517,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             {
                 DocumentType = documentType,
                 Provider = _searchOptions.Provider,
-                Scope = _searchOptions.Scope,
+                Scope = _searchOptions.GetScope(documentType),
                 IsActive = !getBackupIndexState,
             };
 
