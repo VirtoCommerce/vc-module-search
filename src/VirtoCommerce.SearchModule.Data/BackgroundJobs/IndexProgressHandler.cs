@@ -81,7 +81,13 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             _notification.TotalCount = progress.TotalCount ?? 0;
             _notification.ProcessedCount = progress.ProcessedCount ?? 0;
 
-            _progressBar.SetValue(_notification.ProcessedCount * _maxPercent / _notification.TotalCount);
+            if (_notification.ProcessedCount > _notification.TotalCount)
+            {
+                _log.LogWarning($"Count warning - Type: {progress.DocumentType}, ProcessedCount: {_notification.ProcessedCount}, TotalCount: {_notification.TotalCount}");
+            }
+
+            var progressBarValue = Math.Min(100, _notification.ProcessedCount * _maxPercent / _notification.TotalCount);
+            _progressBar.SetValue(progressBarValue);
 
 
             if (!_suppressInsignificantNotifications || progress.TotalCount > 0 || progress.ProcessedCount > 0)
