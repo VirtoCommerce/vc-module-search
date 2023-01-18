@@ -83,7 +83,9 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
             if (_notification.ProcessedCount > _notification.TotalCount)
             {
+#pragma warning disable CA2254 // Template should be a static expression
                 _log.LogWarning($"Count warning - Type: {progress.DocumentType}, ProcessedCount: {_notification.ProcessedCount}, TotalCount: {_notification.TotalCount}");
+#pragma warning restore CA2254 // Template should be a static expression
             }
 
             var progressBarValue = Math.Min(100, _notification.ProcessedCount * _maxPercent / _notification.TotalCount);
