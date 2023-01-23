@@ -2,8 +2,8 @@ using System;
 using System.Threading;
 using Hangfire;
 using VirtoCommerce.Platform.Core.Jobs;
-using VirtoCommerce.SearchModule.Core.Services;
 using VirtoCommerce.SearchModule.Core.Model;
+using VirtoCommerce.SearchModule.Core.Services;
 
 namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 {
@@ -25,7 +25,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             if (priority != IndexingPriority.NearRealTime)
                 ThrottleByQueueCount(priority, ThrottleQueueCount);
 
-            IndexingJobs.EnqueueIndexDocuments(documentType, documentIds, IndexingPriorityToJobPriority(priority));
+            IndexingJobs.EnqueueIndexDocuments(documentType, documentIds, IndexingPriorityToJobPriority(priority), builders: null);
         }
 
         public void DeleteDocuments(string documentType, string[] documentIds,
@@ -41,15 +41,15 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         {
             var queue = IndexingPriorityToJobPriority(priority);
             var monitoringApi = JobStorage.Current.GetMonitoringApi();
-            long queued = 0;
+
             while (true)
             {
-                queued = monitoringApi.EnqueuedCount(queue);
+                var queued = monitoringApi.EnqueuedCount(queue);
                 if (queued <= maxQueueCount)
                     return;
 
                 Thread.Sleep(SleepTimeMs);
-            } 
+            }
         }
 
         protected virtual string IndexingPriorityToJobPriority(IndexingPriority priority)
@@ -63,7 +63,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                     return JobPriority.Low;
 
                 default:
-                    throw new ArgumentException($"Unkown priority: {priority}");
+                    throw new ArgumentException($"Unknown priority: {priority}");
             }
         }
     }
