@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace VirtoCommerce.SearchModule.Core.Services
 {
     /// <summary>
-    /// Allows creating a statefull change feed as a source for the indexation process.
+    /// Allows creating a stateful change feed as a source for the indexation process.
     /// </summary>
     public interface IIndexDocumentChangeFeedFactory
     {

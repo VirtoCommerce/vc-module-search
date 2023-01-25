@@ -501,7 +501,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
         }
 
         /// <summary>
-        /// Swap between active and backup indeces, if supported
+        /// Swap between active and backup indices, if supported
         /// </summary>
         protected virtual async Task SwapIndices(IndexingOptions options)
         {
