@@ -32,7 +32,7 @@ namespace VirtoCommerce.SearchModule.Core
                     Name = "VirtoCommerce.Search.IndexPartitionSize",
                     GroupName = "Search|General",
                     ValueType = SettingValueType.PositiveInteger,
-                    DefaultValue = "50",
+                    DefaultValue = 50,
                 };
                 public static IEnumerable<SettingDescriptor> AllSettings
                 {
