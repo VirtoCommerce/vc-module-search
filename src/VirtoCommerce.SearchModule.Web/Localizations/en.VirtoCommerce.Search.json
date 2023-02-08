@@ -3,6 +3,7 @@
     "commands": {
       "apply-filter": "Save and apply",
       "rebuild-index": "Build index",
+      "rebuild-scalable": "Rebuild scalable",
       "copy-to-clipboard": "Copy to clipboard",
       "swap-index": "Swap indices",
       "show-backup-indices": "Show backup indices",

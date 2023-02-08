@@ -36,14 +36,26 @@ angular.module('virtoCommerce.searchModule')
                     executeMethod: function () {
                         blade.refresh();
                     }
-                }, {
+                },
+                {
                     name: 'search.commands.rebuild-index',
                     icon: 'fa fa-recycle',
                     canExecuteMethod: function () {
                         return $scope.gridApi && _.any($scope.gridApi.selection.getSelectedRows());
                     },
                     executeMethod: function () {
-                        $scope.rebuildIndex($scope.gridApi.selection.getSelectedRows());
+                        $scope.rebuildIndex($scope.gridApi.selection.getSelectedRows(), false);
+                    },
+                    permission: 'search:index:rebuild'
+                },
+                {
+                    name: 'search.commands.rebuild-scalable',
+                    icon: 'fa fa-recycle',
+                    canExecuteMethod: function () {
+                        return $scope.gridApi && _.any($scope.gridApi.selection.getSelectedRows());
+                    },
+                    executeMethod: function () {
+                        $scope.rebuildIndex($scope.gridApi.selection.getSelectedRows(), true);
                     },
                     permission: 'search:index:rebuild'
                 }];
@@ -79,7 +91,7 @@ angular.module('virtoCommerce.searchModule')
                 });
             }
 
-            $scope.rebuildIndex = function (documentTypes) {
+            $scope.rebuildIndex = function (documentTypes, scaleOut) {
                 // index only one documentType in collection
                 var documentTypesGroup = _.groupBy(documentTypes, function (x) { return x.documentType; });
 
@@ -90,7 +102,8 @@ angular.module('virtoCommerce.searchModule')
                             var documentType = _.first(x);
                             return {
                                 documentType: documentType.documentType,
-                                deleteExistingIndex: doReindex
+                                deleteExistingIndex: doReindex,
+                                scaleOut: scaleOut,
                             };
                         });
                         searchIndexationApi.index(options, function openProgressBlade(data) {

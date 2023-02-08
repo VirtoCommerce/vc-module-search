@@ -24,14 +24,20 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         private readonly IIndexingManager _indexingManager;
         private readonly ISettingsManager _settingsManager;
         private readonly IndexProgressHandler _progressHandler;
+        private readonly IScalableIndexingManager _scalableIndexingManager;
 
-        public IndexingJobs(IEnumerable<IndexDocumentConfiguration> documentsConfigs, IIndexingManager indexingManager, ISettingsManager settingsManager,
-            IndexProgressHandler progressHandler)
+        public IndexingJobs(
+            IEnumerable<IndexDocumentConfiguration> documentsConfigs,
+            IIndexingManager indexingManager,
+            ISettingsManager settingsManager,
+            IndexProgressHandler progressHandler,
+            IScalableIndexingManager scalableIndexingManager)
         {
             _documentsConfigs = documentsConfigs;
             _indexingManager = indexingManager;
             _settingsManager = settingsManager;
             _progressHandler = progressHandler;
+            _scalableIndexingManager = scalableIndexingManager;
         }
 
         // Enqueue a background job with single notification object for all given options
@@ -328,7 +334,14 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             var oldIndexationDate = GetLastIndexationDate(options.DocumentType);
             var newIndexationDate = DateTime.UtcNow;
 
-            await _indexingManager.IndexAsync(options, _progressHandler.Progress, cancellationToken);
+            if (options.ScaleOut)
+            {
+                await _scalableIndexingManager.IndexAllDocuments(options, _progressHandler.Progress, cancellationToken);
+            }
+            else
+            {
+                await _indexingManager.IndexAsync(options, _progressHandler.Progress, cancellationToken);
+            }
 
             // Save indexation date to prevent changes from being indexed again
             SetLastIndexationDate(options.DocumentType, oldIndexationDate, newIndexationDate);
@@ -399,7 +412,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
         private int GetBatchSize()
         {
-            return _settingsManager.GetValue(ModuleConstants.Settings.General.IndexPartitionSize.Name, 50);
+            return _settingsManager.GetValueByDescriptor<int>(ModuleConstants.Settings.General.IndexPartitionSize);
         }
     }
 }

@@ -16,10 +16,10 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
         public async Task StartStopIndexingJobs()
         {
-            var scheduleJobs = await _settingsManager.GetValueAsync(ModuleConstants.Settings.IndexingJobs.Enable.Name, (bool)ModuleConstants.Settings.IndexingJobs.Enable.DefaultValue);
+            var scheduleJobs = await _settingsManager.GetValueByDescriptorAsync<bool>(ModuleConstants.Settings.IndexingJobs.Enable);
             if (scheduleJobs)
             {
-                var cronExpression = _settingsManager.GetValue(ModuleConstants.Settings.IndexingJobs.CronExpression.Name, (string)ModuleConstants.Settings.IndexingJobs.CronExpression.DefaultValue);
+                var cronExpression = await _settingsManager.GetValueByDescriptorAsync<string>(ModuleConstants.Settings.IndexingJobs.CronExpression);
                 RecurringJob.AddOrUpdate<IndexingJobs>(j => j.IndexChangesJob(null, null, JobCancellationToken.Null), cronExpression);
             }
             else

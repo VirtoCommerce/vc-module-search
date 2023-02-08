@@ -45,8 +45,11 @@
                     <li class="menu-item" ng-click="swapIndex(contextMenuEntity.documentType)" va-permission="search:index:rebuild" ng-if="blade.manageIndexMode && contextMenuEntity.canSwap">
                         <i class="menu-ico fa fa-exchange"></i> {{ 'search.commands.swap-index' | translate }}
                     </li>
-                    <li class="menu-item" ng-click="rebuildIndex([contextMenuEntity])" va-permission="search:index:rebuild" ng-if="contextMenuEntity.isActive">
+                    <li class="menu-item" ng-click="rebuildIndex([contextMenuEntity],false)" va-permission="search:index:rebuild" ng-if="contextMenuEntity.isActive">
                         <i class="menu-ico fa fa-recycle"></i> {{ 'search.commands.rebuild-index' | translate }}
+                    </li>
+                    <li class="menu-item" ng-click="rebuildIndex([contextMenuEntity],true)" va-permission="search:index:rebuild" ng-if="contextMenuEntity.isActive">
+                        <i class="menu-ico fa fa-recycle"></i> {{ 'search.commands.rebuild-scalable' | translate }}
                     </li>
                 </ul>
             </div>

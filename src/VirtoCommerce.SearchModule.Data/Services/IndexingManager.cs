@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Settings;
-using VirtoCommerce.SearchModule.Core;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 
@@ -15,27 +14,24 @@ namespace VirtoCommerce.SearchModule.Data.Services
     /// <summary>
     /// Implement the functionality of indexing
     /// </summary>
-    public class IndexingManager : IIndexingManager
+    public class IndexingManager : IndexingManagerBase, IIndexingManager
     {
         private readonly ISearchProvider _searchProvider;
-        private readonly IEnumerable<IndexDocumentConfiguration> _configs;
-        private readonly ISettingsManager _settingsManager;
+        private readonly IEnumerable<IndexDocumentConfiguration> _configurations;
         private readonly IIndexingWorker _backgroundWorker;
         private readonly SearchOptions _searchOptions;
 
-        public IndexingManager(ISearchProvider searchProvider, IEnumerable<IndexDocumentConfiguration> configs,
+        public IndexingManager(
+            ISearchProvider searchProvider,
+            IEnumerable<IndexDocumentConfiguration> configurations,
             IOptions<SearchOptions> searchOptions,
-            ISettingsManager settingsManager = null, IIndexingWorker backgroundWorker = null)
+            ISettingsManager settingsManager = null,
+            IIndexingWorker backgroundWorker = null)
+            : base(searchProvider, configurations, settingsManager)
         {
-            if (searchProvider == null)
-                throw new ArgumentNullException(nameof(searchProvider));
-            if (configs == null)
-                throw new ArgumentNullException(nameof(configs));
-
+            _searchProvider = searchProvider ?? throw new ArgumentNullException(nameof(searchProvider));
+            _configurations = configurations ?? throw new ArgumentNullException(nameof(configurations));
             _searchOptions = searchOptions.Value;
-            _searchProvider = searchProvider;
-            _configs = configs;
-            _settingsManager = settingsManager;
             _backgroundWorker = backgroundWorker;
         }
 
@@ -48,9 +44,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         public virtual async Task<IEnumerable<IndexState>> GetIndicesStateAsync(string documentType)
         {
-            var result = new List<IndexState>();
-
-            result.Add(await GetIndexStateAsync(documentType, getBackupIndexState: false));
+            var result = new List<IndexState> { await GetIndexStateAsync(documentType, getBackupIndexState: false) };
 
             if (_searchProvider is ISupportIndexSwap)
             {
@@ -60,21 +54,9 @@ namespace VirtoCommerce.SearchModule.Data.Services
             return result;
         }
 
-        public virtual async Task IndexAsync(IndexingOptions options, Action<IndexingProgress> progressCallback,
-            ICancellationToken cancellationToken)
+        public virtual async Task IndexAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
         {
-            if (options == null)
-                throw new ArgumentNullException(nameof(options));
-            if (string.IsNullOrEmpty(options.DocumentType))
-                throw new ArgumentNullException($"{nameof(options)}.{nameof(options.DocumentType)}");
-
-            if (options.BatchSize == null)
-                options.BatchSize =
-                    _settingsManager?.GetValue(ModuleConstants.Settings.General.IndexPartitionSize.Name, 50) ?? 50;
-            if (options.BatchSize < 1)
-                throw new ArgumentException(@$"{nameof(options.BatchSize)} {options.BatchSize} cannon be less than 1",
-                    $"{nameof(options)}");
-
+            ValidateOptions(options);
             cancellationToken.ThrowIfCancellationRequested();
 
             var documentType = options.DocumentType;
@@ -86,89 +68,64 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 await _searchProvider.DeleteIndexAsync(documentType);
             }
 
-            var configs = _configs.Where(c => c.DocumentType.EqualsInvariant(documentType)).ToArray();
-
-            foreach (var config in configs)
+            if (GetConfiguration(documentType, out var configuration))
             {
-                await ProcessConfigurationAsync(config, options, progressCallback, cancellationToken);
+                await ProcessConfigurationAsync(configuration, options, progressCallback, cancellationToken);
             }
         }
 
         public virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes = null)
         {
-            // Todo: reuse general index api?
-            var configs = _configs.Where(c => c.DocumentType.EqualsInvariant(documentType)).ToArray();
-            var result = new IndexingResult { Items = new List<IndexingResultItem>() };
+            // TODO: Reuse general index API?
+
+            if (!GetConfiguration(documentType, out var configuration))
+            {
+                return new IndexingResult();
+            }
 
             var partialUpdate = false;
+            var builderTypesList = (builderTypes as IList<string> ?? builderTypes?.ToList()) ?? Array.Empty<string>();
+            var primaryDocumentBuilder = configuration.DocumentSource.DocumentBuilder;
 
-            foreach (var config in configs)
+            var additionalDocumentBuilders = configuration.RelatedSources
+                ?.Where(s => s.DocumentBuilder != null)
+                .Select(s => s.DocumentBuilder)
+                .ToList() ?? new List<IIndexDocumentBuilder>();
+
+            if (builderTypesList.Any() && additionalDocumentBuilders.Any() && _searchProvider is ISupportPartialUpdate)
             {
-                var primaryDocumentBuilder = config.DocumentSource.DocumentBuilder;
+                partialUpdate = true;
+                additionalDocumentBuilders = additionalDocumentBuilders.Where(x => builderTypesList.Contains(x.GetType().FullName)).ToList();
 
-                var additionalDocumentBuilders = config.RelatedSources?
-                    .Where(s => s.DocumentBuilder != null)
-                    .Select(s => s.DocumentBuilder)
-                    .ToList() ?? new List<IIndexDocumentBuilder>();
-
-                if ((builderTypes?.Any() ?? false) && additionalDocumentBuilders.Any() && _searchProvider is ISupportPartialUpdate)
+                // In case of changing main object itself, there would be only primary document builder,
+                // but in the other cases, when changed additional dependent objects, primary builder should be nulled.
+                if (!builderTypesList.Contains(primaryDocumentBuilder.GetType().FullName))
                 {
-                    additionalDocumentBuilders = additionalDocumentBuilders.Where(x => builderTypes.Contains(x.GetType().FullName))
-                        .ToList();
-
-                    // In case of changing main object itself, there would be only primary document builder,
-                    // but in the other cases, when changed additional dependent objects, primary builder should be nulled.
-                    if (!builderTypes.Contains(primaryDocumentBuilder.GetType().FullName))
-                    {
-                        primaryDocumentBuilder = null;
-                    }
-
-                    partialUpdate = true;
+                    primaryDocumentBuilder = null;
                 }
-
-                var documents = await GetDocumentsAsync(documentIds, primaryDocumentBuilder, additionalDocumentBuilders, new CancellationTokenWrapper(CancellationToken.None));
-
-                IndexingResult indexingResult;
-
-                if (partialUpdate && _searchProvider is ISupportPartialUpdate supportPartialUpdateProvider)
-                {
-                    indexingResult = await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents);
-                }
-                else
-                {
-                    indexingResult = await _searchProvider.IndexAsync(documentType, documents);
-                }
-
-                result.Items.AddRange(indexingResult.Items ?? Enumerable.Empty<IndexingResultItem>());
             }
+
+            var cancellationToken = new CancellationTokenWrapper(CancellationToken.None);
+            var documents = await GetDocumentsAsync(documentIds, primaryDocumentBuilder, additionalDocumentBuilders, cancellationToken);
+
+            var result = partialUpdate && _searchProvider is ISupportPartialUpdate supportPartialUpdateProvider
+                ? await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents)
+                : await _searchProvider.IndexAsync(documentType, documents);
 
             return result;
         }
 
-        public virtual async Task<IndexingResult> DeleteDocumentsAsync(string documentType, string[] documentIds)
+        public virtual Task<IndexingResult> DeleteDocumentsAsync(string documentType, string[] documentIds)
         {
-            var documents = documentIds.Select(id => new IndexDocument(id)).ToList();
-            return await _searchProvider.RemoveAsync(documentType, documents);
+            return base.DeleteDocuments(documentType, documentIds);
         }
 
-        protected virtual async Task ProcessConfigurationAsync(IndexDocumentConfiguration configuration,
-            IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
+        protected virtual async Task ProcessConfigurationAsync(
+            IndexDocumentConfiguration configuration,
+            IndexingOptions options,
+            Action<IndexingProgress> progressCallback,
+            ICancellationToken cancellationToken)
         {
-            if (configuration == null)
-                throw new ArgumentNullException(nameof(configuration));
-            if (string.IsNullOrEmpty(configuration.DocumentType))
-                throw new ArgumentNullException($"{nameof(configuration)}.{nameof(configuration.DocumentType)}");
-            if (configuration.DocumentSource == null)
-                throw new ArgumentNullException($"{nameof(configuration)}.{nameof(configuration.DocumentSource)}");
-            if (configuration.DocumentSource.ChangesProvider == null)
-                throw new ArgumentNullException(
-                    nameof(configuration),
-                    $"{nameof(configuration)}.{nameof(configuration.DocumentSource)}.{nameof(configuration.DocumentSource.ChangesProvider)} cannot be null");
-            if (configuration.DocumentSource.DocumentBuilder == null)
-                throw new ArgumentNullException(
-                    nameof(configuration),
-                    $"{nameof(configuration)}.{nameof(configuration.DocumentSource)}.{nameof(configuration.DocumentSource.DocumentBuilder)} cannot be null");
-
             cancellationToken.ThrowIfCancellationRequested();
 
             var documentType = options.DocumentType;
@@ -177,7 +134,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             var batchOptions = new BatchIndexingOptions
             {
-                DocumentType = options.DocumentType,
+                DocumentType = documentType,
                 Reindex = options.DeleteExistingIndex,
                 PrimaryDocumentBuilder = configuration.DocumentSource.DocumentBuilder,
                 SecondaryDocumentBuilders = configuration.RelatedSources
@@ -214,8 +171,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                         .Distinct()
                         .ToArray();
 
-                    _backgroundWorker.IndexDocuments(configuration.DocumentType, documentIds,
-                        IndexingPriority.Background);
+                    _backgroundWorker.IndexDocuments(documentType, documentIds, IndexingPriority.Background);
                 }
 
                 processedCount += changes.Count;
@@ -224,8 +180,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     ? $"{documentType}: {processedCount} of {totalCount} have been indexed"
                     : $"{documentType}: {processedCount} have been indexed";
 
-                progressCallback?.Invoke(new IndexingProgress(description, documentType, totalCount, processedCount,
-                    errors));
+                progressCallback?.Invoke(new IndexingProgress(description, documentType, totalCount, processedCount, errors));
 
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -238,49 +193,34 @@ namespace VirtoCommerce.SearchModule.Data.Services
             progressCallback?.Invoke(new IndexingProgress($"{documentType}: indexation finished", documentType, totalCount ?? processedCount, processedCount));
         }
 
-        protected virtual async Task<IList<IndexDocumentChange>> GetNextChangesAsync(
-            IList<IIndexDocumentChangeFeed> feeds)
-        {
-            var batches = await Task.WhenAll(feeds.Select(f => f.GetNextBatch()));
-
-            var changes = batches
-                .Where(b => b != null)
-                .SelectMany(b => b)
-                .ToList();
-
-            return changes;
-        }
-
-        protected virtual async Task<IndexingResult> ProcessChangesAsync(IEnumerable<IndexDocumentChange> changes,
-            BatchIndexingOptions batchOptions, ICancellationToken cancellationToken)
+        protected virtual async Task<IndexingResult> ProcessChangesAsync(
+            IEnumerable<IndexDocumentChange> changes,
+            BatchIndexingOptions batchOptions,
+            ICancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var result = new IndexingResult { Items = new List<IndexingResultItem>() };
+            var result = new IndexingResult();
 
-            var indexDocumentChanges = changes as IndexDocumentChange[] ?? changes.ToArray();
+            var changesList = changes as IList<IndexDocumentChange> ?? changes.ToList();
 
             // Full changes don't have changes provider specified because we don't set it for manual indexation.
-            var fullChanges = _searchProvider is ISupportPartialUpdate ? indexDocumentChanges
-                .Where(x =>
-                    x.ChangeType is IndexDocumentChangeType.Deleted or IndexDocumentChangeType.Created ||
-                    !_configs.GetBuildersForProvider(x.Provider?.GetType()).Any()
-                )
-                .ToArray() : indexDocumentChanges;
+            var fullChanges = _searchProvider is ISupportPartialUpdate
+                ? changesList
+                    .Where(x =>
+                        x.ChangeType is IndexDocumentChangeType.Deleted or IndexDocumentChangeType.Created ||
+                        !_configurations.GetBuildersForProvider(x.Provider?.GetType()).Any())
+                    .ToList()
+                : changesList;
 
-            var partialChanges = indexDocumentChanges.Except(fullChanges);
-
+            var partialChanges = changesList.Except(fullChanges);
             var partialResult = await ProcessPartialDocumentsAsync(partialChanges, batchOptions, cancellationToken);
 
             var groups = GetLatestChangesForEachDocumentGroupedByChangeType(fullChanges);
 
-            foreach (var group in groups)
+            foreach (var (changeType, changedIds) in groups)
             {
-                var changeType = group.Key;
-                var changesGroup = group.Value;
-
-                var groupResult =
-                    await ProcessDocumentsAsync(changeType, changesGroup, batchOptions, cancellationToken);
+                var groupResult = await ProcessDocumentsAsync(changeType, changedIds, batchOptions, cancellationToken);
 
                 if (groupResult?.Items != null)
                 {
@@ -298,23 +238,19 @@ namespace VirtoCommerce.SearchModule.Data.Services
             BatchIndexingOptions batchOptions,
             ICancellationToken cancellationToken)
         {
-            var result = new IndexingResult { Items = new List<IndexingResultItem>() };
+            var result = new IndexingResult();
 
-            var indexDocumentChanges = changes as IndexDocumentChange[] ?? changes.ToArray();
-
-            var changeIds = indexDocumentChanges.Select(x => x.DocumentId).Distinct();
+            var changesList = changes as IList<IndexDocumentChange> ?? changes.ToList();
+            var changeIds = changesList.Select(x => x.DocumentId).Distinct();
 
             foreach (var id in changeIds)
             {
-                var builders = indexDocumentChanges
+                var builders = changesList
                     .Where(x => x.DocumentId == id)
-                    .SelectMany(x => _configs.GetBuildersForProvider(x.Provider.GetType()));
+                    .SelectMany(x => _configurations.GetBuildersForProvider(x.Provider.GetType()));
 
                 var documents = await GetDocumentsAsync(new[] { id }, null, builders, cancellationToken);
-
-                IndexingResult indexingResult;
-
-                indexingResult = await ((ISupportPartialUpdate)_searchProvider).IndexPartialAsync(batchOptions.DocumentType, documents);
+                var indexingResult = await ((ISupportPartialUpdate)_searchProvider).IndexPartialAsync(batchOptions.DocumentType, documents);
 
                 result.Items.AddRange(indexingResult.Items);
             }
@@ -322,87 +258,13 @@ namespace VirtoCommerce.SearchModule.Data.Services
             return result;
         }
 
-        protected virtual async Task<IndexingResult> ProcessDocumentsAsync(IndexDocumentChangeType changeType,
-            string[] changedIds, BatchIndexingOptions batchOptions, ICancellationToken cancellationToken)
+        protected virtual Task<IndexingResult> ProcessDocumentsAsync(
+            IndexDocumentChangeType changeType,
+            string[] changedIds,
+            BatchIndexingOptions batchOptions,
+            ICancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            IndexingResult result = null;
-
-            if (changeType == IndexDocumentChangeType.Deleted)
-            {
-                result = await DeleteDocumentsAsync(batchOptions.DocumentType, changedIds);
-            }
-            else if (changeType is IndexDocumentChangeType.Modified or IndexDocumentChangeType.Created)
-            {
-                var documents = await GetDocumentsAsync(changedIds, batchOptions.PrimaryDocumentBuilder, batchOptions.SecondaryDocumentBuilders, cancellationToken);
-
-                if (batchOptions.Reindex && _searchProvider is ISupportIndexSwap supportIndexSwapProvider)
-                {
-                    result = await supportIndexSwapProvider.IndexWithBackupAsync(batchOptions.DocumentType, documents);
-                }
-                else
-                {
-                    result = await _searchProvider.IndexAsync(batchOptions.DocumentType, documents);
-                }
-            }
-
-            return result;
-        }
-
-        protected virtual async Task<IIndexDocumentChangeFeed[]> GetChangeFeeds(
-            IndexDocumentConfiguration configuration, IndexingOptions options)
-        {
-            // Return in-memory change feed for specific set of document ids.
-            if (options.DocumentIds != null)
-            {
-                return new IIndexDocumentChangeFeed[]
-                {
-                    new InMemoryIndexDocumentChangeFeed(options.DocumentIds.ToArray(),
-                        IndexDocumentChangeType.Modified, options.BatchSize ?? 50)
-                };
-            }
-
-            // Support old ChangesProvider.
-            if (configuration.DocumentSource.ChangeFeedFactory == null)
-            {
-                configuration.DocumentSource.ChangeFeedFactory =
-                    new IndexDocumentChangeFeedFactoryAdapter(configuration.DocumentSource.ChangesProvider);
-            }
-
-            var factories = new List<IIndexDocumentChangeFeedFactory>
-            {
-                configuration.DocumentSource.ChangeFeedFactory
-            };
-
-            // In case of 'full' re-index we don't want to include the related sources,
-            // because that would double the indexation work.
-            // E.g. All products would get indexed for the primary document source
-            // and afterwards all products would get re-indexed for all the prices as well.
-            if (options.StartDate != null || options.EndDate != null)
-            {
-                foreach (var related in configuration.RelatedSources ?? Enumerable.Empty<IndexDocumentSource>())
-                {
-                    // Support old ChangesProvider.
-                    if (related.ChangeFeedFactory == null)
-                        related.ChangeFeedFactory = new IndexDocumentChangeFeedFactoryAdapter(related.ChangesProvider);
-
-                    factories.Add(related.ChangeFeedFactory);
-                }
-            }
-
-            return await Task.WhenAll(factories.Select(x =>
-                x.CreateFeed(options.StartDate, options.EndDate, options.BatchSize ?? 50)));
-        }
-
-        protected virtual IList<string> GetIndexingErrors(IndexingResult indexingResult)
-        {
-            var errors = indexingResult?.Items?
-                .Where(i => !i.Succeeded)
-                .Select(i => $"ID: {i.Id}, Error: {i.ErrorMessage}")
-                .ToList();
-
-            return errors?.Any() == true ? errors : null;
+            return base.ProcessDocuments(changeType, changedIds, batchOptions, cancellationToken);
         }
 
         protected virtual IDictionary<IndexDocumentChangeType, string[]> GetLatestChangesForEachDocumentGroupedByChangeType(IEnumerable<IndexDocumentChange> changes)
@@ -416,99 +278,21 @@ namespace VirtoCommerce.SearchModule.Data.Services
             return result;
         }
 
-        protected virtual async Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds, IIndexDocumentBuilder primaryDocumentBuilder,
-            IEnumerable<IIndexDocumentBuilder> additionalDocumentBuilders, ICancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            List<IndexDocument> primaryDocuments;
-
-            if (primaryDocumentBuilder == null)
-            {
-                primaryDocuments = documentIds.Select(x => new IndexDocument(x)).ToList();
-            }
-            else
-            {
-                primaryDocuments = (await primaryDocumentBuilder.GetDocumentsAsync(documentIds))
-                    ?.Where(x => x != null)
-                    .ToList();
-            }
-
-            if (primaryDocuments?.Any() == true)
-            {
-                if (additionalDocumentBuilders != null)
-                {
-                    var primaryDocumentIds = primaryDocuments.Select(d => d.Id).ToArray();
-                    var secondaryDocuments =
-                        await GetSecondaryDocumentsAsync(additionalDocumentBuilders, primaryDocumentIds, cancellationToken);
-
-                    MergeDocuments(primaryDocuments, secondaryDocuments);
-                }
-
-                // Add system fields
-                foreach (var document in primaryDocuments)
-                {
-                    document.Add(new IndexDocumentField(KnownDocumentFields.IndexationDate, DateTime.UtcNow)
-                    {
-                        IsRetrievable = true,
-                        IsFilterable = true
-                    });
-                }
-            }
-
-            return primaryDocuments;
-        }
-
-        protected virtual async Task<IList<IndexDocument>> GetSecondaryDocumentsAsync(
-            IEnumerable<IIndexDocumentBuilder> secondaryDocumentBuilders, IList<string> documentIds,
+        protected virtual Task<IList<IndexDocument>> GetDocumentsAsync(
+            IList<string> documentIds,
+            IIndexDocumentBuilder primaryDocumentBuilder,
+            IEnumerable<IIndexDocumentBuilder> additionalDocumentBuilders,
             ICancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var tasks = secondaryDocumentBuilders.Select(p => p.GetDocumentsAsync(documentIds));
-            var results = await Task.WhenAll(tasks);
-
-            var result = results
-                .Where(r => r != null)
-                .SelectMany(r => r.Where(d => d != null))
-                .ToList();
-
-            return result;
+            return base.GetDocuments(documentIds, primaryDocumentBuilder, additionalDocumentBuilders.ToList(), cancellationToken);
         }
 
-        protected virtual void MergeDocuments(IList<IndexDocument> primaryDocuments,
-            IList<IndexDocument> secondaryDocuments)
+        protected virtual Task<IList<IndexDocument>> GetSecondaryDocumentsAsync(
+            IEnumerable<IIndexDocumentBuilder> secondaryDocumentBuilders,
+            IList<string> documentIds,
+            ICancellationToken cancellationToken)
         {
-            if (primaryDocuments?.Any() == true && secondaryDocuments?.Any() == true)
-            {
-                var secondaryDocumentGroups = secondaryDocuments
-                    .GroupBy(d => d.Id)
-                    .ToDictionary(g => g.Key, g => g, StringComparer.OrdinalIgnoreCase);
-
-                foreach (var primaryDocument in primaryDocuments)
-                {
-                    if (secondaryDocumentGroups.ContainsKey(primaryDocument.Id))
-                    {
-                        var secondaryDocumentGroup = secondaryDocumentGroups[primaryDocument.Id];
-
-                        foreach (var secondaryDocument in secondaryDocumentGroup)
-                        {
-                            primaryDocument.Merge(secondaryDocument);
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Swap between active and backup indices, if supported
-        /// </summary>
-        protected virtual async Task SwapIndices(IndexingOptions options)
-        {
-            if (options.DeleteExistingIndex && _searchProvider is ISupportIndexSwap swappingSupportedSearchProvider)
-            {
-                await swappingSupportedSearchProvider.SwapIndexAsync(options.DocumentType);
-            }
+            return base.GetSecondaryDocuments(secondaryDocumentBuilders.ToList(), documentIds, cancellationToken);
         }
 
         private async Task<IndexState> GetIndexStateAsync(string documentType, bool getBackupIndexState)

@@ -14,13 +14,14 @@ using VirtoCommerce.SearchModule.Data.BackgroundJobs;
 using VirtoCommerce.SearchModule.Data.Handlers;
 using VirtoCommerce.SearchModule.Data.SearchPhraseParsing;
 using VirtoCommerce.SearchModule.Data.Services;
+using VirtoCommerce.SearchModule.Data.Services.Hangfire;
 
 namespace VirtoCommerce.SearchModule.Web
 {
     public class Module : IModule, IHasConfiguration
     {
         public ManifestModuleInfo ModuleInfo { get; set; }
-        public IConfiguration Configuration { get; set ; }
+        public IConfiguration Configuration { get; set; }
 
         public void Initialize(IServiceCollection serviceCollection)
         {
@@ -36,6 +37,9 @@ namespace VirtoCommerce.SearchModule.Web
 
             serviceCollection.AddTransient<ObjectSettingEntryChangedEventHandler>();
             serviceCollection.AddTransient<BackgroundJobsRunner>();
+
+            serviceCollection.AddSingleton<IIndexQueue, HangfireIndexQueue>();
+            serviceCollection.AddScoped<IScalableIndexingManager, ScalableIndexingManager>();
         }
 
         public void PostInitialize(IApplicationBuilder appBuilder)
@@ -67,4 +71,3 @@ namespace VirtoCommerce.SearchModule.Web
         }
     }
 }
-
