@@ -13,6 +13,7 @@ namespace VirtoCommerce.SearchModule.Data.Services.Hangfire;
 
 public class HangfireIndexQueue : IIndexQueue
 {
+    private readonly TimeSpan _delay = TimeSpan.FromMilliseconds(100);
     private readonly ConcurrentDictionary<string, ConcurrentQueue<string>> _queues = new();
 
     public virtual Task<string> NewQueue(IndexingOptions options)
@@ -50,8 +51,7 @@ public class HangfireIndexQueue : IIndexQueue
 
         while (queue.TryPeek(out var jobId))
         {
-            await Task.Delay(100);
-
+            var makeDelay = true;
             var stateData = JobStorage.Current.GetConnection().GetStateData(jobId);
 
             if (stateData != null)
@@ -59,12 +59,18 @@ public class HangfireIndexQueue : IIndexQueue
                 if (stateData.Name == SucceededState.StateName)
                 {
                     queue.TryDequeue(out _);
+                    makeDelay = false;
 
                     var jobData = JobStorage.Current.GetConnection().GetJobData(jobId);
                     var options = jobData.Job.Args[1] as IndexingOptions;
                     var result = GetResult<IndexingResult>(stateData);
                     callback(options, result);
                 }
+            }
+
+            if (makeDelay)
+            {
+                await Task.Delay(_delay);
             }
         }
 
