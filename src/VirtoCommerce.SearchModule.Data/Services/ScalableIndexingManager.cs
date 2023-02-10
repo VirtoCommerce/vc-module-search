@@ -38,7 +38,7 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
         void ReportProgress(string message = null, IList<string> errors = null)
         {
             var description = message != null
-                ? $"{documentType}: message"
+                ? $"{documentType}: {message}"
                 : $"{documentType}: {processedCount} of {totalCount} have been indexed";
 
             progressCallback?.Invoke(new IndexingProgress(description, documentType, totalCount, processedCount, errors));
