@@ -17,6 +17,7 @@ public class HangfireIndexWorker
         _scalableIndexingManager = scalableIndexingManager;
     }
 
+    [Queue("index_worker")]
     public async Task<IndexingResult> IndexDocuments(string queueId, IndexingOptions options, IJobCancellationToken cancellationToken)
     {
         IndexingResult result;
