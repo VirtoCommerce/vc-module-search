@@ -243,22 +243,22 @@ public abstract class IndexingManagerBase
 
     protected virtual void MergeDocuments(IList<IndexDocument> primaryDocuments, IList<IndexDocument> secondaryDocuments)
     {
-        if (primaryDocuments?.Any() == true && secondaryDocuments?.Any() == true)
+        if (primaryDocuments.IsNullOrEmpty() || secondaryDocuments.IsNullOrEmpty())
         {
-            var secondaryDocumentGroups = secondaryDocuments
-                .GroupBy(d => d.Id)
-                .ToDictionary(g => g.Key, g => g, StringComparer.OrdinalIgnoreCase);
+            return;
+        }
 
-            foreach (var primaryDocument in primaryDocuments)
+        var secondaryDocumentGroups = secondaryDocuments
+            .GroupBy(d => d.Id)
+            .ToDictionary(g => g.Key, g => g, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var primaryDocument in primaryDocuments)
+        {
+            if (secondaryDocumentGroups.TryGetValue(primaryDocument.Id, out var secondaryDocumentGroup))
             {
-                if (secondaryDocumentGroups.ContainsKey(primaryDocument.Id))
+                foreach (var secondaryDocument in secondaryDocumentGroup)
                 {
-                    var secondaryDocumentGroup = secondaryDocumentGroups[primaryDocument.Id];
-
-                    foreach (var secondaryDocument in secondaryDocumentGroup)
-                    {
-                        primaryDocument.Merge(secondaryDocument);
-                    }
+                    primaryDocument.Merge(secondaryDocument);
                 }
             }
         }
@@ -266,12 +266,12 @@ public abstract class IndexingManagerBase
 
     protected virtual IList<string> GetIndexingErrors(IndexingResult indexingResult)
     {
-        var errors = indexingResult?.Items?
-            .Where(x => !x.Succeeded)
+        var errors = indexingResult?.Items
+            ?.Where(x => !x.Succeeded)
             .Select(x => $"ID: {x.Id}, Error: {x.ErrorMessage}")
-            .ToList();
+            .ToArray();
 
-        return errors?.Any() == true ? errors : null;
+        return errors ?? Array.Empty<string>();
     }
 
     /// <summary>

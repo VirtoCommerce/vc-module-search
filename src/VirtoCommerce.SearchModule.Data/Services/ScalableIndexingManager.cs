@@ -57,7 +57,7 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
 
             totalCount += documentIds.Count;
             options.DocumentIds = documentIds;
-            var batchId = await _indexQueue.Enqueue(queueId, options);
+            await _indexQueue.Enqueue(queueId, options);
         }
 
         ReportProgress();

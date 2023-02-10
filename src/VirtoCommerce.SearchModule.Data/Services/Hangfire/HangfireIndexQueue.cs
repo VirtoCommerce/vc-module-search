@@ -54,18 +54,15 @@ public class HangfireIndexQueue : IIndexQueue
             var makeDelay = true;
             var stateData = JobStorage.Current.GetConnection().GetStateData(jobId);
 
-            if (stateData != null)
+            if (stateData?.Name == SucceededState.StateName)
             {
-                if (stateData.Name == SucceededState.StateName)
-                {
-                    queue.TryDequeue(out _);
-                    makeDelay = false;
+                queue.TryDequeue(out _);
+                makeDelay = false;
 
-                    var jobData = JobStorage.Current.GetConnection().GetJobData(jobId);
-                    var options = jobData.Job.Args[1] as IndexingOptions;
-                    var result = GetResult<IndexingResult>(stateData);
-                    callback(options, result);
-                }
+                var jobData = JobStorage.Current.GetConnection().GetJobData(jobId);
+                var options = jobData.Job.Args[1] as IndexingOptions;
+                var result = GetResult<IndexingResult>(stateData);
+                callback(options, result);
             }
 
             if (makeDelay)
