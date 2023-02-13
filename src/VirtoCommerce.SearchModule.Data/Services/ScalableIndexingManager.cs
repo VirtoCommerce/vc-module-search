@@ -31,27 +31,22 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
         ValidateOptions(options);
 
         var documentType = options.DocumentType;
+        var processedCount = 0L;
         long? totalCount = null;
-        long? processedCount = null;
 
-        void ReportProgress(string message = null, IList<string> errors = null)
+        void Progress(string message = null, IList<string> errors = null)
         {
-            var description = message != null
-                ? $"{documentType}: {message}"
-                : $"{documentType}: {processedCount} of {totalCount} have been indexed";
-
-            progressCallback?.Invoke(new IndexingProgress(description, documentType, totalCount, processedCount, errors));
+            ReportProgress(progressCallback, documentType, message, processedCount, totalCount, errors);
         }
 
-        ReportProgress("Preparing index");
-        await PrepareIndex(options);
+        Progress("Preparing index");
+        await PrepareIndex(options, progressCallback, cancellationToken);
 
-        ReportProgress("Calculating total count");
+        Progress("Calculating total count");
         totalCount = 0L;
-        processedCount = 0L;
         var queueId = await _indexQueue.NewQueue(options);
 
-        await foreach (var documentIds in EnumerateAllDocumentIds(options))
+        await foreach (var documentIds in EnumerateAllDocumentIds(options, cancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -60,16 +55,16 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
             await _indexQueue.Enqueue(queueId, options);
         }
 
-        ReportProgress();
+        Progress();
         await _indexQueue.Wait(queueId, cancellationToken, (batchOptions, batchResult) =>
         {
             processedCount += batchOptions?.DocumentIds?.Count ?? 0L;
-            ReportProgress(errors: GetIndexingErrors(batchResult));
+            Progress(errors: GetIndexingErrors(batchResult));
         });
 
         await SwapIndices(options);
 
-        ReportProgress("Indexation finished");
+        Progress("Indexation finished");
     }
 
     public virtual async Task<IndexingResult> IndexDocuments(IndexingOptions options, ICancellationToken cancellationToken)
@@ -98,25 +93,27 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
     }
 
 
-    protected virtual async Task PrepareIndex(IndexingOptions options)
+    protected virtual async Task PrepareIndex(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
     {
-        await DeleteIndex(options);
-        await CreateIndex(options);
+        await DeleteIndex(options, progressCallback, cancellationToken);
+        await CreateIndex(options, progressCallback, cancellationToken);
     }
 
-    protected virtual async Task DeleteIndex(IndexingOptions options)
+    protected virtual async Task DeleteIndex(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
     {
         if (options.DeleteExistingIndex)
         {
-            await _searchProvider.DeleteIndexAsync(options.DocumentType);
-            // TODO: Report progress
+            var documentType = options.DocumentType;
+            ReportProgress(progressCallback, documentType, "Deleting index");
+            await _searchProvider.DeleteIndexAsync(documentType);
             // TODO: Wait until index is deleted
         }
     }
 
-    protected virtual async Task<IndexingResult> CreateIndex(IndexingOptions options)
+    protected virtual async Task<IndexingResult> CreateIndex(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
     {
-        // TODO: Report progress
+        var documentType = options.DocumentType;
+        ReportProgress(progressCallback, documentType, "Creating index");
 
         var temporaryDocumentId = Guid.NewGuid().ToString("N");
         var document = new IndexDocument(temporaryDocumentId);
@@ -126,15 +123,15 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
         // TODO: Define other fields
 
         var result = options.DeleteExistingIndex && _searchProvider is ISupportIndexSwap supportIndexSwapProvider
-            ? await supportIndexSwapProvider.IndexWithBackupAsync(options.DocumentType, documents)
-            : await _searchProvider.IndexAsync(options.DocumentType, documents);
+            ? await supportIndexSwapProvider.IndexWithBackupAsync(documentType, documents)
+            : await _searchProvider.IndexAsync(documentType, documents);
 
-        await _searchProvider.RemoveAsync(options.DocumentType, documents);
+        await _searchProvider.RemoveAsync(documentType, documents);
 
         return result;
     }
 
-    protected virtual async IAsyncEnumerable<IList<string>> EnumerateAllDocumentIds(IndexingOptions options)
+    protected virtual async IAsyncEnumerable<IList<string>> EnumerateAllDocumentIds(IndexingOptions options, ICancellationToken cancellationToken)
     {
         if (!GetConfiguration(options.DocumentType, out var configuration))
         {
@@ -148,6 +145,8 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
 
         while (true)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var changes = await GetNextChangesAsync(feeds);
 
             if (changes.IsNullOrEmpty())

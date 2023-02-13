@@ -284,4 +284,38 @@ public abstract class IndexingManagerBase
             await swappingSupportedSearchProvider.SwapIndexAsync(options.DocumentType);
         }
     }
+
+    protected virtual void ReportProgress(Action<IndexingProgress> progressCallback, string documentType, string message)
+    {
+        ReportProgress(progressCallback, documentType, message, processedCount: 0L, totalCount: null, errors: null);
+    }
+
+    protected virtual void ReportProgress(
+        Action<IndexingProgress> progressCallback,
+        string documentType,
+        string message,
+        long processedCount,
+        long? totalCount,
+        IList<string> errors)
+    {
+        if (progressCallback == null)
+        {
+            return;
+        }
+
+        string description;
+
+        if (message != null)
+        {
+            description = $"{documentType}: {message}";
+        }
+        else
+        {
+            description = totalCount != null
+                ? $"{documentType}: {processedCount} of {totalCount} have been indexed"
+                : $"{documentType}: {processedCount} have been indexed";
+        }
+
+        progressCallback.Invoke(new IndexingProgress(description, documentType, totalCount, processedCount, errors));
+    }
 }
