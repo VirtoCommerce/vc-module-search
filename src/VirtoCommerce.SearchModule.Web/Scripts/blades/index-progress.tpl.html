@@ -4,13 +4,14 @@
             <div class="sub-t">{{blade.notification.description}}</div>
             <div class="block" ng-if="blade.notification.created || blade.notification.finished">
                 <p ng-if="blade.notification.created" class="text no-data">
-                    {{ 'search.blades.index-progress.labels.start' | translate }} — <i class="fa fa-clock-o"></i><span am-time-ago="blade.notification.created"></span>
+                    {{ 'search.blades.index-progress.labels.start' | translate }} — <span class="fa fa-clock-o"></span> <span am-time-ago="blade.notification.created"></span>
                 </p>
                 <div ng-if="!blade.notification.finished" style="position: relative; margin-bottom: 45px; margin-top: -10px">
                     <div class="progress-bar progress-bar-background" style="position: absolute"></div>
                     <div class="progress-bar" ng-style="{'width': blade.progressPercentage + '%'}" style="position: absolute"></div>
                 </div>
-                <p ng-if="blade.notification.finished" class="text no-data">{{ 'search.blades.index-progress.labels.end' | translate }} — <i class="fa fa-clock-o"></i> <span am-time-ago="blade.notification.finished"></span></p>
+                <p ng-if="blade.notification.finished" class="text no-data">{{ 'search.blades.index-progress.labels.end' | translate }} — <span class="fa fa-clock-o"></span> <span am-time-ago="blade.notification.finished"></span></p>
+                <p ng-if="blade.notification.created" class="text no-data">{{ 'search.blades.index-progress.labels.elapsed' | translate }} — <span class="fa fa-clock-o"></span> <span>{{getElapsedTime()}}</span></p>
                 <p ng-if="blade.notification.finished" class="text no-data">{{ 'search.blades.index-progress.labels.stats' | translate:blade.notification }}</p>
             </div>
             <div class="block" ng-if="!blade.notification.finished || blade.notification.errorCount">

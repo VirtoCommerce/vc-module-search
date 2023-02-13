@@ -17,6 +17,7 @@
         "labels": {
           "start": "Start",
           "end": "End",
+          "elapsed": "Elapsed",
           "errors": "Errors",
           "stats": "Indexed {{ processedCount }} of {{ totalCount }} records"
         }
