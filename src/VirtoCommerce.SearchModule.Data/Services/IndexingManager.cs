@@ -129,8 +129,21 @@ namespace VirtoCommerce.SearchModule.Data.Services
             cancellationToken.ThrowIfCancellationRequested();
 
             var documentType = options.DocumentType;
+            long? totalCount = null;
+            long? processedCount = null;
 
-            progressCallback?.Invoke(new IndexingProgress($"{documentType}: calculating total count", documentType));
+            void ReportProgress(string message = null, IList<string> errors = null)
+            {
+                var description = message != null
+                    ? $"{documentType}: {message}"
+                    : totalCount != null
+                        ? $"{documentType}: {processedCount} of {totalCount} have been indexed"
+                        : $"{documentType}: {processedCount} have been indexed";
+
+                progressCallback?.Invoke(new IndexingProgress(description, documentType, totalCount, processedCount, errors));
+            }
+
+            ReportProgress("Calculating total count");
 
             var batchOptions = new BatchIndexingOptions
             {
@@ -146,11 +159,11 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var feeds = await GetChangeFeeds(configuration, options);
 
             // Try to get total count to indicate progress. Some feeds don't have a total count.
-            var totalCount = feeds.Any(x => x.TotalCount == null)
-                ? (long?)null
+            totalCount = feeds.Any(x => x.TotalCount == null)
+                ? null
                 : feeds.Sum(x => x.TotalCount ?? 0);
 
-            long processedCount = 0;
+            processedCount = 0L;
 
             var changes = await GetNextChangesAsync(feeds);
             while (changes.Any())
@@ -175,12 +188,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 }
 
                 processedCount += changes.Count;
-
-                var description = totalCount != null
-                    ? $"{documentType}: {processedCount} of {totalCount} have been indexed"
-                    : $"{documentType}: {processedCount} have been indexed";
-
-                progressCallback?.Invoke(new IndexingProgress(description, documentType, totalCount, processedCount, errors));
+                ReportProgress(errors: errors);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -190,7 +198,8 @@ namespace VirtoCommerce.SearchModule.Data.Services
             // indexation complete, swap indexes back
             await SwapIndices(options);
 
-            progressCallback?.Invoke(new IndexingProgress($"{documentType}: indexation finished", documentType, totalCount ?? processedCount, processedCount));
+            totalCount ??= processedCount;
+            ReportProgress("Indexation finished");
         }
 
         protected virtual async Task<IndexingResult> ProcessChangesAsync(

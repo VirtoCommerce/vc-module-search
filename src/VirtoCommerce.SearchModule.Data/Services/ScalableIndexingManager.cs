@@ -33,7 +33,6 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
         var documentType = options.DocumentType;
         long? totalCount = null;
         long? processedCount = null;
-        var queueId = await _indexQueue.NewQueue(options);
 
         void ReportProgress(string message = null, IList<string> errors = null)
         {
@@ -50,6 +49,7 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
         ReportProgress("Calculating total count");
         totalCount = 0L;
         processedCount = 0L;
+        var queueId = await _indexQueue.NewQueue(options);
 
         await foreach (var documentIds in EnumerateAllDocumentIds(options))
         {

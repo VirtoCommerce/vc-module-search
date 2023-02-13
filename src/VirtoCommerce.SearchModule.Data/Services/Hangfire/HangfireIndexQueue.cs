@@ -51,6 +51,8 @@ public class HangfireIndexQueue : IIndexQueue
 
         while (queue.TryPeek(out var jobId))
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var makeDelay = true;
             var stateData = JobStorage.Current.GetConnection().GetStateData(jobId);
 
