@@ -60,10 +60,10 @@ namespace VirtoCommerce.SearchModule.Tests
 
             if (rebuild)
             {
-                Assert.Equal($"{DocumentType}: deleting index", progress[i++].Description);
+                Assert.Equal($"{DocumentType}: Deleting index", progress[i++].Description);
             }
 
-            Assert.Equal($"{DocumentType}: calculating total count", progress[i++].Description);
+            Assert.Equal($"{DocumentType}: Calculating total count", progress[i++].Description);
 
             for (var batch = 0; batch < expectedBatchesCount; batch++)
             {
@@ -71,7 +71,7 @@ namespace VirtoCommerce.SearchModule.Tests
                 Assert.Equal($"{DocumentType}: {progressItem.ProcessedCount} of {progressItem.TotalCount} have been indexed", progressItem.Description);
             }
 
-            Assert.Equal($"{DocumentType}: indexation finished", progress[i].Description);
+            Assert.Equal($"{DocumentType}: Indexation finished", progress[i].Description);
 
             ValidateErrors(progress, "bad1");
 
@@ -108,7 +108,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
             var i = 0;
 
-            Assert.Equal($"{DocumentType}: calculating total count", progress[i++].Description);
+            Assert.Equal($"{DocumentType}: Calculating total count", progress[i++].Description);
 
             for (var batch = 0; batch < expectedBatchesCount; batch++)
             {
@@ -116,7 +116,7 @@ namespace VirtoCommerce.SearchModule.Tests
                 Assert.Equal($"{DocumentType}: {progressItem.ProcessedCount} of {progressItem.TotalCount} have been indexed", progressItem.Description);
             }
 
-            Assert.Equal($"{DocumentType}: indexation finished", progress[i].Description);
+            Assert.Equal($"{DocumentType}: Indexation finished", progress[i].Description);
 
             ValidateErrors(progress, "bad1");
 

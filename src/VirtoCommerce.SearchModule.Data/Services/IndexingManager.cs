@@ -64,7 +64,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             // each Search Engine implementation has its own way of handing index rebuild
             if (options.DeleteExistingIndex)
             {
-                progressCallback?.Invoke(new IndexingProgress($"{documentType}: deleting index", documentType));
+                progressCallback?.Invoke(new IndexingProgress($"{documentType}: Deleting index", documentType));
                 await _searchProvider.DeleteIndexAsync(documentType);
             }
 
