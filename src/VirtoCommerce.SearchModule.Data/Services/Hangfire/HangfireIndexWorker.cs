@@ -11,15 +11,20 @@ namespace VirtoCommerce.SearchModule.Data.Services.Hangfire;
 public class HangfireIndexWorker
 {
     private readonly IScalableIndexingManager _scalableIndexingManager;
+    private readonly IIndexQueueServiceFactory _indexQueueServiceFactory;
 
-    public HangfireIndexWorker(IScalableIndexingManager scalableIndexingManager)
+    public HangfireIndexWorker(IScalableIndexingManager scalableIndexingManager, IIndexQueueServiceFactory indexQueueServiceFactory)
     {
         _scalableIndexingManager = scalableIndexingManager;
+        _indexQueueServiceFactory = indexQueueServiceFactory;
     }
 
     [Queue("index_worker")]
-    public async Task<IndexingResult> IndexDocuments(string queueId, IndexingOptions options, IJobCancellationToken cancellationToken)
+    public async Task<IndexingResult> IndexDocuments(string queueId, string batchId, IndexingOptions options, IJobCancellationToken cancellationToken)
     {
+        var indexQueueService = _indexQueueServiceFactory.Create();
+
+        Console.WriteLine($">>> Worker > Start {indexQueueService.GetType().Name}");
         IndexingResult result;
 
         try
@@ -28,7 +33,7 @@ public class HangfireIndexWorker
         }
         catch (Exception ex)
         {
-            var error = ex.Message;
+            var error = ex.ToString();
 
             result = new()
             {
@@ -43,6 +48,17 @@ public class HangfireIndexWorker
             };
         }
 
+        var batchResult = new ScalableBatchResult
+        {
+            QueueId = queueId,
+            BatchId = batchId,
+            Options = options,
+            Result = result,
+        };
+
+        await indexQueueService.SaveBatchResult(batchResult);
+
+        Console.WriteLine(">>> Worker > End");
         return result;
     }
 }

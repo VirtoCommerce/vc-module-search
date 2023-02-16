@@ -12,27 +12,30 @@ namespace VirtoCommerce.SearchModule.Data.Services;
 
 public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingManager
 {
-    private readonly IIndexQueue _indexQueue;
     private readonly ISearchProvider _searchProvider;
+    private readonly IIndexQueueServiceFactory _indexQueueServiceFactory;
 
     public ScalableIndexingManager(
         ISearchProvider searchProvider,
         IEnumerable<IndexDocumentConfiguration> configurations,
         ISettingsManager settingsManager,
-        IIndexQueue indexQueue)
+        IIndexQueueServiceFactory indexQueueServiceFactory)
         : base(searchProvider, configurations, settingsManager)
     {
-        _indexQueue = indexQueue;
         _searchProvider = searchProvider;
+        _indexQueueServiceFactory = indexQueueServiceFactory;
     }
 
     public virtual async Task IndexAllDocuments(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
     {
+        var indexQueueService = _indexQueueServiceFactory.Create();
+
+        Console.WriteLine($">>> IndexAllDocuments > Start {indexQueueService.GetType().Name}");
         ValidateOptions(options);
 
         var documentType = options.DocumentType;
         var processedCount = 0L;
-        long? totalCount = null;
+        var totalCount = 0L;
 
         void Progress(string message = null, IList<string> errors = null)
         {
@@ -43,8 +46,7 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
         await PrepareIndex(options, progressCallback, cancellationToken);
 
         Progress("Calculating total count");
-        totalCount = 0L;
-        var queueId = await _indexQueue.NewQueue(options);
+        var queueId = await indexQueueService.CreateQueue(options);
 
         await foreach (var documentIds in EnumerateAllDocumentIds(options, cancellationToken))
         {
@@ -52,19 +54,23 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
 
             totalCount += documentIds.Count;
             options.DocumentIds = documentIds;
-            await _indexQueue.Enqueue(queueId, options);
+            await indexQueueService.Enqueue(queueId, options);
         }
 
+        // Report total count
         Progress();
-        await _indexQueue.Wait(queueId, cancellationToken, (batchOptions, batchResult) =>
+
+        await indexQueueService.Wait(queueId, cancellationToken, batchResult =>
         {
-            processedCount += batchOptions?.DocumentIds?.Count ?? 0L;
-            Progress(errors: GetIndexingErrors(batchResult));
+            processedCount += batchResult?.Options?.DocumentIds?.Count ?? 0L;
+            Progress(errors: GetIndexingErrors(batchResult?.Result));
         });
 
+        await indexQueueService.DeleteQueue(queueId);
         await SwapIndices(options);
 
         Progress("Indexation finished");
+        Console.WriteLine(">>> IndexAllDocuments > End");
     }
 
     public virtual async Task<IndexingResult> IndexDocuments(IndexingOptions options, ICancellationToken cancellationToken)

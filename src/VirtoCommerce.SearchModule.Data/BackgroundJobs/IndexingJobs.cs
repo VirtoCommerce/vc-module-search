@@ -17,8 +17,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 {
     public sealed class IndexingJobs
     {
-        private static readonly MethodInfo _indexChangesJobMethod = typeof(IndexingJobs).GetMethod("IndexChangesJob");
-        private static readonly MethodInfo _manualIndexAllJobMethod = typeof(IndexingJobs).GetMethod("IndexAllDocumentsJob");
+        private static readonly MethodInfo _indexChangesJobMethod = typeof(IndexingJobs).GetMethod(nameof(IndexChangesJob));
 
         private readonly IEnumerable<IndexDocumentConfiguration> _documentsConfigs;
         private readonly IIndexingManager _indexingManager;
@@ -55,8 +54,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         public static void CancelIndexation()
         {
             var processingJob = JobStorage.Current.GetMonitoringApi().ProcessingJobs(0, int.MaxValue)
-                .FirstOrDefault(x => x.Value?.Job?.Method == _indexChangesJobMethod ||
-                    x.Value?.Job?.Method == _manualIndexAllJobMethod);
+                .FirstOrDefault(x => x.Value?.Job?.Method == _indexChangesJobMethod);
 
             if (!string.IsNullOrEmpty(processingJob.Key))
             {

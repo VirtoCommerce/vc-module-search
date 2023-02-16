@@ -81,6 +81,10 @@
     "VirtoCommerce.Search.IndexPartitionSize": {
       "title": "Maximum item count per indexing partition",
       "description": "Providing high values may lead to slow performance"
+    },
+    "VirtoCommerce.Search.IndexQueueServiceType": {
+      "title": "Indexing queue service",
+      "description": "Select one of the available implementations"
     }
   }
 }

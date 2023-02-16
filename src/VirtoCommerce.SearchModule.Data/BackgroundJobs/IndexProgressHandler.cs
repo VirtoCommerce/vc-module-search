@@ -19,7 +19,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         private IDictionary<string, long> _totalCountMap;
         private IDictionary<string, long> _processedCountMap;
         private IndexProgressPushNotification _notification;
-        private bool _suppressInsignificantNotifications;
+        private bool _sendInsignificantNotifications;
         private bool _isCanceled;
         private PerformContext _context;
         private IProgressBar _progressBar;
@@ -39,7 +39,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             _log.LogTrace(_notification.Description);
 #pragma warning restore CA2254 // Template should be a static expression
 
-            _suppressInsignificantNotifications = suppressInsignificantNotifications;
+            _sendInsignificantNotifications = !suppressInsignificantNotifications;
             _context = context;
             _isCanceled = false;
             _totalCountMap = new Dictionary<string, long>();
@@ -67,13 +67,14 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             _log.LogTrace(progress.Description);
 #pragma warning restore CA2254 // Template should be a static expression
 
+            var documentType = progress.DocumentType;
             var totalCount = progress.TotalCount ?? 0;
             var processedCount = progress.ProcessedCount ?? 0;
 
-            _totalCountMap[progress.DocumentType] = totalCount;
-            _processedCountMap[progress.DocumentType] = processedCount;
+            _totalCountMap[documentType] = totalCount;
+            _processedCountMap[documentType] = processedCount;
 
-            _notification.DocumentType = progress.DocumentType;
+            _notification.DocumentType = documentType;
             _notification.Description = progress.Description;
             _notification.TotalCount = totalCount;
             _notification.ProcessedCount = processedCount;
@@ -84,12 +85,12 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                 _notification.ErrorCount = _notification.Errors.Count;
             }
 
-            if (!_suppressInsignificantNotifications || totalCount > 0 || processedCount > 0)
+            if (_sendInsignificantNotifications || totalCount > 0 || processedCount > 0)
             {
                 _pushNotificationManager.Send(_notification);
             }
 
-            UpdateHangfireProgressBar(processedCount, totalCount, _notification.DocumentType);
+            UpdateHangfireProgressBar(processedCount, totalCount, documentType);
         }
 
         public void Exception(Exception ex)
@@ -116,13 +117,13 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
             _notification.Description = _isCanceled
                 ? "Indexation has been canceled"
-                : _suppressInsignificantNotifications
-                    ? $"{_notification.DocumentType}: Indexation completed. Total: {totalCount}, Processed: {processedCount}, Errors: {_notification.ErrorCount}."
-                    : "Indexation completed" + (_notification.ErrorCount > 0 ? " with errors" : " successfully");
+                : _sendInsignificantNotifications
+                    ? "Indexation completed" + (_notification.ErrorCount > 0 ? " with errors" : " successfully")
+                    : $"{_notification.DocumentType}: Indexation completed. Total: {totalCount}, Processed: {processedCount}, Errors: {_notification.ErrorCount}.";
 
             _log.LogTrace(_notification.Description);
 
-            if (!_suppressInsignificantNotifications || _isCanceled || totalCount > 0 || processedCount > 0)
+            if (_sendInsignificantNotifications || _isCanceled || totalCount > 0 || processedCount > 0)
             {
                 _pushNotificationManager.Send(_notification);
             }

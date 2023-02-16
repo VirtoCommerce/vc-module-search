@@ -34,11 +34,21 @@ namespace VirtoCommerce.SearchModule.Core
                     ValueType = SettingValueType.PositiveInteger,
                     DefaultValue = 50,
                 };
+
+                public static SettingDescriptor IndexQueueServiceType = new()
+                {
+                    Name = "VirtoCommerce.Search.IndexQueueServiceType",
+                    GroupName = "Search|General",
+                    ValueType = SettingValueType.ShortText,
+                    // AllowedValues and DefaultValue are set at runtime in Module.PostInitialize()
+                };
+
                 public static IEnumerable<SettingDescriptor> AllSettings
                 {
                     get
                     {
                         yield return IndexPartitionSize;
+                        yield return IndexQueueServiceType;
                     }
                 }
             }

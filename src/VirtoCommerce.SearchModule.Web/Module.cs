@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -38,36 +40,56 @@ namespace VirtoCommerce.SearchModule.Web
             serviceCollection.AddTransient<ObjectSettingEntryChangedEventHandler>();
             serviceCollection.AddTransient<BackgroundJobsRunner>();
 
-            serviceCollection.AddSingleton<IIndexQueue, HangfireIndexQueue>();
+            serviceCollection.AddSingleton<IRedisIndexingClient, RedisIndexingClient>();
+            serviceCollection.AddSingleton<IIndexQueueService, HangfireIndexQueueService>();
+            serviceCollection.AddSingleton<IIndexQueueService, HangfireMemoryIndexQueueService>();
+            serviceCollection.AddSingleton<IIndexQueueService, HangfireRedisIndexQueueService>();
+            serviceCollection.AddSingleton<IIndexQueueServiceFactory, IndexQueueServiceFactory>();
             serviceCollection.AddScoped<IScalableIndexingManager, ScalableIndexingManager>();
         }
 
         public void PostInitialize(IApplicationBuilder appBuilder)
         {
-            var settingsRegistrar = appBuilder.ApplicationServices.GetRequiredService<ISettingsRegistrar>();
-            settingsRegistrar.RegisterSettings(ModuleConstants.Settings.AllSettings, ModuleInfo.Id);
+            var serviceProvider = appBuilder.ApplicationServices;
 
-            var permissionsProvider = appBuilder.ApplicationServices.GetRequiredService<IPermissionsRegistrar>();
-            permissionsProvider.RegisterPermissions(ModuleConstants.Security.Permissions.AllPermissions.Select(x =>
-                new Permission()
-                {
-                    GroupName = "Search",
-                    ModuleId = ModuleInfo.Id,
-                    Name = x
-                }).ToArray());
+            var settingsRegistrar = serviceProvider.GetRequiredService<ISettingsRegistrar>();
+            settingsRegistrar.RegisterSettings(GetSettings(serviceProvider), ModuleInfo.Id);
+
+            var permissionsRegistrar = serviceProvider.GetRequiredService<IPermissionsRegistrar>();
+            permissionsRegistrar.RegisterPermissions(ModuleInfo.Id, "Search", ModuleConstants.Security.Permissions.AllPermissions);
 
             //Subscribe for Indexation job configuration changes
-            var inProcessBus = appBuilder.ApplicationServices.GetService<IHandlerRegistrar>();
-            inProcessBus.RegisterHandler<ObjectSettingChangedEvent>(async (message, token) => await appBuilder.ApplicationServices.GetService<ObjectSettingEntryChangedEventHandler>().Handle(message));
+            var handlerRegistrar = serviceProvider.GetService<IHandlerRegistrar>();
+            handlerRegistrar.RegisterHandler<ObjectSettingChangedEvent>(async (message, token) => await serviceProvider.GetService<ObjectSettingEntryChangedEventHandler>().Handle(message));
 
             //Schedule periodic Indexation job
-            var jobsRunner = appBuilder.ApplicationServices.GetService<BackgroundJobsRunner>();
+            var jobsRunner = serviceProvider.GetService<BackgroundJobsRunner>();
             jobsRunner.StartStopIndexingJobs().GetAwaiter().GetResult();
         }
 
         public void Uninstall()
         {
             // Method intentionally left empty.
+        }
+
+
+        private static IEnumerable<SettingDescriptor> GetSettings(IServiceProvider serviceProvider)
+        {
+            var queueServices = serviceProvider
+                .GetServices<IIndexQueueService>()
+                .Select(x => x.GetType().Name)
+                .ToArray<object>();
+
+            foreach (var descriptor in ModuleConstants.Settings.AllSettings)
+            {
+                if (descriptor.Name == ModuleConstants.Settings.General.IndexQueueServiceType.Name)
+                {
+                    descriptor.AllowedValues = queueServices;
+                    descriptor.DefaultValue = queueServices.First();
+                }
+
+                yield return descriptor;
+            }
         }
     }
 }
