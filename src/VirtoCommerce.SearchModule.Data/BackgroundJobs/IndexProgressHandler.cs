@@ -115,11 +115,16 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             _notification.TotalCount = totalCount;
             _notification.ProcessedCount = processedCount;
 
-            _notification.Description = _isCanceled
-                ? "Indexation has been canceled"
-                : _sendInsignificantNotifications
+            if (_isCanceled)
+            {
+                _notification.Description = "Indexation has been canceled";
+            }
+            else
+            {
+                _notification.Description = _sendInsignificantNotifications
                     ? "Indexation completed" + (_notification.ErrorCount > 0 ? " with errors" : " successfully")
                     : $"{_notification.DocumentType}: Indexation completed. Total: {totalCount}, Processed: {processedCount}, Errors: {_notification.ErrorCount}.";
+            }
 
             _log.LogTrace(_notification.Description);
 

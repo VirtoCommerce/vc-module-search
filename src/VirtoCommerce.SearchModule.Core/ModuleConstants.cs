@@ -35,7 +35,7 @@ namespace VirtoCommerce.SearchModule.Core
                     DefaultValue = 50,
                 };
 
-                public static SettingDescriptor IndexQueueServiceType = new()
+                public static SettingDescriptor IndexQueueServiceType { get; } = new()
                 {
                     Name = "VirtoCommerce.Search.IndexQueueServiceType",
                     GroupName = "Search|General",
