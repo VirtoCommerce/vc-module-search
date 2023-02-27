@@ -54,7 +54,8 @@ public class HangfireIndexQueueService : IndexQueueServiceBase
         if (stateData?.Name == SucceededState.StateName)
         {
             var jobData = JobStorage.Current.GetConnection().GetJobData(jobId);
-            var options = jobData.Job.Args[2] as IndexingOptions;
+            var batch = jobData.Job.Args[0] as ScalableIndexingBatch;
+            var options = batch?.Options;
             var result = GetResult<IndexingResult>(stateData);
 
             batchResult = new ScalableIndexingBatchResult
