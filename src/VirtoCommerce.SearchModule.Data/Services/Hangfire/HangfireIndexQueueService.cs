@@ -11,12 +11,12 @@ namespace VirtoCommerce.SearchModule.Data.Services.Hangfire;
 
 public class HangfireIndexQueueService : IndexQueueServiceBase
 {
-    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, string>> _queues = new();
+    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, string>> _jobs = new();
 
     public override async Task<string> CreateQueue(IndexingOptions options)
     {
         var queueId = await base.CreateQueue(options);
-        _queues[queueId] = new ConcurrentDictionary<string, string>();
+        _jobs[queueId] = new ConcurrentDictionary<string, string>();
 
         return queueId;
     }
@@ -24,31 +24,30 @@ public class HangfireIndexQueueService : IndexQueueServiceBase
     public override async Task DeleteQueue(string queueId)
     {
         await base.DeleteQueue(queueId);
-        _queues.TryRemove(queueId, out _);
+        _jobs.TryRemove(queueId, out _);
     }
 
-    public override Task<bool> SaveBatchResult(ScalableBatchResult batchResult)
+    public override Task<bool> SaveBatchResult(ScalableIndexingBatchResult batchResult)
     {
         // Result is stored by Hangfire
-        return Task.FromResult(_queues.ContainsKey(batchResult.QueueId));
+        return Task.FromResult(_jobs.ContainsKey(batchResult.QueueId));
     }
 
-    protected override Task CreateBatch(string queueId, string batchId, IndexingOptions options)
+    protected override Task SaveBatch(ScalableIndexingBatch batch)
     {
-        var jobIdsByBatchIds = _queues[queueId];
-        var cancellationToken = JobCancellationToken.Null;
-        var jobId = BackgroundJob.Enqueue<HangfireIndexWorker>(x => x.IndexDocuments(queueId, batchId, options, cancellationToken));
-        jobIdsByBatchIds[batchId] = jobId;
+        var jobIdsByBatchIds = _jobs[batch.QueueId];
+        var jobId = BackgroundJob.Enqueue<HangfireIndexWorker>(x => x.IndexDocuments(batch, JobCancellationToken.Null));
+        jobIdsByBatchIds[batch.BatchId] = jobId;
 
         return Task.CompletedTask;
     }
 
-    protected override bool GetBatchResult(string queueId, string batchId, out ScalableBatchResult batchResult)
+    protected override bool GetBatchResult(string queueId, string batchId, out ScalableIndexingBatchResult batchResult)
     {
         var success = false;
         batchResult = null;
 
-        var jobIdsByBatchIds = _queues[queueId];
+        var jobIdsByBatchIds = _jobs[queueId];
         var jobId = jobIdsByBatchIds[batchId];
         var stateData = JobStorage.Current.GetConnection().GetStateData(jobId);
 
@@ -58,7 +57,7 @@ public class HangfireIndexQueueService : IndexQueueServiceBase
             var options = jobData.Job.Args[2] as IndexingOptions;
             var result = GetResult<IndexingResult>(stateData);
 
-            batchResult = new ScalableBatchResult
+            batchResult = new ScalableIndexingBatchResult
             {
                 QueueId = queueId,
                 BatchId = batchId,

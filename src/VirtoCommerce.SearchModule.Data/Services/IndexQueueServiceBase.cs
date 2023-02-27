@@ -12,6 +12,11 @@ public abstract class IndexQueueServiceBase : IIndexQueueService
     private readonly TimeSpan _waitDelay = TimeSpan.FromMilliseconds(100);
     private readonly ConcurrentDictionary<string, ConcurrentQueue<string>> _queues = new();
 
+    public virtual Task Start()
+    {
+        return Task.CompletedTask;
+    }
+
     public virtual Task<string> CreateQueue(IndexingOptions options)
     {
         var queueId = NewId();
@@ -28,19 +33,25 @@ public abstract class IndexQueueServiceBase : IIndexQueueService
         return Task.CompletedTask;
     }
 
-    public virtual async Task<string> Enqueue(string queueId, IndexingOptions options)
+    public virtual async Task<string> CreateBatch(string queueId, IndexingOptions options)
     {
         var queue = _queues[queueId];
         var batchId = NewId();
-        await CreateBatch(queueId, batchId, options);
+
+        var batch = new ScalableIndexingBatch
+        {
+            QueueId = queueId,
+            BatchId = batchId,
+            Options = options,
+        };
+
+        await SaveBatch(batch);
         queue.Enqueue(batchId);
 
         return batchId;
     }
 
-    public abstract Task<bool> SaveBatchResult(ScalableBatchResult batchResult);
-
-    public virtual async Task Wait(string queueId, ICancellationToken cancellationToken, Action<ScalableBatchResult> callback)
+    public virtual async Task Wait(string queueId, ICancellationToken cancellationToken, Action<ScalableIndexingBatchResult> callback)
     {
         while (_queues.TryGetValue(queueId, out var queue) &&
                queue.TryPeek(out var batchId))
@@ -64,6 +75,8 @@ public abstract class IndexQueueServiceBase : IIndexQueueService
         return Guid.NewGuid().ToString("N");
     }
 
-    protected abstract Task CreateBatch(string queueId, string batchId, IndexingOptions options);
-    protected abstract bool GetBatchResult(string queueId, string batchId, out ScalableBatchResult batchResult);
+
+    protected abstract Task SaveBatch(ScalableIndexingBatch batch);
+    public abstract Task<bool> SaveBatchResult(ScalableIndexingBatchResult batchResult);
+    protected abstract bool GetBatchResult(string queueId, string batchId, out ScalableIndexingBatchResult batchResult);
 }

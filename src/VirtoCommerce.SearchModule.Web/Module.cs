@@ -17,6 +17,7 @@ using VirtoCommerce.SearchModule.Data.Handlers;
 using VirtoCommerce.SearchModule.Data.SearchPhraseParsing;
 using VirtoCommerce.SearchModule.Data.Services;
 using VirtoCommerce.SearchModule.Data.Services.Hangfire;
+using VirtoCommerce.SearchModule.Data.Services.Redis;
 
 namespace VirtoCommerce.SearchModule.Web
 {
@@ -40,10 +41,9 @@ namespace VirtoCommerce.SearchModule.Web
             serviceCollection.AddTransient<ObjectSettingEntryChangedEventHandler>();
             serviceCollection.AddTransient<BackgroundJobsRunner>();
 
-            serviceCollection.AddSingleton<IRedisIndexingClient, RedisIndexingClient>();
+            serviceCollection.AddSingleton<IRedisIndexWorker, RedisIndexWorker>();
+            serviceCollection.AddSingleton<IIndexQueueService, RedisIndexQueueService>();
             serviceCollection.AddSingleton<IIndexQueueService, HangfireIndexQueueService>();
-            serviceCollection.AddSingleton<IIndexQueueService, HangfireMemoryIndexQueueService>();
-            serviceCollection.AddSingleton<IIndexQueueService, HangfireRedisIndexQueueService>();
             serviceCollection.AddSingleton<IIndexQueueServiceFactory, IndexQueueServiceFactory>();
             serviceCollection.AddScoped<IScalableIndexingManager, ScalableIndexingManager>();
         }
@@ -60,11 +60,18 @@ namespace VirtoCommerce.SearchModule.Web
 
             //Subscribe for Indexation job configuration changes
             var handlerRegistrar = serviceProvider.GetService<IHandlerRegistrar>();
-            handlerRegistrar.RegisterHandler<ObjectSettingChangedEvent>(async (message, token) => await serviceProvider.GetService<ObjectSettingEntryChangedEventHandler>().Handle(message));
+            handlerRegistrar.RegisterHandler<ObjectSettingChangedEvent>(async (message, _) => await serviceProvider.GetService<ObjectSettingEntryChangedEventHandler>().Handle(message));
 
             //Schedule periodic Indexation job
             var jobsRunner = serviceProvider.GetService<BackgroundJobsRunner>();
             jobsRunner.StartStopIndexingJobs().GetAwaiter().GetResult();
+
+            var redisWorker = serviceProvider.GetRequiredService<IRedisIndexWorker>();
+            redisWorker.Start();
+
+            var indexQueueServiceFactory = serviceProvider.GetRequiredService<IIndexQueueServiceFactory>();
+            var queueService = indexQueueServiceFactory.Create();
+            queueService.Start();
         }
 
         public void Uninstall()

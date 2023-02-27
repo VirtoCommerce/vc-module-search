@@ -30,7 +30,6 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
     {
         var indexQueueService = _indexQueueServiceFactory.Create();
 
-        Console.WriteLine($">>> IndexAllDocuments > Start {indexQueueService.GetType().Name}");
         ValidateOptions(options);
 
         var documentType = options.DocumentType;
@@ -54,7 +53,7 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
 
             totalCount += documentIds.Count;
             options.DocumentIds = documentIds;
-            await indexQueueService.Enqueue(queueId, options);
+            await indexQueueService.CreateBatch(queueId, options);
         }
 
         // Report total count
@@ -70,7 +69,6 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
         await SwapIndices(options);
 
         Progress("Indexation finished");
-        Console.WriteLine(">>> IndexAllDocuments > End");
     }
 
     public virtual async Task<IndexingResult> IndexDocuments(IndexingOptions options, ICancellationToken cancellationToken)
