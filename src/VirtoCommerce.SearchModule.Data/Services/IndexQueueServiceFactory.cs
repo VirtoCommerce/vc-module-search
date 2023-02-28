@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using VirtoCommerce.Platform.Core.Settings;
@@ -19,8 +20,9 @@ public class IndexQueueServiceFactory : IIndexQueueServiceFactory
 
     public IIndexQueueService Create()
     {
-        var selectedServiceType = _settingsManager.GetValueByDescriptor<string>(ModuleConstants.Settings.General.IndexQueueServiceType);
+        var serviceType = _settingsManager.GetValueByDescriptor<string>(ModuleConstants.Settings.General.IndexQueueServiceType);
+        var service = _indexQueueServices.FirstOrDefault(x => x.GetType().Name == serviceType);
 
-        return _indexQueueServices.First(x => x.GetType().Name == selectedServiceType);
+        return service ?? throw new InvalidOperationException($"Unknown index queue service type: {serviceType}");
     }
 }
