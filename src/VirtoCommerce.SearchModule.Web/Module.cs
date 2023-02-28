@@ -45,7 +45,7 @@ namespace VirtoCommerce.SearchModule.Web
             serviceCollection.AddSingleton<IIndexQueueService, RedisIndexQueueService>();
             serviceCollection.AddSingleton<IIndexQueueService, HangfireIndexQueueService>();
             serviceCollection.AddSingleton<IIndexQueueServiceFactory, IndexQueueServiceFactory>();
-            serviceCollection.AddScoped<IScalableIndexingManager, ScalableIndexingManager>();
+            serviceCollection.AddSingleton<IScalableIndexingManager, ScalableIndexingManager>();
         }
 
         public void PostInitialize(IApplicationBuilder appBuilder)
