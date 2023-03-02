@@ -4,6 +4,8 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.Platform.Core.Settings;
+using VirtoCommerce.SearchModule.Core;
 using VirtoCommerce.SearchModule.Core.Services;
 
 namespace VirtoCommerce.SearchModule.Data.Services.Redis;
@@ -12,17 +14,20 @@ public class RedisIndexWorker : ScalableIndexingWorker, IRedisIndexWorker
 {
     private readonly IConnectionMultiplexer _connection;
     private readonly RedisIndexingOptions _options;
-    private bool _processing;
+    private readonly ISettingsManager _settingsManager;
+    private int _currentWorkersCount;
 
     public RedisIndexWorker(
         IScalableIndexingManager scalableIndexingManager,
         IIndexQueueServiceFactory indexQueueServiceFactory,
         IConnectionMultiplexer connection,
-        IOptions<RedisIndexingOptions> redisIndexingOptions)
+        IOptions<RedisIndexingOptions> redisIndexingOptions,
+        ISettingsManager settingsManager)
         : base(scalableIndexingManager, indexQueueServiceFactory)
     {
         _connection = connection;
         _options = redisIndexingOptions.Value;
+        _settingsManager = settingsManager;
     }
 
     protected ISubscriber Subscriber => _connection.GetSubscriber();
@@ -41,23 +46,27 @@ public class RedisIndexWorker : ScalableIndexingWorker, IRedisIndexWorker
 
     private async Task ProcessJobs()
     {
-        if (_processing)
+        var maxWorkersCount = await _settingsManager.GetValueByDescriptorAsync<int>(ModuleConstants.Settings.General.MaxWorkersCount);
+        var currentWorkersCount = Interlocked.Increment(ref _currentWorkersCount);
+
+        try
         {
-            return;
+            if (currentWorkersCount <= maxWorkersCount)
+            {
+                var queueValue = await Database.ListRightPopAsync(_options.QueueName);
+
+                while (!queueValue.IsNullOrEmpty)
+                {
+                    var message = JsonConvert.DeserializeObject<BatchOptionsMessage>(queueValue);
+                    await IndexDocuments(message.Value, new CancellationTokenWrapper(new CancellationToken()));
+
+                    queueValue = await Database.ListRightPopAsync(_options.QueueName);
+                }
+            }
         }
-
-        _processing = true;
-
-        var queueValue = await Database.ListRightPopAsync(_options.QueueName);
-
-        while (!queueValue.IsNullOrEmpty)
+        finally
         {
-            var message = JsonConvert.DeserializeObject<BatchOptionsMessage>(queueValue);
-            await IndexDocuments(message.Value, new CancellationTokenWrapper(new CancellationToken()));
-
-            queueValue = await Database.ListRightPopAsync(_options.QueueName);
+            Interlocked.Decrement(ref _currentWorkersCount);
         }
-
-        _processing = false;
     }
 }

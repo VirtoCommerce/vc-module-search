@@ -43,12 +43,21 @@ namespace VirtoCommerce.SearchModule.Core
                     // AllowedValues and DefaultValue are set at runtime in Module.PostInitialize()
                 };
 
+                public static SettingDescriptor MaxWorkersCount { get; } = new()
+                {
+                    Name = "VirtoCommerce.Search.MaxWorkersCount",
+                    GroupName = "Search|General",
+                    ValueType = SettingValueType.PositiveInteger,
+                    DefaultValue = 4,
+                };
+
                 public static IEnumerable<SettingDescriptor> AllSettings
                 {
                     get
                     {
                         yield return IndexPartitionSize;
                         yield return IndexQueueServiceType;
+                        yield return MaxWorkersCount;
                     }
                 }
             }
