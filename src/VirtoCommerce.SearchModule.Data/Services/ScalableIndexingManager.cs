@@ -44,7 +44,7 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
         Progress("Preparing index");
         await PrepareIndex(options, progressCallback, cancellationToken);
 
-        Progress("Calculating total count");
+        Progress("Creating queue");
         var queueId = await indexQueueService.CreateQueue(options);
 
         await foreach (var documentIds in EnumerateAllDocumentIds(options, cancellationToken))
@@ -54,6 +54,7 @@ public class ScalableIndexingManager : IndexingManagerBase, IScalableIndexingMan
             totalCount += documentIds.Count;
             options.DocumentIds = documentIds;
             await indexQueueService.CreateBatch(queueId, options);
+            Progress($"{totalCount} have been added to queue");
         }
 
         // Report total count

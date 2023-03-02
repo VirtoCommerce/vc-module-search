@@ -85,6 +85,10 @@
     "VirtoCommerce.Search.IndexQueueServiceType": {
       "title": "Indexing queue service",
       "description": "Select one of the available implementations"
+    },
+    "VirtoCommerce.Search.MaxWorkersCount": {
+      "title": "Max Redis workers count",
+      "description": "The number of Redis workers running on each platform instance simultaneously"
     }
   }
 }
