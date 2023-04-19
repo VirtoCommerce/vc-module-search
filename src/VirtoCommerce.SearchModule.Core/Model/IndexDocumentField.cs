@@ -5,7 +5,7 @@ using VirtoCommerce.Platform.Core.Common;
 namespace VirtoCommerce.SearchModule.Core.Model
 {
     /// <summary>
-    /// Represents a single field in a document that will be indexed by search engines such as Azure Search or Elastic Search.
+    /// Represents a single field in a document that will be indexed by search engines such as Azure Search or Elasticsearch.
     /// It includes the name and one or more values for the field.
     /// </summary>
     [DebuggerDisplay("{Name}: {string.Join(\", \", Values)}")]
