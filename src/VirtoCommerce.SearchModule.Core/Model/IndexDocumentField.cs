@@ -38,22 +38,22 @@ namespace VirtoCommerce.SearchModule.Core.Model
         }
 
         /// <summary>
-        /// Indicating whether the field can be retrieved.
+        /// Indicats whether the field value can be retrieved from the index.
         /// </summary>
         public bool IsRetrievable { get; set; }
 
         /// <summary>
-        /// Indicating whether the field can be filtered.
+        /// Indicats whether the field can be used in search requests for filtering.
         /// </summary>
         public bool IsFilterable { get; set; }
 
         /// <summary>
-        /// Indicating whether the field can be searched.
+        /// Indicats whether the field can be used in search requests for searching.
         /// </summary>
         public bool IsSearchable { get; set; }
 
         /// <summary>
-        /// Indicates whether the field contains a collection of values.
+        /// Indicates whether the field can contain a collection of values.
         /// </summary>
         public bool IsCollection { get; set; }
 
