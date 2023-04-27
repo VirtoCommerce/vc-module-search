@@ -31,7 +31,9 @@ namespace VirtoCommerce.SearchModule.Core.Model
             get
             {
                 if (Values != null && Values.Count > 0)
+                {
                     return Values[0];
+                }
 
                 return null;
             }
