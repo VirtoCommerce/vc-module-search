@@ -28,8 +28,8 @@ RangeStart            : '[' | '(';
 RangeEnd              : ']' | ')';
 
 String                : SimpleString | QuotedString;
-fragment SimpleString : ~[!":,[\]() \t]+;
-fragment QuotedString : ('"' (Esc | ~["\\])* '"');
+fragment SimpleString : ~["\\!:,[\]() \r\n\t]+;
+fragment QuotedString : ('"' (Esc | ~["\\\r\n\t])* '"');
 fragment Esc          : '\\' (["\\rnt]);
 
 WS                    : [ \t]+; // Whitespace
