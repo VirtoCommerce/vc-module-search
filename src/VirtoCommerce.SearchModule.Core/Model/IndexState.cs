@@ -4,7 +4,7 @@ namespace VirtoCommerce.SearchModule.Core.Model
 {
     public class IndexState
     {
-        public string Provider { get; set;  }
+        public string Provider { get; set; }
 
         public string Scope { get; set; }
 

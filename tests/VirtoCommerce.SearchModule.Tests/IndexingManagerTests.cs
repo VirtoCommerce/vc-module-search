@@ -194,18 +194,18 @@ namespace VirtoCommerce.SearchModule.Tests
             return (int)Math.Ceiling((decimal)itemsCount / batchSize);
         }
 
-        private static void ValidateErrors(IEnumerable<IndexingProgress> progress, params string[] expectdErrorDoucmentIds)
+        private static void ValidateErrors(IEnumerable<IndexingProgress> progress, params string[] expectedErrorDocumentIds)
         {
             var errors = progress
                 .Where(p => p.Errors != null)
                 .SelectMany(p => p.Errors)
                 .ToList();
 
-            Assert.Equal(expectdErrorDoucmentIds.Length, errors.Count);
+            Assert.Equal(expectedErrorDocumentIds.Length, errors.Count);
 
-            foreach (var doucmentId in expectdErrorDoucmentIds)
+            foreach (var documentId in expectedErrorDocumentIds)
             {
-                Assert.Equal($"ID: {doucmentId}, Error: Search provider error", errors[0]);
+                Assert.Equal($"ID: {documentId}, Error: Search provider error", errors[0]);
             }
         }
 

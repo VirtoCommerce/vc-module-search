@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.Serialization;
 using VirtoCommerce.Platform.Core.Exceptions;
 
 namespace VirtoCommerce.SearchModule.Core.Exceptions

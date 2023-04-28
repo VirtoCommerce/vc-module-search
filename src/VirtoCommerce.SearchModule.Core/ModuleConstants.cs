@@ -25,6 +25,8 @@ namespace VirtoCommerce.SearchModule.Core
 
         public static class Settings
         {
+            public const int DefaultIndexPartitionSize = 50;
+
             public static class General
             {
                 public static SettingDescriptor IndexPartitionSize = new SettingDescriptor
@@ -32,7 +34,7 @@ namespace VirtoCommerce.SearchModule.Core
                     Name = "VirtoCommerce.Search.IndexPartitionSize",
                     GroupName = "Search|General",
                     ValueType = SettingValueType.PositiveInteger,
-                    DefaultValue = "50",
+                    DefaultValue = DefaultIndexPartitionSize,
                 };
                 public static IEnumerable<SettingDescriptor> AllSettings
                 {
@@ -81,4 +83,3 @@ namespace VirtoCommerce.SearchModule.Core
         }
     }
 }
-

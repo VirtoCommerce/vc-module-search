@@ -12,7 +12,7 @@ namespace VirtoCommerce.SearchModule.Core.Model
         public IIndexDocumentChangesProvider ChangesProvider { get; set; }
 
         /// <summary>
-        /// Newer statefull feed to get changes.
+        /// Newer stateful feed to get changes.
         /// If this one is present, the changes provider will be ignored.
         /// </summary>
         public IIndexDocumentChangeFeedFactory ChangeFeedFactory { get; set; }

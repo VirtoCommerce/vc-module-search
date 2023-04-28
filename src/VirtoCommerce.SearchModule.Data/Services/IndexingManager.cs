@@ -96,7 +96,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         public virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes = null)
         {
-            // Todo: reuse general index api?
+            // TODO: reuse general index API?
             var configs = _configs.Where(c => c.DocumentType.EqualsInvariant(documentType)).ToArray();
             var result = new IndexingResult { Items = new List<IndexingResultItem>() };
 
@@ -117,7 +117,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                         .ToList();
 
                     // In case of changing main object itself, there would be only primary document builder,
-                    // but in the other cases, when changed additional dependent objects, primary builder should be nulled.
+                    // but in the other cases, when changed additional dependent objects, primary builder should be set to null.
                     if (!builderTypes.Contains(primaryDocumentBuilder.GetType().FullName))
                     {
                         primaryDocumentBuilder = null;
@@ -501,7 +501,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
         }
 
         /// <summary>
-        /// Swap between active and backup indeces, if supported
+        /// Swap between active and backup indices, if supported
         /// </summary>
         protected virtual async Task SwapIndices(IndexingOptions options)
         {

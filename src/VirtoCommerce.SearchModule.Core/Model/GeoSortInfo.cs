@@ -44,10 +44,10 @@ namespace VirtoCommerce.SearchModule.Core.Model
             }
             return result;
         }
-     
+
         public override string ToString()
         {
-            return $"{GeoPoint?.ToString()}:{ base.ToString() }";
+            return $"{GeoPoint?.ToString()}:{base.ToString()}";
         }
 
         public override bool Equals(object obj)

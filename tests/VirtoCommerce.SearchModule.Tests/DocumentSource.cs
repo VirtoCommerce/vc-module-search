@@ -57,7 +57,7 @@ namespace VirtoCommerce.SearchModule.Tests
             }
             return Task.FromResult(result);
         }
-        
+
         public virtual Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds)
         {
             var validDocumentIds = DocumentIds?.Intersect(documentIds) ?? documentIds;

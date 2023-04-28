@@ -62,7 +62,7 @@ namespace VirtoCommerce.SearchModule.Core.Model
         public static GeoPoint Parse(string value)
         {
             var result = TryParse(value);
-            if(result == null)
+            if (result == null)
             {
                 throw new ArgumentException("", nameof(value));
             }
@@ -78,7 +78,7 @@ namespace VirtoCommerce.SearchModule.Core.Model
             {
                 result = new GeoPoint
                 {
-                    Latitude = Math.Round(double.Parse(match.Groups[LatitudeGroupIndex].Value, NumberStyles.Float, CultureInfo.InvariantCulture), Digits) ,
+                    Latitude = Math.Round(double.Parse(match.Groups[LatitudeGroupIndex].Value, NumberStyles.Float, CultureInfo.InvariantCulture), Digits),
                     Longitude = Math.Round(double.Parse(match.Groups[LongitudeGroupIndex].Value, NumberStyles.Float, CultureInfo.InvariantCulture), Digits)
                 };
             }
