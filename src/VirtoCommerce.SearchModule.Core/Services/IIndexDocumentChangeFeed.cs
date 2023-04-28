@@ -5,8 +5,8 @@ using VirtoCommerce.SearchModule.Core.Model;
 namespace VirtoCommerce.SearchModule.Core.Services
 {
     /// <summary>
-    /// Statefull change feed for indexation.
-    /// Storage sub systems should be able to implement this effeciently, whether it be Sql or NoSql.
+    /// Stateful change feed for indexation.
+    /// Storage sub systems should be able to implement this efficiently, whether it be SQL or NoSQL.
     /// </summary>
     public interface IIndexDocumentChangeFeed
     {

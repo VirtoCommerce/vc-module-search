@@ -13,7 +13,7 @@ namespace VirtoCommerce.SearchModule.Tests
         [Fact]
         public void TestKeywords()
         {
-            var parser = Getparser();
+            var parser = GetParser();
             var result = parser.Parse(" one two three ");
 
             Assert.NotNull(result);
@@ -25,7 +25,7 @@ namespace VirtoCommerce.SearchModule.Tests
         public void TestNegationFilter()
         {
             // Arrange
-            var parser = Getparser();
+            var parser = GetParser();
 
             // Act
             var result = parser.Parse("!size:medium");
@@ -43,7 +43,7 @@ namespace VirtoCommerce.SearchModule.Tests
         [Fact]
         public void TestAttributeFilter()
         {
-            var parser = Getparser();
+            var parser = GetParser();
             var result = parser.Parse("color:red,blue");
 
             Assert.NotNull(result);
@@ -69,7 +69,7 @@ namespace VirtoCommerce.SearchModule.Tests
         [Fact]
         public void TestRangeFilter()
         {
-            var parser = Getparser();
+            var parser = GetParser();
             var result = parser.Parse("size:(10 TO 20],[30 to 40)");
 
             Assert.NotNull(result);
@@ -143,7 +143,7 @@ namespace VirtoCommerce.SearchModule.Tests
         [Fact]
         public void TestKeywordAndFilter()
         {
-            var parser = Getparser();
+            var parser = GetParser();
             var result = parser.Parse("one brand:apple two");
 
             Assert.NotNull(result);
@@ -168,7 +168,7 @@ namespace VirtoCommerce.SearchModule.Tests
         [Fact]
         public void TestQuotedStrings()
         {
-            var parser = Getparser();
+            var parser = GetParser();
 
             // Keywords
             var result = parser.Parse("one \"two \\r\\n\\t\\\\ three\" four");
@@ -217,7 +217,7 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.True(rangeValue.IncludeUpper);
         }
 
-        private static ISearchPhraseParser Getparser()
+        private static ISearchPhraseParser GetParser()
         {
             return new SearchPhraseParser();
         }

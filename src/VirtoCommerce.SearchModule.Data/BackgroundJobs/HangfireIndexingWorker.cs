@@ -63,7 +63,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                     return JobPriority.Low;
 
                 default:
-                    throw new ArgumentException($"Unkown priority: {priority}");
+                    throw new ArgumentException($"Unknown priority: {priority}");
             }
         }
     }

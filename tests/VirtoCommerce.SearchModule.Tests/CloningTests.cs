@@ -42,18 +42,18 @@ namespace VirtoCommerce.SearchModule.Tests
                     FieldName = "term",
                     Values = new[] { "term1", "term2" }
                 };
-                var widlcardFilter = new WildCardTermFilter
+                var wildcardFilter = new WildCardTermFilter
                 {
-                    FieldName = "widlcard",
+                    FieldName = "wildcard",
                     Value = "*"
                 };
                 var andFilter = new AndFilter
                 {
-                    ChildFilters = new IFilter[] { idsFilter, rangeFilter, termFilter, widlcardFilter }.ToList()
+                    ChildFilters = new IFilter[] { idsFilter, rangeFilter, termFilter, wildcardFilter }.ToList()
                 };
                 var orFilter = new OrFilter
                 {
-                    ChildFilters = new IFilter[] { andFilter, idsFilter, rangeFilter, termFilter, widlcardFilter }.ToList()
+                    ChildFilters = new IFilter[] { andFilter, idsFilter, rangeFilter, termFilter, wildcardFilter }.ToList()
                 };
                 var notFilter = new NotFilter
                 {
@@ -62,7 +62,7 @@ namespace VirtoCommerce.SearchModule.Tests
                 yield return new[] { idsFilter };
                 yield return new[] { rangeFilter };
                 yield return new[] { termFilter };
-                yield return new[] { widlcardFilter };
+                yield return new[] { wildcardFilter };
                 yield return new[] { andFilter };
                 yield return new[] { orFilter };
                 yield return new[] { notFilter };
