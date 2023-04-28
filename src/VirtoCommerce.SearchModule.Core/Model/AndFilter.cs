@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,7 +17,7 @@ namespace VirtoCommerce.SearchModule.Core.Model
         {
             var result = MemberwiseClone() as AndFilter;
             result.ChildFilters = ChildFilters?.Select(x => x.Clone()).OfType<IFilter>().ToList();
-          
+
             return result;
         }
 

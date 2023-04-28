@@ -13,14 +13,14 @@ namespace VirtoCommerce.SearchModule.Tests
         [MemberData(nameof(TestFilters))]
         public void CloneCategory(IFilter filter)
         {
-             filter.AssertCloneIndependency();
+            filter.AssertCloneIndependency();
         }
 
         public static IEnumerable<object[]> TestFilters
         {
             get
             {
-                var idsFilter =  new IdsFilter
+                var idsFilter = new IdsFilter
                 {
                     Values = new[] { "a", "b" }
                 };
@@ -57,7 +57,7 @@ namespace VirtoCommerce.SearchModule.Tests
                 };
                 var notFilter = new NotFilter
                 {
-                     ChildFilter = orFilter
+                    ChildFilter = orFilter
                 };
                 yield return new[] { idsFilter };
                 yield return new[] { rangeFilter };

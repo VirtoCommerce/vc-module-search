@@ -81,4 +81,3 @@ namespace VirtoCommerce.SearchModule.Core
         }
     }
 }
-

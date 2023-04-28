@@ -20,7 +20,7 @@ namespace VirtoCommerce.SearchModule.Web
     public class Module : IModule, IHasConfiguration
     {
         public ManifestModuleInfo ModuleInfo { get; set; }
-        public IConfiguration Configuration { get; set ; }
+        public IConfiguration Configuration { get; set; }
 
         public void Initialize(IServiceCollection serviceCollection)
         {
@@ -67,4 +67,3 @@ namespace VirtoCommerce.SearchModule.Web
         }
     }
 }
-
