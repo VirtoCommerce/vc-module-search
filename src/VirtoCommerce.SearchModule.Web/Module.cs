@@ -53,8 +53,8 @@ namespace VirtoCommerce.SearchModule.Web
                 }).ToArray());
 
             //Subscribe for Indexation job configuration changes
-            var inProcessBus = appBuilder.ApplicationServices.GetService<IHandlerRegistrar>();
-            inProcessBus.RegisterHandler<ObjectSettingChangedEvent>(async (message, token) => await appBuilder.ApplicationServices.GetService<ObjectSettingEntryChangedEventHandler>().Handle(message));
+            var handlerRegistrar = appBuilder.ApplicationServices.GetService<IHandlerRegistrar>();
+            handlerRegistrar.RegisterHandler<ObjectSettingChangedEvent>(async (message, token) => await appBuilder.ApplicationServices.GetService<ObjectSettingEntryChangedEventHandler>().Handle(message));
 
             //Schedule periodic Indexation job
             var jobsRunner = appBuilder.ApplicationServices.GetService<BackgroundJobsRunner>();
