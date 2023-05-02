@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Antlr4.Runtime.Misc;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model;
@@ -109,12 +110,44 @@ namespace VirtoCommerce.SearchModule.Data.SearchPhraseParsing
 
         protected virtual string UnEscape(string value)
         {
-            if (string.IsNullOrEmpty(value))
+            if (value == null ||
+                value.Length < 2 ||
+                value.First() != '"' ||
+                value.Last() != '"')
             {
                 return value;
             }
 
-            return value.Trim('"').Replace("\\r", "\r").Replace("\\n", "\n").Replace("\\t", "\t").Replace("\\\\", "\\");
+            var result = new StringBuilder(value.Length);
+            var unescaping = false;
+
+            // Skip first and last double quote characters
+            foreach (var character in value[1..^1])
+            {
+                if (unescaping)
+                {
+                    var newCharacter = character switch
+                    {
+                        'r' => '\r',
+                        'n' => '\n',
+                        't' => '\t',
+                        _ => character,
+                    };
+
+                    result.Append(newCharacter);
+                    unescaping = false;
+                }
+                else if (character == '\\')
+                {
+                    unescaping = true;
+                }
+                else
+                {
+                    result.Append(character);
+                }
+            }
+
+            return result.ToString();
         }
     }
 }
