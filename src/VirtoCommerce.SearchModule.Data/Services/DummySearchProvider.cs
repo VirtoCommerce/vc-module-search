@@ -6,7 +6,7 @@ using VirtoCommerce.SearchModule.Core.Services;
 
 namespace VirtoCommerce.SearchModule.Data.Services
 {
-    public class DummySearchProvider : ISearchProvider, ISupportIndexSwap, ISupportPartialUpdate
+    public class DummySearchProvider : ISearchProvider, ISupportIndexSwap, ISupportPartialUpdate, ISupportSuggestions
     {
         private readonly string _error = "There's no registered Search Provider. Please install at least one Search Module implementation (Lucene, Elastic Search or Azure Search).";
 
@@ -41,6 +41,11 @@ namespace VirtoCommerce.SearchModule.Data.Services
         }
 
         public Task<IndexingResult> IndexPartialAsync(string documentType, IList<IndexDocument> documents)
+        {
+            throw new SearchException(_error);
+        }
+
+        public Task<SuggestionResponse> GetSuggestionsAsync(string documentType, SuggestionRequest request)
         {
             throw new SearchException(_error);
         }
