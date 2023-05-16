@@ -1,6 +1,8 @@
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using VirtoCommerce.SearchModule.Core.Model;
+using VirtoCommerce.SearchModule.Core.Services;
 using Xunit;
 
 namespace VirtoCommerce.SearchModule.Tests
@@ -1024,6 +1026,31 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.Equal(1, GetAggregationValueCount(response, "Color", "Black"));
             Assert.Equal(1, GetAggregationValueCount(response, "Color", "Blue"));
             Assert.Equal(0, GetAggregationValueCount(response, "Color", "Silver"));
+        }
+
+        [Fact]
+        public async Task CanMakeSuggestions()
+        {
+            var provider = GetSearchProvider();
+
+            if (provider is not ISupportSuggestions supportSuggestions)
+            {
+                return;
+            }
+
+            var request = new SuggestionRequest
+            {
+                Query = "bl",
+                Fields = new[] { "Name" },
+                Size = 5,
+            };
+
+            var response = await supportSuggestions.GetSuggestionsAsync(DocumentType, request);
+
+            Assert.NotNull(response);
+            Assert.NotNull(response.Suggestions);
+
+            response.Suggestions.Should().BeEquivalentTo("black", "black sox", "black sox2", "blue", "blue shirt");
         }
     }
 }
