@@ -4,6 +4,8 @@ namespace VirtoCommerce.SearchModule.Core.Model;
 
 public class SuggestionRequest
 {
+    public string CatalogId { get; set; }
+
     /// <summary>
     /// A word, phrase, or text fragment which will be used to make suggestions
     /// </summary>
