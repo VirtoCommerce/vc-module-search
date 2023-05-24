@@ -5,6 +5,11 @@ namespace VirtoCommerce.SearchModule.Core.Model;
 public class SuggestionRequest
 {
     /// <summary>
+    /// Filtering parameter for the suggestion results
+    /// </summary>
+    public string CatalogId { get; set; }
+
+    /// <summary>
     /// A word, phrase, or text fragment which will be used to make suggestions
     /// </summary>
     public string Query { get; set; }
@@ -18,11 +23,6 @@ public class SuggestionRequest
     /// Number of suggestions to return
     /// </summary>
     public int Size { get; set; }
-
-    /// <summary>
-    /// Various request data that for a provider to interpred
-    /// </summary>
-    public IDictionary<string, object> QueryContext { get; set; }
 
     /// <summary>
     /// Gets or sets the option to specifically use backup index.
