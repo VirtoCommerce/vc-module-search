@@ -122,5 +122,21 @@ namespace VirtoCommerce.SearchModule.Core.Extenstions
                 }
             }
         }
+
+        public static void AddSuggestableValue(this IndexDocument document, string name, string value)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                document.Add(new IndexDocumentField(name, value)
+                {
+                    IsRetrievable = true,
+                    IsFilterable = true,
+                    IsSuggestable = true,
+                    ValueType = IndexDocumentFieldValueType.String,
+                });
+
+                document.AddSearchableValue(value);
+            }
+        }
     }
 }

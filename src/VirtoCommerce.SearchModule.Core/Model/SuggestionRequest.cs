@@ -20,6 +20,11 @@ public class SuggestionRequest
     public int Size { get; set; }
 
     /// <summary>
+    /// Filtering parameters for the suggestion results
+    /// </summary>
+    public IDictionary<string, object> QueryContext { get; set; }
+
+    /// <summary>
     /// Gets or sets the option to specifically use backup index.
     /// </summary>
     public bool UseBackupIndex { get; set; }

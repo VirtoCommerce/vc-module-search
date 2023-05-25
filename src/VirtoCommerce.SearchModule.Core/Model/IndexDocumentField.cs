@@ -60,6 +60,11 @@ namespace VirtoCommerce.SearchModule.Core.Model
         public bool IsCollection { get; set; }
 
         /// <summary>
+        /// Indicates whether the field need to be added to the list of suggestable/autocomplete fields during indexing in certain providers (ElasticSearch, AzureSearch)
+        /// </summary>
+        public bool IsSuggestable { get; set; }
+
+        /// <summary>
         /// Indicates the data type of the field.
         /// </summary>
         public IndexDocumentFieldValueType ValueType { get; set; }
