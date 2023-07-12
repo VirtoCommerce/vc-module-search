@@ -69,7 +69,7 @@ namespace VirtoCommerce.SearchModule.Tests
         protected static IndexDocument CreateDocument(string id, string fieldName)
         {
             var result = new IndexDocument(id);
-            result.Add(new IndexDocumentField(fieldName, id));
+            result.Add(new IndexDocumentField(fieldName, id, IndexDocumentFieldValueType.String));
             return result;
         }
 

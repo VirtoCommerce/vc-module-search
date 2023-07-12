@@ -465,7 +465,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 // Add system fields
                 foreach (var document in primaryDocuments)
                 {
-                    document.Add(new IndexDocumentField(KnownDocumentFields.IndexationDate, DateTime.UtcNow)
+                    document.Add(new IndexDocumentField(KnownDocumentFields.IndexationDate, DateTime.UtcNow, IndexDocumentFieldValueType.DateTime)
                     {
                         IsRetrievable = true,
                         IsFilterable = true
