@@ -40,24 +40,20 @@ namespace VirtoCommerce.SearchModule.Web
 
         public void PostInitialize(IApplicationBuilder appBuilder)
         {
-            var settingsRegistrar = appBuilder.ApplicationServices.GetRequiredService<ISettingsRegistrar>();
+            var serviceProvider = appBuilder.ApplicationServices;
+
+            var settingsRegistrar = serviceProvider.GetRequiredService<ISettingsRegistrar>();
             settingsRegistrar.RegisterSettings(ModuleConstants.Settings.AllSettings, ModuleInfo.Id);
 
-            var permissionsProvider = appBuilder.ApplicationServices.GetRequiredService<IPermissionsRegistrar>();
-            permissionsProvider.RegisterPermissions(ModuleConstants.Security.Permissions.AllPermissions.Select(x =>
-                new Permission()
-                {
-                    GroupName = "Search",
-                    ModuleId = ModuleInfo.Id,
-                    Name = x
-                }).ToArray());
+            var permissionsRegistrar = serviceProvider.GetRequiredService<IPermissionsRegistrar>();
+            permissionsRegistrar.RegisterPermissions(ModuleInfo.Id, "Search", ModuleConstants.Security.Permissions.AllPermissions);
 
             //Subscribe for Indexation job configuration changes
-            var handlerRegistrar = appBuilder.ApplicationServices.GetService<IHandlerRegistrar>();
-            handlerRegistrar.RegisterHandler<ObjectSettingChangedEvent>(async (message, token) => await appBuilder.ApplicationServices.GetService<ObjectSettingEntryChangedEventHandler>().Handle(message));
+            var handlerRegistrar = serviceProvider.GetService<IHandlerRegistrar>();
+            handlerRegistrar.RegisterHandler<ObjectSettingChangedEvent>(async (message, _) => await serviceProvider.GetService<ObjectSettingEntryChangedEventHandler>().Handle(message));
 
             //Schedule periodic Indexation job
-            var jobsRunner = appBuilder.ApplicationServices.GetService<BackgroundJobsRunner>();
+            var jobsRunner = serviceProvider.GetService<BackgroundJobsRunner>();
             jobsRunner.StartStopIndexingJobs().GetAwaiter().GetResult();
         }
 

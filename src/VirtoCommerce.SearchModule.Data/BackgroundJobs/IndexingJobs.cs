@@ -399,7 +399,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
         private int GetBatchSize()
         {
-            return _settingsManager.GetValue(ModuleConstants.Settings.General.IndexPartitionSize.Name, 50);
+            return _settingsManager.GetValueByDescriptor<int>(ModuleConstants.Settings.General.IndexPartitionSize);
         }
     }
 }

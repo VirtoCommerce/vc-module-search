@@ -18,23 +18,21 @@ namespace VirtoCommerce.SearchModule.Data.Services
     public class IndexingManager : IIndexingManager
     {
         private readonly ISearchProvider _searchProvider;
-        private readonly IEnumerable<IndexDocumentConfiguration> _configs;
+        private readonly IEnumerable<IndexDocumentConfiguration> _configurations;
         private readonly ISettingsManager _settingsManager;
         private readonly IIndexingWorker _backgroundWorker;
         private readonly SearchOptions _searchOptions;
 
-        public IndexingManager(ISearchProvider searchProvider, IEnumerable<IndexDocumentConfiguration> configs,
+        public IndexingManager(
+            ISearchProvider searchProvider,
+            IEnumerable<IndexDocumentConfiguration> configurations,
             IOptions<SearchOptions> searchOptions,
-            ISettingsManager settingsManager = null, IIndexingWorker backgroundWorker = null)
+            ISettingsManager settingsManager,
+            IIndexingWorker backgroundWorker)
         {
-            if (searchProvider == null)
-                throw new ArgumentNullException(nameof(searchProvider));
-            if (configs == null)
-                throw new ArgumentNullException(nameof(configs));
-
+            _searchProvider = searchProvider ?? throw new ArgumentNullException(nameof(searchProvider));
+            _configurations = configurations ?? throw new ArgumentNullException(nameof(configurations));
             _searchOptions = searchOptions.Value;
-            _searchProvider = searchProvider;
-            _configs = configs;
             _settingsManager = settingsManager;
             _backgroundWorker = backgroundWorker;
         }
@@ -64,16 +62,22 @@ namespace VirtoCommerce.SearchModule.Data.Services
             ICancellationToken cancellationToken)
         {
             if (options == null)
+            {
                 throw new ArgumentNullException(nameof(options));
-            if (string.IsNullOrEmpty(options.DocumentType))
-                throw new ArgumentNullException($"{nameof(options)}.{nameof(options.DocumentType)}");
+            }
 
-            if (options.BatchSize == null)
-                options.BatchSize =
-                    _settingsManager?.GetValue(ModuleConstants.Settings.General.IndexPartitionSize.Name, 50) ?? 50;
+            if (string.IsNullOrEmpty(options.DocumentType))
+            {
+                throw new ArgumentNullException($"{nameof(options)}.{nameof(options.DocumentType)}");
+            }
+
+            options.BatchSize ??= _settingsManager?.GetValue(ModuleConstants.Settings.General.IndexPartitionSize.Name, 50) ?? 50;
+
             if (options.BatchSize < 1)
+            {
                 throw new ArgumentException(@$"{nameof(options.BatchSize)} {options.BatchSize} cannon be less than 1",
                     $"{nameof(options)}");
+            }
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -86,7 +90,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 await _searchProvider.DeleteIndexAsync(documentType);
             }
 
-            var configs = _configs.Where(c => c.DocumentType.EqualsInvariant(documentType)).ToArray();
+            var configs = _configurations.Where(c => c.DocumentType.EqualsInvariant(documentType)).ToArray();
 
             foreach (var config in configs)
             {
@@ -96,8 +100,8 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         public virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes = null)
         {
-            // TODO: reuse general index API?
-            var configs = _configs.Where(c => c.DocumentType.EqualsInvariant(documentType)).ToArray();
+            // TODO: Reuse general index API?
+            var configs = _configurations.Where(c => c.DocumentType.EqualsInvariant(documentType)).ToArray();
             var result = new IndexingResult { Items = new List<IndexingResultItem>() };
 
             var partialUpdate = false;
@@ -155,19 +159,33 @@ namespace VirtoCommerce.SearchModule.Data.Services
             IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
         {
             if (configuration == null)
+            {
                 throw new ArgumentNullException(nameof(configuration));
+            }
+
             if (string.IsNullOrEmpty(configuration.DocumentType))
+            {
                 throw new ArgumentNullException($"{nameof(configuration)}.{nameof(configuration.DocumentType)}");
+            }
+
             if (configuration.DocumentSource == null)
+            {
                 throw new ArgumentNullException($"{nameof(configuration)}.{nameof(configuration.DocumentSource)}");
+            }
+
             if (configuration.DocumentSource.ChangesProvider == null)
+            {
                 throw new ArgumentNullException(
                     nameof(configuration),
                     $"{nameof(configuration)}.{nameof(configuration.DocumentSource)}.{nameof(configuration.DocumentSource.ChangesProvider)} cannot be null");
+            }
+
             if (configuration.DocumentSource.DocumentBuilder == null)
+            {
                 throw new ArgumentNullException(
                     nameof(configuration),
                     $"{nameof(configuration)}.{nameof(configuration.DocumentSource)}.{nameof(configuration.DocumentSource.DocumentBuilder)} cannot be null");
+            }
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -214,8 +232,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                         .Distinct()
                         .ToArray();
 
-                    _backgroundWorker.IndexDocuments(configuration.DocumentType, documentIds,
-                        IndexingPriority.Background);
+                    _backgroundWorker.IndexDocuments(configuration.DocumentType, documentIds, IndexingPriority.Background);
                 }
 
                 processedCount += changes.Count;
@@ -264,7 +281,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var fullChanges = _searchProvider is ISupportPartialUpdate ? indexDocumentChanges
                 .Where(x =>
                     x.ChangeType is IndexDocumentChangeType.Deleted or IndexDocumentChangeType.Created ||
-                    !_configs.GetBuildersForProvider(x.Provider?.GetType()).Any()
+                    !_configurations.GetBuildersForProvider(x.Provider?.GetType()).Any()
                 )
                 .ToArray() : indexDocumentChanges;
 
@@ -308,13 +325,11 @@ namespace VirtoCommerce.SearchModule.Data.Services
             {
                 var builders = indexDocumentChanges
                     .Where(x => x.DocumentId == id)
-                    .SelectMany(x => _configs.GetBuildersForProvider(x.Provider.GetType()));
+                    .SelectMany(x => _configurations.GetBuildersForProvider(x.Provider.GetType()));
 
                 var documents = await GetDocumentsAsync(new[] { id }, null, builders, cancellationToken);
 
-                IndexingResult indexingResult;
-
-                indexingResult = await ((ISupportPartialUpdate)_searchProvider).IndexPartialAsync(batchOptions.DocumentType, documents);
+                var indexingResult = await ((ISupportPartialUpdate)_searchProvider).IndexPartialAsync(batchOptions.DocumentType, documents);
 
                 result.Items.AddRange(indexingResult.Items);
             }
@@ -385,7 +400,9 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 {
                     // Support old ChangesProvider.
                     if (related.ChangeFeedFactory == null)
+                    {
                         related.ChangeFeedFactory = new IndexDocumentChangeFeedFactoryAdapter(related.ChangesProvider);
+                    }
 
                     factories.Add(related.ChangeFeedFactory);
                 }

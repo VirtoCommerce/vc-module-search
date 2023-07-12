@@ -44,8 +44,8 @@ namespace VirtoCommerce.SearchModule.Tests
             {
                 DocumentType = DocumentType,
                 DeleteExistingIndex = rebuild,
-                StartDate = rebuild ? null : (DateTime?)new DateTime(1, 1, 1),
-                EndDate = rebuild ? null : (DateTime?)new DateTime(1, 1, 9),
+                StartDate = rebuild ? null : new DateTime(1, 1, 1),
+                EndDate = rebuild ? null : new DateTime(1, 1, 9),
                 BatchSize = batchSize,
             };
 
@@ -247,7 +247,7 @@ namespace VirtoCommerce.SearchModule.Tests
                 RelatedSources = documentSources?.Skip(1).Select(CreateIndexDocumentSource).ToArray(),
             };
 
-            return new IndexingManager(searchProvider, new[] { configuration }, new Moq.Mock<IOptions<SearchOptions>>().Object);
+            return new IndexingManager(searchProvider, new[] { configuration }, new Moq.Mock<IOptions<SearchOptions>>().Object, settingsManager: null, backgroundWorker: null);
         }
 
         private static IndexDocumentSource CreateIndexDocumentSource(DocumentSource documentSource)
