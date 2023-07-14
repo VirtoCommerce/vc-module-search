@@ -15,6 +15,7 @@ namespace VirtoCommerce.SearchModule.Core.Extenstions
         /// <param name="document"></param>
         /// <param name="name"></param>
         /// <param name="values"></param>
+        [Obsolete("Use AddFilterableCollectionAndContentString")]
         public static void AddFilterableAndSearchableValues(this IndexDocument document, string name, ICollection<string> values)
         {
             if (values?.Any() == true)
@@ -42,6 +43,7 @@ namespace VirtoCommerce.SearchModule.Core.Extenstions
         /// <param name="document"></param>
         /// <param name="name"></param>
         /// <param name="value"></param>
+        [Obsolete("Use AddFilterableStringAndContentString")]
         public static void AddFilterableAndSearchableValue(this IndexDocument document, string name, string value)
         {
             if (!string.IsNullOrWhiteSpace(value))
@@ -61,6 +63,7 @@ namespace VirtoCommerce.SearchModule.Core.Extenstions
         /// </summary>
         /// <param name="document"></param>
         /// <param name="value"></param>
+        [Obsolete("Use AddContentString")]
         public static void AddSearchableValue(this IndexDocument document, string value)
         {
             if (!string.IsNullOrWhiteSpace(value))
@@ -87,6 +90,7 @@ namespace VirtoCommerce.SearchModule.Core.Extenstions
             }
         }
 
+        [Obsolete("Use namespace VirtoCommerce.SearchModule.Core.Extensions")]
         public static void AddFilterableValue(this IndexDocument document, string name, object value, IndexDocumentFieldValueType valueType)
         {
             if (value != null)
@@ -99,6 +103,7 @@ namespace VirtoCommerce.SearchModule.Core.Extenstions
             }
         }
 
+        [Obsolete("Use AddFilterableCollection")]
         public static void AddFilterableValues(this IndexDocument document, string name, ICollection<string> values)
         {
             if (values?.Any() == true)
@@ -118,6 +123,7 @@ namespace VirtoCommerce.SearchModule.Core.Extenstions
             }
         }
 
+        [Obsolete("Use AddSuggestableStringAndContentString")]
         public static void AddSuggestableValue(this IndexDocument document, string name, string value)
         {
             if (!string.IsNullOrWhiteSpace(value))
