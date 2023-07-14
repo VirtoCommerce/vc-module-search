@@ -1,4 +1,3 @@
-using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,6 +7,7 @@ using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.Platform.Core.Settings.Events;
 using VirtoCommerce.SearchModule.Core;
+using VirtoCommerce.SearchModule.Core.BackgroundJobs;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 using VirtoCommerce.SearchModule.Data.BackgroundJobs;
@@ -25,17 +25,16 @@ namespace VirtoCommerce.SearchModule.Web
         public void Initialize(IServiceCollection serviceCollection)
         {
             serviceCollection.AddTransient<ISearchPhraseParser, SearchPhraseParser>();
-            serviceCollection.AddScoped<IIndexingWorker>(_ => null);
 
-            serviceCollection.AddScoped<IIndexingManager, IndexingManager>();
-            serviceCollection.AddScoped<IndexProgressHandler>();
+            serviceCollection.AddSingleton<IIndexingManager, IndexingManager>();
+            serviceCollection.AddTransient<IndexProgressHandler>();
             serviceCollection.AddSingleton<ISearchProvider, DummySearchProvider>();
             serviceCollection.AddSingleton<ISearchRequestBuilderRegistrar, SearchRequestBuilderRegistrar>();
 
             serviceCollection.AddOptions<SearchOptions>().Bind(Configuration.GetSection("Search")).ValidateDataAnnotations();
 
-            serviceCollection.AddTransient<ObjectSettingEntryChangedEventHandler>();
-            serviceCollection.AddTransient<BackgroundJobsRunner>();
+            serviceCollection.AddSingleton<ObjectSettingEntryChangedEventHandler>();
+            serviceCollection.AddSingleton<IIndexingJobService, IndexingJobs>();
         }
 
         public void PostInitialize(IApplicationBuilder appBuilder)
@@ -53,8 +52,8 @@ namespace VirtoCommerce.SearchModule.Web
             handlerRegistrar.RegisterHandler<ObjectSettingChangedEvent>(async (message, _) => await serviceProvider.GetService<ObjectSettingEntryChangedEventHandler>().Handle(message));
 
             //Schedule periodic Indexation job
-            var jobsRunner = serviceProvider.GetService<BackgroundJobsRunner>();
-            jobsRunner.StartStopIndexingJobs().GetAwaiter().GetResult();
+            var indexingJobService = serviceProvider.GetService<IIndexingJobService>();
+            indexingJobService.StartStopRecurringJobs().GetAwaiter().GetResult();
         }
 
         public void Uninstall()

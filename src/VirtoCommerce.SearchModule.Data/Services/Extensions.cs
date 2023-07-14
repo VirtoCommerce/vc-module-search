@@ -14,6 +14,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
         /// <param name="configuration"></param>
         /// <param name="providerType"></param>
         /// <returns></returns>
+        [Obsolete("Use GetDocumentBuilders() from VirtoCommerce.SearchModule.Core.Extensions")]
         public static IEnumerable<IIndexDocumentBuilder> GetBuildersForProvider(this IEnumerable<IndexDocumentConfiguration> configuration, Type providerType)
         {
             var result = new List<IIndexDocumentBuilder>();

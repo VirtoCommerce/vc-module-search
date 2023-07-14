@@ -52,7 +52,7 @@ namespace VirtoCommerce.SearchModule.Tests
             await manager.IndexAsync(options, p => progress.Add(p), new CancellationTokenWrapper(cancellationTokenSource.Token));
 
             var expectedBatchesCount = GetExpectedBatchesCount(rebuild, documentSources, batchSize);
-            var expectedProgressItemsCount = (rebuild ? 1 : 0) + 1 + expectedBatchesCount + 1;
+            var expectedProgressItemsCount = (rebuild ? 2 : 0) + 1 + expectedBatchesCount + 1;
 
             Assert.Equal(expectedProgressItemsCount, progress.Count);
 
@@ -61,6 +61,7 @@ namespace VirtoCommerce.SearchModule.Tests
             if (rebuild)
             {
                 Assert.Equal($"{DocumentType}: deleting index", progress[i++].Description);
+                Assert.Equal($"{DocumentType}: creating index", progress[i++].Description);
             }
 
             Assert.Equal($"{DocumentType}: calculating total count", progress[i++].Description);
@@ -247,7 +248,7 @@ namespace VirtoCommerce.SearchModule.Tests
                 RelatedSources = documentSources?.Skip(1).Select(CreateIndexDocumentSource).ToArray(),
             };
 
-            return new IndexingManager(searchProvider, new[] { configuration }, new Moq.Mock<IOptions<SearchOptions>>().Object, settingsManager: null, backgroundWorker: null);
+            return new IndexingManager(searchProvider, new[] { configuration }, new Moq.Mock<IOptions<SearchOptions>>().Object, settingsManager: null);
         }
 
         private static IndexDocumentSource CreateIndexDocumentSource(DocumentSource documentSource)

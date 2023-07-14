@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.SearchModule.Core;
+using VirtoCommerce.SearchModule.Core.BackgroundJobs;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
-using VirtoCommerce.SearchModule.Data.BackgroundJobs;
 
 namespace VirtoCommerce.SearchModule.Web.Controllers
 {
@@ -20,14 +20,22 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
         private readonly IEnumerable<IndexDocumentConfiguration> _documentConfigs;
         private readonly ISearchProvider _searchProvider;
         private readonly IIndexingManager _indexingManager;
+        private readonly IIndexingJobService _indexingJobService;
         private readonly IUserNameResolver _userNameResolver;
         private readonly IPushNotificationManager _pushNotifier;
 
-        public SearchIndexationModuleController(IEnumerable<IndexDocumentConfiguration> documentConfigs, ISearchProvider searchProvider, IIndexingManager indexingManager, IUserNameResolver userNameResolver, IPushNotificationManager pushNotifier)
+        public SearchIndexationModuleController(
+            IEnumerable<IndexDocumentConfiguration> documentConfigs,
+            ISearchProvider searchProvider,
+            IIndexingManager indexingManager,
+            IIndexingJobService indexingJobService,
+            IUserNameResolver userNameResolver,
+            IPushNotificationManager pushNotifier)
         {
             _documentConfigs = documentConfigs;
             _searchProvider = searchProvider;
             _indexingManager = indexingManager;
+            _indexingJobService = indexingJobService;
             _userNameResolver = userNameResolver;
             _pushNotifier = pushNotifier;
         }
@@ -81,7 +89,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
         public ActionResult<IndexProgressPushNotification> IndexDocuments([FromBody] IndexingOptions[] options)
         {
             var currentUserName = _userNameResolver.GetCurrentUserName();
-            var notification = IndexingJobs.Enqueue(currentUserName, options);
+            var notification = _indexingJobService.Enqueue(currentUserName, options);
             _pushNotifier.Send(notification);
             return Ok(notification);
         }
@@ -91,7 +99,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
         [Route("tasks/{taskId}/cancel")]
         public ActionResult CancelIndexationProcess(string taskId)
         {
-            IndexingJobs.CancelIndexation();
+            _indexingJobService.CancelIndexation();
             return Ok();
         }
 

@@ -10,22 +10,26 @@ using VirtoCommerce.Platform.Core.Jobs;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.Platform.Hangfire;
 using VirtoCommerce.SearchModule.Core;
+using VirtoCommerce.SearchModule.Core.BackgroundJobs;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 
 namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 {
-    public sealed class IndexingJobs
+    public sealed class IndexingJobs : IIndexingJobService
     {
-        private static readonly MethodInfo _indexChangesJobMethod = typeof(IndexingJobs).GetMethod("IndexChangesJob");
-        private static readonly MethodInfo _manualIndexAllJobMethod = typeof(IndexingJobs).GetMethod("IndexAllDocumentsJob");
+        private static readonly MethodInfo _recurringJobMethod = typeof(IndexingJobs).GetMethod(nameof(IndexChangesJob));
+        private static readonly MethodInfo _manualJobMethod = typeof(IndexingJobs).GetMethod(nameof(IndexAllDocumentsJob));
 
         private readonly IEnumerable<IndexDocumentConfiguration> _documentsConfigs;
         private readonly IIndexingManager _indexingManager;
         private readonly ISettingsManager _settingsManager;
         private readonly IndexProgressHandler _progressHandler;
 
-        public IndexingJobs(IEnumerable<IndexDocumentConfiguration> documentsConfigs, IIndexingManager indexingManager, ISettingsManager settingsManager,
+        public IndexingJobs(
+            IEnumerable<IndexDocumentConfiguration> documentsConfigs,
+            IIndexingManager indexingManager,
+            ISettingsManager settingsManager,
             IndexProgressHandler progressHandler)
         {
             _documentsConfigs = documentsConfigs;
@@ -35,7 +39,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         }
 
         // Enqueue a background job with single notification object for all given options
-        public static IndexProgressPushNotification Enqueue(string currentUserName, IndexingOptions[] options)
+        public IndexProgressPushNotification Enqueue(string currentUserName, IndexingOptions[] options)
         {
             var notification = IndexProgressHandler.CreateNotification(currentUserName, null);
 
@@ -45,18 +49,42 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             return notification;
         }
 
-        // Cancel current indexation if there is one
-        public static void CancelIndexation()
+        public async Task StartStopRecurringJobs()
         {
-            var processingJob = JobStorage.Current.GetMonitoringApi().ProcessingJobs(0, int.MaxValue)
-                .FirstOrDefault(x => x.Value?.Job?.Method == _indexChangesJobMethod ||
-                    x.Value?.Job?.Method == _manualIndexAllJobMethod);
+            // Temporary solution for backward compatibility
+            IndexingJobs.JobService = this;
 
-            if (!string.IsNullOrEmpty(processingJob.Key))
+            var recurringJobId = "IndexingJobs.IndexChangesJob";
+            var scheduleJobs = await _settingsManager.GetValueByDescriptorAsync<bool>(ModuleConstants.Settings.IndexingJobs.Enable);
+
+            if (scheduleJobs)
+            {
+                var cronExpression = await _settingsManager.GetValueByDescriptorAsync<string>(ModuleConstants.Settings.IndexingJobs.CronExpression);
+                RecurringJob.AddOrUpdate<IndexingJobs>(recurringJobId, x => x.IndexChangesJob(null, null, JobCancellationToken.Null), cronExpression);
+            }
+            else
+            {
+                CancelJob(_recurringJobMethod);
+                RecurringJob.RemoveIfExists(recurringJobId);
+            }
+        }
+
+        // Cancel current indexation if there is one
+        public void CancelIndexation()
+        {
+            CancelJob(_manualJobMethod);
+        }
+
+        private static void CancelJob(MethodInfo method)
+        {
+            var processingJobs = JobStorage.Current.GetMonitoringApi().ProcessingJobs(0, int.MaxValue);
+            var (jobId, _) = processingJobs.FirstOrDefault(x => x.Value?.Job?.Method == method);
+
+            if (!string.IsNullOrEmpty(jobId))
             {
                 try
                 {
-                    BackgroundJob.Delete(processingJob.Key);
+                    BackgroundJob.Delete(jobId);
                 }
                 catch
                 {
@@ -73,8 +101,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             {
                 try
                 {
-                    return await RunIndexJobAsync(userName, notificationId, false, options, IndexAllDocumentsAsync, context,
-                        cancellationToken);
+                    return await RunIndexJobAsync(userName, notificationId, false, options, IndexAllDocumentsAsync, context, cancellationToken);
                 }
                 finally
                 {
@@ -104,15 +131,8 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             }).Result;
         }
 
-        #region Scale-out indexation actions for indexing worker
 
-        [Obsolete("Method is obsolete. Use EnqueueIndexDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null) instead.")]
-        public static void EnqueueIndexDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal)
-        {
-            EnqueueIndexDocuments(documentType, documentIds, priority, null);
-        }
-
-        public static void EnqueueIndexDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
+        private static void EnqueueIndexDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
         {
             var buildersTypes = builders?.Select(x => x.GetType().FullName);
 
@@ -132,7 +152,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             }
         }
 
-        public static void EnqueueDeleteDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal)
+        private static void EnqueueDeleteDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal)
         {
             switch (priority)
             {
@@ -150,42 +170,44 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             }
         }
 
-        [Obsolete("Method is obsolete. Use EnqueueIndexAndDeleteDocuments(IndexEntry[] indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null) instead.")]
-        public static void EnqueueIndexAndDeleteDocuments(IndexEntry[] indexEntries, string priority = JobPriority.Normal)
+        internal static IIndexingJobService JobService { get; set; }
+
+        [Obsolete($"Use {nameof(IIndexingJobService)}")]
+        public static void EnqueueIndexAndDeleteDocuments(IndexEntry[] indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
         {
-            EnqueueIndexAndDeleteDocuments(indexEntries, priority, null);
+            JobService.EnqueueIndexAndDeleteDocuments(indexEntries, priority, builders);
         }
 
-        public static void EnqueueIndexAndDeleteDocuments(IndexEntry[] indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
+        public void EnqueueIndexAndDeleteDocuments(IList<IndexEntry> indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
         {
             var groupedEntriesByType = GetGroupedByTypeAndDistinctedByChangeTypeIndexEntries(indexEntries);
 
             foreach (var groupedEntryByType in groupedEntriesByType)
             {
-                var addedEntries = groupedEntryByType.Where(x => x.EntryState == EntryState.Added).ToList();
-                var modifiedEntries = groupedEntryByType.Where(x => x.EntryState == EntryState.Modified).ToList();
-                var deletedEntries = groupedEntryByType.Where(x => x.EntryState == EntryState.Deleted).ToList();
+                var addedEntryIds = groupedEntryByType.Where(x => x.EntryState == EntryState.Added).Select(x => x.Id).ToArray();
+                var modifiedEntryIds = groupedEntryByType.Where(x => x.EntryState == EntryState.Modified).Select(x => x.Id).ToArray();
+                var deletedEntryIds = groupedEntryByType.Where(x => x.EntryState == EntryState.Deleted).Select(x => x.Id).ToArray();
 
-                if (addedEntries.Any())
+                if (addedEntryIds.Any())
                 {
-                    EnqueueIndexDocuments(groupedEntryByType.Key, addedEntries.Select(x => x.Id).ToArray(), priority, null);
+                    EnqueueIndexDocuments(groupedEntryByType.Key, addedEntryIds, priority, builders: null);
                 }
 
-                if (modifiedEntries.Any())
+                if (modifiedEntryIds.Any())
                 {
-                    EnqueueIndexDocuments(groupedEntryByType.Key, modifiedEntries.Select(x => x.Id).ToArray(), priority, builders);
+                    EnqueueIndexDocuments(groupedEntryByType.Key, modifiedEntryIds, priority, builders);
                 }
 
-                if (deletedEntries.Any())
+                if (deletedEntryIds.Any())
                 {
-                    EnqueueDeleteDocuments(groupedEntryByType.Key, deletedEntries.Select(x => x.Id).ToArray(), priority);
+                    EnqueueDeleteDocuments(groupedEntryByType.Key, deletedEntryIds, priority);
                 }
             }
         }
 
         public static IEnumerable<IGrouping<string, IndexEntry>> GetGroupedByTypeAndDistinctedByChangeTypeIndexEntries(IEnumerable<IndexEntry> indexEntries)
         {
-            var indexEntriesFilteredFromEmptyIds = indexEntries.Where(x => !string.IsNullOrEmpty(x.Id)).ToList();
+            var indexEntriesFilteredFromEmptyIds = indexEntries.Where(x => !string.IsNullOrEmpty(x.Id));
 
             var result = new List<IndexEntry>();
 
@@ -272,10 +294,14 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             }
         }
 
-        #endregion
 
-        private Task<bool> RunIndexJobAsync(string currentUserName, string notificationId, bool suppressInsignificantNotifications,
-            IEnumerable<IndexingOptions> allOptions, Func<IndexingOptions, ICancellationToken, Task> indexationFunc, PerformContext context,
+        private Task<bool> RunIndexJobAsync(
+            string currentUserName,
+            string notificationId,
+            bool suppressInsignificantNotifications,
+            IEnumerable<IndexingOptions> allOptions,
+            Func<IndexingOptions, ICancellationToken, Task> indexationFunc,
+            PerformContext context,
             IJobCancellationToken cancellationToken)
         {
             var success = false;
@@ -328,7 +354,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             var oldIndexationDate = GetLastIndexationDate(options.DocumentType);
             var newIndexationDate = DateTime.UtcNow;
 
-            await _indexingManager.IndexAsync(options, _progressHandler.Progress, cancellationToken);
+            await _indexingManager.IndexAllDocumentsAsync(options, _progressHandler.Progress, cancellationToken);
 
             // Save indexation date to prevent changes from being indexed again
             SetLastIndexationDate(options.DocumentType, oldIndexationDate, newIndexationDate);
@@ -339,9 +365,9 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             var oldIndexationDate = options.StartDate;
             var newIndexationDate = DateTime.UtcNow;
 
-            options.EndDate = oldIndexationDate == null ? null : (DateTime?)newIndexationDate;
+            options.EndDate = oldIndexationDate == null ? null : newIndexationDate;
 
-            await _indexingManager.IndexAsync(options, _progressHandler.Progress, cancellationToken);
+            await _indexingManager.IndexChangesAsync(options, _progressHandler.Progress, cancellationToken);
 
             // Save indexation date. It will be used as a start date for the next indexation
             SetLastIndexationDate(options.DocumentType, oldIndexationDate, newIndexationDate);
