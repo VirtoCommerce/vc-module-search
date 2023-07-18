@@ -67,6 +67,38 @@ public static class IndexDocumentExtensions
         }
     }
 
+    public static void AddSuggestableStringAndContentString(this IndexDocument document, string name)
+    {
+        document.AddSuggestableStringAndContentString(name, SchemaStringValue);
+    }
+
+    public static void AddSuggestableStringAndContentString(this IndexDocument document, string name, string value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            document.AddSuggestableString(name, value);
+            document.AddContentString(value);
+        }
+    }
+
+    public static void AddSuggestableString(this IndexDocument document, string name)
+    {
+        document.AddFilterableString(name, SchemaStringValue);
+    }
+
+    public static void AddSuggestableString(this IndexDocument document, string name, string value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            document.Add(new IndexDocumentField(name, value, IndexDocumentFieldValueType.String)
+            {
+                IsRetrievable = true,
+                IsFilterable = true,
+                IsSuggestable = true,
+            });
+        }
+    }
+
     public static void AddContentString(this IndexDocument document)
     {
         document.AddContentString(SchemaStringValue);
@@ -226,30 +258,6 @@ public static class IndexDocumentExtensions
                 IsSearchable = true,
                 IsCollection = true,
             });
-        }
-    }
-
-    public static void AddSuggestableStringAndContentString(this IndexDocument document, string name, string value)
-    {
-        if (!string.IsNullOrWhiteSpace(value))
-        {
-            document.AddSuggestableString(name, value);
-            document.AddContentString(value);
-        }
-    }
-
-    public static void AddSuggestableString(this IndexDocument document, string name, string value)
-    {
-        if (!string.IsNullOrWhiteSpace(value))
-        {
-            document.Add(new IndexDocumentField(name, value, IndexDocumentFieldValueType.String)
-            {
-                IsRetrievable = true,
-                IsFilterable = true,
-                IsSuggestable = true,
-            });
-
-            document.AddContentString(value);
         }
     }
 }
