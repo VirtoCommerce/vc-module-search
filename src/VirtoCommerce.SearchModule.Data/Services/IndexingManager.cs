@@ -585,7 +585,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 throw new ArgumentException($"{nameof(options.DocumentType)} is empty", nameof(options));
             }
 
-            options.BatchSize ??= _settingsManager?.GetValueByDescriptor<int>(GeneralSettings.IndexPartitionSize) ?? DefaultBatchSize;
+            options.BatchSize ??= _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize) ?? DefaultBatchSize;
 
             if (options.BatchSize < 1)
             {

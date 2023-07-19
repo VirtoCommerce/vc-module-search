@@ -55,11 +55,11 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             IndexingJobs.JobService = this;
 
             var recurringJobId = "IndexingJobs.IndexChangesJob";
-            var scheduleJobs = await _settingsManager.GetValueByDescriptorAsync<bool>(ModuleConstants.Settings.IndexingJobs.Enable);
+            var scheduleJobs = await _settingsManager.GetValueAsync<bool>(ModuleConstants.Settings.IndexingJobs.Enable);
 
             if (scheduleJobs)
             {
-                var cronExpression = await _settingsManager.GetValueByDescriptorAsync<string>(ModuleConstants.Settings.IndexingJobs.CronExpression);
+                var cronExpression = await _settingsManager.GetValueAsync<string>(ModuleConstants.Settings.IndexingJobs.CronExpression);
                 RecurringJob.AddOrUpdate<IndexingJobs>(recurringJobId, x => x.IndexChangesJob(null, null, JobCancellationToken.Null), cronExpression);
             }
             else
@@ -402,9 +402,16 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             var result = _indexingManager.GetIndexStateAsync(documentType).GetAwaiter().GetResult().LastIndexationDate;
             if (result != null)
             {
+                var settingDescriptor = new SettingDescriptor
+                {
+                    Name = GetLastIndexationDateName(documentType),
+                    ValueType = SettingValueType.DateTime,
+                    DefaultValue = DateTime.MaxValue,
+                };
+
                 //need to take the older date from the dates loaded from the index and settings.
                 //Because the actual last indexation date stored in the index may be later than last job run are stored in the settings. e.g after data import or direct database changes
-                result = new DateTime(Math.Min(result.Value.Ticks, _settingsManager.GetValue(GetLastIndexationDateName(documentType), DateTime.MaxValue).Ticks), DateTimeKind.Utc);
+                result = new DateTime(Math.Min(result.Value.Ticks, _settingsManager.GetValue<DateTime>(settingDescriptor).Ticks), DateTimeKind.Utc);
             }
             return result;
         }
@@ -425,7 +432,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
         private int GetBatchSize()
         {
-            return _settingsManager.GetValueByDescriptor<int>(ModuleConstants.Settings.General.IndexPartitionSize);
+            return _settingsManager.GetValue<int>(ModuleConstants.Settings.General.IndexPartitionSize);
         }
     }
 }

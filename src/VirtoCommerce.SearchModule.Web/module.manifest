@@ -4,7 +4,7 @@
   <version>3.400.0</version>
   <version-tag />
 
-  <platformVersion>3.274.0</platformVersion>
+  <platformVersion>3.400.0</platformVersion>
 
   <title>Search Core</title>
   <description>Defines Core Abstractions for indexed search functionality above different search providers, like: Elasticsearch, Azure Search, etc.</description>
