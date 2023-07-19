@@ -15,10 +15,9 @@ namespace VirtoCommerce.SearchModule.Core
                 public const string IndexAccess = "search:index:access";
                 public const string IndexRebuild = "search:index:rebuild";
 
-                public static string[] AllPermissions { get; } = new[]
-                {
+                public static string[] AllPermissions { get; } = {
                     IndexAccess,
-                    IndexRebuild
+                    IndexRebuild,
                 };
             }
         }
@@ -29,14 +28,15 @@ namespace VirtoCommerce.SearchModule.Core
 
             public static class General
             {
-                public static SettingDescriptor IndexPartitionSize = new SettingDescriptor
+                public static SettingDescriptor IndexPartitionSize { get; } = new()
                 {
                     Name = "VirtoCommerce.Search.IndexPartitionSize",
                     GroupName = "Search|General",
                     ValueType = SettingValueType.PositiveInteger,
                     DefaultValue = DefaultIndexPartitionSize,
                 };
-                public static IEnumerable<SettingDescriptor> AllSettings
+
+                public static IEnumerable<SettingDescriptor> AllGeneralSettings
                 {
                     get
                     {
@@ -47,22 +47,23 @@ namespace VirtoCommerce.SearchModule.Core
 
             public static class IndexingJobs
             {
-                public static SettingDescriptor Enable = new SettingDescriptor
+                public static SettingDescriptor Enable { get; } = new()
                 {
                     Name = "VirtoCommerce.Search.IndexingJobs.Enable",
                     GroupName = "Search|Job",
                     ValueType = SettingValueType.Boolean,
-                    DefaultValue = true
+                    DefaultValue = true,
                 };
-                public static SettingDescriptor CronExpression = new SettingDescriptor
+
+                public static SettingDescriptor CronExpression { get; } = new()
                 {
                     Name = "VirtoCommerce.Search.IndexingJobs.CronExpression",
                     GroupName = "Search|Job",
                     ValueType = SettingValueType.ShortText,
-                    DefaultValue = "0/5 * * * *"
+                    DefaultValue = "0/5 * * * *",
                 };
 
-                public static IEnumerable<SettingDescriptor> AllSettings
+                public static IEnumerable<SettingDescriptor> AllIndexingJobsSettings
                 {
                     get
                     {
@@ -76,10 +77,9 @@ namespace VirtoCommerce.SearchModule.Core
             {
                 get
                 {
-                    return General.AllSettings.Concat(IndexingJobs.AllSettings);
+                    return General.AllGeneralSettings.Concat(IndexingJobs.AllIndexingJobsSettings);
                 }
             }
-
         }
     }
 }

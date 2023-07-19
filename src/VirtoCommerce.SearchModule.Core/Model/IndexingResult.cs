@@ -9,6 +9,6 @@ namespace VirtoCommerce.SearchModule.Core.Model
     public class IndexingResult
     {
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-        public IList<IndexingResultItem> Items { get; set; }
+        public IList<IndexingResultItem> Items { get; set; } = new List<IndexingResultItem>();
     }
 }

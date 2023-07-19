@@ -23,7 +23,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         private bool _isCanceled;
         private PerformContext _context;
         private IProgressBar _progressBar;
-        private const double _maxPercent = 100;
+        private const int _maxPercent = 100;
 
         public IndexProgressHandler(ILogger<IndexProgressHandler> log, IPushNotificationManager pushNotificationManager)
         {
@@ -34,17 +34,18 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         public void Start(string currentUserName, string notificationId, bool suppressInsignificantNotifications, PerformContext context)
         {
             _notification = GetNotification(currentUserName, notificationId);
+
 #pragma warning disable CA2254 // Template should be a static expression
             _log.LogTrace(_notification.Description);
 #pragma warning restore CA2254 // Template should be a static expression
-            _context.SetTextColor(ConsoleTextColor.White);
-            _context.WriteLine(_notification.Description);
 
             _suppressInsignificantNotifications = suppressInsignificantNotifications;
+            _context = context;
             _isCanceled = false;
             _totalCountMap = new Dictionary<string, long>();
             _processedCountMap = new Dictionary<string, long>();
-            _context = context;
+
+            _context.WriteLine(ConsoleTextColor.White, _notification.Description);
             _progressBar = _context.WriteProgressBar();
         }
 
@@ -66,11 +67,17 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             _log.LogTrace(progress.Description);
 #pragma warning restore CA2254 // Template should be a static expression
 
-            _totalCountMap[progress.DocumentType] = progress.TotalCount ?? 0;
-            _processedCountMap[progress.DocumentType] = progress.ProcessedCount ?? 0;
+            var documentType = progress.DocumentType;
+            var totalCount = progress.TotalCount ?? 0;
+            var processedCount = progress.ProcessedCount ?? 0;
 
-            _notification.DocumentType = progress.DocumentType;
+            _totalCountMap[documentType] = totalCount;
+            _processedCountMap[documentType] = processedCount;
+
+            _notification.DocumentType = documentType;
             _notification.Description = progress.Description;
+            _notification.TotalCount = totalCount;
+            _notification.ProcessedCount = processedCount;
 
             if (!progress.Errors.IsNullOrEmpty())
             {
@@ -78,66 +85,59 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                 _notification.ErrorCount = _notification.Errors.Count;
             }
 
-            _notification.TotalCount = progress.TotalCount ?? 0;
-            _notification.ProcessedCount = progress.ProcessedCount ?? 0;
-
-            if (_notification.ProcessedCount > _notification.TotalCount)
-            {
-#pragma warning disable CA2254 // Template should be a static expression
-                _log.LogWarning($"Count warning - Type: {progress.DocumentType}, ProcessedCount: {_notification.ProcessedCount}, TotalCount: {_notification.TotalCount}");
-#pragma warning restore CA2254 // Template should be a static expression
-            }
-
-            var progressBarValue = Math.Min(100, _notification.ProcessedCount * _maxPercent / _notification.TotalCount);
-            _progressBar.SetValue(progressBarValue);
-
-
-            if (!_suppressInsignificantNotifications || progress.TotalCount > 0 || progress.ProcessedCount > 0)
+            if (!_suppressInsignificantNotifications || totalCount > 0 || processedCount > 0)
             {
                 _pushNotificationManager.Send(_notification);
             }
+
+            UpdateHangfireProgressBar(processedCount, totalCount, documentType);
         }
 
         public void Exception(Exception ex)
         {
-            var errMsg = ex.ToString();
+            var errorMessage = ex.ToString();
 #pragma warning disable CA2254 // Template should be a static expression
-            _log.LogError(errMsg);
+            _log.LogError(errorMessage);
 #pragma warning restore CA2254 // Template should be a static expression
-            _context.SetTextColor(ConsoleTextColor.Red);
-            _context.WriteLine(errMsg);
-            _notification.Errors.Add(errMsg);
+            _context.WriteLine(ConsoleTextColor.Red, errorMessage);
+            _notification.Errors.Add(errorMessage);
             _notification.ErrorCount++;
         }
 
         public void Finish()
         {
+            var totalCount = _totalCountMap.Values.Sum();
+            var processedCount = _processedCountMap.Values.Sum();
+
             _notification.Finished = DateTime.UtcNow;
-            _notification.TotalCount = _totalCountMap.Values.Sum();
-            _notification.ProcessedCount = _processedCountMap.Values.Sum();
+            _notification.TotalCount = totalCount;
+            _notification.ProcessedCount = processedCount;
 
-            _progressBar.SetValue(_notification.ProcessedCount * _maxPercent / _notification.TotalCount);
-
-            _notification.Description = _isCanceled
-                ? "Indexation has been canceled"
-                : _suppressInsignificantNotifications
-                    ? $"{_notification.DocumentType}: Indexation completed. Total: {_notification.TotalCount}, Processed: {_notification.ProcessedCount}, Errors: {_notification.ErrorCount}."
-                    : "Indexation completed" + (_notification.ErrorCount > 0 ? " with errors" : " successfully");
+            if (_isCanceled)
+            {
+                _notification.Description = "Indexation has been canceled";
+            }
+            else
+            {
+                _notification.Description = !_suppressInsignificantNotifications
+                    ? "Indexation completed" + (_notification.ErrorCount > 0 ? " with errors" : " successfully")
+                    : $"{_notification.DocumentType}: Indexation completed. Total: {totalCount}, Processed: {processedCount}, Errors: {_notification.ErrorCount}.";
+            }
 
             _log.LogTrace(_notification.Description);
 
-            _context.SetTextColor(ConsoleTextColor.White);
-            _context.WriteLine(_notification.Description);
-
-            if (!_suppressInsignificantNotifications || _isCanceled || _notification.TotalCount > 0 || _notification.ProcessedCount > 0)
+            if (!_suppressInsignificantNotifications || _isCanceled || totalCount > 0 || processedCount > 0)
             {
                 _pushNotificationManager.Send(_notification);
             }
+
+            UpdateHangfireProgressBar(processedCount, totalCount, _notification.DocumentType);
+            _context.WriteLine(ConsoleTextColor.White, _notification.Description);
         }
 
         public static IndexProgressPushNotification CreateNotification(string currentUserName, string notificationId)
         {
-            var notification = new IndexProgressPushNotification(currentUserName ?? nameof(IndexingJobs))
+            var notification = new IndexProgressPushNotification(currentUserName ?? "BackgroundJob")
             {
                 Title = "Indexation process",
                 Description = "Starting indexation...",
@@ -170,6 +170,21 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
             var result = notification ?? CreateNotification(currentUserName, notificationId);
             return result;
+        }
+
+        private void UpdateHangfireProgressBar(long processedCount, long totalCount, string documentType)
+        {
+            if (processedCount > totalCount)
+            {
+                _log.LogWarning("Processed count is grater than total count. DocumentType: {DocumentType}, Processed: {Processed}, Total: {Total}",
+                    documentType, processedCount, totalCount);
+            }
+
+            var progressBarValue = totalCount != 0
+                ? Math.Min(_maxPercent, processedCount * _maxPercent / totalCount)
+                : 0;
+
+            _progressBar.SetValue(progressBarValue);
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.SearchModule.Core.Model;
 
 namespace VirtoCommerce.SearchModule.Core.Services
@@ -22,6 +23,10 @@ namespace VirtoCommerce.SearchModule.Core.Services
         /// </summary>
         Task<IEnumerable<IndexState>> GetIndicesStateAsync(string documentType);
 
+        Task IndexAllDocumentsAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken);
+
+        Task IndexChangesAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken);
+
         /// <summary>
         /// Indexing the specified documents with given options
         /// </summary>
@@ -29,7 +34,7 @@ namespace VirtoCommerce.SearchModule.Core.Services
         /// <param name="progressCallback"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task IndexAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, Platform.Core.Common.ICancellationToken cancellationToken);
+        Task IndexAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken);
 
         /// <summary>
         /// Indexes a batch of documents immediately. Intended to be used by IndexingJobs.

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using VirtoCommerce.Platform.Core.Common;
@@ -11,16 +12,32 @@ namespace VirtoCommerce.SearchModule.Core.Model
     [DebuggerDisplay("{Name}: {string.Join(\", \", Values)}")]
     public class IndexDocumentField
     {
+        [Obsolete("Use constructor with valueType argument")]
         public IndexDocumentField(string name, object value)
         {
             Name = name;
             Values = new List<object> { value };
         }
 
+        [Obsolete("Use constructor with valueType argument")]
         public IndexDocumentField(string name, IList<object> values)
         {
             Name = name;
             Values = values;
+        }
+
+        public IndexDocumentField(string name, object value, IndexDocumentFieldValueType valueType)
+        {
+            Name = name;
+            Values = new List<object> { value };
+            ValueType = valueType;
+        }
+
+        public IndexDocumentField(string name, IList<object> values, IndexDocumentFieldValueType valueType)
+        {
+            Name = name;
+            Values = values;
+            ValueType = valueType;
         }
 
         public string Name { get; set; }

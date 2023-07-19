@@ -1,27 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-        <noWarn>1591</noWarn>
-    </PropertyGroup>
-    <ItemGroup>
-        <PackageReference Include="coverlet.collector" Version="3.2.0">
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-          <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <noWarn>1591</noWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
-        <PackageReference Include="Moq" Version="4.13.1" />
-        <PackageReference Include="MSTest.TestAdapter" Version="2.1.0" />
-        <PackageReference Include="MSTest.TestFramework" Version="2.1.0" />
-        <PackageReference Include="VirtoCommerce.Testing" Version="3.200.0" />
-        <PackageReference Include="xunit" Version="2.4.1" />
-        <PackageReference Include="xunit.runner.console" Version="2.4.1" />
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
-        <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
-        <PackageReference Include="FluentAssertions" Version="5.10.3" />
-    </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\..\src\VirtoCommerce.SearchModule.Core\VirtoCommerce.SearchModule.Core.csproj" />
-        <ProjectReference Include="..\..\src\VirtoCommerce.SearchModule.Data\VirtoCommerce.SearchModule.Data.csproj" />
-        <ProjectReference Include="..\..\src\VirtoCommerce.SearchModule.Web\VirtoCommerce.SearchModule.Web.csproj" />
-    </ItemGroup>
+    <PackageReference Include="Moq" Version="4.13.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="2.1.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="2.1.0" />
+    <PackageReference Include="VirtoCommerce.Testing" Version="3.400.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.console" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
+    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
+    <PackageReference Include="FluentAssertions" Version="5.10.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\VirtoCommerce.SearchModule.Core\VirtoCommerce.SearchModule.Core.csproj" />
+    <ProjectReference Include="..\..\src\VirtoCommerce.SearchModule.Data\VirtoCommerce.SearchModule.Data.csproj" />
+    <ProjectReference Include="..\..\src\VirtoCommerce.SearchModule.Web\VirtoCommerce.SearchModule.Web.csproj" />
+  </ItemGroup>
 </Project>
