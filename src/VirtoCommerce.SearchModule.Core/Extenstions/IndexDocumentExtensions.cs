@@ -5,6 +5,7 @@ using VirtoCommerce.SearchModule.Core.Model;
 
 namespace VirtoCommerce.SearchModule.Core.Extenstions
 {
+    [Obsolete("Use VirtoCommerce.SearchModule.Core.Extensions namespace")]
     public static class IndexDocumentExtensions
     {
         public const string SearchableFieldName = "__content";

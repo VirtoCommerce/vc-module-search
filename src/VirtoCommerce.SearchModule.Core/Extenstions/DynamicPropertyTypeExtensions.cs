@@ -1,10 +1,13 @@
+using System;
 using VirtoCommerce.Platform.Core.DynamicProperties;
 using VirtoCommerce.SearchModule.Core.Model;
 
 namespace VirtoCommerce.SearchModule.Core.Extenstions
 {
+    [Obsolete("Use VirtoCommerce.SearchModule.Core.Extensions namespace")]
     public static class DynamicPropertyTypeExtensions
     {
+        [Obsolete("Use VirtoCommerce.SearchModule.Core.Extensions namespace")]
         public static IndexDocumentFieldValueType ToIndexedDocumentFieldValueType(this DynamicPropertyValueType type)
         {
             switch (type)

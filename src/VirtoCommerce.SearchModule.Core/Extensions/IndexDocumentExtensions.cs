@@ -10,9 +10,9 @@ public static class IndexDocumentExtensions
     public const string ContentFieldName = "__content";
     public const string SchemaStringValue = "schema";
 
-    public static void AddFilterableCollectionAndContentString(this IndexDocument document, string name)
+    public static void AddFilterableCollectionAndContentString(this IndexDocument schema, string name)
     {
-        document.AddFilterableCollectionAndContentString(name, new[] { SchemaStringValue });
+        schema.AddFilterableCollectionAndContentString(name, new[] { SchemaStringValue });
     }
 
     /// <summary>
@@ -47,9 +47,9 @@ public static class IndexDocumentExtensions
         }
     }
 
-    public static void AddFilterableStringAndContentString(this IndexDocument document, string name)
+    public static void AddFilterableStringAndContentString(this IndexDocument schema, string name)
     {
-        document.AddFilterableStringAndContentString(name, SchemaStringValue);
+        schema.AddFilterableStringAndContentString(name, SchemaStringValue);
     }
 
     /// <summary>
@@ -67,9 +67,9 @@ public static class IndexDocumentExtensions
         }
     }
 
-    public static void AddSuggestableStringAndContentString(this IndexDocument document, string name)
+    public static void AddSuggestableStringAndContentString(this IndexDocument schema, string name)
     {
-        document.AddSuggestableStringAndContentString(name, SchemaStringValue);
+        schema.AddSuggestableStringAndContentString(name, SchemaStringValue);
     }
 
     public static void AddSuggestableStringAndContentString(this IndexDocument document, string name, string value)
@@ -81,9 +81,9 @@ public static class IndexDocumentExtensions
         }
     }
 
-    public static void AddSuggestableString(this IndexDocument document, string name)
+    public static void AddSuggestableString(this IndexDocument schema, string name)
     {
-        document.AddFilterableString(name, SchemaStringValue);
+        schema.AddFilterableString(name, SchemaStringValue);
     }
 
     public static void AddSuggestableString(this IndexDocument document, string name, string value)
@@ -114,42 +114,65 @@ public static class IndexDocumentExtensions
         document.AddSearchableCollection(ContentFieldName, value);
     }
 
-    public static void AddFilterableBoolean(this IndexDocument document, string name)
+
+    public static void AddFilterableBoolean(this IndexDocument schema, string name)
     {
-        document.AddFilterableBoolean(name, default);
+        schema.AddFilterableBoolean(name, false);
     }
 
-    public static void AddFilterableBoolean(this IndexDocument document, string name, bool value)
+    public static void AddFilterableBoolean(this IndexDocument document, string name, bool? value)
     {
         document.AddFilterableValue(name, value, IndexDocumentFieldValueType.Boolean);
     }
 
 
-    public static void AddFilterableDateTime(this IndexDocument document, string name)
+    public static void AddFilterableDateTime(this IndexDocument schema, string name)
     {
-        document.AddFilterableDateTime(name, default);
+        schema.AddFilterableDateTime(name, DateTime.MinValue);
     }
 
-    public static void AddFilterableDateTime(this IndexDocument document, string name, DateTime value)
+    public static void AddFilterableDateTime(this IndexDocument document, string name, DateTime? value)
     {
         document.AddFilterableValue(name, value, IndexDocumentFieldValueType.DateTime);
     }
 
 
-    public static void AddFilterableInteger(this IndexDocument document, string name)
+    public static void AddFilterableInteger(this IndexDocument schema, string name)
     {
-        document.AddFilterableInteger(name, default);
+        schema.AddFilterableInteger(name, 0);
     }
 
-    public static void AddFilterableInteger(this IndexDocument document, string name, int value)
+    public static void AddFilterableInteger(this IndexDocument document, string name, int? value)
     {
         document.AddFilterableValue(name, value, IndexDocumentFieldValueType.Integer);
     }
 
 
-    public static void AddFilterableString(this IndexDocument document, string name)
+    public static void AddFilterableDecimal(this IndexDocument schema, string name)
     {
-        document.AddFilterableString(name, SchemaStringValue);
+        schema.AddFilterableDecimal(name, 0m);
+    }
+
+    public static void AddFilterableDecimal(this IndexDocument document, string name, decimal? value)
+    {
+        document.AddFilterableValue(name, value, IndexDocumentFieldValueType.Decimal);
+    }
+
+
+    public static void AddFilterableDouble(this IndexDocument schema, string name)
+    {
+        schema.AddFilterableDouble(name, 0d);
+    }
+
+    public static void AddFilterableDouble(this IndexDocument document, string name, double? value)
+    {
+        document.AddFilterableValue(name, value, IndexDocumentFieldValueType.Double);
+    }
+
+
+    public static void AddFilterableString(this IndexDocument schema, string name)
+    {
+        schema.AddFilterableString(name, SchemaStringValue);
     }
 
     public static void AddFilterableString(this IndexDocument document, string name, string value)
@@ -171,9 +194,9 @@ public static class IndexDocumentExtensions
     }
 
 
-    public static void AddFilterableCollection(this IndexDocument document, string name)
+    public static void AddFilterableCollection(this IndexDocument schema, string name)
     {
-        document.AddFilterableCollection(name, SchemaStringValue);
+        schema.AddFilterableCollection(name, SchemaStringValue);
     }
 
     public static void AddFilterableCollection(this IndexDocument document, string name, ICollection<string> values)
@@ -201,9 +224,9 @@ public static class IndexDocumentExtensions
     }
 
 
-    public static void AddSearchableCollection(this IndexDocument document, string name)
+    public static void AddSearchableCollection(this IndexDocument schema, string name)
     {
-        document.AddSearchableCollection(name, SchemaStringValue);
+        schema.AddSearchableCollection(name, SchemaStringValue);
     }
 
     public static void AddSearchableCollection(this IndexDocument document, string name, ICollection<string> values)
@@ -231,9 +254,9 @@ public static class IndexDocumentExtensions
     }
 
 
-    public static void AddFilterableAndSearchableCollection(this IndexDocument document, string name)
+    public static void AddFilterableAndSearchableCollection(this IndexDocument schema, string name)
     {
-        document.AddFilterableAndSearchableCollection(name, SchemaStringValue);
+        schema.AddFilterableAndSearchableCollection(name, SchemaStringValue);
     }
 
     public static void AddFilterableAndSearchableCollection(this IndexDocument document, string name, ICollection<string> values)
