@@ -48,7 +48,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
         {
             var result = new List<IndexState> { await GetIndexStateAsync(documentType, getBackupIndexState: false) };
 
-            if (_searchProvider is ISupportIndexSwap)
+            if (_searchProvider.Is<ISupportIndexSwap>(documentType))
             {
                 result.Add(await GetIndexStateAsync(documentType, getBackupIndexState: true));
             }
@@ -94,7 +94,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 .Select(s => s.DocumentBuilder)
                 .ToList() ?? new List<IIndexDocumentBuilder>();
 
-            if (builderTypesList.Any() && additionalDocumentBuilders.Any() && _searchProvider is ISupportPartialUpdate)
+            if (builderTypesList.Any() && additionalDocumentBuilders.Any() && _searchProvider.Is<ISupportPartialUpdate>(documentType))
             {
                 partialUpdate = true;
                 additionalDocumentBuilders = additionalDocumentBuilders.Where(x => builderTypesList.Contains(x.GetType().FullName)).ToList();
@@ -110,7 +110,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var cancellationToken = new CancellationTokenWrapper(CancellationToken.None);
             var documents = await GetDocumentsAsync(documentIds, primaryDocumentBuilder, additionalDocumentBuilders, cancellationToken);
 
-            var result = partialUpdate && _searchProvider is ISupportPartialUpdate supportPartialUpdateProvider
+            var result = partialUpdate && _searchProvider.Is<ISupportPartialUpdate>(documentType, out var supportPartialUpdateProvider)
                 ? await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents)
                 : await _searchProvider.IndexAsync(documentType, documents);
 
@@ -210,7 +210,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var documentType = batchOptions.DocumentType;
 
             // Full changes don't have changes provider specified because we don't set it for manual indexation.
-            var fullChanges = _searchProvider is ISupportPartialUpdate
+            var fullChanges = _searchProvider.Is<ISupportPartialUpdate>(documentType)
                 ? changes
                     .Where(x =>
                         x.ChangeType is IndexDocumentChangeType.Deleted or IndexDocumentChangeType.Created ||
@@ -244,8 +244,13 @@ namespace VirtoCommerce.SearchModule.Data.Services
             ICancellationToken cancellationToken)
         {
             var result = new IndexingResult();
-
             var documentType = batchOptions.DocumentType;
+
+            if (!_searchProvider.Is<ISupportPartialUpdate>(documentType, out var supportPartialUpdateProvider))
+            {
+                return result;
+            }
+
             var documentIds = changes.Select(x => x.DocumentId).Distinct();
 
             foreach (var id in documentIds)
@@ -257,7 +262,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     .ToList();
 
                 var documents = await GetDocumentsAsync(new[] { id }, null, builders, cancellationToken);
-                var indexingResult = await ((ISupportPartialUpdate)_searchProvider).IndexPartialAsync(batchOptions.DocumentType, documents);
+                var indexingResult = await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents);
 
                 result.Items.AddRange(indexingResult.Items);
             }
@@ -274,18 +279,19 @@ namespace VirtoCommerce.SearchModule.Data.Services
             cancellationToken.ThrowIfCancellationRequested();
 
             IndexingResult result;
+            var documentType = batchOptions.DocumentType;
 
             switch (changeType)
             {
                 case IndexDocumentChangeType.Deleted:
-                    result = await DeleteDocumentsAsync(batchOptions.DocumentType, documentIds);
+                    result = await DeleteDocumentsAsync(documentType, documentIds);
                     break;
                 case IndexDocumentChangeType.Modified or IndexDocumentChangeType.Created:
                     var documents = await GetDocumentsAsync(documentIds, batchOptions.PrimaryDocumentBuilder, batchOptions.SecondaryDocumentBuilders, cancellationToken);
 
-                    result = batchOptions.Reindex && _searchProvider is ISupportIndexSwap supportIndexSwapProvider
-                        ? await supportIndexSwapProvider.IndexWithBackupAsync(batchOptions.DocumentType, documents)
-                        : await _searchProvider.IndexAsync(batchOptions.DocumentType, documents);
+                    result = batchOptions.Reindex && _searchProvider.Is<ISupportIndexSwap>(documentType, out var supportIndexSwapProvider)
+                        ? await supportIndexSwapProvider.IndexWithBackupAsync(documentType, documents)
+                        : await _searchProvider.IndexAsync(documentType, documents);
 
                     break;
                 default:
@@ -445,9 +451,11 @@ namespace VirtoCommerce.SearchModule.Data.Services
         /// </summary>
         protected virtual async Task SwapIndicesAsync(IndexingOptions options)
         {
-            if (options.DeleteExistingIndex && _searchProvider is ISupportIndexSwap swappingSupportedSearchProvider)
+            var documentType = options.DocumentType;
+
+            if (options.DeleteExistingIndex && _searchProvider.Is<ISupportIndexSwap>(documentType, out var swappingSupportedSearchProvider))
             {
-                await swappingSupportedSearchProvider.SwapIndexAsync(options.DocumentType);
+                await swappingSupportedSearchProvider.SwapIndexAsync(documentType);
             }
         }
 
@@ -456,7 +464,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var result = new IndexState
             {
                 DocumentType = documentType,
-                Provider = _searchOptions.Provider,
+                Provider = _searchProvider.GetProviderName(documentType, _searchOptions.Provider),
                 Scope = _searchOptions.GetScope(documentType),
                 IsActive = !getBackupIndexState,
             };
@@ -515,7 +523,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             var schema = await BuildSchemaAsync(documentType);
 
-            if (_searchProvider is ISupportIndexCreate supportIndexCreate)
+            if (_searchProvider.Is<ISupportIndexCreate>(documentType, out var supportIndexCreate))
             {
                 await supportIndexCreate.CreateIndexAsync(documentType, schema);
             }
@@ -523,7 +531,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             {
                 var documents = new[] { schema };
 
-                if (_searchProvider is ISupportIndexSwap supportIndexSwapProvider)
+                if (_searchProvider.Is<ISupportIndexSwap>(documentType, out var supportIndexSwapProvider))
                 {
                     await supportIndexSwapProvider.IndexWithBackupAsync(documentType, documents);
                 }
