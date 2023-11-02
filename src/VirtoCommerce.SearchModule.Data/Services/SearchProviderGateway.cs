@@ -25,27 +25,27 @@ public class SearchProviderGateway : ISearchProvider, ISearchProviderGateway
         _providerNameByDocumentType = options.Value.DocumentScopes.ToDictionary(x => x.DocumentType, x => x.Provider, _ignoreCase);
     }
 
-    public Task DeleteIndexAsync(string documentType)
+    public virtual Task DeleteIndexAsync(string documentType)
     {
         return GetSearchProvider(documentType).DeleteIndexAsync(documentType);
     }
 
-    public Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents)
+    public virtual Task<IndexingResult> IndexAsync(string documentType, IList<IndexDocument> documents)
     {
         return GetSearchProvider(documentType).IndexAsync(documentType, documents);
     }
 
-    public Task<IndexingResult> RemoveAsync(string documentType, IList<IndexDocument> documents)
+    public virtual Task<IndexingResult> RemoveAsync(string documentType, IList<IndexDocument> documents)
     {
         return GetSearchProvider(documentType).RemoveAsync(documentType, documents);
     }
 
-    public Task<SearchResponse> SearchAsync(string documentType, SearchRequest request)
+    public virtual Task<SearchResponse> SearchAsync(string documentType, SearchRequest request)
     {
         return GetSearchProvider(documentType).SearchAsync(documentType, request);
     }
 
-    public void AddSearchProvider(ISearchProvider provider, string name)
+    public virtual void AddSearchProvider(ISearchProvider provider, string name)
     {
         if (string.IsNullOrEmpty(name))
         {
@@ -57,7 +57,7 @@ public class SearchProviderGateway : ISearchProvider, ISearchProviderGateway
         }
     }
 
-    public ISearchProvider GetSearchProvider(string documentType)
+    public virtual ISearchProvider GetSearchProvider(string documentType)
     {
         var providerName = _providerNameByDocumentType.GetValueSafe(documentType) ?? _defaultProviderName;
         return _providerByName.GetValueSafe(providerName) ?? _fallbackProvider;
