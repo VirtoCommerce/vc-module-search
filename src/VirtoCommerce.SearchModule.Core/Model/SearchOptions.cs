@@ -9,6 +9,7 @@ namespace VirtoCommerce.SearchModule.Core.Model
     {
         [Required]
         public string Provider { get; set; }
+
         [Required]
         public string Scope { get; set; }
 
@@ -21,6 +22,8 @@ namespace VirtoCommerce.SearchModule.Core.Model
         public class DocumentScope
         {
             public string DocumentType { get; set; }
+
+            public string Provider { get; set; }
 
             public string Scope { get; set; }
         }
