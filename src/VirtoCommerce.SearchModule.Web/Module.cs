@@ -26,9 +26,9 @@ namespace VirtoCommerce.SearchModule.Web
         public void Initialize(IServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton<DummySearchProvider>();
-            serviceCollection.AddSingleton<SearchProviderGateway>();
-            serviceCollection.AddSingleton<ISearchProvider>(serviceProvider => serviceProvider.GetService<SearchProviderGateway>());
-            serviceCollection.AddSingleton<ISearchProviderGateway>(serviceProvider => serviceProvider.GetService<SearchProviderGateway>());
+            serviceCollection.AddSingleton<SearchGateway>();
+            serviceCollection.AddSingleton<ISearchGateway>(serviceProvider => serviceProvider.GetService<SearchGateway>());
+            serviceCollection.AddSingleton<ISearchProvider>(serviceProvider => serviceProvider.GetService<SearchGateway>());
 
             serviceCollection.AddTransient<ISearchPhraseParser, SearchPhraseParser>();
 

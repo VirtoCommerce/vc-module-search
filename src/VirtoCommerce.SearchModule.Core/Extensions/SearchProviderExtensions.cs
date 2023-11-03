@@ -6,14 +6,14 @@ public static class SearchProviderExtensions
 {
     public static string GetProviderName(this ISearchProvider provider, string documentType, string defaultValue)
     {
-        return provider is ISearchProviderGateway gateway
+        return provider is ISearchGateway gateway
             ? gateway.GetSearchProvider(documentType).GetType().Name
             : defaultValue;
     }
 
     public static bool Is<T>(this ISearchProvider provider, string documentType)
     {
-        if (provider is ISearchProviderGateway gateway)
+        if (provider is ISearchGateway gateway)
         {
             provider = gateway.GetSearchProvider(documentType);
         }
@@ -23,7 +23,7 @@ public static class SearchProviderExtensions
 
     public static bool Is<T>(this ISearchProvider provider, string documentType, out T extendedProvider)
     {
-        if (provider is ISearchProviderGateway gateway)
+        if (provider is ISearchGateway gateway)
         {
             provider = gateway.GetSearchProvider(documentType);
         }

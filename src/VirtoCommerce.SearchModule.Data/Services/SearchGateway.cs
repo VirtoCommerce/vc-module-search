@@ -10,7 +10,7 @@ using VirtoCommerce.SearchModule.Core.Services;
 
 namespace VirtoCommerce.SearchModule.Data.Services;
 
-public class SearchProviderGateway : ISearchProvider, ISearchProviderGateway
+public class SearchGateway : ISearchGateway, ISearchProvider
 {
     private static readonly StringComparer _ignoreCase = StringComparer.OrdinalIgnoreCase;
 
@@ -19,7 +19,7 @@ public class SearchProviderGateway : ISearchProvider, ISearchProviderGateway
     private ISearchProvider _fallbackProvider;
     private readonly ConcurrentDictionary<string, ISearchProvider> _providerByName = new(_ignoreCase);
 
-    public SearchProviderGateway(IOptions<SearchOptions> options)
+    public SearchGateway(IOptions<SearchOptions> options)
     {
         _defaultProviderName = options.Value.Provider;
         _providerNameByDocumentType = options.Value.DocumentScopes.ToDictionary(x => x.DocumentType, x => x.Provider, _ignoreCase);

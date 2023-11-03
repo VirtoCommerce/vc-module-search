@@ -10,7 +10,7 @@ public static class ApplicationBuilderExtensions
         where T : ISearchProvider
     {
         var serviceProvider = applicationBuilder.ApplicationServices;
-        var gateway = serviceProvider.GetRequiredService<ISearchProviderGateway>();
+        var gateway = serviceProvider.GetRequiredService<ISearchGateway>();
         var provider = serviceProvider.GetRequiredService<T>();
         gateway.AddSearchProvider(provider, name);
 
