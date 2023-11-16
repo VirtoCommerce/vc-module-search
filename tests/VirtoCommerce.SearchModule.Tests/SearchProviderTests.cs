@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using VirtoCommerce.SearchModule.Core.Extensions;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 using Xunit;
@@ -1034,7 +1035,7 @@ namespace VirtoCommerce.SearchModule.Tests
         {
             var provider = GetSearchProvider();
 
-            if (provider is not ISupportSuggestions supportSuggestions)
+            if (!provider.Is<ISupportSuggestions>(DocumentType, out var supportSuggestions))
             {
                 return;
             }

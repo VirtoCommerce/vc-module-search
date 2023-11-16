@@ -8,6 +8,7 @@ using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.Platform.Core.Settings.Events;
 using VirtoCommerce.SearchModule.Core;
 using VirtoCommerce.SearchModule.Core.BackgroundJobs;
+using VirtoCommerce.SearchModule.Core.Extensions;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 using VirtoCommerce.SearchModule.Data.BackgroundJobs;
@@ -24,11 +25,15 @@ namespace VirtoCommerce.SearchModule.Web
 
         public void Initialize(IServiceCollection serviceCollection)
         {
+            serviceCollection.AddSingleton<DummySearchProvider>();
+            serviceCollection.AddSingleton<SearchGateway>();
+            serviceCollection.AddSingleton<ISearchGateway>(serviceProvider => serviceProvider.GetService<SearchGateway>());
+            serviceCollection.AddSingleton<ISearchProvider>(serviceProvider => serviceProvider.GetService<SearchGateway>());
+
             serviceCollection.AddTransient<ISearchPhraseParser, SearchPhraseParser>();
 
             serviceCollection.AddSingleton<IIndexingManager, IndexingManager>();
             serviceCollection.AddTransient<IndexProgressHandler>();
-            serviceCollection.AddSingleton<ISearchProvider, DummySearchProvider>();
             serviceCollection.AddSingleton<ISearchRequestBuilderRegistrar, SearchRequestBuilderRegistrar>();
 
             serviceCollection.AddOptions<SearchOptions>().Bind(Configuration.GetSection("Search")).ValidateDataAnnotations();
@@ -46,6 +51,9 @@ namespace VirtoCommerce.SearchModule.Web
 
             var permissionsRegistrar = serviceProvider.GetRequiredService<IPermissionsRegistrar>();
             permissionsRegistrar.RegisterPermissions(ModuleInfo.Id, "Search", ModuleConstants.Security.Permissions.AllPermissions);
+
+            // Register fallback provider
+            appBuilder.UseSearchProvider<DummySearchProvider>(name: null);
 
             //Subscribe for Indexation job configuration changes
             var handlerRegistrar = serviceProvider.GetService<IHandlerRegistrar>();

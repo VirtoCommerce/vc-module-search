@@ -6,7 +6,7 @@
       "copy-to-clipboard": "Copy to clipboard",
       "swap-index": "Swap indices",
       "show-backup-indices": "Show backup indices",
-      "hide-backup-indices": "Show backup indices"
+      "hide-backup-indices": "Hide backup indices"
     },
     "main-menu-title": {
       "search-index": "Search Index"

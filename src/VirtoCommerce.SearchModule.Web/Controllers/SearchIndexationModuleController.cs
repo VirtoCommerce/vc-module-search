@@ -7,6 +7,7 @@ using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.SearchModule.Core;
 using VirtoCommerce.SearchModule.Core.BackgroundJobs;
+using VirtoCommerce.SearchModule.Core.Extensions;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 
@@ -44,7 +45,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
         [Route("")]
         public async Task<ActionResult<IndexState[]>> GetIndicesAsync()
         {
-            var documentTypes = _documentConfigs.Select(c => c.DocumentType).Distinct().ToList();
+            var documentTypes = GetDocumentTypes();
             var result = await Task.WhenAll(documentTypes.Select(_indexingManager.GetIndexStateAsync));
             return Ok(result);
         }
@@ -53,7 +54,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
         [Route("all")]
         public async Task<ActionResult<IndexState[]>> GetAllIndicesAsync()
         {
-            var documentTypes = _documentConfigs.Select(c => c.DocumentType).Distinct().ToList();
+            var documentTypes = GetDocumentTypes();
             var indicesResult = await Task.WhenAll(documentTypes.Select(_indexingManager.GetIndicesStateAsync));
             var results = indicesResult.SelectMany(x => x);
             return Ok(results);
@@ -107,7 +108,8 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
         [Route("swapIndexSupported")]
         public ActionResult GetSwapIndexSupported()
         {
-            return Ok(new { Result = _searchProvider is ISupportIndexSwap });
+            var documentTypes = GetDocumentTypes();
+            return Ok(new { Result = documentTypes.Any(x => _searchProvider.Is<ISupportIndexSwap>(x)) });
         }
 
         [HttpPost]
@@ -115,12 +117,20 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
         [Authorize(ModuleConstants.Security.Permissions.IndexRebuild)]
         public async Task<ActionResult> SwapIndexAsync([FromBody] IndexingOptions option)
         {
-            if (_searchProvider is ISupportIndexSwap supportIndexSwapSearchProvider)
+            var documentType = option.DocumentType;
+
+            if (_searchProvider.Is<ISupportIndexSwap>(documentType, out var supportIndexSwapSearchProvider))
             {
-                await supportIndexSwapSearchProvider.SwapIndexAsync(option.DocumentType);
+                await supportIndexSwapSearchProvider.SwapIndexAsync(documentType);
             }
 
             return Ok();
+        }
+
+
+        private IEnumerable<string> GetDocumentTypes()
+        {
+            return _documentConfigs.Select(x => x.DocumentType).Distinct();
         }
     }
 }

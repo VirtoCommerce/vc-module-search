@@ -66,5 +66,10 @@ namespace VirtoCommerce.SearchModule.Core.Model
         /// Gets or sets the option to specifically use backup index. Returns empty result if backup index does not exist.
         /// </summary>
         public bool UseBackupIndex { get; set; }
+
+        /// <summary>
+        /// Gets or sets the collection of boosts options
+        /// </summary>
+        public IList<SearchBoost> Boosts { get; set; }
     }
 }
