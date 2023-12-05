@@ -71,8 +71,8 @@
     </div>
 </script>
 <script type="text/ng-template" id="default-count.cell.html">
-    <div ng-if="COL_FIELD" class="ui-grid-cell-contents">{{ COL_FIELD }}</div>
-    <div ng-if="!COL_FIELD" class="ui-grid-cell-contents">N/A</div>
+    <div ng-if="COL_FIELD != null" class="ui-grid-cell-contents">{{ COL_FIELD }}</div>
+    <div ng-if="COL_FIELD == null" class="ui-grid-cell-contents">N/A</div>
 </script>
 <script type="text/ng-template" id="default-date.cell.html">
     <div ng-if="COL_FIELD" class="ui-grid-cell-contents"><span class="table-date" am-time-ago="COL_FIELD"></span></div>
