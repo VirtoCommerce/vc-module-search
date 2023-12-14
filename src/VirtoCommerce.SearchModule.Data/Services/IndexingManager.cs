@@ -25,6 +25,14 @@ namespace VirtoCommerce.SearchModule.Data.Services
         private readonly SearchOptions _searchOptions;
         private readonly ISettingsManager _settingsManager;
 
+        private bool PartialDocumentUpdateEnabled
+        {
+            get
+            {
+                return _settingsManager.GetValue<bool>(GeneralSettings.EnablePartialDocumentUpdate);
+            }
+        }
+
         public IndexingManager(
             ISearchProvider searchProvider,
             IEnumerable<IndexDocumentConfiguration> configurations,
@@ -94,7 +102,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 .Select(s => s.DocumentBuilder)
                 .ToList() ?? new List<IIndexDocumentBuilder>();
 
-            if (builderTypesList.Any() && additionalDocumentBuilders.Any() && _searchProvider is ISupportPartialUpdate)
+            if (builderTypesList.Any() && additionalDocumentBuilders.Any() && _searchProvider is ISupportPartialUpdate && PartialDocumentUpdateEnabled)
             {
                 partialUpdate = true;
                 additionalDocumentBuilders = additionalDocumentBuilders.Where(x => builderTypesList.Contains(x.GetType().FullName)).ToList();
@@ -210,7 +218,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var documentType = batchOptions.DocumentType;
 
             // Full changes don't have changes provider specified because we don't set it for manual indexation.
-            var fullChanges = _searchProvider is ISupportPartialUpdate
+            var fullChanges = _searchProvider is ISupportPartialUpdate && PartialDocumentUpdateEnabled
                 ? changes
                     .Where(x =>
                         x.ChangeType is IndexDocumentChangeType.Deleted or IndexDocumentChangeType.Created ||
@@ -244,6 +252,11 @@ namespace VirtoCommerce.SearchModule.Data.Services
             ICancellationToken cancellationToken)
         {
             var result = new IndexingResult();
+
+            if (!PartialDocumentUpdateEnabled || !(_searchProvider is ISupportPartialUpdate))
+            {
+                return result;
+            }
 
             var documentType = batchOptions.DocumentType;
             var documentIds = changes.Select(x => x.DocumentId).Distinct();
