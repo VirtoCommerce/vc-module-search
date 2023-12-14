@@ -34,11 +34,19 @@ namespace VirtoCommerce.SearchModule.Core
                     ValueType = SettingValueType.PositiveInteger,
                     DefaultValue = "50",
                 };
+                public static SettingDescriptor EnablePartialDocumentUpdate { get; } = new()
+                {
+                    Name = "VirtoCommerce.Search.PartialDocumentUpdate.Enable",
+                    GroupName = "Search|General",
+                    ValueType = SettingValueType.Boolean,
+                    DefaultValue = false,
+                };
                 public static IEnumerable<SettingDescriptor> AllSettings
                 {
                     get
                     {
                         yield return IndexPartitionSize;
+                        yield return EnablePartialDocumentUpdate;
                     }
                 }
             }

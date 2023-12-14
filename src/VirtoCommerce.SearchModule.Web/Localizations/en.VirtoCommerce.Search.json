@@ -79,6 +79,10 @@
     "VirtoCommerce.Search.IndexPartitionSize": {
       "title": "Maximum item count per indexing partition",
       "description": "Providing high values may lead to slow performance"
+    },
+    "VirtoCommerce.Search.PartialDocumentUpdate.Enable": {
+      "title": "Enable partial document update",
+      "description": "Enables partial document update if a search provider supports it"
     }
   }
 }

@@ -4,7 +4,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using Moq;
 using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.Platform.Core.Settings;
+using VirtoCommerce.SearchModule.Core;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 using VirtoCommerce.SearchModule.Data.Services;
@@ -247,7 +250,15 @@ namespace VirtoCommerce.SearchModule.Tests
                 RelatedSources = documentSources?.Skip(1).Select(CreateIndexDocumentSource).ToArray(),
             };
 
-            return new IndexingManager(searchProvider, new[] { configuration }, new Moq.Mock<IOptions<SearchOptions>>().Object);
+            var settingsManager = new Mock<ISettingsManager>();
+            settingsManager
+                .Setup(x => x.GetObjectSettingAsync(ModuleConstants.Settings.General.EnablePartialDocumentUpdate.Name, null, null))
+                .ReturnsAsync(new ObjectSettingEntry
+                {
+                    Value = true
+                });
+
+            return new IndexingManager(searchProvider, new[] { configuration }, new Mock<IOptions<SearchOptions>>().Object, settingsManager.Object);
         }
 
         private static IndexDocumentSource CreateIndexDocumentSource(DocumentSource documentSource)

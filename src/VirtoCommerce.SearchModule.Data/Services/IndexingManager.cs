@@ -23,6 +23,14 @@ namespace VirtoCommerce.SearchModule.Data.Services
         private readonly IIndexingWorker _backgroundWorker;
         private readonly SearchOptions _searchOptions;
 
+        private bool PartialDocumentUpdateEnabled
+        {
+            get
+            {
+                return _settingsManager?.GetValue(ModuleConstants.Settings.General.EnablePartialDocumentUpdate.Name, false) ?? false;
+            }
+        }
+
         public IndexingManager(ISearchProvider searchProvider, IEnumerable<IndexDocumentConfiguration> configs,
             IOptions<SearchOptions> searchOptions,
             ISettingsManager settingsManager = null, IIndexingWorker backgroundWorker = null)
@@ -111,7 +119,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     .Select(s => s.DocumentBuilder)
                     .ToList() ?? new List<IIndexDocumentBuilder>();
 
-                if ((builderTypes?.Any() ?? false) && additionalDocumentBuilders.Any() && _searchProvider is ISupportPartialUpdate)
+                if ((builderTypes?.Any() ?? false) && additionalDocumentBuilders.Any() && _searchProvider is ISupportPartialUpdate && PartialDocumentUpdateEnabled)
                 {
                     additionalDocumentBuilders = additionalDocumentBuilders.Where(x => builderTypes.Contains(x.GetType().FullName))
                         .ToList();
@@ -261,7 +269,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var indexDocumentChanges = changes as IndexDocumentChange[] ?? changes.ToArray();
 
             // Full changes don't have changes provider specified because we don't set it for manual indexation.
-            var fullChanges = _searchProvider is ISupportPartialUpdate ? indexDocumentChanges
+            var fullChanges = _searchProvider is ISupportPartialUpdate && PartialDocumentUpdateEnabled ? indexDocumentChanges
                 .Where(x =>
                     x.ChangeType is IndexDocumentChangeType.Deleted or IndexDocumentChangeType.Created ||
                     !_configs.GetBuildersForProvider(x.Provider?.GetType()).Any()
@@ -299,6 +307,11 @@ namespace VirtoCommerce.SearchModule.Data.Services
             ICancellationToken cancellationToken)
         {
             var result = new IndexingResult { Items = new List<IndexingResultItem>() };
+
+            if (!PartialDocumentUpdateEnabled || !(_searchProvider is ISupportPartialUpdate))
+            {
+                return result;
+            }
 
             var indexDocumentChanges = changes as IndexDocumentChange[] ?? changes.ToArray();
 
