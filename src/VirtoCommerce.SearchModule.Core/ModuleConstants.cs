@@ -36,11 +36,20 @@ namespace VirtoCommerce.SearchModule.Core
                     DefaultValue = DefaultIndexPartitionSize,
                 };
 
+                public static SettingDescriptor EnablePartialDocumentUpdate { get; } = new()
+                {
+                    Name = "VirtoCommerce.Search.PartialDocumentUpdate.Enable",
+                    GroupName = "Search|General",
+                    ValueType = SettingValueType.Boolean,
+                    DefaultValue = false,
+                };
+
                 public static IEnumerable<SettingDescriptor> AllGeneralSettings
                 {
                     get
                     {
                         yield return IndexPartitionSize;
+                        yield return EnablePartialDocumentUpdate;
                     }
                 }
             }

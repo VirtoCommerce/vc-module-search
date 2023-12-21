@@ -25,6 +25,14 @@ namespace VirtoCommerce.SearchModule.Data.Services
         private readonly SearchOptions _searchOptions;
         private readonly ISettingsManager _settingsManager;
 
+        private bool PartialDocumentUpdateEnabled
+        {
+            get
+            {
+                return _settingsManager.GetValue<bool>(GeneralSettings.EnablePartialDocumentUpdate);
+            }
+        }
+
         public IndexingManager(
             ISearchProvider searchProvider,
             IEnumerable<IndexDocumentConfiguration> configurations,
@@ -94,7 +102,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 .Select(s => s.DocumentBuilder)
                 .ToList() ?? new List<IIndexDocumentBuilder>();
 
-            if (builderTypesList.Any() && additionalDocumentBuilders.Any() && _searchProvider.Is<ISupportPartialUpdate>(documentType))
+            if (builderTypesList.Any() && additionalDocumentBuilders.Any() && _searchProvider.Is<ISupportPartialUpdate>(documentType) && PartialDocumentUpdateEnabled)
             {
                 partialUpdate = true;
                 additionalDocumentBuilders = additionalDocumentBuilders.Where(x => builderTypesList.Contains(x.GetType().FullName)).ToList();
@@ -210,7 +218,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var documentType = batchOptions.DocumentType;
 
             // Full changes don't have changes provider specified because we don't set it for manual indexation.
-            var fullChanges = _searchProvider.Is<ISupportPartialUpdate>(documentType)
+            var fullChanges = _searchProvider.Is<ISupportPartialUpdate>(documentType) && PartialDocumentUpdateEnabled
                 ? changes
                     .Where(x =>
                         x.ChangeType is IndexDocumentChangeType.Deleted or IndexDocumentChangeType.Created ||
@@ -246,7 +254,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var result = new IndexingResult();
             var documentType = batchOptions.DocumentType;
 
-            if (!_searchProvider.Is<ISupportPartialUpdate>(documentType, out var supportPartialUpdateProvider))
+            if (!PartialDocumentUpdateEnabled || !_searchProvider.Is<ISupportPartialUpdate>(documentType, out var supportPartialUpdateProvider))
             {
                 return result;
             }
