@@ -17,7 +17,7 @@
     <NoWarn>3021</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.8.0" />
+    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="VirtoCommerce.Platform.Hangfire" Version="3.400.0" />
   </ItemGroup>
