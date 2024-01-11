@@ -49,7 +49,7 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.NotNull(result);
             Assert.Equal(string.Empty, result.Keyword);
             Assert.NotNull(result.Filters);
-            Assert.Equal(1, result.Filters.Count);
+            Assert.Single(result.Filters);
 
             var filter = result.Filters.First() as TermFilter;
             Assert.NotNull(filter);
@@ -75,7 +75,7 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.NotNull(result);
             Assert.Equal(string.Empty, result.Keyword);
             Assert.NotNull(result.Filters);
-            Assert.Equal(1, result.Filters.Count);
+            Assert.Single(result.Filters);
 
             var filter = result.Filters.First() as RangeFilter;
             Assert.NotNull(filter);
@@ -102,14 +102,14 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.NotNull(result);
             Assert.Equal(string.Empty, result.Keyword);
             Assert.NotNull(result.Filters);
-            Assert.Equal(1, result.Filters.Count);
+            Assert.Single(result.Filters);
 
             filter = result.Filters.First() as RangeFilter;
 
             Assert.NotNull(filter);
             Assert.Equal("size", filter.FieldName);
             Assert.NotNull(filter.Values);
-            Assert.Equal(1, filter.Values.Count);
+            Assert.Single(filter.Values);
 
             value = filter.Values.First();
             Assert.NotNull(value);
@@ -123,14 +123,14 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.NotNull(result);
             Assert.Equal(string.Empty, result.Keyword);
             Assert.NotNull(result.Filters);
-            Assert.Equal(1, result.Filters.Count);
+            Assert.Single(result.Filters);
 
             filter = result.Filters.First() as RangeFilter;
 
             Assert.NotNull(filter);
             Assert.Equal("size", filter.FieldName);
             Assert.NotNull(filter.Values);
-            Assert.Equal(1, filter.Values.Count);
+            Assert.Single(filter.Values);
 
             value = filter.Values.First();
             Assert.NotNull(value);
@@ -149,7 +149,7 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.NotNull(result);
             Assert.Equal("one two", result.Keyword);
             Assert.NotNull(result.Filters);
-            Assert.Equal(1, result.Filters.Count);
+            Assert.Single(result.Filters);
 
             var filter = result.Filters.First() as TermFilter;
 
@@ -158,7 +158,7 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.NotNull(filter);
             Assert.Equal("brand", filter.FieldName);
             Assert.NotNull(filter.Values);
-            Assert.Equal(1, filter.Values.Count);
+            Assert.Single(filter.Values);
 
             var value = filter.Values.First();
             Assert.NotNull(value);
@@ -183,13 +183,13 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.NotNull(result);
             Assert.Equal(string.Empty, result.Keyword);
             Assert.NotNull(result.Filters);
-            Assert.Equal(1, result.Filters.Count);
+            Assert.Single(result.Filters);
 
             var filter = result.Filters.First() as TermFilter;
             Assert.NotNull(filter);
             Assert.Equal("color \r\n\t\\ 2", filter.FieldName);
             Assert.NotNull(filter.Values);
-            Assert.Equal(1, filter.Values.Count);
+            Assert.Single(filter.Values);
 
             var value = filter.Values.First();
             Assert.NotNull(value);
@@ -201,13 +201,13 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.NotNull(result);
             Assert.Equal(string.Empty, result.Keyword);
             Assert.NotNull(result.Filters);
-            Assert.Equal(1, result.Filters.Count);
+            Assert.Single(result.Filters);
 
             var rangeFilter = result.Filters.Last() as RangeFilter;
             Assert.NotNull(rangeFilter);
             Assert.Equal("date", rangeFilter.FieldName);
             Assert.NotNull(rangeFilter.Values);
-            Assert.Equal(1, rangeFilter.Values.Count);
+            Assert.Single(rangeFilter.Values);
 
             var rangeValue = rangeFilter.Values.First();
             Assert.NotNull(value);
@@ -252,16 +252,16 @@ namespace VirtoCommerce.SearchModule.Tests
 
             if (expectedValue is null)
             {
-                Assert.Equal(0, result.Filters.Count);
+                Assert.Empty(result.Filters);
             }
             else
             {
-                Assert.Equal(1, result.Filters.Count);
+                Assert.Single(result.Filters);
 
                 var filter = result.Filters.First() as TermFilter;
                 Assert.NotNull(filter);
                 Assert.NotNull(filter.Values);
-                Assert.Equal(1, filter.Values.Count);
+                Assert.Single(filter.Values);
 
                 var value = filter.Values.First();
                 Assert.NotNull(value);
