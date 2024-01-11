@@ -1,5 +1,7 @@
 using System.Linq;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Moq;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 using VirtoCommerce.SearchModule.Data.SearchPhraseParsing;
@@ -10,6 +12,54 @@ namespace VirtoCommerce.SearchModule.Tests
     [Trait("Category", "Unit")]
     public class SearchPhraseParserTests
     {
+        [Theory]
+        [InlineData("customerId:\"78b0208a-bb52-4a33-9250-583d63aa1f77\" createddate:[2023-12-01 TO]")]
+        [InlineData("customerId:\"78b0208a-bb52-4a33-9250-583d63aa1f77\" createddate:[2023-12-01 TO 2023-12-31]")]
+        [InlineData("customerId:\"78b0208a-bb52-4a33-9250-583d63aa1f77\" createddate:[\"2023-12-01T01:12:00Z\" TO]")]
+        [InlineData("customerId:\"78b0208a-bb52-4a33-9250-583d63aa1f77\" createddate:[\"2023-12-01T01:12:00Z\" TO \"2023-12-31T01:12:00Z\"]")]
+        [InlineData("createddate:[2023-12-01 TO] customerId:\"78b0208a-bb52-4a33-9250-583d63aa1f77\"")]
+        [InlineData("createddate:[2023-12-01 TO 2023-12-31] customerId:\"78b0208a-bb52-4a33-9250-583d63aa1f77\"")]
+        [InlineData("createddate:[\"2023-12-01T01:12:00Z\" TO] customerId:\"78b0208a-bb52-4a33-9250-583d63aa1f77\"")]
+        [InlineData("createddate:[\"2023-12-01T01:12:00Z\" TO \"2023-12-31T01:12:00Z\"] customerId:\"78b0208a-bb52-4a33-9250-583d63aa1f77\"")]
+        public void TestDateTimeRange(string filter)
+        {
+            var parser = GetParser();
+            var result = parser.Parse(filter);
+
+            Assert.Equal(2, result.Filters.Count);
+            Assert.NotNull(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "customerId"));
+            Assert.NotNull(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "createddate"));
+        }
+
+        /// <summary>
+        /// This test demonstrates that currrent grammar failed and stop parcing next filters if date time value is not wrapped with double quotes, check logs for the details.
+        /// </summary>
+        [Fact]
+        public void TestWrongDateTimeWithoutQuoеtes()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("createddate:[2023-12-01T01:12:00Z TO] customerId:\"78b0208a-bb52-4a33-9250-583d63aa1f77\"");
+
+            Assert.Equal(1, result.Filters.Count);
+            Assert.NotNull(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "createddate"));
+            Assert.Null(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "customerId"));
+        }
+
+        /// <summary>
+        /// This test demonstrates that currrent grammar failed and stop parcing next filters if date time value is not wrapped with double quotes, check logs for the details.
+        /// </summary>
+        [Fact]
+        public void TestWrongDateTimeWithoutQuoеtes2()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("customerId:\"78b0208a-bb52-4a33-9250-583d63aa1f77\" createddate:[2023-12-01T01:12:00Z TO] color:Black,White");
+
+            Assert.Equal(2, result.Filters.Count);
+            Assert.NotNull(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "customerId"));
+            Assert.NotNull(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "createddate"));
+            Assert.Null(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "color"));
+        }
+
         [Fact]
         public void TestKeywords()
         {
@@ -272,7 +322,9 @@ namespace VirtoCommerce.SearchModule.Tests
 
         private static ISearchPhraseParser GetParser()
         {
-            return new SearchPhraseParser();
+            var logger = new Mock<ILogger<SearchPhraseParser>>();
+
+            return new SearchPhraseParser(logger.Object);
         }
     }
 }
