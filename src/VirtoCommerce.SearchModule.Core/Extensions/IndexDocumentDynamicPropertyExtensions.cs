@@ -121,7 +121,7 @@ public static class IndexDocumentDynamicPropertyExtensions
 
         do
         {
-            var searchResult = await dynamicPropertySearchService.SearchDynamicPropertiesAsync(searchCriteria);
+            var searchResult = await dynamicPropertySearchService.SearchAsync(searchCriteria);
 
             var validProperties = searchResult.Results.Where(x =>
                 !string.IsNullOrEmpty(x.Name) &&
