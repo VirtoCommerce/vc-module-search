@@ -1,9 +1,9 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <module xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <id>VirtoCommerce.Search</id>
   <version>3.800.0</version>
   <version-tag />
-  <platformVersion>3.800.0-alpha.12831-net8</platformVersion>
+  <platformVersion>3.800.0</platformVersion>
   <title>Search Core</title>
   <description>Defines Core Abstractions for indexed search functionality above different search providers, like: Elasticsearch, Azure Search, etc.</description>
   <authors>
