@@ -40,7 +40,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var parser = GetParser();
             var result = parser.Parse("createddate:[2023-12-01T01:12:00Z TO] customerId:\"78b0208a-bb52-4a33-9250-583d63aa1f77\"");
 
-            Assert.Equal(1, result.Filters.Count);
+            Assert.Single(result.Filters);
             Assert.NotNull(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "createddate"));
             Assert.Null(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "customerId"));
         }
