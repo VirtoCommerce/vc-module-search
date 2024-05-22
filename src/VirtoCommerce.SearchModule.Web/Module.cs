@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using VirtoCommerce.Platform.Core.Bus;
+using VirtoCommerce.Platform.Core.Events;
 using VirtoCommerce.Platform.Core.Modularity;
 using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.Platform.Core.Settings;
@@ -55,11 +55,10 @@ namespace VirtoCommerce.SearchModule.Web
             // Register fallback provider
             appBuilder.UseSearchProvider<DummySearchProvider>(name: null);
 
-            //Subscribe for Indexation job configuration changes
-            var handlerRegistrar = serviceProvider.GetService<IHandlerRegistrar>();
-            handlerRegistrar.RegisterHandler<ObjectSettingChangedEvent>(async (message, _) => await serviceProvider.GetService<ObjectSettingEntryChangedEventHandler>().Handle(message));
+            // Subscribe for Indexation job configuration changes
+            appBuilder.RegisterEventHandler<ObjectSettingChangedEvent, ObjectSettingEntryChangedEventHandler>();
 
-            //Schedule periodic Indexation job
+            // Schedule periodic Indexation job
             var indexingJobService = serviceProvider.GetService<IIndexingJobService>();
             indexingJobService.StartStopRecurringJobs().GetAwaiter().GetResult();
         }
