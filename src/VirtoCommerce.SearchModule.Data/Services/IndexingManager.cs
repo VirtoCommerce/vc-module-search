@@ -297,9 +297,17 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 case IndexDocumentChangeType.Modified or IndexDocumentChangeType.Created:
                     var documents = await GetDocumentsAsync(documentIds, batchOptions.PrimaryDocumentBuilder, batchOptions.SecondaryDocumentBuilders, cancellationToken);
 
-                    result = batchOptions.Reindex && _searchProvider.Is<ISupportIndexSwap>(documentType, out var supportIndexSwapProvider)
-                        ? await supportIndexSwapProvider.IndexWithBackupAsync(documentType, documents)
-                        : await _searchProvider.IndexAsync(documentType, documents);
+                    if (documents.IsNullOrEmpty())
+                    {
+                        result = new IndexingResult();
+                    }
+                    else
+                    {
+                        result = batchOptions.Reindex &&
+                                 _searchProvider.Is<ISupportIndexSwap>(documentType, out var supportIndexSwapProvider)
+                            ? await supportIndexSwapProvider.IndexWithBackupAsync(documentType, documents)
+                            : await _searchProvider.IndexAsync(documentType, documents);
+                    }
 
                     break;
                 default:
