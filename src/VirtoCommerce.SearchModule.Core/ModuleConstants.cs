@@ -8,6 +8,8 @@ namespace VirtoCommerce.SearchModule.Core
     [ExcludeFromCodeCoverage]
     public static class ModuleConstants
     {
+        public const string RelevanceScore = "__score";
+
         public static class Security
         {
             public static class Permissions
