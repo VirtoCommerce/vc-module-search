@@ -3,7 +3,7 @@
   <id>VirtoCommerce.Search</id>
   <version>3.804.0</version>
   <version-tag />
-  <platformVersion>3.825.0</platformVersion>
+  <platformVersion>3.853.0</platformVersion>
   <title>Search Core</title>
   <description>Defines Core Abstractions for indexed search functionality above different search providers, like: Elasticsearch, Azure Search, etc.</description>
   <authors>
@@ -12,7 +12,7 @@
   <owners>
     <owner>Virto Commerce</owner>
   </owners>
-  <projectUrl>https://virtocommerce.com/apps/extensions/virto-core-module</projectUrl>
+  <projectUrl>https://github.com/VirtoCommerce/vc-module-search</projectUrl>
   <iconUrl>Modules/$(VirtoCommerce.Search)/Content/logoVC.png</iconUrl>
   <requireLicenseAcceptance>false</requireLicenseAcceptance>
   <releaseNotes />
