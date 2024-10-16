@@ -114,6 +114,24 @@ public static class IndexDocumentExtensions
         document.AddSearchableCollection(ContentFieldName, value);
     }
 
+    /// <summary>
+    /// Adds given value to the searchable '__content_{languageCode}' collection with given language code.
+    /// If languageCode is null or empty, adds value to the searchable '__content' collection.
+    /// </summary>
+    /// <param name="document"></param>
+    /// <param name="value"></param>
+    /// <param name="languageCode"></param>
+    public static void AddContentString(this IndexDocument document, string value, string languageCode)
+    {
+        if (string.IsNullOrEmpty(languageCode))
+        {
+            document.AddSearchableCollection(ContentFieldName, value);
+        }
+        else
+        {
+            document.AddSearchableCollection($"{ContentFieldName}_{languageCode.ToLowerInvariant()}", value);
+        }
+    }
 
     public static void AddFilterableBoolean(this IndexDocument schema, string name)
     {
