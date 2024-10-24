@@ -9,7 +9,7 @@ The VirtoCommerce.Search module defines common abstractions for indexed search f
 
 * [Elastic App Search](https://github.com/VirtoCommerce/vc-module-elastic-app-search) - Preferred search provider with rich no-code search customization and analytics tools.
 * [Elasticsearch 8](https://github.com/VirtoCommerce/vc-module-elastic-search-8) -  Version compatible with Elasticsearch 8.x. For driving innovation like semantic and hybrid search.
-* [Lucene](https://github.com/VirtoCommerce/vc-module-lucene-search) - Recommended for local development щтдн.
+* [Lucene](https://github.com/VirtoCommerce/vc-module-lucene-search) - Recommended for local development.
 * [Elasticsearch](https://github.com/VirtoCommerce/vc-module-elastic-search) - Version compatible with Elasticsearch 7.x.
 * [Azure Cognitive Search](https://github.com/VirtoCommerce/vc-module-azure-search) 
 * [Algolia](https://github.com/VirtoCommerce/vc-module-algolia-search)
