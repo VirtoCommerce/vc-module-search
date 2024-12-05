@@ -9,7 +9,7 @@
       "hide-backup-indices": "Hide backup indices"
     },
     "main-menu-title": {
-      "search-index": "Search Index"
+      "search-index": "Search index"
     },
     "blades": {
       "index-progress": {
@@ -22,7 +22,7 @@
         }
       },
       "index-detail": {
-        "title": "Search Index",
+        "title": "Search index",
         "title-new": "Search index missing",
         "subtitle": "Search index details",
         "labels": {
@@ -48,10 +48,10 @@
     },
     "dialogs": {
       "reindex": {
-        "title": "Build Search Index",
-        "msg1": "Please choose how you want to update the search index. There are two options available:",
-        "msg2": "Build: Index all data without recreating.",
-        "msg3": "Delete and build: Delete the existing search index and build a new one from scratch. Note: No search results will be available until the build process is over.",
+        "title": "Build search index",
+        "msg1": "Select your preferred method for updating the search index. You have two options:",
+        "msg2": "Build: Updates the index by adding all data without starting over",
+        "msg3": "Delete and Build: Removes the current search index and creates a new one from the beginning. Note: Search results will be unavailable until the rebuild is complete",
         "index": "Build",
         "reindex": "Delete and build"
       }
@@ -59,18 +59,18 @@
     "widgets": {
       "index": {
         "index-ok": "Indexed <span am-time-ago='indexDate'></span>",
-        "index-old": "This index is outdated, as it was built <span am-time-ago='indexDate'>",
+        "index-old": "This index is outdated as it was built <span am-time-ago='indexDate'>",
         "no-index": "Search index missing"
       }
     }
   },
   "permissions": {
-    "search:index:rebuild": "Enables deleting the search index and building it once again.",
-    "search:index:access": "Enables access to the Search Index menu."
+    "search:index:rebuild": "Enables clearing and rebuilding the search index",
+    "search:index:access": "Enables access to the search index menu"
   },
   "settings": {
     "VirtoCommerce.Search.IndexingJobs.Enable": {
-      "title": "Schedule indexing jobs",
+      "title": "Regular indexing jobs",
       "description": "Enable or disable regular search index builders"
     },
     "VirtoCommerce.Search.IndexingJobs.CronExpression": {
@@ -78,12 +78,12 @@
       "description": "For X minutes, use '0/x * * * *'. For X hours, use '0 */x * * *'. You can also set X minutes as '15 */x * * *', and X days as '0 0 */x * *'."
     },
     "VirtoCommerce.Search.IndexPartitionSize": {
-      "title": "Maximum item count per indexing partition",
-      "description": "Providing high values may lead to slow performance"
+      "title": "Maximum number of items per indexing partition",
+      "description": "Enter the maximum number of items to include in each indexing partition. Providing high values may lead to slower performance"
     },
     "VirtoCommerce.Search.PartialDocumentUpdate.Enable": {
-      "title": "Enable partial document update",
-      "description": "Enables partial document update if a search provider supports it"
+      "title": "Partial document update",
+      "description": "Enable partial document updates if supported by a search provider"
     }
   }
 }

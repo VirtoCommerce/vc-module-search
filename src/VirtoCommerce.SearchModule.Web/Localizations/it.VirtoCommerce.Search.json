@@ -1,0 +1,89 @@
+{
+  "search": {
+    "commands": {
+      "apply-filter": "Salva e applica",
+      "rebuild-index": "Costruisci indice",
+      "copy-to-clipboard": "Copia negli appunti",
+      "swap-index": "Scambia indici",
+      "show-backup-indices": "Mostra indici di backup",
+      "hide-backup-indices": "Nascondi indici di backup"
+    },
+    "main-menu-title": {
+      "search-index": "Indice di ricerca"
+    },
+    "blades": {
+      "index-progress": {
+        "labels": {
+          "start": "Inizio",
+          "end": "Fine",
+          "elapsed": "Trascorso",
+          "errors": "Errori",
+          "stats": "{{ processedCount }} di {{ totalCount }} record indicizzati"
+        }
+      },
+      "index-detail": {
+        "title": "Indice di ricerca",
+        "title-new": "Indice di ricerca mancante",
+        "subtitle": "Dettagli sull'indice di ricerca",
+        "labels": {
+          "no-index": "Nessun dato",
+          "build-date": "Ultima indicizzazione",
+          "content": "Contenuto dell'indice"
+        }
+      },
+      "document-type-list": {
+        "title": "Tipi di record",
+        "labels": {
+          "document-type": "Tipo di record",
+          "indexed-docs-total": "Numero di record",
+          "provider": "Provider",
+          "scope": "Ambito",
+          "last-indexation-date": "Ultima indicizzazione",
+          "build-index": "Costruisci indice",
+          "rebuild-index": "Ricostruisci indice",
+          "swap-index": "Scambia indici",
+          "active": "Indice attivo"
+        }
+      }
+    },
+    "dialogs": {
+      "reindex": {
+        "title": "Costruisci l'indice di ricerca",
+        "msg1": "Seleziona il metodo preferito per aggiornare l'indice di ricerca. Sono disponibili due opzioni:",
+        "msg2": "Costruisci: Aggiorna l'indice aggiungendo tutti i dati senza ricominciare da capo",
+        "msg3": "Elimina e costruisci: Rimuove l'indice di ricerca corrente e ne crea uno nuovo. Nota: I risultati della ricerca non saranno disponibili fino al termine della ricostruzione",
+        "index": "Costruisci",
+        "reindex": "Elimina e costruisci"
+      }
+    },
+    "widgets": {
+      "index": {
+        "index-ok": "Indicizzato <span am-time-ago='indexDate'></span>",
+        "index-old": "Questo indice è obsoleto poiché è stato costruito <span am-time-ago='indexDate'>",
+        "no-index": "Indice di ricerca mancante"
+      }
+    }
+  },
+  "permissions": {
+    "search:index:rebuild": "Consente di cancellare e ricostruire l'indice di ricerca",
+    "search:index:access": "Consente l'accesso al menu dell'indice di ricerca"
+  },
+  "settings": {
+    "VirtoCommerce.Search.IndexingJobs.Enable": {
+      "title": "Attività regolari di indicizzazione",
+      "description": "Abilita o disabilita i generatori regolari di indici di ricerca"
+    },
+    "VirtoCommerce.Search.IndexingJobs.CronExpression": {
+      "title": "Espressione cron per attività di indicizzazione",
+      "description": "Per X minuti, utilizza '0/x * * * *'. Per X ore, utilizza '0 */x * * *'. Puoi anche impostare X minuti con '15 */x * * *' e X giorni con '0 0 */x * *'."
+    },
+    "VirtoCommerce.Search.IndexPartitionSize": {
+      "title": "Numero massimo di elementi per partizione di indicizzazione",
+      "description": "Inserisci il numero massimo di elementi da includere in ciascuna partizione di indicizzazione. Valori elevati possono portare a un rallentamento delle prestazioni."
+    },
+    "VirtoCommerce.Search.PartialDocumentUpdate.Enable": {
+      "title": "Aggiornamento parziale dei documenti",
+      "description": "Abilita gli aggiornamenti parziali dei documenti se supportati da un provider di ricerca."
+    }
+  }
+}

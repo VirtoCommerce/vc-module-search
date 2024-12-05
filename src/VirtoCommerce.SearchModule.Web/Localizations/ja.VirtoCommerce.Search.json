@@ -1,0 +1,89 @@
+{
+  "search": {
+    "commands": {
+      "apply-filter": "保存して適用",
+      "rebuild-index": "インデックスを構築",
+      "copy-to-clipboard": "クリップボードにコピー",
+      "swap-index": "インデックスを交換",
+      "show-backup-indices": "バックアップインデックスを表示",
+      "hide-backup-indices": "バックアップインデックスを非表示"
+    },
+    "main-menu-title": {
+      "search-index": "検索インデックス"
+    },
+    "blades": {
+      "index-progress": {
+        "labels": {
+          "start": "開始",
+          "end": "終了",
+          "elapsed": "経過時間",
+          "errors": "エラー",
+          "stats": "{{ processedCount }} / {{ totalCount }} レコードがインデックス化されました"
+        }
+      },
+      "index-detail": {
+        "title": "検索インデックス",
+        "title-new": "検索インデックスがありません",
+        "subtitle": "検索インデックスの詳細",
+        "labels": {
+          "no-index": "データがありません",
+          "build-date": "最終インデックス化",
+          "content": "インデックス内容"
+        }
+      },
+      "document-type-list": {
+        "title": "レコードタイプ",
+        "labels": {
+          "document-type": "レコードタイプ",
+          "indexed-docs-total": "レコード数",
+          "provider": "プロバイダー",
+          "scope": "スコープ",
+          "last-indexation-date": "最終インデックス化",
+          "build-index": "インデックスを構築",
+          "rebuild-index": "インデックスを再構築",
+          "swap-index": "インデックスを交換",
+          "active": "アクティブなインデックス"
+        }
+      }
+    },
+    "dialogs": {
+      "reindex": {
+        "title": "検索インデックスを構築",
+        "msg1": "検索インデックスを更新する方法を選択してください。2つのオプションがあります：",
+        "msg2": "構築：既存のデータを追加しながら更新",
+        "msg3": "削除して構築：現在のインデックスを削除して新しいインデックスを作成します。注：再構築が完了するまで検索結果は利用できません",
+        "index": "構築",
+        "reindex": "削除して構築"
+      }
+    },
+    "widgets": {
+      "index": {
+        "index-ok": "<span am-time-ago='indexDate'></span> にインデックス化されました",
+        "index-old": "このインデックスは古く、<span am-time-ago='indexDate'> に構築されました",
+        "no-index": "検索インデックスがありません"
+      }
+    }
+  },
+  "permissions": {
+    "search:index:rebuild": "検索インデックスの消去と再構築を有効化",
+    "search:index:access": "検索インデックスメニューへのアクセスを有効化"
+  },
+  "settings": {
+    "VirtoCommerce.Search.IndexingJobs.Enable": {
+      "title": "定期インデックス作成ジョブ",
+      "description": "定期的な検索インデックスビルダーを有効または無効にする"
+    },
+    "VirtoCommerce.Search.IndexingJobs.CronExpression": {
+      "title": "インデックス作成ジョブのCron式",
+      "description": "X分ごとに '0/x * * * *' を使用します。X時間ごとには '0 */x * * *' を使用します。または、X日ごとに '0 0 */x * *' を使用してください。"
+    },
+    "VirtoCommerce.Search.IndexPartitionSize": {
+      "title": "インデックスパーティションあたりの最大アイテム数",
+      "description": "各インデックスパーティションに含める最大アイテム数を入力します。高い値を設定すると、パフォーマンスが低下する可能性があります。"
+    },
+    "VirtoCommerce.Search.PartialDocumentUpdate.Enable": {
+      "title": "部分的なドキュメント更新",
+      "description": "検索プロバイダーがサポートする場合、部分的なドキュメント更新を有効にします。"
+    }
+  }
+}
