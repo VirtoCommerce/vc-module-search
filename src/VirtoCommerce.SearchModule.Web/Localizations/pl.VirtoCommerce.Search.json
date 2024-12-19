@@ -1,0 +1,89 @@
+{
+  "search": {
+    "commands": {
+      "apply-filter": "Zapisz i zastosuj",
+      "rebuild-index": "Buduj indeks",
+      "copy-to-clipboard": "Kopiuj do schowka",
+      "swap-index": "Zamień indeksy",
+      "show-backup-indices": "Pokaż indeksy zapasowe",
+      "hide-backup-indices": "Ukryj indeksy zapasowe"
+    },
+    "main-menu-title": {
+      "search-index": "Indeks wyszukiwania"
+    },
+    "blades": {
+      "index-progress": {
+        "labels": {
+          "start": "Początek",
+          "end": "Koniec",
+          "elapsed": "Upłynęło",
+          "errors": "Błędy",
+          "stats": "Zindeksowano {{ processedCount }} z {{ totalCount }} rekordów"
+        }
+      },
+      "index-detail": {
+        "title": "Indeks wyszukiwania",
+        "title-new": "Brak indeksu wyszukiwania",
+        "subtitle": "Szczegóły indeksu wyszukiwania",
+        "labels": {
+          "no-index": "Brak danych",
+          "build-date": "Ostatnia indeksacja",
+          "content": "Zawartość indeksu"
+        }
+      },
+      "document-type-list": {
+        "title": "Typy rekordów",
+        "labels": {
+          "document-type": "Typ rekordu",
+          "indexed-docs-total": "Liczba rekordów",
+          "provider": "Dostawca",
+          "scope": "Zakres",
+          "last-indexation-date": "Ostatnia indeksacja",
+          "build-index": "Buduj indeks",
+          "rebuild-index": "Odbuduj indeks",
+          "swap-index": "Zamień indeksy",
+          "active": "Aktywny indeks"
+        }
+      }
+    },
+    "dialogs": {
+      "reindex": {
+        "title": "Budowanie indeksu wyszukiwania",
+        "msg1": "Wybierz preferowaną metodę aktualizacji indeksu wyszukiwania. Dostępne są dwie opcje:",
+        "msg2": "Buduj: Aktualizuje indeks, dodając wszystkie dane bez rozpoczynania od nowa",
+        "msg3": "Usuń i buduj: Usuwa bieżący indeks i tworzy nowy od podstaw. Uwaga: Wyniki wyszukiwania będą niedostępne do czasu zakończenia odbudowy",
+        "index": "Buduj",
+        "reindex": "Usuń i buduj"
+      }
+    },
+    "widgets": {
+      "index": {
+        "index-ok": "Zindeksowano <span am-time-ago='indexDate'></span>",
+        "index-old": "Ten indeks jest przestarzały, zbudowany <span am-time-ago='indexDate'>",
+        "no-index": "Brak indeksu wyszukiwania"
+      }
+    }
+  },
+  "permissions": {
+    "search:index:rebuild": "Pozwala na czyszczenie i odbudowę indeksu wyszukiwania",
+    "search:index:access": "Pozwala na dostęp do menu indeksu wyszukiwania"
+  },
+  "settings": {
+    "VirtoCommerce.Search.IndexingJobs.Enable": {
+      "title": "Regularne zadania indeksacji",
+      "description": "Włącz lub wyłącz regularne zadania tworzenia indeksu wyszukiwania"
+    },
+    "VirtoCommerce.Search.IndexingJobs.CronExpression": {
+      "title": "Wyrażenie cron dla zadań indeksacji",
+      "description": "Dla X minut użyj '0/x * * * *'. Dla X godzin użyj '0 */x * * *'. Możesz także ustawić X minut jako '15 */x * * *', a X dni jako '0 0 */x * *'."
+    },
+    "VirtoCommerce.Search.IndexPartitionSize": {
+      "title": "Maksymalna liczba elementów w partycji indeksu",
+      "description": "Wprowadź maksymalną liczbę elementów do uwzględnienia w każdej partycji indeksu. Wysokie wartości mogą obniżyć wydajność."
+    },
+    "VirtoCommerce.Search.PartialDocumentUpdate.Enable": {
+      "title": "Częściowa aktualizacja dokumentów",
+      "description": "Włącz częściowe aktualizacje dokumentów, jeśli są obsługiwane przez dostawcę wyszukiwania"
+    }
+  }
+}

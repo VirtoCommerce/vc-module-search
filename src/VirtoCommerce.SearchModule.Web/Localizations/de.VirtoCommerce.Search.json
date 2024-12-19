@@ -1,15 +1,24 @@
 {
   "search": {
     "commands": {
-      "rebuild-index": "Suchindex erstellen",
-      "copy-to-clipboard": "Zwischenablage"
+      "apply-filter": "Speichern und anwenden",
+      "rebuild-index": "Index erstellen",
+      "copy-to-clipboard": "In die Zwischenablage kopieren",
+      "swap-index": "Indizes tauschen",
+      "show-backup-indices": "Sicherungsindizes anzeigen",
+      "hide-backup-indices": "Sicherungsindizes ausblenden"
+    },
+    "main-menu-title": {
+      "search-index": "Suchindex"
     },
     "blades": {
       "index-progress": {
         "labels": {
-          "start": "Starten",
+          "start": "Start",
           "end": "Ende",
-          "errors": "Fehler"
+          "elapsed": "Verstrichen",
+          "errors": "Fehler",
+          "stats": "{{ processedCount }} von {{ totalCount }} Einträgen indiziert"
         }
       },
       "index-detail": {
@@ -17,40 +26,64 @@
         "title-new": "Suchindex fehlt",
         "subtitle": "Details zum Suchindex",
         "labels": {
-          "no-index": "Suchindex nicht gefunden",
-          "build-date": "Letzte Indexierung",
-          "content": "Suchindexinhalt"
+          "no-index": "Keine Daten",
+          "build-date": "Zuletzt indiziert",
+          "content": "Indexinhalt"
         }
       },
       "document-type-list": {
-        "title": "Dokumenttypen",
+        "title": "Datensatztypen",
         "labels": {
-          "document-type": "Dokumenttypen",
-          "indexed-docs-total": "Dokumentenzähler",
-          "provider": "Provider",
-          "scope": "Scope",
+          "document-type": "Datensatztyp",
+          "indexed-docs-total": "Anzahl der Datensätze",
+          "provider": "Anbieter",
+          "scope": "Bereich",
           "last-indexation-date": "Zuletzt indiziert",
-          "build-index": "Build index",
-          "rebuild-index": "Rebuild index"
+          "build-index": "Index erstellen",
+          "rebuild-index": "Index neu erstellen",
+          "swap-index": "Indizes tauschen",
+          "active": "Aktiver Index"
         }
       }
     },
     "dialogs": {
       "reindex": {
-        "title": "Suchindex durchsuchen",
-        "msg1": "Wählen Sie aus, wie Sie den Suchindex aktualisieren möchten. Optionen:",
-        "msg2": "Update: Update durch Indizierung von fehlenden oder veralteten Daten.",
-        "msg3": "Löschen + aufbauen",
-        "index": "Neuaufbau: Der aktuelle Suchindex wird gelöscht und von Grund auf neu gebaut. Beachten Sie, dass es KEINE SUCHERGEBNISSE GIBT, bis der Aufbauprozess beendet ist.",
-        "reindex": "Löschen + aufbauen"
+        "title": "Suchindex erstellen",
+        "msg1": "Wählen Sie Ihre bevorzugte Methode zur Aktualisierung des Suchindex. Es stehen zwei Optionen zur Verfügung:",
+        "msg2": "Erstellen: Fügt alle Daten hinzu, ohne neu zu beginnen",
+        "msg3": "Löschen und Erstellen: Entfernt den aktuellen Suchindex und erstellt einen neuen. Hinweis: Suchergebnisse sind erst nach Abschluss der Neuerstellung verfügbar",
+        "index": "Erstellen",
+        "reindex": "Löschen und Erstellen"
       }
     },
     "widgets": {
       "index": {
-        "index-ok": "Suchindex erstellt am <span am-time-ago='indexDate'></span>",
-        "index-old": "Suchindex veraltet. Index wurde zuletzt um <span bin - Zeit - vor='indexDate'> aktualisiert",
+        "index-ok": "Indiziert vor <span am-time-ago='indexDate'></span>",
+        "index-old": "Dieser Index ist veraltet, da er vor <span am-time-ago='indexDate'> erstellt wurde",
         "no-index": "Suchindex fehlt"
       }
+    }
+  },
+  "permissions": {
+    "search:index:rebuild": "Ermöglicht das Löschen und Neuerstellen des Suchindex",
+    "search:index:access": "Ermöglicht den Zugriff auf das Suchindex-Menü"
+  },
+  "settings": {
+    "VirtoCommerce.Search.IndexingJobs.Enable": {
+      "title": "Regelmäßige Indexierungsaufgaben",
+      "description": "Aktivieren oder deaktivieren Sie regelmäßige Suchindex-Ersteller"
+    },
+    "VirtoCommerce.Search.IndexingJobs.CronExpression": {
+      "title": "Cron-Ausdruck für Indexierungsaufgaben",
+      "description": "Für X Minuten verwenden Sie '0/x * * * *'. Für X Stunden verwenden Sie '0 */x * * *'. Sie können auch X Minuten mit '15 */x * * *' und X Tage mit '0 0 */x * *' einstellen."
+    },
+    "VirtoCommerce.Search.IndexPartitionSize": {
+      "title": "Maximale Anzahl der Elemente pro Indexpartition",
+      "description": "Geben Sie die maximale Anzahl der Elemente an, die in jeder Indexpartition enthalten sein sollen. Hohe Werte können zu einer langsameren Leistung führen."
+    },
+    "VirtoCommerce.Search.PartialDocumentUpdate.Enable": {
+      "title": "Teilaktualisierung von Dokumenten",
+      "description": "Aktivieren Sie die Teilaktualisierung von Dokumenten, wenn sie von einem Suchanbieter unterstützt wird."
     }
   }
 }

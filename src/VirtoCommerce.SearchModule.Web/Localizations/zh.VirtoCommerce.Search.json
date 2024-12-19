@@ -1,0 +1,89 @@
+{
+  "search": {
+    "commands": {
+      "apply-filter": "保存并应用",
+      "rebuild-index": "构建索引",
+      "copy-to-clipboard": "复制到剪贴板",
+      "swap-index": "切换索引",
+      "show-backup-indices": "显示备份索引",
+      "hide-backup-indices": "隐藏备份索引"
+    },
+    "main-menu-title": {
+      "search-index": "搜索索引"
+    },
+    "blades": {
+      "index-progress": {
+        "labels": {
+          "start": "开始",
+          "end": "结束",
+          "elapsed": "耗时",
+          "errors": "错误",
+          "stats": "已索引 {{ processedCount }} / {{ totalCount }} 条记录"
+        }
+      },
+      "index-detail": {
+        "title": "搜索索引",
+        "title-new": "缺少搜索索引",
+        "subtitle": "搜索索引详情",
+        "labels": {
+          "no-index": "无数据",
+          "build-date": "最后索引时间",
+          "content": "索引内容"
+        }
+      },
+      "document-type-list": {
+        "title": "记录类型",
+        "labels": {
+          "document-type": "记录类型",
+          "indexed-docs-total": "记录总数",
+          "provider": "提供者",
+          "scope": "范围",
+          "last-indexation-date": "最后索引时间",
+          "build-index": "构建索引",
+          "rebuild-index": "重建索引",
+          "swap-index": "切换索引",
+          "active": "活动索引"
+        }
+      }
+    },
+    "dialogs": {
+      "reindex": {
+        "title": "构建搜索索引",
+        "msg1": "请选择更新搜索索引的方法。有两个选项：",
+        "msg2": "构建：通过添加所有数据更新索引，而不重新开始",
+        "msg3": "删除并构建：删除当前搜索索引并从头创建一个新索引。注意：在重建完成之前，搜索结果将不可用",
+        "index": "构建",
+        "reindex": "删除并构建"
+      }
+    },
+    "widgets": {
+      "index": {
+        "index-ok": "<span am-time-ago='indexDate'></span> 已完成索引",
+        "index-old": "此索引已过期，上次构建时间为 <span am-time-ago='indexDate'>",
+        "no-index": "缺少搜索索引"
+      }
+    }
+  },
+  "permissions": {
+    "search:index:rebuild": "启用清除和重建搜索索引",
+    "search:index:access": "启用访问搜索索引菜单"
+  },
+  "settings": {
+    "VirtoCommerce.Search.IndexingJobs.Enable": {
+      "title": "定期索引作业",
+      "description": "启用或禁用定期搜索索引生成器"
+    },
+    "VirtoCommerce.Search.IndexingJobs.CronExpression": {
+      "title": "索引作业Cron表达式",
+      "description": "对于每X分钟，使用 '0/x * * * *'。对于每X小时，使用 '0 */x * * *'。您还可以设置每X分钟为 '15 */x * * *'，每X天为 '0 0 */x * *'。"
+    },
+    "VirtoCommerce.Search.IndexPartitionSize": {
+      "title": "每个索引分区的最大项目数",
+      "description": "输入每个索引分区中包含的最大项目数。设置较高的值可能会导致性能变慢。"
+    },
+    "VirtoCommerce.Search.PartialDocumentUpdate.Enable": {
+      "title": "部分文档更新",
+      "description": "如果搜索提供者支持，请启用部分文档更新。"
+    }
+  }
+}
