@@ -33,4 +33,4 @@ fragment SimpleString : [a-zA-Z0-9_-]+;
 fragment QuotedString : ('"' (Esc | ~["\\\r\n\t])* '"');
 fragment Esc          : '\\' (["\\rnt]);
 
-DL                    : [ \t,]+; 
+DL                    : [ \t,]+; // Delimiter
