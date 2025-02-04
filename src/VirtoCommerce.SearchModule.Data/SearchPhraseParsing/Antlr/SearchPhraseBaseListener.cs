@@ -205,18 +205,6 @@ public partial class SearchPhraseBaseListener : ISearchPhraseListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitUpper([NotNull] SearchPhraseParser.UpperContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="SearchPhraseParser.string"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterString([NotNull] SearchPhraseParser.StringContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="SearchPhraseParser.string"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitString([NotNull] SearchPhraseParser.StringContext context) { }
-	/// <summary>
 	/// Enter a parse tree produced by <see cref="SearchPhraseParser.negation"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
@@ -228,6 +216,18 @@ public partial class SearchPhraseBaseListener : ISearchPhraseListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitNegation([NotNull] SearchPhraseParser.NegationContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.string"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterString([NotNull] SearchPhraseParser.StringContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.string"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitString([NotNull] SearchPhraseParser.StringContext context) { }
 
 	/// <inheritdoc/>
 	/// <remarks>The default implementation does nothing.</remarks>

@@ -12,4 +12,5 @@ SearchPhrase.g4 file contains the grammar for the search phrase expression from 
 
 ## References:
 1. Use http://lab.antlr.org/ for online test.
+1. https://tomassetti.me/antlr-mega-tutorial/
 

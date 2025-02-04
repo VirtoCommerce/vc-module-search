@@ -6,19 +6,18 @@ options {
 
 searchPhrase          : DL* phrase (DL phrase)* DL*;
 phrase                : keyword | filters;
-keyword               : String;
+keyword               : string;
 filters               : negation? (attributeFilter | rangeFilter);
 attributeFilter       : fieldName FD attributeFilterValue;
 rangeFilter           : fieldName FD rangeFilterValue;
-fieldName             : String;
+fieldName             : string;
 attributeFilterValue  : string (VD string)*;
 rangeFilterValue      : range (VD range)*;
 range                 : rangeStart DL* lower? DL* RD DL* upper? DL* rangeEnd;
 rangeStart            : RangeStart;
 rangeEnd              : RangeEnd;
-lower                 : String;
-upper                 : String;
-string                : String;
+lower                 : string;
+upper                 : string;
 
 negation              : '!';
 FD                    : ':'; // Filter delimiter
@@ -27,10 +26,10 @@ RD                    : 'TO' | 'to'; // Range delimiter
 RangeStart            : '[' | '(';
 RangeEnd              : ']' | ')';
 
-String                : SimpleString | QuotedString;
+string                : SimpleString | QuotedString;
 
-fragment SimpleString : [a-zA-Z0-9_-]+;
-fragment QuotedString : ('"' (Esc | ~["\\\r\n\t])* '"');
-fragment Esc          : '\\' (["\\rnt]);
+SimpleString          : [\p{L}\p{N}_-]+;
+QuotedString          : '"' (Esc | ~["\\\r\n\t])* '"';
+Esc                   : '\\' (["\\rnt]);
 
-DL                    : [ \t,]+; // Delimiter
+DL                    : [ \t,!]+; // Delimiter

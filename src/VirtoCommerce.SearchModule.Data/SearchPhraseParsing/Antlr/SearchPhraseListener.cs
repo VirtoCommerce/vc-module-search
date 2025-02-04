@@ -172,16 +172,6 @@ public interface ISearchPhraseListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitUpper([NotNull] SearchPhraseParser.UpperContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="SearchPhraseParser.string"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterString([NotNull] SearchPhraseParser.StringContext context);
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="SearchPhraseParser.string"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitString([NotNull] SearchPhraseParser.StringContext context);
-	/// <summary>
 	/// Enter a parse tree produced by <see cref="SearchPhraseParser.negation"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
@@ -191,5 +181,15 @@ public interface ISearchPhraseListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitNegation([NotNull] SearchPhraseParser.NegationContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SearchPhraseParser.string"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterString([NotNull] SearchPhraseParser.StringContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SearchPhraseParser.string"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitString([NotNull] SearchPhraseParser.StringContext context);
 }
 } // namespace VirtoCommerce.SearchModule.Data.SearchPhraseParsing.Antlr

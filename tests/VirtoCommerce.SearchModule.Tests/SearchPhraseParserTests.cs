@@ -135,6 +135,79 @@ namespace VirtoCommerce.SearchModule.Tests
 
         }
 
+
+        [Fact]
+        public void Mix_Filter_And_Keyword_Dot()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("color:red B2B.@# test");
+            var result_quoted = parser.Parse("color:red \"B2B test\"");
+            var result_reverse = parser.Parse("B2B.@# test color:red");
+
+            Assert.Equal("B2B test", result.Keyword);
+            Assert.Single(result.Filters);
+
+            var filter = result.Filters.First() as TermFilter;
+            Assert.NotNull(filter);
+            Assert.Equal("color", filter.FieldName);
+            Assert.NotNull(filter.Values);
+            Assert.Single(filter.Values);
+
+            var value = filter.Values.First();
+            Assert.NotNull(value);
+            Assert.Equal("red", value);
+
+            result.Should().BeEquivalentTo(result_quoted);
+            result.Should().BeEquivalentTo(result_reverse);
+        }
+
+        [Fact]
+        public void Mix_Filter_And_Keyword_Russian()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("color:Red123 Привет мир!");
+            var result_quoted = parser.Parse("color:Red123 \"Привет мир\"");
+            var result_reverse = parser.Parse("Привет мир! color:Red123");
+
+            Assert.Equal("Привет мир", result.Keyword);
+            Assert.Single(result.Filters);
+
+            var filter = result.Filters.First() as TermFilter;
+            Assert.NotNull(filter);
+            Assert.Equal("color", filter.FieldName);
+            Assert.NotNull(filter.Values);
+            Assert.Single(filter.Values);
+
+            var value = filter.Values.First();
+            Assert.NotNull(value);
+            Assert.Equal("Red123", value);
+
+            result.Should().BeEquivalentTo(result_quoted);
+            result.Should().BeEquivalentTo(result_reverse);
+        }
+
+        [Fact]
+        public void MultipleFilters()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("color:red brand:apple");
+
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.Equal(2, result.Filters.Count);
+
+            var colorFilter = result.Filters.First() as TermFilter;
+            Assert.NotNull(colorFilter);
+            Assert.Equal("color", colorFilter.FieldName);
+            Assert.NotNull(colorFilter.Values);
+            Assert.Single(colorFilter.Values);
+
+            var brandFilter = result.Filters.Last() as TermFilter;
+            Assert.NotNull(brandFilter);
+            Assert.Equal("brand", brandFilter.FieldName);
+            Assert.NotNull(brandFilter.Values);
+            Assert.Single(brandFilter.Values);
+        }
+
         [Fact]
         public void Mix_Filter_And_Keyword()
         {
