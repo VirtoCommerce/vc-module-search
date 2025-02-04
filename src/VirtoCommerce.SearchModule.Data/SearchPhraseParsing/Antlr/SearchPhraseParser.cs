@@ -37,7 +37,7 @@ public partial class SearchPhraseParser : Parser {
 	protected static DFA[] decisionToDFA;
 	protected static PredictionContextCache sharedContextCache = new PredictionContextCache();
 	public const int
-		T__0=1, FD=2, VD=3, RD=4, RangeStart=5, RangeEnd=6, String=7, WS=8;
+		T__0=1, FD=2, VD=3, RD=4, RangeStart=5, RangeEnd=6, String=7, DL=8;
 	public const int
 		RULE_searchPhrase = 0, RULE_phrase = 1, RULE_keyword = 2, RULE_filters = 3, 
 		RULE_attributeFilter = 4, RULE_rangeFilter = 5, RULE_fieldName = 6, RULE_attributeFilterValue = 7, 
@@ -53,7 +53,7 @@ public partial class SearchPhraseParser : Parser {
 		null, "'!'", "':'", "','"
 	};
 	private static readonly string[] _SymbolicNames = {
-		null, null, "FD", "VD", "RD", "RangeStart", "RangeEnd", "String", "WS"
+		null, null, "FD", "VD", "RD", "RangeStart", "RangeEnd", "String", "DL"
 	};
 	public static readonly IVocabulary DefaultVocabulary = new Vocabulary(_LiteralNames, _SymbolicNames);
 
@@ -94,9 +94,9 @@ public partial class SearchPhraseParser : Parser {
 		[System.Diagnostics.DebuggerNonUserCode] public PhraseContext phrase(int i) {
 			return GetRuleContext<PhraseContext>(i);
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] WS() { return GetTokens(SearchPhraseParser.WS); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode WS(int i) {
-			return GetToken(SearchPhraseParser.WS, i);
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] DL() { return GetTokens(SearchPhraseParser.DL); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DL(int i) {
+			return GetToken(SearchPhraseParser.DL, i);
 		}
 		public SearchPhraseContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -127,11 +127,11 @@ public partial class SearchPhraseParser : Parser {
 			State = 35;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			while (_la==WS) {
+			while (_la==DL) {
 				{
 				{
 				State = 32;
-				Match(WS);
+				Match(DL);
 				}
 				}
 				State = 37;
@@ -148,7 +148,7 @@ public partial class SearchPhraseParser : Parser {
 					{
 					{
 					State = 39;
-					Match(WS);
+					Match(DL);
 					State = 40;
 					phrase();
 					}
@@ -161,11 +161,11 @@ public partial class SearchPhraseParser : Parser {
 			State = 49;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			while (_la==WS) {
+			while (_la==DL) {
 				{
 				{
 				State = 46;
-				Match(WS);
+				Match(DL);
 				}
 				}
 				State = 51;
@@ -644,9 +644,9 @@ public partial class SearchPhraseParser : Parser {
 		[System.Diagnostics.DebuggerNonUserCode] public RangeEndContext rangeEnd() {
 			return GetRuleContext<RangeEndContext>(0);
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] WS() { return GetTokens(SearchPhraseParser.WS); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode WS(int i) {
-			return GetToken(SearchPhraseParser.WS, i);
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] DL() { return GetTokens(SearchPhraseParser.DL); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DL(int i) {
+			return GetToken(SearchPhraseParser.DL, i);
 		}
 		[System.Diagnostics.DebuggerNonUserCode] public LowerContext lower() {
 			return GetRuleContext<LowerContext>(0);
@@ -690,7 +690,7 @@ public partial class SearchPhraseParser : Parser {
 					{
 					{
 					State = 92;
-					Match(WS);
+					Match(DL);
 					}
 					} 
 				}
@@ -711,11 +711,11 @@ public partial class SearchPhraseParser : Parser {
 			State = 104;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			while (_la==WS) {
+			while (_la==DL) {
 				{
 				{
 				State = 101;
-				Match(WS);
+				Match(DL);
 				}
 				}
 				State = 106;
@@ -732,7 +732,7 @@ public partial class SearchPhraseParser : Parser {
 					{
 					{
 					State = 108;
-					Match(WS);
+					Match(DL);
 					}
 					} 
 				}
@@ -753,11 +753,11 @@ public partial class SearchPhraseParser : Parser {
 			State = 120;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			while (_la==WS) {
+			while (_la==DL) {
 				{
 				{
 				State = 117;
-				Match(WS);
+				Match(DL);
 				}
 				}
 				State = 122;

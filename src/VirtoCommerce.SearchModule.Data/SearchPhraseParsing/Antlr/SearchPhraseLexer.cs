@@ -34,7 +34,7 @@ public partial class SearchPhraseLexer : Lexer {
 	protected static DFA[] decisionToDFA;
 	protected static PredictionContextCache sharedContextCache = new PredictionContextCache();
 	public const int
-		T__0=1, FD=2, VD=3, RD=4, RangeStart=5, RangeEnd=6, String=7, WS=8;
+		T__0=1, FD=2, VD=3, RD=4, RangeStart=5, RangeEnd=6, String=7, DL=8;
 	public static string[] channelNames = {
 		"DEFAULT_TOKEN_CHANNEL", "HIDDEN"
 	};
@@ -45,7 +45,7 @@ public partial class SearchPhraseLexer : Lexer {
 
 	public static readonly string[] ruleNames = {
 		"T__0", "FD", "VD", "RD", "RangeStart", "RangeEnd", "String", "SimpleString", 
-		"QuotedString", "Esc", "WS"
+		"QuotedString", "Esc", "DL"
 	};
 
 
@@ -62,7 +62,7 @@ public partial class SearchPhraseLexer : Lexer {
 		null, "'!'", "':'", "','"
 	};
 	private static readonly string[] _SymbolicNames = {
-		null, null, "FD", "VD", "RD", "RangeStart", "RangeEnd", "String", "WS"
+		null, null, "FD", "VD", "RD", "RangeStart", "RangeEnd", "String", "DL"
 	};
 	public static readonly IVocabulary DefaultVocabulary = new Vocabulary(_LiteralNames, _SymbolicNames);
 

@@ -18,7 +18,7 @@ RD
 RangeStart
 RangeEnd
 String
-WS
+DL
 
 rule names:
 searchPhrase

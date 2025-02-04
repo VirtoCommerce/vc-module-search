@@ -18,7 +18,7 @@ RD
 RangeStart
 RangeEnd
 String
-WS
+DL
 
 rule names:
 T__0
@@ -31,7 +31,7 @@ String
 SimpleString
 QuotedString
 Esc
-WS
+DL
 
 channel names:
 DEFAULT_TOKEN_CHANNEL
