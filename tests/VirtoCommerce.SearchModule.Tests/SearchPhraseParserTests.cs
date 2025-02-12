@@ -141,10 +141,10 @@ namespace VirtoCommerce.SearchModule.Tests
         {
             var parser = GetParser();
             var result = parser.Parse("color:red B2B.@# test");
-            var result_quoted = parser.Parse("color:red \"B2B test\"");
+            var result_quoted = parser.Parse("color:red \"B2B. test\"");
             var result_reverse = parser.Parse("B2B.@# test color:red");
 
-            Assert.Equal("B2B test", result.Keyword);
+            Assert.Equal("B2B. test", result.Keyword);
             Assert.Single(result.Filters);
 
             var filter = result.Filters.First() as TermFilter;
@@ -492,6 +492,42 @@ namespace VirtoCommerce.SearchModule.Tests
                 Assert.NotNull(value);
                 Assert.Equal(expectedValue, value);
             }
+        }
+
+
+        [Fact]
+        public void TestCategorySubtreePriceAndBrand()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("category.subtree:e7499b13-c61f-4bf9-9cc7-4c2b00903771 price.USD:(0 TO) \"BRAND\":\"Amstel\"");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Equal(3, result.Filters.Count);
+
+            var categoryFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "category.subtree") as TermFilter;
+            Assert.NotNull(categoryFilter);
+            Assert.NotNull(categoryFilter.Values);
+            Assert.Single(categoryFilter.Values);
+            Assert.Equal("e7499b13-c61f-4bf9-9cc7-4c2b00903771", categoryFilter.Values.First());
+
+            var priceFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "price.USD") as RangeFilter;
+            Assert.NotNull(priceFilter);
+            Assert.NotNull(priceFilter.Values);
+            Assert.Single(priceFilter.Values);
+            var priceRange = priceFilter.Values.First();
+            Assert.NotNull(priceRange);
+            Assert.Equal("0", priceRange.Lower);
+            Assert.Null(priceRange.Upper);
+            Assert.False(priceRange.IncludeLower);
+            Assert.False(priceRange.IncludeUpper);
+
+            var brandFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "BRAND") as TermFilter;
+            Assert.NotNull(brandFilter);
+            Assert.NotNull(brandFilter.Values);
+            Assert.Single(brandFilter.Values);
+            Assert.Equal("Amstel", brandFilter.Values.First());
         }
 
 
