@@ -28,7 +28,7 @@ RangeEnd              : ']' | ')';
 
 string                : SimpleString | QuotedString;
 
-SimpleString          : [\p{L}\p{N}_\-.]+;
+SimpleString          : [\p{L}\p{N}_\-./]+;
 QuotedString          : '"' (Esc | ~["\\\r\n\t])* '"';
 Esc                   : '\\' (["\\rnt]);
 

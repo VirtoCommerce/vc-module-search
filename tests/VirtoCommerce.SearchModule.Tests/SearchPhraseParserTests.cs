@@ -530,6 +530,85 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.Equal("Amstel", brandFilter.Values.First());
         }
 
+        [Fact]
+        public void TestPermalinkFilter_With_Escaping()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("permalink:\"/catalog/product\"");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Single(result.Filters);
+
+            var permalinkFilter = result.Filters.First() as TermFilter;
+            Assert.NotNull(permalinkFilter);
+            Assert.Equal("permalink", permalinkFilter.FieldName);
+            Assert.NotNull(permalinkFilter.Values);
+            Assert.Single(permalinkFilter.Values);
+            Assert.Equal("/catalog/product", permalinkFilter.Values.First());
+        }
+
+        [Fact]
+        public void TestPermalinkFilter_Without_Escaping()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("permalink:/catalog/product");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Single(result.Filters);
+
+            var permalinkFilter = result.Filters.First() as TermFilter;
+            Assert.NotNull(permalinkFilter);
+            Assert.Equal("permalink", permalinkFilter.FieldName);
+            Assert.NotNull(permalinkFilter.Values);
+            Assert.Single(permalinkFilter.Values);
+            Assert.Equal("/catalog/product", permalinkFilter.Values.First());
+        }
+
+        [Fact]
+        public void TestCategorySubtreePriceBrandAndAvailability()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("category.subtree:fc596540864a41bf8ab78734ee7353a3/cda4eb77-5ee5-492e-89f5-fa0954dfcfbb price.USD:(0 TO) \"BRAND\":\"Affligem\" availability:InStock");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Equal(4, result.Filters.Count);
+
+            var categoryFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "category.subtree") as TermFilter;
+            Assert.NotNull(categoryFilter);
+            Assert.NotNull(categoryFilter.Values);
+            Assert.Single(categoryFilter.Values);
+            Assert.Equal("fc596540864a41bf8ab78734ee7353a3/cda4eb77-5ee5-492e-89f5-fa0954dfcfbb", categoryFilter.Values.First());
+
+            var priceFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "price.USD") as RangeFilter;
+            Assert.NotNull(priceFilter);
+            Assert.NotNull(priceFilter.Values);
+            Assert.Single(priceFilter.Values);
+            var priceRange = priceFilter.Values.First();
+            Assert.NotNull(priceRange);
+            Assert.Equal("0", priceRange.Lower);
+            Assert.Null(priceRange.Upper);
+            Assert.False(priceRange.IncludeLower);
+            Assert.False(priceRange.IncludeUpper);
+
+            var brandFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "BRAND") as TermFilter;
+            Assert.NotNull(brandFilter);
+            Assert.NotNull(brandFilter.Values);
+            Assert.Single(brandFilter.Values);
+            Assert.Equal("Affligem", brandFilter.Values.First());
+
+            var availabilityFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "availability") as TermFilter;
+            Assert.NotNull(availabilityFilter);
+            Assert.NotNull(availabilityFilter.Values);
+            Assert.Single(availabilityFilter.Values);
+            Assert.Equal("InStock", availabilityFilter.Values.First());
+        }
+
 
         private static ISearchPhraseParser GetParser()
         {
