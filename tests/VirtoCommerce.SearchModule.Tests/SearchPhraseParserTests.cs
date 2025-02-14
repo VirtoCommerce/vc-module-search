@@ -91,6 +91,181 @@ namespace VirtoCommerce.SearchModule.Tests
         }
 
         [Fact]
+        public void Mix_Filter_And_Keyword_In_Quotation_Marks()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("color:red \"B2B, test\"");
+
+            Assert.Equal("B2B, test", result.Keyword);
+            Assert.Single(result.Filters);
+
+            var filter = result.Filters.First() as TermFilter;
+            Assert.NotNull(filter);
+            Assert.Equal("color", filter.FieldName);
+            Assert.NotNull(filter.Values);
+            Assert.Single(filter.Values);
+
+            var value = filter.Values.First();
+            Assert.NotNull(value);
+            Assert.Equal("red", value);
+        }
+
+        [Fact]
+        public void Mix_MultiValue_Filter_And_Keyword_In_Quotation_Marks8()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("color:red,blue \"B2B, test\"");
+
+            Assert.Equal("B2B, test", result.Keyword);
+            Assert.Single(result.Filters);
+
+            var filter = result.Filters.First() as TermFilter;
+            Assert.NotNull(filter);
+            Assert.Equal("color", filter.FieldName);
+            Assert.NotNull(filter.Values);
+            Assert.Equal(2, filter.Values.Count);
+
+            var value = filter.Values.First();
+            Assert.NotNull(value);
+            Assert.Equal("red", value);
+
+            var value2 = filter.Values.Last();
+            Assert.NotNull(value2);
+            Assert.Equal("blue", value2);
+
+        }
+
+
+        [Fact]
+        public void Mix_Filter_And_Keyword_Dot()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("color:red B2B.@# test");
+            var result_quoted = parser.Parse("color:red \"B2B. test\"");
+            var result_reverse = parser.Parse("B2B.@# test color:red");
+
+            Assert.Equal("B2B. test", result.Keyword);
+            Assert.Single(result.Filters);
+
+            var filter = result.Filters.First() as TermFilter;
+            Assert.NotNull(filter);
+            Assert.Equal("color", filter.FieldName);
+            Assert.NotNull(filter.Values);
+            Assert.Single(filter.Values);
+
+            var value = filter.Values.First();
+            Assert.NotNull(value);
+            Assert.Equal("red", value);
+
+            result.Should().BeEquivalentTo(result_quoted);
+            result.Should().BeEquivalentTo(result_reverse);
+        }
+
+        [Fact]
+        public void Mix_Filter_And_Keyword_Russian()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("color:Red123 Привет мир!");
+            var result_quoted = parser.Parse("color:Red123 \"Привет мир\"");
+            var result_reverse = parser.Parse("Привет мир! color:Red123");
+
+            Assert.Equal("Привет мир", result.Keyword);
+            Assert.Single(result.Filters);
+
+            var filter = result.Filters.First() as TermFilter;
+            Assert.NotNull(filter);
+            Assert.Equal("color", filter.FieldName);
+            Assert.NotNull(filter.Values);
+            Assert.Single(filter.Values);
+
+            var value = filter.Values.First();
+            Assert.NotNull(value);
+            Assert.Equal("Red123", value);
+
+            result.Should().BeEquivalentTo(result_quoted);
+            result.Should().BeEquivalentTo(result_reverse);
+        }
+
+        [Fact]
+        public void MultipleFilters()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("color:red brand:apple");
+
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.Equal(2, result.Filters.Count);
+
+            var colorFilter = result.Filters.First() as TermFilter;
+            Assert.NotNull(colorFilter);
+            Assert.Equal("color", colorFilter.FieldName);
+            Assert.NotNull(colorFilter.Values);
+            Assert.Single(colorFilter.Values);
+
+            var brandFilter = result.Filters.Last() as TermFilter;
+            Assert.NotNull(brandFilter);
+            Assert.Equal("brand", brandFilter.FieldName);
+            Assert.NotNull(brandFilter.Values);
+            Assert.Single(brandFilter.Values);
+        }
+
+        [Fact]
+        public void Mix_Filter_And_Keyword()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("color:red B2B, test");
+            var result_quoted = parser.Parse("color:red \"B2B test\"");
+
+            var result_reverse = parser.Parse("B2B, test color:red");
+
+            Assert.Equal("B2B test", result.Keyword);
+            Assert.Single(result.Filters);
+
+            var filter = result.Filters.First() as TermFilter;
+            Assert.NotNull(filter);
+            Assert.Equal("color", filter.FieldName);
+            Assert.NotNull(filter.Values);
+            Assert.Single(filter.Values);
+
+            var value = filter.Values.First();
+            Assert.NotNull(value);
+            Assert.Equal("red", value);
+
+            result.Should().BeEquivalentTo(result_quoted);
+            result.Should().BeEquivalentTo(result_reverse);
+        }
+
+        [Fact]
+        public void Mix_MultiValue_Filter_And_Keyword()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("color:red,blue B2B, test");
+            var result_quoted = parser.Parse("color:red,blue \"B2B test\"");
+
+            var result_reverse = parser.Parse("B2B, test color:red,blue");
+
+            Assert.Equal("B2B test", result.Keyword);
+            Assert.Single(result.Filters);
+
+            var filter = result.Filters.First() as TermFilter;
+            Assert.NotNull(filter);
+            Assert.Equal("color", filter.FieldName);
+            Assert.NotNull(filter.Values);
+            Assert.Equal(2, filter.Values.Count);
+
+            var value = filter.Values.First();
+            Assert.NotNull(value);
+            Assert.Equal("red", value);
+
+            var value2 = filter.Values.Last();
+            Assert.NotNull(value2);
+            Assert.Equal("blue", value2);
+
+
+            result.Should().BeEquivalentTo(result_quoted);
+            result.Should().BeEquivalentTo(result_reverse);
+        }
+
+        [Fact]
         public void TestAttributeFilter()
         {
             var parser = GetParser();
@@ -317,6 +492,121 @@ namespace VirtoCommerce.SearchModule.Tests
                 Assert.NotNull(value);
                 Assert.Equal(expectedValue, value);
             }
+        }
+
+
+        [Fact]
+        public void TestCategorySubtreePriceAndBrand()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("category.subtree:e7499b13-c61f-4bf9-9cc7-4c2b00903771 price.USD:(0 TO) \"BRAND\":\"Amstel\"");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Equal(3, result.Filters.Count);
+
+            var categoryFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "category.subtree") as TermFilter;
+            Assert.NotNull(categoryFilter);
+            Assert.NotNull(categoryFilter.Values);
+            Assert.Single(categoryFilter.Values);
+            Assert.Equal("e7499b13-c61f-4bf9-9cc7-4c2b00903771", categoryFilter.Values.First());
+
+            var priceFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "price.USD") as RangeFilter;
+            Assert.NotNull(priceFilter);
+            Assert.NotNull(priceFilter.Values);
+            Assert.Single(priceFilter.Values);
+            var priceRange = priceFilter.Values.First();
+            Assert.NotNull(priceRange);
+            Assert.Equal("0", priceRange.Lower);
+            Assert.Null(priceRange.Upper);
+            Assert.False(priceRange.IncludeLower);
+            Assert.False(priceRange.IncludeUpper);
+
+            var brandFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "BRAND") as TermFilter;
+            Assert.NotNull(brandFilter);
+            Assert.NotNull(brandFilter.Values);
+            Assert.Single(brandFilter.Values);
+            Assert.Equal("Amstel", brandFilter.Values.First());
+        }
+
+        [Fact]
+        public void TestPermalinkFilter_With_Escaping()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("permalink:\"/catalog/product\"");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Single(result.Filters);
+
+            var permalinkFilter = result.Filters.First() as TermFilter;
+            Assert.NotNull(permalinkFilter);
+            Assert.Equal("permalink", permalinkFilter.FieldName);
+            Assert.NotNull(permalinkFilter.Values);
+            Assert.Single(permalinkFilter.Values);
+            Assert.Equal("/catalog/product", permalinkFilter.Values.First());
+        }
+
+        [Fact]
+        public void TestPermalinkFilter_Without_Escaping()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("permalink:/catalog/product");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Single(result.Filters);
+
+            var permalinkFilter = result.Filters.First() as TermFilter;
+            Assert.NotNull(permalinkFilter);
+            Assert.Equal("permalink", permalinkFilter.FieldName);
+            Assert.NotNull(permalinkFilter.Values);
+            Assert.Single(permalinkFilter.Values);
+            Assert.Equal("/catalog/product", permalinkFilter.Values.First());
+        }
+
+        [Fact]
+        public void TestCategorySubtreePriceBrandAndAvailability()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("category.subtree:fc596540864a41bf8ab78734ee7353a3/cda4eb77-5ee5-492e-89f5-fa0954dfcfbb price.USD:(0 TO) \"BRAND\":\"Affligem\" availability:InStock");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Equal(4, result.Filters.Count);
+
+            var categoryFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "category.subtree") as TermFilter;
+            Assert.NotNull(categoryFilter);
+            Assert.NotNull(categoryFilter.Values);
+            Assert.Single(categoryFilter.Values);
+            Assert.Equal("fc596540864a41bf8ab78734ee7353a3/cda4eb77-5ee5-492e-89f5-fa0954dfcfbb", categoryFilter.Values.First());
+
+            var priceFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "price.USD") as RangeFilter;
+            Assert.NotNull(priceFilter);
+            Assert.NotNull(priceFilter.Values);
+            Assert.Single(priceFilter.Values);
+            var priceRange = priceFilter.Values.First();
+            Assert.NotNull(priceRange);
+            Assert.Equal("0", priceRange.Lower);
+            Assert.Null(priceRange.Upper);
+            Assert.False(priceRange.IncludeLower);
+            Assert.False(priceRange.IncludeUpper);
+
+            var brandFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "BRAND") as TermFilter;
+            Assert.NotNull(brandFilter);
+            Assert.NotNull(brandFilter.Values);
+            Assert.Single(brandFilter.Values);
+            Assert.Equal("Affligem", brandFilter.Values.First());
+
+            var availabilityFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "availability") as TermFilter;
+            Assert.NotNull(availabilityFilter);
+            Assert.NotNull(availabilityFilter.Values);
+            Assert.Single(availabilityFilter.Values);
+            Assert.Equal("InStock", availabilityFilter.Values.First());
         }
 
 
