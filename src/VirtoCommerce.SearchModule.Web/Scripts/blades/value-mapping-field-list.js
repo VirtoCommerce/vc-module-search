@@ -1,6 +1,8 @@
 angular.module('virtoCommerce.searchModule')
     .controller('virtoCommerce.searchModule.valueMappingFieldListController', [
-        '$scope', 'uiGridConstants', 'platformWebApp.uiGridHelper', 'platformWebApp.bladeUtils', 'platformWebApp.bladeNavigationService', 'platformWebApp.dialogService', 'virtoCommerce.searchModule.indexFieldSettingsApi',
+        '$scope', 'uiGridConstants',
+        'platformWebApp.uiGridHelper', 'platformWebApp.bladeUtils', 'platformWebApp.bladeNavigationService', 'platformWebApp.dialogService',
+        'virtoCommerce.searchModule.indexFieldSettingsApi',
         function ($scope, uiGridConstants, uiGridHelper, bladeUtils, bladeNavigationService, dialogService, indexFieldSettingsApi) {
             var blade = $scope.blade;
             blade.headIcon = 'fas fa-wrench';

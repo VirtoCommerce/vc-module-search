@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.SearchModule.Core;
+using VirtoCommerce.SearchModule.Core.Extensions;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 
@@ -58,7 +59,7 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
         var fieldSettings = await GetAllFieldSettings();
 
         return fieldSettings
-            .Where(x => ids.Any(id => id.EqualsIgnoreCase(x.Id)))
+            .Where(x => ids.ContainsIgnoreCase(x.Id))
             .ToList();
     }
 
@@ -148,7 +149,11 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
 
         foreach (var valueSetting in fieldSetting.Values)
         {
-            valueSetting.Synonyms = valueSetting.Synonyms?.OrderBy(x => x, _ignoreCase).Distinct(_ignoreCase).ToList() ?? [];
+            valueSetting.Synonyms = valueSetting.Synonyms
+                ?.Where(x => !string.IsNullOrEmpty(x))
+                .OrderBy(x => x, _ignoreCase)
+                .Distinct(_ignoreCase)
+                .ToList() ?? [];
         }
     }
 
@@ -159,12 +164,9 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
             fieldSetting.Id = NewId();
         }
 
-        foreach (var valueSetting in fieldSetting.Values ?? [])
+        foreach (var valueSetting in fieldSetting.Values.Where(x => string.IsNullOrEmpty(x.Id)))
         {
-            if (string.IsNullOrEmpty(valueSetting.Id))
-            {
-                valueSetting.Id = NewId();
-            }
+            valueSetting.Id = NewId();
         }
     }
 
@@ -186,15 +188,12 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
                 throw new InvalidOperationException($"Index field setting '{fieldKey}' already exists.");
             }
 
-            foreach (var valueSetting in fieldSetting.Values ?? [])
+            foreach (var synonym in fieldSetting.Values.SelectMany(x => x.Synonyms))
             {
-                foreach (var synonym in valueSetting.Synonyms)
+                var synonymKey = $"{fieldKey}.{synonym}";
+                if (!synonymKeys.Add(synonymKey))
                 {
-                    var synonymKey = $"{fieldKey}.{synonym}";
-                    if (!synonymKeys.Add(synonymKey))
-                    {
-                        throw new InvalidOperationException($"Synonym '{synonymKey}' already exists.");
-                    }
+                    throw new InvalidOperationException($"Synonym '{synonymKey}' already exists.");
                 }
             }
         }

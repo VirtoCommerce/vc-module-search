@@ -11,7 +11,9 @@ angular.module('virtoCommerce.searchModule')
                 blade.originalEntity = {};
                 blade.originalEntity.id = blade.data.id;
                 blade.originalEntity.value = blade.data.value;
-                blade.originalEntity.values = blade.data.synonyms.map(x => { return { value: x } });
+                blade.originalEntity.values = blade.data.synonyms.map(x => {
+                    return { value: x }
+                });
 
                 blade.currentEntity = angular.copy(blade.originalEntity);
                 blade.isLoading = false;
@@ -33,10 +35,11 @@ angular.module('virtoCommerce.searchModule')
             $scope.saveChanges = function () {
                 angular.copy(blade.currentEntity, blade.originalEntity);
 
-                const data = {};
-                data.id = blade.currentEntity.id;
-                data.value = blade.currentEntity.value;
-                data.synonyms = blade.currentEntity.values.map(x => x.value).filter(x => !!x);
+                const data = {
+                    id: blade.currentEntity.id,
+                    value: blade.currentEntity.value,
+                    synonyms: blade.currentEntity.values.map(x => x.value).filter(x => !!x),
+                };
 
                 blade.parentRefresh(data);
                 $scope.bladeClose();
