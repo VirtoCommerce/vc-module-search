@@ -2,12 +2,12 @@
   "search": {
     "commands": {
       "apply-filter": "Save and apply",
-      "value-mapping": "Value mapping",
       "rebuild-index": "Build index",
       "copy-to-clipboard": "Copy to clipboard",
       "swap-index": "Swap indices",
       "show-backup-indices": "Show backup indices",
-      "hide-backup-indices": "Hide backup indices"
+      "hide-backup-indices": "Hide backup indices",
+      "value-mapping": "Value mapping"
     },
     "main-menu-title": {
       "search-index": "Search index"
