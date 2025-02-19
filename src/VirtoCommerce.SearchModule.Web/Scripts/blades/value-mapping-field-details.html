@@ -1,0 +1,57 @@
+<div class="blade-content">
+  <div class="blade-inner">
+    <div class="inner-block">
+      <form class="form" name="formScope">
+        <fieldset>
+          <div class="form-group" ng-init="setForm(formScope)">
+            <label class="form-label">{{ 'search.blades.value-mapping.field-name.label' | translate }}</label>
+            <div class="form-input">
+              <input ng-model="blade.currentEntity.fieldName" placeholder="{{ 'search.blades.value-mapping.field-name.placeholder' | translate }}" focus-on required>
+            </div>
+          </div>
+        </fieldset>
+      </form>
+
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="table-col">
+                <label class="form-control __checkbox">
+                  <input type="checkbox" ng-model="blade.selectedAll" ng-change="toggleAll()" />
+                  <span class="check"></span>
+                </label>
+              </th>
+              <th class="table-col">{{ 'search.blades.value-mapping.values.label' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-if="blade.currentEntity.values.length"
+                ng-repeat="setting in blade.currentEntity.values track by $index"
+                ng-class="{'__selected': setting.id === selectedNodeId}"
+                class="table-item">
+              <td class="table-col">
+                <label class="form-control __checkbox">
+                  <input type="checkbox" ng-model="setting.$selected">
+                  <span class="check"></span>
+                </label>
+              </td>
+              <td class="table-col" ng-click="blade.selectNode(setting)">
+                <span>{{setting.value}}</span>
+                <span class="table-descr">{{ setting.synonyms | join: ", "}}</span>
+              </td>
+            </tr>
+
+            <tr ng-if="!blade.currentEntity.values.length">
+              <td class="table-col" colspan="2">
+                <div>{{ 'platform.list.no-data' | translate }}</div>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>

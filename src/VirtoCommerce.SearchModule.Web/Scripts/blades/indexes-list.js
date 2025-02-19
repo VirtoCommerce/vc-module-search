@@ -7,7 +7,8 @@ angular.module('virtoCommerce.searchModule')
             blade.manageIndexMode = false;
 
             blade.showBackupIndicesCommand = {
-                name: 'Show backup indices', icon: 'fas fa-eye',
+                name: 'Show backup indices',
+                icon: 'fas fa-eye',
                 canExecuteMethod: function () {
                     return true;
                 },
@@ -84,7 +85,7 @@ angular.module('virtoCommerce.searchModule')
                 var documentTypesGroup = _.groupBy(documentTypes, function (x) { return x.documentType; });
 
                 var dialog = {
-                    id: "confirmRebuildIndex",
+                    id: 'confirmRebuildIndex',
                     callback: function (doReindex) {
                         var options = _.map(documentTypesGroup, function (x) {
                             var documentType = _.first(x);
@@ -116,6 +117,16 @@ angular.module('virtoCommerce.searchModule')
                     blade.refresh();
                 });
             }
+
+            $scope.openValueMapping = function (entity) {
+                var newBlade = {
+                    id: 'indexConfiguration',
+                    controller: 'virtoCommerce.searchModule.valueMappingFieldListController',
+                    template: 'Modules/$(VirtoCommerce.Search)/Scripts/blades/value-mapping-field-list.html',
+                    currentEntity: entity,
+                };
+                bladeNavigationService.showBlade(newBlade, blade);
+            };
 
             // ui-grid
             $scope.setGridOptions = function (gridId, gridOptions) {

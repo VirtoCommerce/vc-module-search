@@ -99,7 +99,7 @@ namespace VirtoCommerce.SearchModule.Tests
             var options = new IndexingOptions
             {
                 DocumentType = DocumentType,
-                DocumentIds = new[] { "bad1", "good3", "non-existent-id" },
+                DocumentIds = ["bad1", "good3", "non-existent-id"],
                 BatchSize = batchSize,
             };
 
@@ -141,26 +141,26 @@ namespace VirtoCommerce.SearchModule.Tests
                 case Primary:
                     return new DocumentSource(name)
                     {
-                        DocumentIds = new[]
-                        {
+                        DocumentIds =
+                        [
                             "bad1",
                             "good2",
                             "good3",
-                        },
-                        Changes = new[]
-                        {
+                        ],
+                        Changes =
+                        [
                             new IndexDocumentChange { ChangeDate = new DateTime(1, 1, 1), DocumentId = "bad1", ChangeType = IndexDocumentChangeType.Modified },
                             new IndexDocumentChange { ChangeDate = new DateTime(1, 1, 2), DocumentId = "good1", ChangeType = IndexDocumentChangeType.Modified },
                             new IndexDocumentChange { ChangeDate = new DateTime(1, 1, 3), DocumentId = "good1", ChangeType = IndexDocumentChangeType.Deleted },
                             new IndexDocumentChange { ChangeDate = new DateTime(1, 1, 4), DocumentId = "good2", ChangeType = IndexDocumentChangeType.Modified },
                             new IndexDocumentChange { ChangeDate = new DateTime(1, 1, 5), DocumentId = "good3", ChangeType = IndexDocumentChangeType.Modified },
-                        }
+                        ],
                     };
                 case Secondary:
                     return new DocumentSource(name)
                     {
-                        Changes = new[]
-                        {
+                        Changes =
+                        [
                             new IndexDocumentChange { ChangeDate = new DateTime(1, 1, 2), DocumentId = "bad1", ChangeType = IndexDocumentChangeType.Modified },
                             new IndexDocumentChange { ChangeDate = new DateTime(1, 1, 3), DocumentId = "good1", ChangeType = IndexDocumentChangeType.Modified },
                             new IndexDocumentChange { ChangeDate = new DateTime(1, 1, 4), DocumentId = "good1", ChangeType = IndexDocumentChangeType.Modified },
@@ -168,7 +168,7 @@ namespace VirtoCommerce.SearchModule.Tests
                             new IndexDocumentChange { ChangeDate = new DateTime(1, 1, 6), DocumentId = "good2", ChangeType = IndexDocumentChangeType.Modified },
                             new IndexDocumentChange { ChangeDate = new DateTime(1, 1, 7), DocumentId = "good3", ChangeType = IndexDocumentChangeType.Modified },
                             new IndexDocumentChange { ChangeDate = new DateTime(1, 1, 8), DocumentId = "good3", ChangeType = IndexDocumentChangeType.Modified },
-                        }
+                        ],
                     };
             }
 
@@ -259,7 +259,7 @@ namespace VirtoCommerce.SearchModule.Tests
                     Value = true
                 });
 
-            return new IndexingManager(searchProvider, new[] { configuration }, new Mock<IOptions<SearchOptions>>().Object, settingsManager.Object);
+            return new IndexingManager(searchProvider, [configuration], new Mock<IOptions<SearchOptions>>().Object, settingsManager.Object, Array.Empty<IIndexDocumentConverter>());
         }
 
         private static IndexDocumentSource CreateIndexDocumentSource(DocumentSource documentSource)

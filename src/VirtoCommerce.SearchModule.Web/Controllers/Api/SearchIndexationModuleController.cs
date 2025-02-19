@@ -11,7 +11,7 @@ using VirtoCommerce.SearchModule.Core.Extensions;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 
-namespace VirtoCommerce.SearchModule.Web.Controllers
+namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 {
     [Route("api/search/indexes")]
     [Produces("application/json")]
