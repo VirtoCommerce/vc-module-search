@@ -14,6 +14,7 @@ angular.module('virtoCommerce.searchModule')
 
                 indexFieldSettingsApi.search({
                     documentType: blade.currentEntity.documentType,
+                    keyword: filter.keyword,
                 }, function (data) {
                     blade.isLoading = false;
 

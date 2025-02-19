@@ -42,6 +42,11 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
             query = query.Where(x => x.FieldName.EqualsIgnoreCase(criteria.FieldName));
         }
 
+        if (!string.IsNullOrEmpty(criteria.Keyword))
+        {
+            query = query.Where(x => x.FieldName.Contains(criteria.Keyword, StringComparison.OrdinalIgnoreCase));
+        }
+
         var result = AbstractTypeFactory<IndexFieldSettingSearchResult>.TryCreateInstance();
         result.Results = query.ToList();
         result.TotalCount = result.Results.Count;
