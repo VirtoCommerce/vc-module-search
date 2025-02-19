@@ -63,7 +63,7 @@
        role="{{ col.isRowHeader ? 'rowheader' : 'gridcell' }}"
        data-target="prl_menu"
        ng-repeat="(colRenderIndex, col) in colContainer.renderedColumns track by col.uid"
-       ng-class="{ 'ui-grid-row-header-cell': col.isRowHeader, '__hovered': grid.appScope.contextMenuEntity === row.entity }"
+       ng-class="{ 'ui-grid-row-header-cell': col.isRowHeader, '__hovered': grid.appScope.contextMenuEntity === row.entity, '__selected': row.entity.documentType===grid.appScope.selectedNodeId }"
        ui-grid-one-bind-id-grid="rowRenderIndex + '-' + col.uid + '-cell'"
        ui-grid-cell
        ng-click="grid.appScope.openValueMapping(row.entity)"

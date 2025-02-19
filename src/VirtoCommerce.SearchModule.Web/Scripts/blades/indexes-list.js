@@ -119,8 +119,9 @@ angular.module('virtoCommerce.searchModule')
             }
 
             $scope.openValueMapping = function (entity) {
+                $scope.selectedNodeId = entity.documentType;
                 var newBlade = {
-                    id: 'indexConfiguration',
+                    id: 'valueMappingFieldList',
                     controller: 'virtoCommerce.searchModule.valueMappingFieldListController',
                     template: 'Modules/$(VirtoCommerce.Search)/Scripts/blades/value-mapping-field-list.html',
                     currentEntity: entity,
