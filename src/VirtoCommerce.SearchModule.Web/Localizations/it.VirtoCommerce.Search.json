@@ -6,7 +6,8 @@
       "copy-to-clipboard": "Copia negli appunti",
       "swap-index": "Scambia indici",
       "show-backup-indices": "Mostra indici di backup",
-      "hide-backup-indices": "Nascondi indici di backup"
+      "hide-backup-indices": "Nascondi indici di backup",
+      "value-mapping": "Mappatura valori"
     },
     "main-menu-title": {
       "search-index": "Indice di ricerca"
@@ -44,6 +45,26 @@
           "swap-index": "Scambia indici",
           "active": "Indice attivo"
         }
+      },
+      "value-mapping": {
+        "title": "Mappatura valori",
+        "manage": "Gestisci",
+        "new-field": "Nuovo campo",
+        "new-value": "Nuovo valore",
+        "field-name": {
+          "label": "Nome campo",
+          "placeholder": "Inserisci il nome del campo"
+        },
+        "values": {
+          "label": "Valori"
+        },
+        "value": {
+          "label": "Valore",
+          "placeholder": "Inserisci o seleziona il valore del campo"
+        },
+        "synonyms": {
+          "label": "Sinonimi"
+        }
       }
     },
     "dialogs": {
@@ -54,6 +75,14 @@
         "msg3": "Elimina e costruisci: Rimuove l'indice di ricerca corrente e ne crea uno nuovo. Nota: I risultati della ricerca non saranno disponibili fino al termine della ricostruzione",
         "index": "Costruisci",
         "reindex": "Elimina e costruisci"
+      },
+      "value-mapping-delete-fields": {
+        "title": "Conferma eliminazione",
+        "message": "Sei sicuro di voler eliminare {{quantity}} campo/i selezionato/i?"
+      },
+      "value-mapping-save-values": {
+        "title": "Salva modifiche",
+        "message": "Questa mappatura valori è stata modificata. Salvare le modifiche?"
       }
     },
     "widgets": {
@@ -66,7 +95,8 @@
   },
   "permissions": {
     "search:index:rebuild": "Consente di cancellare e ricostruire l'indice di ricerca",
-    "search:index:access": "Consente l'accesso al menu dell'indice di ricerca"
+    "search:index:access": "Consente l'accesso al menu dell'indice di ricerca",
+    "search:index:manage": "Abilita la modifica della configurazione dell'indice"
   },
   "settings": {
     "VirtoCommerce.Search.IndexingJobs.Enable": {

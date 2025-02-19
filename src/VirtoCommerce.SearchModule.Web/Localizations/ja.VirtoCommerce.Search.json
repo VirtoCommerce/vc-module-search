@@ -6,7 +6,8 @@
       "copy-to-clipboard": "クリップボードにコピー",
       "swap-index": "インデックスを交換",
       "show-backup-indices": "バックアップインデックスを表示",
-      "hide-backup-indices": "バックアップインデックスを非表示"
+      "hide-backup-indices": "バックアップインデックスを非表示",
+      "value-mapping": "値マッピング"
     },
     "main-menu-title": {
       "search-index": "検索インデックス"
@@ -44,6 +45,26 @@
           "swap-index": "インデックスを交換",
           "active": "アクティブなインデックス"
         }
+      },
+      "value-mapping": {
+        "title": "値マッピング",
+        "manage": "管理",
+        "new-field": "新しいフィールド",
+        "new-value": "新しい値",
+        "field-name": {
+          "label": "フィールド名",
+          "placeholder": "フィールド名を入力"
+        },
+        "values": {
+          "label": "価値"
+        },
+        "value": {
+          "label": "価値",
+          "placeholder": "フィールドの値を入力または選択"
+        },
+        "synonyms": {
+          "label": "同義語"
+        }
       }
     },
     "dialogs": {
@@ -54,6 +75,14 @@
         "msg3": "削除して構築：現在のインデックスを削除して新しいインデックスを作成します。注：再構築が完了するまで検索結果は利用できません",
         "index": "構築",
         "reindex": "削除して構築"
+      },
+      "value-mapping-delete-fields": {
+        "title": "削除の確認",
+        "message": "選択した{{quantity}}個のフィールドを削除してもよろしいですか？"
+      },
+      "value-mapping-save-values": {
+        "title": "変更を保存",
+        "message": "この値マッピングは変更されました。変更を保存しますか？"
       }
     },
     "widgets": {
@@ -66,7 +95,8 @@
   },
   "permissions": {
     "search:index:rebuild": "検索インデックスの消去と再構築を有効化",
-    "search:index:access": "検索インデックスメニューへのアクセスを有効化"
+    "search:index:access": "検索インデックスメニューへのアクセスを有効化",
+    "search:index:manage": "インデックス設定の編集を有効にする"
   },
   "settings": {
     "VirtoCommerce.Search.IndexingJobs.Enable": {

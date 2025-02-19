@@ -6,7 +6,8 @@
       "copy-to-clipboard": "In die Zwischenablage kopieren",
       "swap-index": "Indizes tauschen",
       "show-backup-indices": "Sicherungsindizes anzeigen",
-      "hide-backup-indices": "Sicherungsindizes ausblenden"
+      "hide-backup-indices": "Sicherungsindizes ausblenden",
+      "value-mapping": "Wertezuordnung"
     },
     "main-menu-title": {
       "search-index": "Suchindex"
@@ -44,6 +45,26 @@
           "swap-index": "Indizes tauschen",
           "active": "Aktiver Index"
         }
+      },
+      "value-mapping": {
+        "title": "Wertezuordnung",
+        "manage": "Verwalten",
+        "new-field": "Neues Feld",
+        "new-value": "Neuer Wert",
+        "field-name": {
+          "label": "Feldname",
+          "placeholder": "Feldnamen eingeben"
+        },
+        "values": {
+          "label": "Werte"
+        },
+        "value": {
+          "label": "Wert",
+          "placeholder": "Feldwert eingeben oder auswählen"
+        },
+        "synonyms": {
+          "label": "Synonyme"
+        }
       }
     },
     "dialogs": {
@@ -54,6 +75,14 @@
         "msg3": "Löschen und Erstellen: Entfernt den aktuellen Suchindex und erstellt einen neuen. Hinweis: Suchergebnisse sind erst nach Abschluss der Neuerstellung verfügbar",
         "index": "Erstellen",
         "reindex": "Löschen und Erstellen"
+      },
+      "value-mapping-delete-fields": {
+        "title": "Löschbestätigung",
+        "message": "Möchten Sie wirklich die {{quantity}} ausgewählten Felder löschen?"
+      },
+      "value-mapping-save-values": {
+        "title": "Änderungen speichern",
+        "message": "Diese Wertzuordnung wurde geändert. Änderungen speichern?"
       }
     },
     "widgets": {
@@ -66,7 +95,8 @@
   },
   "permissions": {
     "search:index:rebuild": "Ermöglicht das Löschen und Neuerstellen des Suchindex",
-    "search:index:access": "Ermöglicht den Zugriff auf das Suchindex-Menü"
+    "search:index:access": "Ermöglicht den Zugriff auf das Suchindex-Menü",
+    "search:index:manage": "Ermöglicht die Bearbeitung der Indexkonfiguration"
   },
   "settings": {
     "VirtoCommerce.Search.IndexingJobs.Enable": {
