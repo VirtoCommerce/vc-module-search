@@ -1,8 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using VirtoCommerce.Platform.Core.Common;
-using VirtoCommerce.SearchModule.Core.Extensions;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 
@@ -64,7 +64,7 @@ public class FieldValueConverter(IIndexFieldSettingSearchService searchService) 
     {
         newValue = null;
 
-        var valueSetting = valueSettings.FirstOrDefault(x => x.Synonyms.ContainsIgnoreCase(value));
+        var valueSetting = valueSettings.FirstOrDefault(x => x.Synonyms.Contains(value, StringComparer.OrdinalIgnoreCase));
         if (valueSetting is null)
         {
             return false;

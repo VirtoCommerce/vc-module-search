@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.SearchModule.Core;
-using VirtoCommerce.SearchModule.Core.Extensions;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 
@@ -17,15 +14,6 @@ namespace VirtoCommerce.SearchModule.Data.Services;
 public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndexFieldSettingSearchService, IIndexFieldSettingService
 {
     private readonly StringComparer _ignoreCase = StringComparer.OrdinalIgnoreCase;
-
-    private static readonly JsonSerializer _jsonSerializer = new()
-    {
-        DefaultValueHandling = DefaultValueHandling.Include,
-        NullValueHandling = NullValueHandling.Include,
-        Formatting = Formatting.Indented,
-        ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-        TypeNameHandling = TypeNameHandling.None,
-    };
 
     public async Task<IndexFieldSettingSearchResult> SearchAsync(IndexFieldSettingSearchCriteria criteria, bool clone = true)
     {
@@ -64,7 +52,7 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
         var fieldSettings = await GetAllFieldSettings();
 
         return fieldSettings
-            .Where(x => ids.ContainsIgnoreCase(x.Id))
+            .Where(x => ids.Contains(x.Id, _ignoreCase))
             .ToList();
     }
 
@@ -208,24 +196,16 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
     {
         var json = await settingsManager.GetValueAsync<string>(ModuleConstants.Settings.General.IndexSettings);
 
-        using var stringReader = new StringReader(json);
-        await using var jsonTextReader = new JsonTextReader(stringReader);
-        var fieldSettings = _jsonSerializer.Deserialize<IList<IndexFieldSetting>>(jsonTextReader);
-
-        return fieldSettings;
+        return JsonConvert.DeserializeObject<IList<IndexFieldSetting>>(json);
     }
 
     private void SaveAllFieldSettings(IList<IndexFieldSetting> fieldSettings)
     {
-        using var stream = new MemoryStream();
-        using var streamWriter = new StreamWriter(stream, Encoding.UTF8, 1024, true);
-        streamWriter.AutoFlush = true;
-        using JsonWriter writer = new JsonTextWriter(streamWriter);
-        _jsonSerializer.Serialize(writer, fieldSettings.OrderBy(x => x.DocumentType, _ignoreCase).ThenBy(x => x.FieldName, _ignoreCase));
+        var orderedSettings = fieldSettings
+            .OrderBy(x => x.DocumentType, _ignoreCase)
+            .ThenBy(x => x.FieldName, _ignoreCase);
 
-        stream.Seek(0, SeekOrigin.Begin);
-        var json = stream.ReadToString();
-
+        var json = JsonConvert.SerializeObject(orderedSettings, Formatting.Indented);
         settingsManager.SetValueAsync(ModuleConstants.Settings.General.IndexSettings.Name, json);
     }
 }
