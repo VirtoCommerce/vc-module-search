@@ -82,7 +82,7 @@
       },
       "value-mapping-save-values": {
         "title": "Änderungen speichern",
-        "message": "Diese Wertzuordnung wurde geändert. Änderungen speichern?"
+        "message": "Diese Wertzuordnung wurde geändert. Möchten Sie die Änderungen speichern?"
       }
     },
     "widgets": {

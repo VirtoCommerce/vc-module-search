@@ -78,7 +78,7 @@
       },
       "value-mapping-delete-fields": {
         "title": "Подтверждение удаления",
-        "message": "Вы уверены, что хотите удалить {{quantity}} выбранных полей?"
+        "message": "Вы уверены, что хотите удалить {{quantity}} поле/поля/полей?"
       },
       "value-mapping-save-values": {
         "title": "Сохранить изменения",
@@ -96,7 +96,7 @@
   "permissions": {
     "search:index:rebuild": "Позволяет очистить и перестроить индекс поиска",
     "search:index:access": "Разрешает доступ к меню индекса поиска",
-    "search:index:manage": "Разрешить редактирование конфигурации индекса"
+    "search:index:manage": "Разрешает редактирование конфигурации индекса"
   },
   "settings": {
     "VirtoCommerce.Search.IndexingJobs.Enable": {
