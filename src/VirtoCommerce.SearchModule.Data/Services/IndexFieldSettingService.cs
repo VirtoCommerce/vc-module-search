@@ -76,7 +76,7 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
         }
 
         CheckDuplicates(fieldSettings);
-        SaveAllFieldSettings(fieldSettings);
+        await SaveAllFieldSettings(fieldSettings);
     }
 
     public async Task DeleteAsync(IList<string> ids, bool softDelete = false)
@@ -97,7 +97,7 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
             }
         }
 
-        SaveAllFieldSettings(fieldSettings);
+        await SaveAllFieldSettings(fieldSettings);
     }
 
 
@@ -199,13 +199,14 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
         return JsonConvert.DeserializeObject<IList<IndexFieldSetting>>(json);
     }
 
-    private void SaveAllFieldSettings(IList<IndexFieldSetting> fieldSettings)
+    private Task SaveAllFieldSettings(IList<IndexFieldSetting> fieldSettings)
     {
         var orderedSettings = fieldSettings
             .OrderBy(x => x.DocumentType, _ignoreCase)
             .ThenBy(x => x.FieldName, _ignoreCase);
 
         var json = JsonConvert.SerializeObject(orderedSettings, Formatting.Indented);
-        settingsManager.SetValueAsync(ModuleConstants.Settings.General.IndexSettings.Name, json);
+
+        return settingsManager.SetValueAsync(ModuleConstants.Settings.General.IndexSettings.Name, json);
     }
 }
