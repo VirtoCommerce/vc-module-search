@@ -10,6 +10,8 @@ namespace VirtoCommerce.SearchModule.Data.Services;
 
 public class FieldValueConverter(IIndexFieldSettingSearchService searchService) : IIndexDocumentConverter
 {
+    private static readonly StringComparer _ignoreCase = StringComparer.OrdinalIgnoreCase;
+
     public async Task ConvertAsync(string documentType, IList<IndexDocument> documents)
     {
         var criteria = AbstractTypeFactory<IndexFieldSettingSearchCriteria>.TryCreateInstance();
@@ -36,6 +38,7 @@ public class FieldValueConverter(IIndexFieldSettingSearchService searchService) 
 
     private static void NormalizeValues(IndexDocumentField documentField, IList<IndexFieldValueSetting> valueSettings)
     {
+        // Avoid memory allocation if no values need to be replaced.
         List<string> newValues = null;
 
         for (var i = 0; i < documentField.Values.Count; i++)
@@ -56,7 +59,7 @@ public class FieldValueConverter(IIndexFieldSettingSearchService searchService) 
 
         if (newValues != null)
         {
-            documentField.Values = newValues.Distinct().ToList<object>();
+            documentField.Values = newValues.Distinct(_ignoreCase).ToList<object>();
         }
     }
 
@@ -64,7 +67,7 @@ public class FieldValueConverter(IIndexFieldSettingSearchService searchService) 
     {
         newValue = null;
 
-        var valueSetting = valueSettings.FirstOrDefault(x => x.Synonyms.Contains(value, StringComparer.OrdinalIgnoreCase));
+        var valueSetting = valueSettings.FirstOrDefault(x => x.Synonyms.Contains(value, _ignoreCase));
         if (valueSetting is null)
         {
             return false;

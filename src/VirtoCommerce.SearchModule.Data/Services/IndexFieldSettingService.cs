@@ -13,7 +13,7 @@ namespace VirtoCommerce.SearchModule.Data.Services;
 
 public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndexFieldSettingSearchService, IIndexFieldSettingService
 {
-    private readonly StringComparer _ignoreCase = StringComparer.OrdinalIgnoreCase;
+    private static readonly StringComparer _ignoreCase = StringComparer.OrdinalIgnoreCase;
 
     public async Task<IndexFieldSettingSearchResult> SearchAsync(IndexFieldSettingSearchCriteria criteria, bool clone = true)
     {
