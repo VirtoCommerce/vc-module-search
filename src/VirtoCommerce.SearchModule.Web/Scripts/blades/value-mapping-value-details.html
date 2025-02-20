@@ -1,0 +1,63 @@
+<div class="blade-static __bottom" ng-include="'$(Platform)/Scripts/common/templates/ok-cancel2.tpl.html'"></div>
+
+<div class="blade-content">
+  <div class="blade-inner">
+    <div class="inner-block">
+      <form class="form" name="formScope">
+        <fieldset ng-init="setForm(formScope)">
+
+          <datalist id="value-options">
+            <option ng-repeat="item in blade.field.values" value="{{ item }}">
+          </datalist>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'search.blades.value-mapping.value.label' | translate }}</label>
+            <div class="form-input">
+              <input required ng-model="blade.currentEntity.value" type="text" list="value-options" placeholder="{{ 'search.blades.value-mapping.value.placeholder' | translate }}">
+            </div>
+          </div>
+
+        </fieldset>
+      </form>
+
+      <div class="table-wrapper">
+        <table class="table __indexed">
+          <thead>
+            <tr>
+              <th class="table-col">
+                <label class="form-control __checkbox">
+                  <input type="checkbox" ng-model="blade.selectedAll" ng-change="toggleAll()" />
+                  <span class="check"></span>
+                </label>
+              </th>
+              <th class="table-col">{{ 'search.blades.value-mapping.synonyms.label' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-if="blade.currentEntity.values.length" ng-repeat="synonym in blade.currentEntity.values">
+              <td class="table-col">
+                <label class="form-control __checkbox">
+                  <input type="checkbox" ng-model="synonym.$selected">
+                  <span class="check"></span>
+                </label>
+              </td>
+              <td class="table-col">
+                <div class="form-input">
+                  <input required ng-model="synonym.value" type="text" list="value-options" placeholder="{{ 'search.blades.value-mapping.value.placeholder' | translate }}" />
+                </div>
+              </td>
+            </tr>
+
+            <tr ng-if="!blade.currentEntity.values.length">
+              <td class="table-col" colspan="2">
+                <div>{{ 'platform.list.no-data' | translate }}</div>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>

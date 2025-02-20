@@ -16,11 +16,14 @@ namespace VirtoCommerce.SearchModule.Core
             {
                 public const string IndexAccess = "search:index:access";
                 public const string IndexRebuild = "search:index:rebuild";
+                public const string IndexManage = "search:index:manage";
 
-                public static string[] AllPermissions { get; } = {
+                public static string[] AllPermissions { get; } =
+                [
                     IndexAccess,
                     IndexRebuild,
-                };
+                    IndexManage,
+                ];
             }
         }
 
@@ -46,12 +49,22 @@ namespace VirtoCommerce.SearchModule.Core
                     DefaultValue = false,
                 };
 
+                public static SettingDescriptor IndexSettings { get; } = new()
+                {
+                    Name = "VirtoCommerce.Search.IndexSettings",
+                    GroupName = "Search|General",
+                    ValueType = SettingValueType.Json,
+                    DefaultValue = "[]",
+                    IsHidden = true,
+                };
+
                 public static IEnumerable<SettingDescriptor> AllGeneralSettings
                 {
                     get
                     {
                         yield return IndexPartitionSize;
                         yield return EnablePartialDocumentUpdate;
+                        yield return IndexSettings;
                     }
                 }
             }

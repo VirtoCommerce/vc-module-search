@@ -6,7 +6,8 @@
       "copy-to-clipboard": "Kopiuj do schowka",
       "swap-index": "Zamień indeksy",
       "show-backup-indices": "Pokaż indeksy zapasowe",
-      "hide-backup-indices": "Ukryj indeksy zapasowe"
+      "hide-backup-indices": "Ukryj indeksy zapasowe",
+      "value-mapping": "Mapowanie wartości"
     },
     "main-menu-title": {
       "search-index": "Indeks wyszukiwania"
@@ -44,6 +45,26 @@
           "swap-index": "Zamień indeksy",
           "active": "Aktywny indeks"
         }
+      },
+      "value-mapping": {
+        "title": "Mapowanie wartości",
+        "manage": "Zarządzaj",
+        "new-field": "Nowe pole",
+        "new-value": "Nowa wartość",
+        "field-name": {
+          "label": "Nazwa pola",
+          "placeholder": "Wprowadź nazwę pola"
+        },
+        "values": {
+          "label": "Wartości"
+        },
+        "value": {
+          "label": "Wartość",
+          "placeholder": "Wprowadź lub wybierz wartość pola"
+        },
+        "synonyms": {
+          "label": "Synonimy"
+        }
       }
     },
     "dialogs": {
@@ -54,6 +75,14 @@
         "msg3": "Usuń i buduj: Usuwa bieżący indeks i tworzy nowy od podstaw. Uwaga: Wyniki wyszukiwania będą niedostępne do czasu zakończenia odbudowy",
         "index": "Buduj",
         "reindex": "Usuń i buduj"
+      },
+      "value-mapping-delete-fields": {
+        "title": "Potwierdź usunięcie",
+        "message": "Czy na pewno chcesz usunąć {{quantity}} zaznaczone pole/pola/pól?"
+      },
+      "value-mapping-save-values": {
+        "title": "Zapisz zmiany",
+        "message": "To mapowanie wartości zostało zmodyfikowane. Czy chcesz zapisać zmiany?"
       }
     },
     "widgets": {
@@ -66,7 +95,8 @@
   },
   "permissions": {
     "search:index:rebuild": "Pozwala na czyszczenie i odbudowę indeksu wyszukiwania",
-    "search:index:access": "Pozwala na dostęp do menu indeksu wyszukiwania"
+    "search:index:access": "Pozwala na dostęp do menu indeksu wyszukiwania",
+    "search:index:manage": "Umożliwia edycję konfiguracji indeksu"
   },
   "settings": {
     "VirtoCommerce.Search.IndexingJobs.Enable": {

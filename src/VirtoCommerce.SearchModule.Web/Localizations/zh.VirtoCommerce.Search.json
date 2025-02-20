@@ -6,7 +6,8 @@
       "copy-to-clipboard": "复制到剪贴板",
       "swap-index": "切换索引",
       "show-backup-indices": "显示备份索引",
-      "hide-backup-indices": "隐藏备份索引"
+      "hide-backup-indices": "隐藏备份索引",
+      "value-mapping": "值映射"
     },
     "main-menu-title": {
       "search-index": "搜索索引"
@@ -44,6 +45,26 @@
           "swap-index": "切换索引",
           "active": "活动索引"
         }
+      },
+      "value-mapping": {
+        "title": "值映射",
+        "manage": "管理",
+        "new-field": "新字段",
+        "new-value": "新值",
+        "field-name": {
+          "label": "字段名称",
+          "placeholder": "输入字段名称"
+        },
+        "values": {
+          "label": "值"
+        },
+        "value": {
+          "label": "值",
+          "placeholder": "输入或选择字段值"
+        },
+        "synonyms": {
+          "label": "同义词"
+        }
       }
     },
     "dialogs": {
@@ -54,6 +75,14 @@
         "msg3": "删除并构建：删除当前搜索索引并从头创建一个新索引。注意：在重建完成之前，搜索结果将不可用",
         "index": "构建",
         "reindex": "删除并构建"
+      },
+      "value-mapping-delete-fields": {
+        "title": "删除确认",
+        "message": "确定要删除 {{quantity}} 个所选字段吗？"
+      },
+      "value-mapping-save-values": {
+        "title": "保存更改",
+        "message": "此值映射已被修改。是否保存更改？"
       }
     },
     "widgets": {
@@ -66,7 +95,8 @@
   },
   "permissions": {
     "search:index:rebuild": "启用清除和重建搜索索引",
-    "search:index:access": "启用访问搜索索引菜单"
+    "search:index:access": "启用访问搜索索引菜单",
+    "search:index:manage": "启用索引配置编辑"
   },
   "settings": {
     "VirtoCommerce.Search.IndexingJobs.Enable": {
