@@ -136,7 +136,7 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
         }
     }
 
-    private void SortValues(IndexFieldSetting fieldSetting)
+    private static void SortValues(IndexFieldSetting fieldSetting)
     {
         fieldSetting.Values = fieldSetting.Values?.OrderBy(x => x.Value, _ignoreCase).ToList() ?? [];
 
@@ -168,7 +168,7 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
         return Guid.NewGuid().ToString("N");
     }
 
-    private void CheckDuplicates(IList<IndexFieldSetting> fieldSettings)
+    private static void CheckDuplicates(IList<IndexFieldSetting> fieldSettings)
     {
         var fieldKeys = new HashSet<string>(_ignoreCase);
         var synonymKeys = new HashSet<string>(_ignoreCase);
