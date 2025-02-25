@@ -6,14 +6,15 @@
       <form class="form" name="formScope">
         <fieldset ng-init="setForm(formScope)">
 
-          <datalist id="value-options">
-            <option ng-repeat="item in blade.field.values" value="{{ item }}">
-          </datalist>
-
           <div class="form-group">
             <label class="form-label">{{ 'search.blades.value-mapping.value.label' | translate }}</label>
             <div class="form-input">
-              <input required ng-model="blade.currentEntity.value" type="text" list="value-options" placeholder="{{ 'search.blades.value-mapping.value.placeholder' | translate }}">
+              <ui-scroll-drop-down ng-model="blade.currentEntity.value"
+                                   data="blade.field.values"
+                                   placeholder="'search.blades.value-mapping.value.placeholder'"
+                                   allow-custom-value
+                                   required>
+              </ui-scroll-drop-down>
             </div>
           </div>
 
@@ -43,7 +44,12 @@
               </td>
               <td class="table-col">
                 <div class="form-input">
-                  <input required ng-model="synonym.value" type="text" list="value-options" placeholder="{{ 'search.blades.value-mapping.value.placeholder' | translate }}" />
+                  <ui-scroll-drop-down ng-model="synonym.value"
+                                       data="blade.field.values"
+                                       placeholder="'search.blades.value-mapping.value.placeholder'"
+                                       allow-custom-value
+                                       required>
+                  </ui-scroll-drop-down>
                 </div>
               </td>
             </tr>
