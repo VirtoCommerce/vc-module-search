@@ -5,19 +5,16 @@
     <div class="inner-block">
       <form class="form" name="formScope">
         <fieldset ng-init="setForm(formScope)">
-
           <div class="form-group">
             <label class="form-label">{{ 'search.blades.value-mapping.value.label' | translate }}</label>
             <div class="form-input">
               <ui-scroll-drop-down ng-model="blade.currentEntity.value"
                                    data="blade.field.values"
                                    placeholder="'search.blades.value-mapping.value.placeholder'"
-                                   allow-custom-value
                                    required>
               </ui-scroll-drop-down>
             </div>
           </div>
-
         </fieldset>
       </form>
 
@@ -35,6 +32,7 @@
             </tr>
           </thead>
           <tbody>
+
             <tr ng-if="blade.currentEntity.values.length" ng-repeat="synonym in blade.currentEntity.values">
               <td class="table-col">
                 <label class="form-control __checkbox">
@@ -47,7 +45,6 @@
                   <ui-scroll-drop-down ng-model="synonym.value"
                                        data="blade.field.values"
                                        placeholder="'search.blades.value-mapping.value.placeholder'"
-                                       allow-custom-value
                                        required>
                   </ui-scroll-drop-down>
                 </div>
