@@ -8,11 +8,11 @@
           <div class="form-group">
             <label class="form-label">{{ 'search.blades.value-mapping.value.label' | translate }}</label>
             <div class="form-input">
-              <ui-scroll-drop-down ng-model="blade.currentEntity.value"
-                                   data="blade.field.values"
-                                   placeholder="'search.blades.value-mapping.value.placeholder'"
-                                   required>
-              </ui-scroll-drop-down>
+              <ui-select-edit ng-model="blade.currentEntity.value"
+                              data="blade.field.values"
+                              placeholder="'search.blades.value-mapping.value.placeholder'"
+                              required>
+              </ui-select-edit>
             </div>
           </div>
         </fieldset>
@@ -42,11 +42,11 @@
               </td>
               <td class="table-col">
                 <div class="form-input">
-                  <ui-scroll-drop-down ng-model="synonym.value"
-                                       data="blade.field.values"
-                                       placeholder="'search.blades.value-mapping.value.placeholder'"
-                                       required>
-                  </ui-scroll-drop-down>
+                  <ui-select-edit ng-model="synonym.value"
+                                  data="blade.field.values"
+                                  placeholder="'search.blades.value-mapping.value.placeholder'"
+                                  required>
+                  </ui-select-edit>
                 </div>
               </td>
             </tr>

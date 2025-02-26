@@ -134,9 +134,7 @@ angular.module('virtoCommerce.searchModule')
                         fieldName: blade.currentEntity.fieldName
                     }, function (response) {
                         field.name = blade.currentEntity.fieldName;
-                        field.values = _.map(response, function (x) {
-                            return { id: x, name: x };
-                        });
+                        field.values = response;
                     });
                 }
 
