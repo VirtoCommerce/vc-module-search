@@ -2,7 +2,7 @@ angular.module('virtoCommerce.searchModule')
     .directive('uiSelectEdit', [function () {
         return {
             restrict: 'E',
-            templateUrl: 'Modules/$(VirtoCommerce.Search)/Scripts/directives/ui-edit-select.html',
+            templateUrl: 'Modules/$(VirtoCommerce.Search)/Scripts/directives/ui-select-edit.html',
             require: 'ngModel',
             replace: true,
             scope: {
