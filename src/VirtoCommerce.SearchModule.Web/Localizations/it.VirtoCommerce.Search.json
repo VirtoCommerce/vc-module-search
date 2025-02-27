@@ -51,6 +51,7 @@
         "manage": "Gestisci",
         "new-field": "Nuovo campo",
         "new-value": "Nuovo valore",
+        "rebuild-index": "Sarà necessario ricostruire l'indice dopo aver apportato modifiche.",
         "field-name": {
           "label": "Nome campo",
           "placeholder": "Inserisci il nome del campo"

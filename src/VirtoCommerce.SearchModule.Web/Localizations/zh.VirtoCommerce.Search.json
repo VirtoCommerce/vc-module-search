@@ -51,6 +51,7 @@
         "manage": "管理",
         "new-field": "新字段",
         "new-value": "新值",
+        "rebuild-index": "您需要在更改后重建索引。",
         "field-name": {
           "label": "字段名称",
           "placeholder": "输入字段名称"

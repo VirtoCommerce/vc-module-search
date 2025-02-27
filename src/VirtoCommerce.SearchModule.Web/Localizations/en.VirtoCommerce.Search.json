@@ -51,6 +51,7 @@
         "manage": "Manage",
         "new-field": "New field",
         "new-value": "New value",
+        "rebuild-index": "You will need to rebuild the index after making any changes.",
         "field-name": {
           "label": "Field name",
           "placeholder": "Enter field name"

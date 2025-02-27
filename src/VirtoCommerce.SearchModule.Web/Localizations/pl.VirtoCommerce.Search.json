@@ -51,6 +51,7 @@
         "manage": "Zarządzaj",
         "new-field": "Nowe pole",
         "new-value": "Nowa wartość",
+        "rebuild-index": "Konieczna będzie przebudowa indeksu po wprowadzeniu zmian.",
         "field-name": {
           "label": "Nazwa pola",
           "placeholder": "Wprowadź nazwę pola"

@@ -51,6 +51,7 @@
         "manage": "Verwalten",
         "new-field": "Neues Feld",
         "new-value": "Neuer Wert",
+        "rebuild-index": "Sie müssen den Index nach allen Änderungen neu erstellen.",
         "field-name": {
           "label": "Feldname",
           "placeholder": "Feldnamen eingeben"

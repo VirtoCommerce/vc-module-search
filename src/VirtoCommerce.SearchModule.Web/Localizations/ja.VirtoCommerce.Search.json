@@ -51,6 +51,7 @@
         "manage": "管理",
         "new-field": "新しいフィールド",
         "new-value": "新しい値",
+        "rebuild-index": "変更を加えた後は、インデックスを再構築する必要があります。",
         "field-name": {
           "label": "フィールド名",
           "placeholder": "フィールド名を入力"
