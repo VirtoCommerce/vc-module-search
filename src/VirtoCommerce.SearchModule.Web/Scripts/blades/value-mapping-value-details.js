@@ -28,6 +28,10 @@ angular.module('virtoCommerce.searchModule')
                     "search.dialogs.value-mapping-save-values.title", "search.dialogs.value-mapping-save-values.message");
             };
 
+            $scope.setForm = function (form) {
+                $scope.formScope = form;
+            }
+
             $scope.toggleAll = function () {
                 blade.currentEntity.values.forEach(x => x.$selected = blade.selectedAll);
             };

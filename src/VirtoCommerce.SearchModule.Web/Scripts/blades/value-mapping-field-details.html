@@ -1,15 +1,13 @@
 <div class="blade-content">
   <div class="blade-inner">
     <div class="inner-block">
-      <form class="form" name="formScope">
-        <fieldset>
-          <div class="form-group" ng-init="setForm(formScope)">
-            <label class="form-label">{{ 'search.blades.value-mapping.field-name.label' | translate }}</label>
-            <div class="form-input">
-              <input ng-model="blade.currentEntity.fieldName" placeholder="{{ 'search.blades.value-mapping.field-name.placeholder' | translate }}" focus-on required>
-            </div>
+      <form class="form" name="scopeForm">
+        <div class="form-group" ng-init="setForm(scopeForm)">
+          <label class="form-label">{{ 'search.blades.value-mapping.field-name.label' | translate }}</label>
+          <div class="form-input">
+            <input ng-model="blade.currentEntity.fieldName" placeholder="{{ 'search.blades.value-mapping.field-name.placeholder' | translate }}" focus-on required>
           </div>
-        </fieldset>
+        </div>
       </form>
 
       <div class="table-wrapper">

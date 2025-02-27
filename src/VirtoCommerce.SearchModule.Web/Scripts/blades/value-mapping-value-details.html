@@ -3,23 +3,21 @@
 <div class="blade-content">
   <div class="blade-inner">
     <div class="inner-block">
-      <form class="form" name="formScope">
-        <fieldset ng-init="setForm(formScope)">
-          <div class="form-group">
-            <label class="form-label">{{ 'search.blades.value-mapping.value.label' | translate }}</label>
-            <div class="form-input">
-              <ui-select-edit ng-model="blade.currentEntity.value"
-                              data="blade.field.values"
-                              placeholder="'search.blades.value-mapping.value.placeholder'"
-                              required>
-              </ui-select-edit>
-            </div>
+      <form class="form" name="scopeForm">
+        <div class="form-group" ng-init="setForm(scopeForm)">
+          <label class="form-label">{{ 'search.blades.value-mapping.value.label' | translate }}</label>
+          <div class="form-input">
+            <ui-select-edit ng-model="blade.currentEntity.value"
+                            data="blade.field.values"
+                            placeholder="'search.blades.value-mapping.value.placeholder'"
+                            required>
+            </ui-select-edit>
           </div>
-        </fieldset>
+        </div>
       </form>
 
       <div class="table-wrapper">
-        <table class="table __indexed">
+        <table class="table">
           <thead>
             <tr>
               <th class="table-col">

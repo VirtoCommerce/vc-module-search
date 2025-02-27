@@ -151,6 +151,10 @@ angular.module('virtoCommerce.searchModule')
                 });
             };
 
+            $scope.setForm = function (form) {
+                $scope.formScope = form;
+            }
+
             $scope.saveChanges = function () {
                 blade.isLoading = true;
 
@@ -164,6 +168,10 @@ angular.module('virtoCommerce.searchModule')
                     }
                 });
             };
+
+            function canSave() {
+                return $scope.formScope && $scope.formScope.$valid && isDirty();
+            }
 
             $scope.toggleAll = function () {
                 blade.currentEntity.values.forEach(x => x.$selected = blade.selectedAll);
@@ -195,7 +203,7 @@ angular.module('virtoCommerce.searchModule')
                     name: "platform.commands.save",
                     icon: 'fas fa-save',
                     executeMethod: $scope.saveChanges,
-                    canExecuteMethod: isDirty,
+                    canExecuteMethod: canSave,
                     permission: blade.updatePermission,
                 },
                 {
