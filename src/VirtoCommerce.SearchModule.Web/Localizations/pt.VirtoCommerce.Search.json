@@ -6,7 +6,8 @@
       "copy-to-clipboard": "Copiar para a área de transferência",
       "swap-index": "Trocar índices",
       "show-backup-indices": "Mostrar índices de backup",
-      "hide-backup-indices": "Ocultar índices de backup"
+      "hide-backup-indices": "Ocultar índices de backup",
+      "value-mapping": "Mapeamento de valores"
     },
     "main-menu-title": {
       "search-index": "Índice de busca"
@@ -44,6 +45,27 @@
           "swap-index": "Trocar índices",
           "active": "Índice ativo"
         }
+      },
+      "value-mapping": {
+        "title": "Mapeamento de valores",
+        "manage": "Gerenciar",
+        "new-field": "Novo campo",
+        "new-value": "Novo valor",
+        "rebuild-index": "Você precisará reconstruir o índice após fazer quaisquer alterações.",
+        "field-name": {
+          "label": "Nome do campo",
+          "placeholder": "Introduza o nome do campo"
+        },
+        "values": {
+          "label": "Valores"
+        },
+        "value": {
+          "label": "Valor",
+          "placeholder": "Insira ou selecione o valor do campo"
+        },
+        "synonyms": {
+          "label": "Sinónimos"
+        }
       }
     },
     "dialogs": {
@@ -54,6 +76,14 @@
         "msg3": "Excluir e Construir: Remove o índice atual e cria um novo do zero. Nota: Os resultados da busca ficarão indisponíveis até a conclusão da reconstrução",
         "index": "Construir",
         "reindex": "Excluir e construir"
+      },
+      "value-mapping-delete-fields": {
+        "title": "Confirmação de exclusão",
+        "message": "Tem certeza de que deseja excluir {{quantity}} campo(s) selecionado(s)?"
+      },
+      "value-mapping-save-values": {
+        "title": "Salvar alterações",
+        "message": "Este mapeamento de valores foi modificado. Deseja salvar as alterações?"
       }
     },
     "widgets": {
@@ -66,7 +96,8 @@
   },
   "permissions": {
     "search:index:rebuild": "Habilita limpar e reconstruir o índice de busca",
-    "search:index:access": "Habilita acesso ao menu do índice de busca"
+    "search:index:access": "Habilita acesso ao menu do índice de busca",
+    "search:index:manage": "Permite editar a configuração do índice"
   },
   "settings": {
     "VirtoCommerce.Search.IndexingJobs.Enable": {

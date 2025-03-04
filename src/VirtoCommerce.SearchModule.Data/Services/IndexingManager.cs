@@ -24,6 +24,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
         private readonly IEnumerable<IndexDocumentConfiguration> _configurations;
         private readonly SearchOptions _searchOptions;
         private readonly ISettingsManager _settingsManager;
+        private readonly IEnumerable<IIndexDocumentConverter> _documentConverters;
 
         private bool PartialDocumentUpdateEnabled
         {
@@ -37,12 +38,14 @@ namespace VirtoCommerce.SearchModule.Data.Services
             ISearchProvider searchProvider,
             IEnumerable<IndexDocumentConfiguration> configurations,
             IOptions<SearchOptions> searchOptions,
-            ISettingsManager settingsManager)
+            ISettingsManager settingsManager,
+            IEnumerable<IIndexDocumentConverter> documentConverters)
         {
             _searchProvider = searchProvider ?? throw new ArgumentNullException(nameof(searchProvider));
             _configurations = configurations ?? throw new ArgumentNullException(nameof(configurations));
             _searchOptions = searchOptions.Value;
             _settingsManager = settingsManager;
+            _documentConverters = documentConverters;
         }
 
         public virtual async Task<IndexState> GetIndexStateAsync(string documentType)
@@ -116,7 +119,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             }
 
             var cancellationToken = new CancellationTokenWrapper(CancellationToken.None);
-            var documents = await GetDocumentsAsync(documentIds, primaryDocumentBuilder, additionalDocumentBuilders, cancellationToken);
+            var documents = await GetDocumentsAsync(documentType, documentIds, primaryDocumentBuilder, additionalDocumentBuilders, cancellationToken);
 
             var result = partialUpdate && _searchProvider.Is<ISupportPartialUpdate>(documentType, out var supportPartialUpdateProvider)
                 ? await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents)
@@ -269,7 +272,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     .Distinct()
                     .ToList();
 
-                var documents = await GetDocumentsAsync(new[] { id }, null, builders, cancellationToken);
+                var documents = await GetDocumentsAsync(batchOptions.DocumentType, [id], null, builders, cancellationToken);
                 var indexingResult = await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents);
 
                 result.Items.AddRange(indexingResult.Items);
@@ -295,7 +298,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     result = await DeleteDocumentsAsync(documentType, documentIds);
                     break;
                 case IndexDocumentChangeType.Modified or IndexDocumentChangeType.Created:
-                    var documents = await GetDocumentsAsync(documentIds, batchOptions.PrimaryDocumentBuilder, batchOptions.SecondaryDocumentBuilders, cancellationToken);
+                    var documents = await GetDocumentsAsync(batchOptions.DocumentType, documentIds, batchOptions.PrimaryDocumentBuilder, batchOptions.SecondaryDocumentBuilders, cancellationToken);
 
                     if (documents.IsNullOrEmpty())
                     {
@@ -323,10 +326,10 @@ namespace VirtoCommerce.SearchModule.Data.Services
             // Return in-memory change feed for specific set of document IDs.
             if (options.DocumentIds != null)
             {
-                return new IIndexDocumentChangeFeed[]
-                {
-                    new InMemoryIndexDocumentChangeFeed(options.DocumentIds.ToArray(), IndexDocumentChangeType.Modified, options.BatchSize ?? DefaultBatchSize)
-                };
+                return
+                [
+                    new InMemoryIndexDocumentChangeFeed(options.DocumentIds.ToArray(), IndexDocumentChangeType.Modified, options.BatchSize ?? DefaultBatchSize),
+                ];
             }
 
             var factories = new List<IIndexDocumentChangeFeedFactory>
@@ -337,7 +340,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             // In case of 'full' re-index we don't want to include the related sources,
             // because that would double the indexation work.
             // E.g. All products would get indexed for the primary document source
-            // and afterwards all products would get re-indexed for all the prices as well.
+            // and then all products would get re-indexed for all the prices as well.
             if (configuration.RelatedSources != null && (options.StartDate != null || options.EndDate != null))
             {
                 factories.AddRange(configuration.RelatedSources.Select(GetChangeFeedFactory));
@@ -360,7 +363,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 .Select(i => $"{FormatId(i.Id)}, Error: {i.ErrorMessage}")
                 .ToArray();
 
-            return errors ?? Array.Empty<string>();
+            return errors ?? [];
         }
 
         protected virtual string FormatId(string id)
@@ -382,6 +385,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
         }
 
         protected virtual async Task<IList<IndexDocument>> GetDocumentsAsync(
+            string documentType,
             IList<string> documentIds,
             IIndexDocumentBuilder primaryDocumentBuilder,
             IList<IIndexDocumentBuilder> secondaryDocumentBuilders,
@@ -389,20 +393,11 @@ namespace VirtoCommerce.SearchModule.Data.Services
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            List<IndexDocument> primaryDocuments;
+            var primaryDocuments = primaryDocumentBuilder != null
+                ? (await primaryDocumentBuilder.GetDocumentsAsync(documentIds))?.Where(x => x != null).ToList()
+                : documentIds.Select(x => new IndexDocument(x)).ToList();
 
-            if (primaryDocumentBuilder == null)
-            {
-                primaryDocuments = documentIds.Select(x => new IndexDocument(x)).ToList();
-            }
-            else
-            {
-                primaryDocuments = (await primaryDocumentBuilder.GetDocumentsAsync(documentIds))
-                    ?.Where(x => x != null)
-                    .ToList();
-            }
-
-            if (primaryDocuments?.Any() == true)
+            if (primaryDocuments?.Count > 0)
             {
                 if (secondaryDocumentBuilders != null)
                 {
@@ -415,6 +410,11 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 foreach (var document in primaryDocuments)
                 {
                     AddSystemFields(document);
+                }
+
+                foreach (var converter in _documentConverters)
+                {
+                    await converter.ConvertAsync(documentType, primaryDocuments);
                 }
             }
 
@@ -488,7 +488,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             var searchRequest = new SearchRequest
             {
                 UseBackupIndex = getBackupIndexState,
-                Sorting = new[] { new SortingField { FieldName = KnownDocumentFields.IndexationDate, IsDescending = true } },
+                Sorting = [new SortingField { FieldName = KnownDocumentFields.IndexationDate, IsDescending = true }],
                 Take = 1,
             };
 
@@ -613,7 +613,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             if (options.BatchSize < 1)
             {
-                throw new ArgumentException(@$"{nameof(options.BatchSize)} {options.BatchSize} is less than 1", nameof(options));
+                throw new ArgumentException($"{nameof(options.BatchSize)} {options.BatchSize} is less than 1", nameof(options));
             }
         }
 

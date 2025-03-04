@@ -6,7 +6,8 @@
       "copy-to-clipboard": "Copier dans le presse-papiers",
       "swap-index": "Échanger les index",
       "show-backup-indices": "Afficher les index de sauvegarde",
-      "hide-backup-indices": "Masquer les index de sauvegarde"
+      "hide-backup-indices": "Masquer les index de sauvegarde",
+      "value-mapping": "Correspondance des valeurs"
     },
     "main-menu-title": {
       "search-index": "Index de recherche"
@@ -44,6 +45,27 @@
           "swap-index": "Échanger les index",
           "active": "Index actif"
         }
+      },
+      "value-mapping": {
+        "title": "Correspondance des valeurs",
+        "manage": "Gérer",
+        "new-field": "Nouveau champ",
+        "new-value": "Nouvelle valeur",
+        "rebuild-index": "Vous devrez reconstruire l'index après toute modification.",
+        "field-name": {
+          "label": "Nom du champ",
+          "placeholder": "Saisir le nom du champ"
+        },
+        "values": {
+          "label": "Valeurs"
+        },
+        "value": {
+          "label": "Valeur",
+          "placeholder": "Saisir ou sélectionner une valeur"
+        },
+        "synonyms": {
+          "label": "Synonymes"
+        }
       }
     },
     "dialogs": {
@@ -54,6 +76,14 @@
         "msg3": "Supprimer et construire : Supprime l'index de recherche actuel et en crée un nouveau. Remarque : Les résultats de recherche ne seront pas disponibles avant la fin de la reconstruction",
         "index": "Construire",
         "reindex": "Supprimer et construire"
+      },
+      "value-mapping-delete-fields": {
+        "title": "Confirmation de suppression",
+        "message": "Êtes-vous sûr de vouloir supprimer les {{quantity}} champ(s) sélectionné(s) ?"
+      },
+      "value-mapping-save-values": {
+        "title": "Enregistrer les modifications",
+        "message": "Cette correspondance de valeurs a été modifiée. Voulez-vous enregistrer les modifications ?"
       }
     },
     "widgets": {
@@ -66,7 +96,8 @@
   },
   "permissions": {
     "search:index:rebuild": "Permet de supprimer et de reconstruire l'index de recherche",
-    "search:index:access": "Permet d'accéder au menu de l'index de recherche"
+    "search:index:access": "Permet d'accéder au menu de l'index de recherche",
+    "search:index:manage": "Permet de modifier la configuration de l'index"
   },
   "settings": {
     "VirtoCommerce.Search.IndexingJobs.Enable": {

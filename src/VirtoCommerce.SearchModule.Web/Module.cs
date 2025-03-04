@@ -40,6 +40,10 @@ namespace VirtoCommerce.SearchModule.Web
 
             serviceCollection.AddSingleton<ObjectSettingEntryChangedEventHandler>();
             serviceCollection.AddSingleton<IIndexingJobService, IndexingJobs>();
+
+            serviceCollection.AddTransient<IIndexFieldSettingService, IndexFieldSettingService>();
+            serviceCollection.AddTransient<IIndexFieldSettingSearchService, IndexFieldSettingService>();
+            serviceCollection.AddTransient<IIndexDocumentConverter, FieldValueConverter>();
         }
 
         public void PostInitialize(IApplicationBuilder appBuilder)

@@ -1,0 +1,64 @@
+<div class="blade-static __bottom" ng-include="'$(Platform)/Scripts/common/templates/ok-cancel2.tpl.html'"></div>
+
+<div class="blade-content">
+  <div class="blade-inner">
+    <div class="inner-block">
+      <form class="form" name="scopeForm">
+        <div class="form-group" ng-init="setForm(scopeForm)">
+          <label class="form-label">{{ 'search.blades.value-mapping.value.label' | translate }}</label>
+          <div class="form-input">
+            <ui-select-edit ng-model="blade.currentEntity.value"
+                            data="blade.field.values"
+                            placeholder="'search.blades.value-mapping.value.placeholder'"
+                            required>
+            </ui-select-edit>
+          </div>
+        </div>
+      </form>
+
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="table-col">
+                <label class="form-control __checkbox">
+                  <input type="checkbox" ng-model="blade.selectedAll" ng-change="toggleAll()" />
+                  <span class="check"></span>
+                </label>
+              </th>
+              <th class="table-col">{{ 'search.blades.value-mapping.synonyms.label' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr ng-if="blade.currentEntity.values.length" ng-repeat="synonym in blade.currentEntity.values">
+              <td class="table-col">
+                <label class="form-control __checkbox">
+                  <input type="checkbox" ng-model="synonym.$selected">
+                  <span class="check"></span>
+                </label>
+              </td>
+              <td class="table-col">
+                <div class="form-input">
+                  <ui-select-edit ng-model="synonym.value"
+                                  data="blade.field.values"
+                                  placeholder="'search.blades.value-mapping.value.placeholder'"
+                                  required>
+                  </ui-select-edit>
+                </div>
+              </td>
+            </tr>
+
+            <tr ng-if="!blade.currentEntity.values.length">
+              <td class="table-col" colspan="2">
+                <div>{{ 'platform.list.no-data' | translate }}</div>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>

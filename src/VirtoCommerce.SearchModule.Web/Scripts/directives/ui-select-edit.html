@@ -1,0 +1,10 @@
+<div class="form-input">
+  <ui-select ng-model="context.modelValue"
+             ng-required="context.required"
+             ng-disabled="context.disabled">
+    <ui-select-match allow-clear="true" placeholder="{{ placeholder || 'platform.placeholders.select-value' | translate }}">{{$select.selected || context.modelValue}}</ui-select-match>
+    <ui-select-choices repeat="x in data | filter: $select.search">
+      <span ng-bind-html="x | highlight: $select.search"></span>
+    </ui-select-choices>
+  </ui-select>
+</div>

@@ -6,7 +6,8 @@
       "copy-to-clipboard": "Copiar al portapapeles",
       "swap-index": "Intercambiar índices",
       "show-backup-indices": "Mostrar índices de respaldo",
-      "hide-backup-indices": "Ocultar índices de respaldo"
+      "hide-backup-indices": "Ocultar índices de respaldo",
+      "value-mapping": "Asignación de valores"
     },
     "main-menu-title": {
       "search-index": "Índice de búsqueda"
@@ -44,6 +45,27 @@
           "swap-index": "Intercambiar índices",
           "active": "Índice activo"
         }
+      },
+      "value-mapping": {
+        "title": "Asignación de valor",
+        "manage": "Gestionar",
+        "new-field": "Nuevo campo",
+        "new-value": "Valor nuevo",
+        "rebuild-index": "Deberá reconstruir el índice después de realizar cualquier cambio.",
+        "field-name": {
+          "label": "Nombre del campo",
+          "placeholder": "Introduce el nombre del campo"
+        },
+        "values": {
+          "label": "Valores"
+        },
+        "value": {
+          "label": "Valor",
+          "placeholder": "Introduce o selecciona el valor del campo"
+        },
+        "synonyms": {
+          "label": "Sinónimos"
+        }
       }
     },
     "dialogs": {
@@ -54,6 +76,14 @@
         "msg3": "Eliminar y construir: Elimina el índice actual y crea uno nuevo desde el principio. Nota: Los resultados de búsqueda no estarán disponibles hasta que se complete la reconstrucción",
         "index": "Construir",
         "reindex": "Eliminar y construir"
+      },
+      "value-mapping-delete-fields": {
+        "title": "Confirmación de eliminación",
+        "message": "¿Seguro que quieres eliminar {{quantity}} campo(s) seleccionado(s)?"
+      },
+      "value-mapping-save-values": {
+        "title": "Guardar cambios",
+        "message": "Esta asignación de valores se ha modificado. ¿Desea guardar los cambios?"
       }
     },
     "widgets": {
@@ -66,7 +96,8 @@
   },
   "permissions": {
     "search:index:rebuild": "Permitir limpiar y reconstruir el índice de búsqueda",
-    "search:index:access": "Permitir acceso al menú del índice de búsqueda"
+    "search:index:access": "Permitir acceso al menú del índice de búsqueda",
+    "search:index:manage": "Permite editar la configuración del índice"
   },
   "settings": {
     "VirtoCommerce.Search.IndexingJobs.Enable": {
