@@ -666,6 +666,39 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.Equal("blue", value);
         }
 
+        [Fact]
+        public void ExclamationMarkShouldBeEscaped()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("name:\"Hello World!\" !brand:\"Apple!\"");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Equal(2, result.Filters.Count);
+
+            var firstFilter = result.Filters.First() as TermFilter;
+            Assert.NotNull(firstFilter);
+            Assert.Equal("name", firstFilter.FieldName);
+            Assert.NotNull(firstFilter.Values);
+
+            var firstValue = firstFilter.Values.First();
+            Assert.NotNull(firstValue);
+            Assert.Equal("Hello World!", firstValue);
+
+            var notSecondFilter = result.Filters.Last() as NotFilter;
+            Assert.NotNull(notSecondFilter);
+            var secondFilter = notSecondFilter.ChildFilter as TermFilter;
+            Assert.NotNull(secondFilter);
+            Assert.Equal("brand", secondFilter.FieldName);
+            Assert.NotNull(secondFilter.Values);
+
+            var secondValue = secondFilter.Values.First();
+            Assert.NotNull(secondValue);
+            Assert.Equal("Apple!", secondValue);
+
+        }
+
         private static ISearchPhraseParser GetParser()
         {
             var logger = new Mock<ILogger<SearchPhraseParser>>();
