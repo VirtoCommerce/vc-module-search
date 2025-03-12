@@ -165,9 +165,9 @@ namespace VirtoCommerce.SearchModule.Tests
         public void Mix_Filter_And_Keyword_Russian()
         {
             var parser = GetParser();
-            var result = parser.Parse("color:Red123 Привет мир!");
+            var result = parser.Parse("color:Red123 Привет мир");
             var result_quoted = parser.Parse("color:Red123 \"Привет мир\"");
-            var result_reverse = parser.Parse("Привет мир! color:Red123");
+            var result_reverse = parser.Parse("Привет мир color:Red123");
 
             Assert.Equal("Привет мир", result.Keyword);
             Assert.Single(result.Filters);
@@ -609,6 +609,95 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.Equal("InStock", availabilityFilter.Values.First());
         }
 
+
+        [Fact]
+        public void TestNotAttributeFilter()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("!color:red,blue");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Single(result.Filters);
+
+            var notFilter = result.Filters.First() as NotFilter;
+            Assert.NotNull(notFilter);
+            var filter = notFilter.ChildFilter as TermFilter;
+            Assert.NotNull(filter);
+            Assert.Equal("color", filter.FieldName);
+            Assert.NotNull(filter.Values);
+            Assert.Equal(2, filter.Values.Count);
+
+            var value = filter.Values.First();
+            Assert.NotNull(value);
+            Assert.Equal("red", value);
+
+            value = filter.Values.Last();
+            Assert.NotNull(value);
+            Assert.Equal("blue", value);
+        }
+
+        [Fact]
+        public void TestNotAttributeFilterWithOthers()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("size:small !color:red,blue");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Equal(2, result.Filters.Count);
+
+            var notFilter = result.Filters.Last() as NotFilter;
+            Assert.NotNull(notFilter);
+            var filter = notFilter.ChildFilter as TermFilter;
+            Assert.NotNull(filter);
+            Assert.Equal("color", filter.FieldName);
+            Assert.NotNull(filter.Values);
+            Assert.Equal(2, filter.Values.Count);
+
+            var value = filter.Values.First();
+            Assert.NotNull(value);
+            Assert.Equal("red", value);
+
+            value = filter.Values.Last();
+            Assert.NotNull(value);
+            Assert.Equal("blue", value);
+        }
+
+        [Fact]
+        public void ExclamationMarkShouldBeEscaped()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("name:\"Hello World!\" !brand:\"Apple!\"");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Equal(2, result.Filters.Count);
+
+            var firstFilter = result.Filters.First() as TermFilter;
+            Assert.NotNull(firstFilter);
+            Assert.Equal("name", firstFilter.FieldName);
+            Assert.NotNull(firstFilter.Values);
+
+            var firstValue = firstFilter.Values.First();
+            Assert.NotNull(firstValue);
+            Assert.Equal("Hello World!", firstValue);
+
+            var notSecondFilter = result.Filters.Last() as NotFilter;
+            Assert.NotNull(notSecondFilter);
+            var secondFilter = notSecondFilter.ChildFilter as TermFilter;
+            Assert.NotNull(secondFilter);
+            Assert.Equal("brand", secondFilter.FieldName);
+            Assert.NotNull(secondFilter.Values);
+
+            var secondValue = secondFilter.Values.First();
+            Assert.NotNull(secondValue);
+            Assert.Equal("Apple!", secondValue);
+
+        }
 
         private static ISearchPhraseParser GetParser()
         {

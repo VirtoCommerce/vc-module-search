@@ -32,4 +32,4 @@ SimpleString          : [\p{L}\p{N}_\-./]+;
 QuotedString          : '"' (Esc | ~["\\\r\n\t])* '"';
 Esc                   : '\\' (["\\rnt]);
 
-DL                    : [ \t,!]+; // Delimiter
+DL                    : [ \t,]+; // Delimiter
