@@ -43,7 +43,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 
         [HttpGet]
         [Route("")]
-        [Authorize(Permissions.IndexRead)]
+        [Authorize(Permissions.IndexAccess)]
         public async Task<ActionResult<IndexState[]>> GetIndicesAsync()
         {
             var documentTypes = GetDocumentTypes();
@@ -53,7 +53,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 
         [HttpGet]
         [Route("all")]
-        [Authorize(Permissions.IndexRead)]
+        [Authorize(Permissions.IndexAccess)]
         public async Task<ActionResult<IndexState[]>> GetAllIndicesAsync()
         {
             var documentTypes = GetDocumentTypes();
@@ -110,7 +110,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
 
         [HttpGet]
         [Route("swapIndexSupported")]
-        [Authorize(Permissions.IndexRead)]
+        [Authorize(Permissions.IndexAccess)]
         public ActionResult GetSwapIndexSupported()
         {
             var documentTypes = GetDocumentTypes();
