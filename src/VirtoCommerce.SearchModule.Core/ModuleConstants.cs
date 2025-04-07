@@ -15,12 +15,14 @@ namespace VirtoCommerce.SearchModule.Core
             public static class Permissions
             {
                 public const string IndexAccess = "search:index:access";
+                public const string IndexRead = "search:index:read";
                 public const string IndexRebuild = "search:index:rebuild";
                 public const string IndexManage = "search:index:manage";
 
                 public static string[] AllPermissions { get; } =
                 [
                     IndexAccess,
+                    IndexRead,
                     IndexRebuild,
                     IndexManage,
                 ];
