@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.Platform.Core.Security;
-using VirtoCommerce.SearchModule.Core;
 using VirtoCommerce.SearchModule.Core.BackgroundJobs;
 using VirtoCommerce.SearchModule.Core.Extensions;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
+using Permissions = VirtoCommerce.SearchModule.Core.ModuleConstants.Security.Permissions;
 
 namespace VirtoCommerce.SearchModule.Web.Controllers
 {
@@ -43,6 +43,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
 
         [HttpGet]
         [Route("")]
+        [Authorize(Permissions.IndexAccess)]
         public async Task<ActionResult<IndexState[]>> GetIndicesAsync()
         {
             var documentTypes = GetDocumentTypes();
@@ -52,6 +53,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
 
         [HttpGet]
         [Route("all")]
+        [Authorize(Permissions.IndexAccess)]
         public async Task<ActionResult<IndexState[]>> GetAllIndicesAsync()
         {
             var documentTypes = GetDocumentTypes();
@@ -66,13 +68,14 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("index/{documentType}/{documentId}")]
+        [Authorize(Permissions.IndexRead)]
         public async Task<ActionResult<IndexDocument[]>> GetDocumentIndexAsync(string documentType, string documentId)
         {
             var request = new SearchRequest
             {
                 Filter = new IdsFilter
                 {
-                    Values = new[] { documentId },
+                    Values = [documentId],
                 },
             };
 
@@ -86,7 +89,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("index")]
-        [Authorize(ModuleConstants.Security.Permissions.IndexRebuild)]
+        [Authorize(Permissions.IndexRebuild)]
         public ActionResult<IndexProgressPushNotification> IndexDocuments([FromBody] IndexingOptions[] options)
         {
             var currentUserName = _userNameResolver.GetCurrentUserName();
@@ -98,6 +101,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
 
         [HttpGet]
         [Route("tasks/{taskId}/cancel")]
+        [Authorize(Permissions.IndexRebuild)]
         public ActionResult CancelIndexationProcess(string taskId)
         {
             _indexingJobService.CancelIndexation();
@@ -106,6 +110,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
 
         [HttpGet]
         [Route("swapIndexSupported")]
+        [Authorize(Permissions.IndexAccess)]
         public ActionResult GetSwapIndexSupported()
         {
             var documentTypes = GetDocumentTypes();
@@ -114,7 +119,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers
 
         [HttpPost]
         [Route("swapIndex")]
-        [Authorize(ModuleConstants.Security.Permissions.IndexRebuild)]
+        [Authorize(Permissions.IndexRebuild)]
         public async Task<ActionResult> SwapIndexAsync([FromBody] IndexingOptions option)
         {
             var documentType = option.DocumentType;
