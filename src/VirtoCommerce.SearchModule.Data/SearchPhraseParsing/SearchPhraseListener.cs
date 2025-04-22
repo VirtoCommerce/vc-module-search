@@ -20,6 +20,24 @@ namespace VirtoCommerce.SearchModule.Data.SearchPhraseParsing
             Keywords.Add(UnEscape(context.GetText()));
         }
 
+        public override void ExitOrExpression([NotNull] AntlrSPP.OrExpressionContext context)
+        {
+            base.ExitOrExpression(context);
+
+            var orExpression = new OrFilter { ChildFilters = [.. Filters] };
+            Filters.Clear();
+            Filters.Add(orExpression);
+        }
+
+        public override void ExitAndExpression([NotNull] AntlrSPP.AndExpressionContext context)
+        {
+            base.ExitAndExpression(context);
+
+            var andExpression = new AndFilter { ChildFilters = [.. Filters] };
+            Filters.Clear();
+            Filters.Add(andExpression);
+        }
+
         public override void ExitFilters([NotNull] AntlrSPP.FiltersContext context)
         {
             base.ExitFilters(context);
