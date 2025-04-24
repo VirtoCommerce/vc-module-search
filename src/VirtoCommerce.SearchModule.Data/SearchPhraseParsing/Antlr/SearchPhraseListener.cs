@@ -42,6 +42,42 @@ public interface ISearchPhraseListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitSearchPhrase([NotNull] SearchPhraseParser.SearchPhraseContext context);
 	/// <summary>
+	/// Enter a parse tree produced by the <c>AndExpression</c>
+	/// labeled alternative in <see cref="SearchPhraseParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterAndExpression([NotNull] SearchPhraseParser.AndExpressionContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>AndExpression</c>
+	/// labeled alternative in <see cref="SearchPhraseParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitAndExpression([NotNull] SearchPhraseParser.AndExpressionContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>PhraseListExpression</c>
+	/// labeled alternative in <see cref="SearchPhraseParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterPhraseListExpression([NotNull] SearchPhraseParser.PhraseListExpressionContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>PhraseListExpression</c>
+	/// labeled alternative in <see cref="SearchPhraseParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitPhraseListExpression([NotNull] SearchPhraseParser.PhraseListExpressionContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>OrExpression</c>
+	/// labeled alternative in <see cref="SearchPhraseParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterOrExpression([NotNull] SearchPhraseParser.OrExpressionContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>OrExpression</c>
+	/// labeled alternative in <see cref="SearchPhraseParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitOrExpression([NotNull] SearchPhraseParser.OrExpressionContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="SearchPhraseParser.phrase"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

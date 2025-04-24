@@ -696,14 +696,116 @@ namespace VirtoCommerce.SearchModule.Tests
             var secondValue = secondFilter.Values.First();
             Assert.NotNull(secondValue);
             Assert.Equal("Apple!", secondValue);
-
         }
+
+        [Fact]
+        public void TestOrConditionBetweenTerms()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("category:books OR color:red");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Single(result.Filters);
+
+            var orFilter = result.Filters.First() as OrFilter;
+            Assert.NotNull(orFilter);
+            Assert.NotNull(orFilter.ChildFilters);
+            Assert.Equal(2, orFilter.ChildFilters.Count);
+
+            var categoryFilter = orFilter.ChildFilters.First() as TermFilter;
+            Assert.NotNull(categoryFilter);
+            Assert.Equal("category", categoryFilter.FieldName);
+            Assert.NotNull(categoryFilter.Values);
+            Assert.Single(categoryFilter.Values);
+            Assert.Equal("books", categoryFilter.Values.First());
+
+            var colorFilter = orFilter.ChildFilters.Last() as TermFilter;
+            Assert.NotNull(colorFilter);
+            Assert.Equal("color", colorFilter.FieldName);
+            Assert.NotNull(colorFilter.Values);
+            Assert.Single(colorFilter.Values);
+            Assert.Equal("red", colorFilter.Values.First());
+        }
+
+        [Fact]
+        public void TestAndConditionBetweenTerms()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("category:books AND color:red");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Single(result.Filters);
+
+            var andFilter = result.Filters.First() as AndFilter;
+            Assert.NotNull(andFilter);
+            Assert.NotNull(andFilter.ChildFilters);
+            Assert.Equal(2, andFilter.ChildFilters.Count);
+
+            var categoryFilter = andFilter.ChildFilters.First() as TermFilter;
+            Assert.NotNull(categoryFilter);
+            Assert.Equal("category", categoryFilter.FieldName);
+            Assert.NotNull(categoryFilter.Values);
+            Assert.Single(categoryFilter.Values);
+            Assert.Equal("books", categoryFilter.Values.First());
+
+            var colorFilter = andFilter.ChildFilters.Last() as TermFilter;
+            Assert.NotNull(colorFilter);
+            Assert.Equal("color", colorFilter.FieldName);
+            Assert.NotNull(colorFilter.Values);
+            Assert.Single(colorFilter.Values);
+            Assert.Equal("red", colorFilter.Values.First());
+        }
+
+
 
         private static ISearchPhraseParser GetParser()
         {
             var logger = new Mock<ILogger<SearchPhraseParser>>();
 
             return new SearchPhraseParser(logger.Object);
+        }
+        [Fact]
+        public void TestOrConditionWithMultipleTermsAndKeyword()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("category:books OR color:red OR size:XL ABC 123");
+
+            Assert.NotNull(result);
+            Assert.Equal("ABC 123", result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Single(result.Filters);
+
+            var orFilter = result.Filters.First() as OrFilter;
+            Assert.NotNull(orFilter);
+            Assert.NotNull(orFilter.ChildFilters);
+            Assert.Equal(2, orFilter.ChildFilters.Count);
+
+            var orFilter2 = orFilter.ChildFilters.First() as OrFilter;
+
+            var categoryFilter = orFilter2.ChildFilters.First() as TermFilter;
+            Assert.NotNull(categoryFilter);
+            Assert.Equal("category", categoryFilter.FieldName);
+            Assert.NotNull(categoryFilter.Values);
+            Assert.Single(categoryFilter.Values);
+            Assert.Equal("books", categoryFilter.Values.First());
+
+            var colorFilter = orFilter2.ChildFilters.ElementAt(1) as TermFilter;
+            Assert.NotNull(colorFilter);
+            Assert.Equal("color", colorFilter.FieldName);
+            Assert.NotNull(colorFilter.Values);
+            Assert.Single(colorFilter.Values);
+            Assert.Equal("red", colorFilter.Values.First());
+
+            var sizeFilter = orFilter.ChildFilters.Last() as TermFilter;
+            Assert.NotNull(sizeFilter);
+            Assert.Equal("size", sizeFilter.FieldName);
+            Assert.NotNull(sizeFilter.Values);
+            Assert.Single(sizeFilter.Values);
+            Assert.Equal("XL", sizeFilter.Values.First());
         }
     }
 }

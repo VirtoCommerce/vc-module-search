@@ -37,24 +37,25 @@ public partial class SearchPhraseParser : Parser {
 	protected static DFA[] decisionToDFA;
 	protected static PredictionContextCache sharedContextCache = new PredictionContextCache();
 	public const int
-		T__0=1, FD=2, VD=3, RD=4, RangeStart=5, RangeEnd=6, SimpleString=7, QuotedString=8, 
-		Esc=9, DL=10;
+		T__0=1, FD=2, VD=3, RD=4, AND=5, OR=6, RangeStart=7, RangeEnd=8, SimpleString=9, 
+		QuotedString=10, Esc=11, DL=12;
 	public const int
-		RULE_searchPhrase = 0, RULE_phrase = 1, RULE_keyword = 2, RULE_filters = 3, 
-		RULE_attributeFilter = 4, RULE_rangeFilter = 5, RULE_fieldName = 6, RULE_attributeFilterValue = 7, 
-		RULE_rangeFilterValue = 8, RULE_range = 9, RULE_rangeStart = 10, RULE_rangeEnd = 11, 
-		RULE_lower = 12, RULE_upper = 13, RULE_negation = 14, RULE_string = 15;
+		RULE_searchPhrase = 0, RULE_expression = 1, RULE_phrase = 2, RULE_keyword = 3, 
+		RULE_filters = 4, RULE_attributeFilter = 5, RULE_rangeFilter = 6, RULE_fieldName = 7, 
+		RULE_attributeFilterValue = 8, RULE_rangeFilterValue = 9, RULE_range = 10, 
+		RULE_rangeStart = 11, RULE_rangeEnd = 12, RULE_lower = 13, RULE_upper = 14, 
+		RULE_negation = 15, RULE_string = 16;
 	public static readonly string[] ruleNames = {
-		"searchPhrase", "phrase", "keyword", "filters", "attributeFilter", "rangeFilter", 
-		"fieldName", "attributeFilterValue", "rangeFilterValue", "range", "rangeStart", 
-		"rangeEnd", "lower", "upper", "negation", "string"
+		"searchPhrase", "expression", "phrase", "keyword", "filters", "attributeFilter", 
+		"rangeFilter", "fieldName", "attributeFilterValue", "rangeFilterValue", 
+		"range", "rangeStart", "rangeEnd", "lower", "upper", "negation", "string"
 	};
 
 	private static readonly string[] _LiteralNames = {
-		null, "'!'", "':'", "','"
+		null, "'!'", "':'", "','", null, "'AND'", "'OR'"
 	};
 	private static readonly string[] _SymbolicNames = {
-		null, null, "FD", "VD", "RD", "RangeStart", "RangeEnd", "SimpleString", 
+		null, null, "FD", "VD", "RD", "AND", "OR", "RangeStart", "RangeEnd", "SimpleString", 
 		"QuotedString", "Esc", "DL"
 	};
 	public static readonly IVocabulary DefaultVocabulary = new Vocabulary(_LiteralNames, _SymbolicNames);
@@ -90,12 +91,10 @@ public partial class SearchPhraseParser : Parser {
 	}
 
 	public partial class SearchPhraseContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public PhraseContext[] phrase() {
-			return GetRuleContexts<PhraseContext>();
+		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext expression() {
+			return GetRuleContext<ExpressionContext>(0);
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public PhraseContext phrase(int i) {
-			return GetRuleContext<PhraseContext>(i);
-		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode Eof() { return GetToken(SearchPhraseParser.Eof, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] DL() { return GetTokens(SearchPhraseParser.DL); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DL(int i) {
 			return GetToken(SearchPhraseParser.DL, i);
@@ -123,57 +122,40 @@ public partial class SearchPhraseParser : Parser {
 		EnterRule(_localctx, 0, RULE_searchPhrase);
 		int _la;
 		try {
-			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 35;
+			State = 37;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==DL) {
 				{
 				{
-				State = 32;
+				State = 34;
 				Match(DL);
 				}
 				}
-				State = 37;
+				State = 39;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
-			State = 38;
-			phrase();
-			State = 43;
-			ErrorHandler.Sync(this);
-			_alt = Interpreter.AdaptivePredict(TokenStream,1,Context);
-			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
-				if ( _alt==1 ) {
-					{
-					{
-					State = 39;
-					Match(DL);
-					State = 40;
-					phrase();
-					}
-					} 
-				}
-				State = 45;
-				ErrorHandler.Sync(this);
-				_alt = Interpreter.AdaptivePredict(TokenStream,1,Context);
-			}
-			State = 49;
+			State = 40;
+			expression(0);
+			State = 44;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==DL) {
 				{
 				{
+				State = 41;
+				Match(DL);
+				}
+				}
 				State = 46;
-				Match(DL);
-				}
-				}
-				State = 51;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
+			State = 47;
+			Match(Eof);
 			}
 		}
 		catch (RecognitionException re) {
@@ -187,12 +169,264 @@ public partial class SearchPhraseParser : Parser {
 		return _localctx;
 	}
 
-	public partial class PhraseContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public KeywordContext keyword() {
-			return GetRuleContext<KeywordContext>(0);
+	public partial class ExpressionContext : ParserRuleContext {
+		public ExpressionContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
 		}
+		public override int RuleIndex { get { return RULE_expression; } }
+	 
+		public ExpressionContext() { }
+		public virtual void CopyFrom(ExpressionContext context) {
+			base.CopyFrom(context);
+		}
+	}
+	public partial class AndExpressionContext : ExpressionContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext[] expression() {
+			return GetRuleContexts<ExpressionContext>();
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext expression(int i) {
+			return GetRuleContext<ExpressionContext>(i);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode AND() { return GetToken(SearchPhraseParser.AND, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] DL() { return GetTokens(SearchPhraseParser.DL); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DL(int i) {
+			return GetToken(SearchPhraseParser.DL, i);
+		}
+		public AndExpressionContext(ExpressionContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISearchPhraseListener typedListener = listener as ISearchPhraseListener;
+			if (typedListener != null) typedListener.EnterAndExpression(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISearchPhraseListener typedListener = listener as ISearchPhraseListener;
+			if (typedListener != null) typedListener.ExitAndExpression(this);
+		}
+	}
+	public partial class PhraseListExpressionContext : ExpressionContext {
+		[System.Diagnostics.DebuggerNonUserCode] public PhraseContext[] phrase() {
+			return GetRuleContexts<PhraseContext>();
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public PhraseContext phrase(int i) {
+			return GetRuleContext<PhraseContext>(i);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] DL() { return GetTokens(SearchPhraseParser.DL); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DL(int i) {
+			return GetToken(SearchPhraseParser.DL, i);
+		}
+		public PhraseListExpressionContext(ExpressionContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISearchPhraseListener typedListener = listener as ISearchPhraseListener;
+			if (typedListener != null) typedListener.EnterPhraseListExpression(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISearchPhraseListener typedListener = listener as ISearchPhraseListener;
+			if (typedListener != null) typedListener.ExitPhraseListExpression(this);
+		}
+	}
+	public partial class OrExpressionContext : ExpressionContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext[] expression() {
+			return GetRuleContexts<ExpressionContext>();
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext expression(int i) {
+			return GetRuleContext<ExpressionContext>(i);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode OR() { return GetToken(SearchPhraseParser.OR, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] DL() { return GetTokens(SearchPhraseParser.DL); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DL(int i) {
+			return GetToken(SearchPhraseParser.DL, i);
+		}
+		public OrExpressionContext(ExpressionContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISearchPhraseListener typedListener = listener as ISearchPhraseListener;
+			if (typedListener != null) typedListener.EnterOrExpression(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISearchPhraseListener typedListener = listener as ISearchPhraseListener;
+			if (typedListener != null) typedListener.ExitOrExpression(this);
+		}
+	}
+
+	[RuleVersion(0)]
+	public ExpressionContext expression() {
+		return expression(0);
+	}
+
+	private ExpressionContext expression(int _p) {
+		ParserRuleContext _parentctx = Context;
+		int _parentState = State;
+		ExpressionContext _localctx = new ExpressionContext(Context, _parentState);
+		ExpressionContext _prevctx = _localctx;
+		int _startState = 2;
+		EnterRecursionRule(_localctx, 2, RULE_expression, _p);
+		int _la;
+		try {
+			int _alt;
+			EnterOuterAlt(_localctx, 1);
+			{
+			{
+			_localctx = new PhraseListExpressionContext(_localctx);
+			Context = _localctx;
+			_prevctx = _localctx;
+
+			State = 50;
+			phrase();
+			State = 59;
+			ErrorHandler.Sync(this);
+			_alt = Interpreter.AdaptivePredict(TokenStream,3,Context);
+			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
+				if ( _alt==1 ) {
+					{
+					{
+					State = 52;
+					ErrorHandler.Sync(this);
+					_la = TokenStream.LA(1);
+					do {
+						{
+						{
+						State = 51;
+						Match(DL);
+						}
+						}
+						State = 54;
+						ErrorHandler.Sync(this);
+						_la = TokenStream.LA(1);
+					} while ( _la==DL );
+					State = 56;
+					phrase();
+					}
+					} 
+				}
+				State = 61;
+				ErrorHandler.Sync(this);
+				_alt = Interpreter.AdaptivePredict(TokenStream,3,Context);
+			}
+			}
+			Context.Stop = TokenStream.LT(-1);
+			State = 94;
+			ErrorHandler.Sync(this);
+			_alt = Interpreter.AdaptivePredict(TokenStream,9,Context);
+			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
+				if ( _alt==1 ) {
+					if ( ParseListeners!=null )
+						TriggerExitRuleEvent();
+					_prevctx = _localctx;
+					{
+					State = 92;
+					ErrorHandler.Sync(this);
+					switch ( Interpreter.AdaptivePredict(TokenStream,8,Context) ) {
+					case 1:
+						{
+						_localctx = new OrExpressionContext(new ExpressionContext(_parentctx, _parentState));
+						PushNewRecursionContext(_localctx, _startState, RULE_expression);
+						State = 62;
+						if (!(Precpred(Context, 3))) throw new FailedPredicateException(this, "Precpred(Context, 3)");
+						State = 66;
+						ErrorHandler.Sync(this);
+						_la = TokenStream.LA(1);
+						while (_la==DL) {
+							{
+							{
+							State = 63;
+							Match(DL);
+							}
+							}
+							State = 68;
+							ErrorHandler.Sync(this);
+							_la = TokenStream.LA(1);
+						}
+						State = 69;
+						Match(OR);
+						State = 73;
+						ErrorHandler.Sync(this);
+						_la = TokenStream.LA(1);
+						while (_la==DL) {
+							{
+							{
+							State = 70;
+							Match(DL);
+							}
+							}
+							State = 75;
+							ErrorHandler.Sync(this);
+							_la = TokenStream.LA(1);
+						}
+						State = 76;
+						expression(4);
+						}
+						break;
+					case 2:
+						{
+						_localctx = new AndExpressionContext(new ExpressionContext(_parentctx, _parentState));
+						PushNewRecursionContext(_localctx, _startState, RULE_expression);
+						State = 77;
+						if (!(Precpred(Context, 2))) throw new FailedPredicateException(this, "Precpred(Context, 2)");
+						State = 81;
+						ErrorHandler.Sync(this);
+						_la = TokenStream.LA(1);
+						while (_la==DL) {
+							{
+							{
+							State = 78;
+							Match(DL);
+							}
+							}
+							State = 83;
+							ErrorHandler.Sync(this);
+							_la = TokenStream.LA(1);
+						}
+						State = 84;
+						Match(AND);
+						State = 88;
+						ErrorHandler.Sync(this);
+						_la = TokenStream.LA(1);
+						while (_la==DL) {
+							{
+							{
+							State = 85;
+							Match(DL);
+							}
+							}
+							State = 90;
+							ErrorHandler.Sync(this);
+							_la = TokenStream.LA(1);
+						}
+						State = 91;
+						expression(3);
+						}
+						break;
+					}
+					} 
+				}
+				State = 96;
+				ErrorHandler.Sync(this);
+				_alt = Interpreter.AdaptivePredict(TokenStream,9,Context);
+			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			UnrollRecursionContexts(_parentctx);
+		}
+		return _localctx;
+	}
+
+	public partial class PhraseContext : ParserRuleContext {
 		[System.Diagnostics.DebuggerNonUserCode] public FiltersContext filters() {
 			return GetRuleContext<FiltersContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public KeywordContext keyword() {
+			return GetRuleContext<KeywordContext>(0);
 		}
 		public PhraseContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -214,23 +448,23 @@ public partial class SearchPhraseParser : Parser {
 	[RuleVersion(0)]
 	public PhraseContext phrase() {
 		PhraseContext _localctx = new PhraseContext(Context, State);
-		EnterRule(_localctx, 2, RULE_phrase);
+		EnterRule(_localctx, 4, RULE_phrase);
 		try {
-			State = 54;
+			State = 99;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,3,Context) ) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,10,Context) ) {
 			case 1:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 52;
-				keyword();
+				State = 97;
+				filters();
 				}
 				break;
 			case 2:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 53;
-				filters();
+				State = 98;
+				keyword();
 				}
 				break;
 			}
@@ -270,11 +504,11 @@ public partial class SearchPhraseParser : Parser {
 	[RuleVersion(0)]
 	public KeywordContext keyword() {
 		KeywordContext _localctx = new KeywordContext(Context, State);
-		EnterRule(_localctx, 4, RULE_keyword);
+		EnterRule(_localctx, 6, RULE_keyword);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 56;
+			State = 101;
 			@string();
 			}
 		}
@@ -319,33 +553,33 @@ public partial class SearchPhraseParser : Parser {
 	[RuleVersion(0)]
 	public FiltersContext filters() {
 		FiltersContext _localctx = new FiltersContext(Context, State);
-		EnterRule(_localctx, 6, RULE_filters);
+		EnterRule(_localctx, 8, RULE_filters);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 59;
+			State = 104;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==T__0) {
 				{
-				State = 58;
+				State = 103;
 				negation();
 				}
 			}
 
-			State = 63;
+			State = 108;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,5,Context) ) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,12,Context) ) {
 			case 1:
 				{
-				State = 61;
+				State = 106;
 				attributeFilter();
 				}
 				break;
 			case 2:
 				{
-				State = 62;
+				State = 107;
 				rangeFilter();
 				}
 				break;
@@ -391,15 +625,15 @@ public partial class SearchPhraseParser : Parser {
 	[RuleVersion(0)]
 	public AttributeFilterContext attributeFilter() {
 		AttributeFilterContext _localctx = new AttributeFilterContext(Context, State);
-		EnterRule(_localctx, 8, RULE_attributeFilter);
+		EnterRule(_localctx, 10, RULE_attributeFilter);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 65;
+			State = 110;
 			fieldName();
-			State = 66;
+			State = 111;
 			Match(FD);
-			State = 67;
+			State = 112;
 			attributeFilterValue();
 			}
 		}
@@ -442,15 +676,15 @@ public partial class SearchPhraseParser : Parser {
 	[RuleVersion(0)]
 	public RangeFilterContext rangeFilter() {
 		RangeFilterContext _localctx = new RangeFilterContext(Context, State);
-		EnterRule(_localctx, 10, RULE_rangeFilter);
+		EnterRule(_localctx, 12, RULE_rangeFilter);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 69;
+			State = 114;
 			fieldName();
-			State = 70;
+			State = 115;
 			Match(FD);
-			State = 71;
+			State = 116;
 			rangeFilterValue();
 			}
 		}
@@ -489,11 +723,11 @@ public partial class SearchPhraseParser : Parser {
 	[RuleVersion(0)]
 	public FieldNameContext fieldName() {
 		FieldNameContext _localctx = new FieldNameContext(Context, State);
-		EnterRule(_localctx, 12, RULE_fieldName);
+		EnterRule(_localctx, 14, RULE_fieldName);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 73;
+			State = 118;
 			@string();
 			}
 		}
@@ -539,28 +773,30 @@ public partial class SearchPhraseParser : Parser {
 	[RuleVersion(0)]
 	public AttributeFilterValueContext attributeFilterValue() {
 		AttributeFilterValueContext _localctx = new AttributeFilterValueContext(Context, State);
-		EnterRule(_localctx, 14, RULE_attributeFilterValue);
-		int _la;
+		EnterRule(_localctx, 16, RULE_attributeFilterValue);
 		try {
+			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 75;
+			State = 120;
 			@string();
-			State = 80;
+			State = 125;
 			ErrorHandler.Sync(this);
-			_la = TokenStream.LA(1);
-			while (_la==VD) {
-				{
-				{
-				State = 76;
-				Match(VD);
-				State = 77;
-				@string();
+			_alt = Interpreter.AdaptivePredict(TokenStream,13,Context);
+			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
+				if ( _alt==1 ) {
+					{
+					{
+					State = 121;
+					Match(VD);
+					State = 122;
+					@string();
+					}
+					} 
 				}
-				}
-				State = 82;
+				State = 127;
 				ErrorHandler.Sync(this);
-				_la = TokenStream.LA(1);
+				_alt = Interpreter.AdaptivePredict(TokenStream,13,Context);
 			}
 			}
 		}
@@ -606,28 +842,30 @@ public partial class SearchPhraseParser : Parser {
 	[RuleVersion(0)]
 	public RangeFilterValueContext rangeFilterValue() {
 		RangeFilterValueContext _localctx = new RangeFilterValueContext(Context, State);
-		EnterRule(_localctx, 16, RULE_rangeFilterValue);
-		int _la;
+		EnterRule(_localctx, 18, RULE_rangeFilterValue);
 		try {
+			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 83;
+			State = 128;
 			range();
-			State = 88;
+			State = 133;
 			ErrorHandler.Sync(this);
-			_la = TokenStream.LA(1);
-			while (_la==VD) {
-				{
-				{
-				State = 84;
-				Match(VD);
-				State = 85;
-				range();
+			_alt = Interpreter.AdaptivePredict(TokenStream,14,Context);
+			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
+				if ( _alt==1 ) {
+					{
+					{
+					State = 129;
+					Match(VD);
+					State = 130;
+					range();
+					}
+					} 
 				}
-				}
-				State = 90;
+				State = 135;
 				ErrorHandler.Sync(this);
-				_la = TokenStream.LA(1);
+				_alt = Interpreter.AdaptivePredict(TokenStream,14,Context);
 			}
 			}
 		}
@@ -680,97 +918,97 @@ public partial class SearchPhraseParser : Parser {
 	[RuleVersion(0)]
 	public RangeContext range() {
 		RangeContext _localctx = new RangeContext(Context, State);
-		EnterRule(_localctx, 18, RULE_range);
+		EnterRule(_localctx, 20, RULE_range);
 		int _la;
 		try {
 			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 91;
+			State = 136;
 			rangeStart();
-			State = 95;
+			State = 140;
 			ErrorHandler.Sync(this);
-			_alt = Interpreter.AdaptivePredict(TokenStream,8,Context);
+			_alt = Interpreter.AdaptivePredict(TokenStream,15,Context);
 			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					State = 92;
+					State = 137;
 					Match(DL);
 					}
 					} 
 				}
-				State = 97;
+				State = 142;
 				ErrorHandler.Sync(this);
-				_alt = Interpreter.AdaptivePredict(TokenStream,8,Context);
+				_alt = Interpreter.AdaptivePredict(TokenStream,15,Context);
 			}
-			State = 99;
+			State = 144;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==SimpleString || _la==QuotedString) {
 				{
-				State = 98;
+				State = 143;
 				lower();
 				}
 			}
 
-			State = 104;
+			State = 149;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==DL) {
 				{
 				{
-				State = 101;
+				State = 146;
 				Match(DL);
 				}
 				}
-				State = 106;
+				State = 151;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
-			State = 107;
+			State = 152;
 			Match(RD);
-			State = 111;
+			State = 156;
 			ErrorHandler.Sync(this);
-			_alt = Interpreter.AdaptivePredict(TokenStream,11,Context);
+			_alt = Interpreter.AdaptivePredict(TokenStream,18,Context);
 			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					State = 108;
+					State = 153;
 					Match(DL);
 					}
 					} 
 				}
-				State = 113;
+				State = 158;
 				ErrorHandler.Sync(this);
-				_alt = Interpreter.AdaptivePredict(TokenStream,11,Context);
+				_alt = Interpreter.AdaptivePredict(TokenStream,18,Context);
 			}
-			State = 115;
+			State = 160;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==SimpleString || _la==QuotedString) {
 				{
-				State = 114;
+				State = 159;
 				upper();
 				}
 			}
 
-			State = 120;
+			State = 165;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==DL) {
 				{
 				{
-				State = 117;
+				State = 162;
 				Match(DL);
 				}
 				}
-				State = 122;
+				State = 167;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
-			State = 123;
+			State = 168;
 			rangeEnd();
 			}
 		}
@@ -807,11 +1045,11 @@ public partial class SearchPhraseParser : Parser {
 	[RuleVersion(0)]
 	public RangeStartContext rangeStart() {
 		RangeStartContext _localctx = new RangeStartContext(Context, State);
-		EnterRule(_localctx, 20, RULE_rangeStart);
+		EnterRule(_localctx, 22, RULE_rangeStart);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 125;
+			State = 170;
 			Match(RangeStart);
 			}
 		}
@@ -848,11 +1086,11 @@ public partial class SearchPhraseParser : Parser {
 	[RuleVersion(0)]
 	public RangeEndContext rangeEnd() {
 		RangeEndContext _localctx = new RangeEndContext(Context, State);
-		EnterRule(_localctx, 22, RULE_rangeEnd);
+		EnterRule(_localctx, 24, RULE_rangeEnd);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 127;
+			State = 172;
 			Match(RangeEnd);
 			}
 		}
@@ -891,11 +1129,11 @@ public partial class SearchPhraseParser : Parser {
 	[RuleVersion(0)]
 	public LowerContext lower() {
 		LowerContext _localctx = new LowerContext(Context, State);
-		EnterRule(_localctx, 24, RULE_lower);
+		EnterRule(_localctx, 26, RULE_lower);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 129;
+			State = 174;
 			@string();
 			}
 		}
@@ -934,11 +1172,11 @@ public partial class SearchPhraseParser : Parser {
 	[RuleVersion(0)]
 	public UpperContext upper() {
 		UpperContext _localctx = new UpperContext(Context, State);
-		EnterRule(_localctx, 26, RULE_upper);
+		EnterRule(_localctx, 28, RULE_upper);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 131;
+			State = 176;
 			@string();
 			}
 		}
@@ -974,11 +1212,11 @@ public partial class SearchPhraseParser : Parser {
 	[RuleVersion(0)]
 	public NegationContext negation() {
 		NegationContext _localctx = new NegationContext(Context, State);
-		EnterRule(_localctx, 28, RULE_negation);
+		EnterRule(_localctx, 30, RULE_negation);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 133;
+			State = 178;
 			Match(T__0);
 			}
 		}
@@ -1016,12 +1254,12 @@ public partial class SearchPhraseParser : Parser {
 	[RuleVersion(0)]
 	public StringContext @string() {
 		StringContext _localctx = new StringContext(Context, State);
-		EnterRule(_localctx, 30, RULE_string);
+		EnterRule(_localctx, 32, RULE_string);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 135;
+			State = 180;
 			_la = TokenStream.LA(1);
 			if ( !(_la==SimpleString || _la==QuotedString) ) {
 			ErrorHandler.RecoverInline(this);
@@ -1043,47 +1281,77 @@ public partial class SearchPhraseParser : Parser {
 		return _localctx;
 	}
 
+	public override bool Sempred(RuleContext _localctx, int ruleIndex, int predIndex) {
+		switch (ruleIndex) {
+		case 1: return expression_sempred((ExpressionContext)_localctx, predIndex);
+		}
+		return true;
+	}
+	private bool expression_sempred(ExpressionContext _localctx, int predIndex) {
+		switch (predIndex) {
+		case 0: return Precpred(Context, 3);
+		case 1: return Precpred(Context, 2);
+		}
+		return true;
+	}
+
 	private static int[] _serializedATN = {
-		4,1,10,138,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
+		4,1,12,183,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
 		7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,
-		2,15,7,15,1,0,5,0,34,8,0,10,0,12,0,37,9,0,1,0,1,0,1,0,5,0,42,8,0,10,0,
-		12,0,45,9,0,1,0,5,0,48,8,0,10,0,12,0,51,9,0,1,1,1,1,3,1,55,8,1,1,2,1,2,
-		1,3,3,3,60,8,3,1,3,1,3,3,3,64,8,3,1,4,1,4,1,4,1,4,1,5,1,5,1,5,1,5,1,6,
-		1,6,1,7,1,7,1,7,5,7,79,8,7,10,7,12,7,82,9,7,1,8,1,8,1,8,5,8,87,8,8,10,
-		8,12,8,90,9,8,1,9,1,9,5,9,94,8,9,10,9,12,9,97,9,9,1,9,3,9,100,8,9,1,9,
-		5,9,103,8,9,10,9,12,9,106,9,9,1,9,1,9,5,9,110,8,9,10,9,12,9,113,9,9,1,
-		9,3,9,116,8,9,1,9,5,9,119,8,9,10,9,12,9,122,9,9,1,9,1,9,1,10,1,10,1,11,
-		1,11,1,12,1,12,1,13,1,13,1,14,1,14,1,15,1,15,1,15,0,0,16,0,2,4,6,8,10,
-		12,14,16,18,20,22,24,26,28,30,0,1,1,0,7,8,135,0,35,1,0,0,0,2,54,1,0,0,
-		0,4,56,1,0,0,0,6,59,1,0,0,0,8,65,1,0,0,0,10,69,1,0,0,0,12,73,1,0,0,0,14,
-		75,1,0,0,0,16,83,1,0,0,0,18,91,1,0,0,0,20,125,1,0,0,0,22,127,1,0,0,0,24,
-		129,1,0,0,0,26,131,1,0,0,0,28,133,1,0,0,0,30,135,1,0,0,0,32,34,5,10,0,
-		0,33,32,1,0,0,0,34,37,1,0,0,0,35,33,1,0,0,0,35,36,1,0,0,0,36,38,1,0,0,
-		0,37,35,1,0,0,0,38,43,3,2,1,0,39,40,5,10,0,0,40,42,3,2,1,0,41,39,1,0,0,
-		0,42,45,1,0,0,0,43,41,1,0,0,0,43,44,1,0,0,0,44,49,1,0,0,0,45,43,1,0,0,
-		0,46,48,5,10,0,0,47,46,1,0,0,0,48,51,1,0,0,0,49,47,1,0,0,0,49,50,1,0,0,
-		0,50,1,1,0,0,0,51,49,1,0,0,0,52,55,3,4,2,0,53,55,3,6,3,0,54,52,1,0,0,0,
-		54,53,1,0,0,0,55,3,1,0,0,0,56,57,3,30,15,0,57,5,1,0,0,0,58,60,3,28,14,
-		0,59,58,1,0,0,0,59,60,1,0,0,0,60,63,1,0,0,0,61,64,3,8,4,0,62,64,3,10,5,
-		0,63,61,1,0,0,0,63,62,1,0,0,0,64,7,1,0,0,0,65,66,3,12,6,0,66,67,5,2,0,
-		0,67,68,3,14,7,0,68,9,1,0,0,0,69,70,3,12,6,0,70,71,5,2,0,0,71,72,3,16,
-		8,0,72,11,1,0,0,0,73,74,3,30,15,0,74,13,1,0,0,0,75,80,3,30,15,0,76,77,
-		5,3,0,0,77,79,3,30,15,0,78,76,1,0,0,0,79,82,1,0,0,0,80,78,1,0,0,0,80,81,
-		1,0,0,0,81,15,1,0,0,0,82,80,1,0,0,0,83,88,3,18,9,0,84,85,5,3,0,0,85,87,
-		3,18,9,0,86,84,1,0,0,0,87,90,1,0,0,0,88,86,1,0,0,0,88,89,1,0,0,0,89,17,
-		1,0,0,0,90,88,1,0,0,0,91,95,3,20,10,0,92,94,5,10,0,0,93,92,1,0,0,0,94,
-		97,1,0,0,0,95,93,1,0,0,0,95,96,1,0,0,0,96,99,1,0,0,0,97,95,1,0,0,0,98,
-		100,3,24,12,0,99,98,1,0,0,0,99,100,1,0,0,0,100,104,1,0,0,0,101,103,5,10,
-		0,0,102,101,1,0,0,0,103,106,1,0,0,0,104,102,1,0,0,0,104,105,1,0,0,0,105,
-		107,1,0,0,0,106,104,1,0,0,0,107,111,5,4,0,0,108,110,5,10,0,0,109,108,1,
-		0,0,0,110,113,1,0,0,0,111,109,1,0,0,0,111,112,1,0,0,0,112,115,1,0,0,0,
-		113,111,1,0,0,0,114,116,3,26,13,0,115,114,1,0,0,0,115,116,1,0,0,0,116,
-		120,1,0,0,0,117,119,5,10,0,0,118,117,1,0,0,0,119,122,1,0,0,0,120,118,1,
-		0,0,0,120,121,1,0,0,0,121,123,1,0,0,0,122,120,1,0,0,0,123,124,3,22,11,
-		0,124,19,1,0,0,0,125,126,5,5,0,0,126,21,1,0,0,0,127,128,5,6,0,0,128,23,
-		1,0,0,0,129,130,3,30,15,0,130,25,1,0,0,0,131,132,3,30,15,0,132,27,1,0,
-		0,0,133,134,5,1,0,0,134,29,1,0,0,0,135,136,7,0,0,0,136,31,1,0,0,0,14,35,
-		43,49,54,59,63,80,88,95,99,104,111,115,120
+		2,15,7,15,2,16,7,16,1,0,5,0,36,8,0,10,0,12,0,39,9,0,1,0,1,0,5,0,43,8,0,
+		10,0,12,0,46,9,0,1,0,1,0,1,1,1,1,1,1,4,1,53,8,1,11,1,12,1,54,1,1,5,1,58,
+		8,1,10,1,12,1,61,9,1,1,1,1,1,5,1,65,8,1,10,1,12,1,68,9,1,1,1,1,1,5,1,72,
+		8,1,10,1,12,1,75,9,1,1,1,1,1,1,1,5,1,80,8,1,10,1,12,1,83,9,1,1,1,1,1,5,
+		1,87,8,1,10,1,12,1,90,9,1,1,1,5,1,93,8,1,10,1,12,1,96,9,1,1,2,1,2,3,2,
+		100,8,2,1,3,1,3,1,4,3,4,105,8,4,1,4,1,4,3,4,109,8,4,1,5,1,5,1,5,1,5,1,
+		6,1,6,1,6,1,6,1,7,1,7,1,8,1,8,1,8,5,8,124,8,8,10,8,12,8,127,9,8,1,9,1,
+		9,1,9,5,9,132,8,9,10,9,12,9,135,9,9,1,10,1,10,5,10,139,8,10,10,10,12,10,
+		142,9,10,1,10,3,10,145,8,10,1,10,5,10,148,8,10,10,10,12,10,151,9,10,1,
+		10,1,10,5,10,155,8,10,10,10,12,10,158,9,10,1,10,3,10,161,8,10,1,10,5,10,
+		164,8,10,10,10,12,10,167,9,10,1,10,1,10,1,11,1,11,1,12,1,12,1,13,1,13,
+		1,14,1,14,1,15,1,15,1,16,1,16,1,16,0,1,2,17,0,2,4,6,8,10,12,14,16,18,20,
+		22,24,26,28,30,32,0,1,1,0,9,10,186,0,37,1,0,0,0,2,49,1,0,0,0,4,99,1,0,
+		0,0,6,101,1,0,0,0,8,104,1,0,0,0,10,110,1,0,0,0,12,114,1,0,0,0,14,118,1,
+		0,0,0,16,120,1,0,0,0,18,128,1,0,0,0,20,136,1,0,0,0,22,170,1,0,0,0,24,172,
+		1,0,0,0,26,174,1,0,0,0,28,176,1,0,0,0,30,178,1,0,0,0,32,180,1,0,0,0,34,
+		36,5,12,0,0,35,34,1,0,0,0,36,39,1,0,0,0,37,35,1,0,0,0,37,38,1,0,0,0,38,
+		40,1,0,0,0,39,37,1,0,0,0,40,44,3,2,1,0,41,43,5,12,0,0,42,41,1,0,0,0,43,
+		46,1,0,0,0,44,42,1,0,0,0,44,45,1,0,0,0,45,47,1,0,0,0,46,44,1,0,0,0,47,
+		48,5,0,0,1,48,1,1,0,0,0,49,50,6,1,-1,0,50,59,3,4,2,0,51,53,5,12,0,0,52,
+		51,1,0,0,0,53,54,1,0,0,0,54,52,1,0,0,0,54,55,1,0,0,0,55,56,1,0,0,0,56,
+		58,3,4,2,0,57,52,1,0,0,0,58,61,1,0,0,0,59,57,1,0,0,0,59,60,1,0,0,0,60,
+		94,1,0,0,0,61,59,1,0,0,0,62,66,10,3,0,0,63,65,5,12,0,0,64,63,1,0,0,0,65,
+		68,1,0,0,0,66,64,1,0,0,0,66,67,1,0,0,0,67,69,1,0,0,0,68,66,1,0,0,0,69,
+		73,5,6,0,0,70,72,5,12,0,0,71,70,1,0,0,0,72,75,1,0,0,0,73,71,1,0,0,0,73,
+		74,1,0,0,0,74,76,1,0,0,0,75,73,1,0,0,0,76,93,3,2,1,4,77,81,10,2,0,0,78,
+		80,5,12,0,0,79,78,1,0,0,0,80,83,1,0,0,0,81,79,1,0,0,0,81,82,1,0,0,0,82,
+		84,1,0,0,0,83,81,1,0,0,0,84,88,5,5,0,0,85,87,5,12,0,0,86,85,1,0,0,0,87,
+		90,1,0,0,0,88,86,1,0,0,0,88,89,1,0,0,0,89,91,1,0,0,0,90,88,1,0,0,0,91,
+		93,3,2,1,3,92,62,1,0,0,0,92,77,1,0,0,0,93,96,1,0,0,0,94,92,1,0,0,0,94,
+		95,1,0,0,0,95,3,1,0,0,0,96,94,1,0,0,0,97,100,3,8,4,0,98,100,3,6,3,0,99,
+		97,1,0,0,0,99,98,1,0,0,0,100,5,1,0,0,0,101,102,3,32,16,0,102,7,1,0,0,0,
+		103,105,3,30,15,0,104,103,1,0,0,0,104,105,1,0,0,0,105,108,1,0,0,0,106,
+		109,3,10,5,0,107,109,3,12,6,0,108,106,1,0,0,0,108,107,1,0,0,0,109,9,1,
+		0,0,0,110,111,3,14,7,0,111,112,5,2,0,0,112,113,3,16,8,0,113,11,1,0,0,0,
+		114,115,3,14,7,0,115,116,5,2,0,0,116,117,3,18,9,0,117,13,1,0,0,0,118,119,
+		3,32,16,0,119,15,1,0,0,0,120,125,3,32,16,0,121,122,5,3,0,0,122,124,3,32,
+		16,0,123,121,1,0,0,0,124,127,1,0,0,0,125,123,1,0,0,0,125,126,1,0,0,0,126,
+		17,1,0,0,0,127,125,1,0,0,0,128,133,3,20,10,0,129,130,5,3,0,0,130,132,3,
+		20,10,0,131,129,1,0,0,0,132,135,1,0,0,0,133,131,1,0,0,0,133,134,1,0,0,
+		0,134,19,1,0,0,0,135,133,1,0,0,0,136,140,3,22,11,0,137,139,5,12,0,0,138,
+		137,1,0,0,0,139,142,1,0,0,0,140,138,1,0,0,0,140,141,1,0,0,0,141,144,1,
+		0,0,0,142,140,1,0,0,0,143,145,3,26,13,0,144,143,1,0,0,0,144,145,1,0,0,
+		0,145,149,1,0,0,0,146,148,5,12,0,0,147,146,1,0,0,0,148,151,1,0,0,0,149,
+		147,1,0,0,0,149,150,1,0,0,0,150,152,1,0,0,0,151,149,1,0,0,0,152,156,5,
+		4,0,0,153,155,5,12,0,0,154,153,1,0,0,0,155,158,1,0,0,0,156,154,1,0,0,0,
+		156,157,1,0,0,0,157,160,1,0,0,0,158,156,1,0,0,0,159,161,3,28,14,0,160,
+		159,1,0,0,0,160,161,1,0,0,0,161,165,1,0,0,0,162,164,5,12,0,0,163,162,1,
+		0,0,0,164,167,1,0,0,0,165,163,1,0,0,0,165,166,1,0,0,0,166,168,1,0,0,0,
+		167,165,1,0,0,0,168,169,3,24,12,0,169,21,1,0,0,0,170,171,5,7,0,0,171,23,
+		1,0,0,0,172,173,5,8,0,0,173,25,1,0,0,0,174,175,3,32,16,0,175,27,1,0,0,
+		0,176,177,3,32,16,0,177,29,1,0,0,0,178,179,5,1,0,0,179,31,1,0,0,0,180,
+		181,7,0,0,0,181,33,1,0,0,0,21,37,44,54,59,66,73,81,88,92,94,99,104,108,
+		125,133,140,144,149,156,160,165
 	};
 
 	public static readonly ATN _ATN =
