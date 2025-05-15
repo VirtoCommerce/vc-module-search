@@ -17,7 +17,7 @@ public class TestCustomerOrderEntity
 
 public class FilterToExpressionMapperTests
 {
-    private IQueryable<TestCustomerOrderEntity> GetMockCustomerOrders()
+    private static IQueryable<TestCustomerOrderEntity> GetMockCustomerOrders()
     {
         return new List<TestCustomerOrderEntity>
             {

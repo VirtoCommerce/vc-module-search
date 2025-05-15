@@ -187,23 +187,6 @@ public static class FilterToExpressionMapper
         throw new NotSupportedException($"Filter type {filterType.Name} is not supported.");
     }
 
-    private class ParameterReplacer : ExpressionVisitor
-    {
-        private readonly ParameterExpression _oldParameter;
-        private readonly ParameterExpression _newParameter;
-
-        public ParameterReplacer(ParameterExpression oldParameter, ParameterExpression newParameter)
-        {
-            _oldParameter = oldParameter;
-            _newParameter = newParameter;
-        }
-
-        protected override Expression VisitParameter(ParameterExpression node)
-        {
-            return node == _oldParameter ? _newParameter : base.VisitParameter(node);
-        }
-    }
-
     private static ConstantExpression TryParseConstant(string value, Type targetType)
     {
         if (string.IsNullOrEmpty(value))
