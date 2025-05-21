@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,9 +21,9 @@ public static class FilterToExpressionMapper
         // Register built-in filter mappers
         Register<OrFilter>(MapOrFilter);
         Register<AndFilter>(MapAndFilter);
+        Register<NotFilter>(MapNotFilter);
         Register<TermFilter>(MapTermFilter);
         Register<RangeFilter>(MapRangeFilter);
-        Register<NotFilter>(MapNotFilter);
     }
 
     /// <summary>
@@ -30,7 +31,7 @@ public static class FilterToExpressionMapper
     /// </summary>
     /// <code>
     /// // You can now add support for new filter types like this:
-    /// FilterToExpressionMapper.Register<MyCustomFilter>((filter, parameter) => {
+    /// FilterToExpressionMapper.Register{MyCustomFilter}((filter, parameter) => {
     /// return a LambdaExpression for your filter
     /// });
     /// </code>
@@ -45,8 +46,7 @@ public static class FilterToExpressionMapper
     /// </summary>
     /// <code>
     /// // You can now add support for new filter types like this:
-    /// FilterToExpressionMapper.Unregister<MyCustomFilter>();
-    /// });
+    /// FilterToExpressionMapper.Unregister{MyCustomFilter}();
     /// </code> 
     public static void Unregister<TFilter>() where TFilter : IFilter
     {
@@ -70,15 +70,10 @@ public static class FilterToExpressionMapper
     {
         ArgumentNullException.ThrowIfNull(filter);
 
-        var filterType = filter.GetType();
-        if (_filterMappers.TryGetValue(filterType, out var mapper))
-        {
-            var parameter = Expression.Parameter(typeof(TEntity), "entity");
-            var lambda = (LambdaExpression)mapper.DynamicInvoke(filter, parameter);
-            return (Expression<Func<TEntity, bool>>)lambda;
-        }
+        var parameter = Expression.Parameter(typeof(TEntity), "entity");
+        var lambda = GetLambdaExpression(filter, parameter);
 
-        throw new NotSupportedException($"Filter type {filterType.Name} is not supported.");
+        return (Expression<Func<TEntity, bool>>)lambda;
     }
 
     // Built-in mappers
@@ -86,142 +81,132 @@ public static class FilterToExpressionMapper
     private static LambdaExpression MapAndFilter(AndFilter andFilter, ParameterExpression parameter)
     {
         Expression body = null;
+
         foreach (var child in andFilter.ChildFilters)
         {
-            var lambda = MapFilterToExpressionInternal(child, parameter);
+            var lambda = GetLambdaExpression(child, parameter);
             body = body == null ? lambda.Body : Expression.AndAlso(body, lambda.Body);
         }
+
         return Expression.Lambda(body ?? Expression.Constant(true), parameter);
     }
 
     private static LambdaExpression MapOrFilter(OrFilter orFilter, ParameterExpression parameter)
     {
         Expression body = null;
+
         foreach (var child in orFilter.ChildFilters)
         {
-            var lambda = MapFilterToExpressionInternal(child, parameter);
+            var lambda = GetLambdaExpression(child, parameter);
             body = body == null ? lambda.Body : Expression.OrElse(body, lambda.Body);
         }
+
         return Expression.Lambda(body ?? Expression.Constant(false), parameter);
+    }
+
+    private static LambdaExpression MapNotFilter(NotFilter notFilter, ParameterExpression parameter)
+    {
+        var inner = GetLambdaExpression(notFilter.ChildFilter, parameter);
+        var negation = Expression.Not(inner.Body);
+
+        return Expression.Lambda(negation, parameter);
     }
 
     private static LambdaExpression MapTermFilter(TermFilter termFilter, ParameterExpression parameter)
     {
         var propertyPath = termFilter.FieldName.Split('.');
+        var body = BuildNestedPropertyOrAnyExpression(parameter, propertyPath, 0, TermPredicateBuilder);
 
-        if (termFilter.Values.Count == 1)
+        return Expression.Lambda(body, parameter);
+
+        Expression TermPredicateBuilder(Expression property)
         {
-            var body = BuildNestedPropertyOrAnyExpression(
-                parameter,
-                propertyPath,
-                0,
-                property =>
-                {
-                    var constant = Expression.Constant(termFilter.Values.First());
-                    return Expression.Equal(property, constant);
-                });
+            if (termFilter.Values.Count == 1)
+            {
+                var constant = Expression.Constant(termFilter.Values.First());
+                return Expression.Equal(property, constant);
+            }
 
-            return Expression.Lambda(body, parameter);
-        }
-        else
-        {
-            var body = BuildNestedPropertyOrAnyExpression(
-                parameter,
-                propertyPath,
-                0,
-                property =>
-                {
-                    var values = termFilter.Values.Select(v => Expression.Constant(v, property.Type)).ToArray();
-                    var valuesArray = Expression.NewArrayInit(property.Type, values);
-                    return Expression.Call(typeof(Enumerable), "Contains", new[] { property.Type }, valuesArray, property);
-                });
+            var values = termFilter.Values.Select(v => Expression.Constant(v, property.Type)).ToArray<Expression>();
+            var valuesArray = Expression.NewArrayInit(property.Type, values);
 
-            return Expression.Lambda(body, parameter);
+            return Expression.Call(typeof(Enumerable), "Contains", [property.Type], valuesArray, property);
         }
     }
-
 
     private static LambdaExpression MapRangeFilter(RangeFilter rangeFilter, ParameterExpression parameter)
     {
-        if (rangeFilter.Values == null || !rangeFilter.Values.Any())
+        if (rangeFilter.Values == null || rangeFilter.Values.Count == 0)
         {
-            throw new ArgumentException("RangeFilter must contain at least one range value.");
+            throw new ArgumentException("RangeFilter must contain at least one range value.", nameof(rangeFilter));
         }
 
         var propertyPath = rangeFilter.FieldName.Split('.');
-
-        Expression body = BuildNestedPropertyOrAnyExpression(
-            parameter,
-            propertyPath,
-            0,
-            property =>
-            {
-                Expression rangeBody = null;
-                foreach (var range in rangeFilter.Values)
-                {
-                    var lower = TryParseConstant(range.Lower, property.Type);
-                    var upper = TryParseConstant(range.Upper, property.Type);
-
-                    Expression lowerBound = null;
-                    Expression upperBound = null;
-
-                    if (lower != null)
-                    {
-                        lowerBound = range.IncludeLower
-                            ? Expression.GreaterThanOrEqual(property, lower)
-                            : Expression.GreaterThan(property, lower);
-                    }
-
-                    if (upper != null)
-                    {
-                        upperBound = range.IncludeUpper
-                            ? Expression.LessThanOrEqual(property, upper)
-                            : Expression.LessThan(property, upper);
-                    }
-
-                    Expression rangeExpression;
-                    if (lowerBound != null && upperBound != null)
-                    {
-                        rangeExpression = Expression.AndAlso(lowerBound, upperBound);
-                    }
-                    else if (lowerBound != null)
-                    {
-                        rangeExpression = lowerBound;
-                    }
-                    else if (upperBound != null)
-                    {
-                        rangeExpression = upperBound;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-
-                    rangeBody = rangeBody == null ? rangeExpression : Expression.OrElse(rangeBody, rangeExpression);
-                }
-                return rangeBody;
-            });
+        var body = BuildNestedPropertyOrAnyExpression(parameter, propertyPath, 0, RangePredicateBuilder);
 
         return Expression.Lambda(body, parameter);
+
+        Expression RangePredicateBuilder(Expression property)
+        {
+            Expression rangeBody = null;
+
+            foreach (var range in rangeFilter.Values)
+            {
+                var lower = TryParseConstant(range.Lower, property.Type);
+                var upper = TryParseConstant(range.Upper, property.Type);
+
+                Expression lowerBound = null;
+                Expression upperBound = null;
+
+                if (lower != null)
+                {
+                    lowerBound = range.IncludeLower
+                        ? Expression.GreaterThanOrEqual(property, lower)
+                        : Expression.GreaterThan(property, lower);
+                }
+
+                if (upper != null)
+                {
+                    upperBound = range.IncludeUpper
+                        ? Expression.LessThanOrEqual(property, upper)
+                        : Expression.LessThan(property, upper);
+                }
+
+                Expression rangeExpression;
+                if (lowerBound != null && upperBound != null)
+                {
+                    rangeExpression = Expression.AndAlso(lowerBound, upperBound);
+                }
+                else if (lowerBound != null)
+                {
+                    rangeExpression = lowerBound;
+                }
+                else if (upperBound != null)
+                {
+                    rangeExpression = upperBound;
+                }
+                else
+                {
+                    continue;
+                }
+
+                rangeBody = rangeBody == null ? rangeExpression : Expression.OrElse(rangeBody, rangeExpression);
+            }
+
+            return rangeBody;
+        }
     }
 
-
-    private static LambdaExpression MapNotFilter(NotFilter notFilter, ParameterExpression parameter)
-    {
-        var inner = MapFilterToExpressionInternal(notFilter.ChildFilter, parameter);
-        var negation = Expression.Not(inner.Body);
-        return Expression.Lambda(negation, parameter);
-    }
-
-    // Helper to map any filter using the registry, reusing the same parameter
-    private static LambdaExpression MapFilterToExpressionInternal(IFilter filter, ParameterExpression parameter)
+    private static LambdaExpression GetLambdaExpression(IFilter filter, ParameterExpression parameter)
     {
         var filterType = filter.GetType();
-        if (_filterMappers.TryGetValue(filterType, out var mapper))
+
+        if (!_filterMappers.TryGetValue(filterType, out var mapper))
         {
-            return (LambdaExpression)mapper.DynamicInvoke(filter, parameter);
+            throw new NotSupportedException($"Filter type {filterType.Name} is not supported.");
         }
-        throw new NotSupportedException($"Filter type {filterType.Name} is not supported.");
+
+        return (LambdaExpression)mapper.DynamicInvoke(filter, parameter);
     }
 
     private static ConstantExpression TryParseConstant(string value, Type targetType)
@@ -232,6 +217,7 @@ public static class FilterToExpressionMapper
         }
 
         object parsed;
+
         try
         {
             parsed = Convert.ChangeType(value, Nullable.GetUnderlyingType(targetType) ?? targetType);
@@ -240,50 +226,46 @@ public static class FilterToExpressionMapper
         {
             throw new InvalidCastException($"Cannot convert '{value}' to type {targetType.Name}");
         }
+
         return Expression.Constant(parsed, targetType);
     }
 
     private static Expression BuildNestedPropertyOrAnyExpression(Expression parameter, string[] propertyPath, int pathIndex, Func<Expression, Expression> leafPredicateBuilder)
     {
-        var member = propertyPath[pathIndex];
-        var memberInfo = parameter.Type.GetProperty(member) ?? throw new InvalidOperationException($"Property '{member}' not found on type '{parameter.Type.Name}'.");
+        var propertyName = propertyPath[pathIndex];
+        var propertyInfo = parameter.Type.GetProperty(propertyName)
+                           ?? throw new InvalidOperationException($"Property '{propertyName}' not found on type '{parameter.Type.Name}'.");
 
-        // If this is a collection and not the last segment, use Any
-        if (typeof(System.Collections.IEnumerable).IsAssignableFrom(memberInfo.PropertyType) &&
-            memberInfo.PropertyType != typeof(string) &&
-            pathIndex < propertyPath.Length - 1)
-        {
-            var elementType = memberInfo.PropertyType.IsGenericType
-                ? memberInfo.PropertyType.GetGenericArguments()[0]
-                : typeof(object);
+        var isLastPropertyInPath = pathIndex == propertyPath.Length - 1;
+        var isCollection = propertyInfo.PropertyType.IsAssignableTo(typeof(IEnumerable));
+        var propertyExpression = Expression.Property(parameter, propertyName);
 
-            var innerParameter = Expression.Parameter(elementType, "x");
-            var innerBody = BuildNestedPropertyOrAnyExpression(
-                innerParameter,
-                propertyPath,
-                pathIndex + 1,
-                leafPredicateBuilder);
+        if (isLastPropertyInPath ||
+            !isCollection ||
+            propertyInfo.PropertyType == typeof(string))
+        {
+            return isLastPropertyInPath
+                // Leaf property
+                ? leafPredicateBuilder(propertyExpression)
+                // Continue traversing
+                : BuildNestedPropertyOrAnyExpression(propertyExpression, propertyPath, pathIndex + 1, leafPredicateBuilder);
+        }
 
-            var anyCall = Expression.Call(
-                typeof(Enumerable),
-                "Any",
-                [elementType],
-                Expression.Property(parameter, member),
-                Expression.Lambda(innerBody, innerParameter)
-            );
-            return anyCall;
-        }
-        else if (pathIndex == propertyPath.Length - 1)
-        {
-            // Leaf property
-            var propertyExpr = Expression.Property(parameter, member);
-            return leafPredicateBuilder(propertyExpr);
-        }
-        else
-        {
-            // Continue traversing
-            var propertyExpr = Expression.Property(parameter, member);
-            return BuildNestedPropertyOrAnyExpression(propertyExpr, propertyPath, pathIndex + 1, leafPredicateBuilder);
-        }
+        // Build Any expression for a collection
+
+        var elementType = propertyInfo.PropertyType.IsGenericType
+            ? propertyInfo.PropertyType.GetGenericArguments()[0]
+            : typeof(object);
+
+        var innerParameter = Expression.Parameter(elementType, "x");
+        var innerBody = BuildNestedPropertyOrAnyExpression(innerParameter, propertyPath, pathIndex + 1, leafPredicateBuilder);
+
+        return Expression.Call(
+            typeof(Enumerable),
+            "Any",
+            [elementType],
+            propertyExpression,
+            Expression.Lambda(innerBody, innerParameter)
+        );
     }
 }
