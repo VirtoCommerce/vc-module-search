@@ -11,7 +11,7 @@ const rootPath = path.resolve(__dirname, "dist");
 function getEntryPoints(isProduction) {
     const result = [
         ...glob.sync("./Scripts/**/*.js", { nosort: true }),
-        ...(isProduction ? glob.sync("./Scripts/**/*.tpl.html", { nosort: true }) : []),
+        ...(isProduction ? glob.sync("./Scripts/**/*.html", { nosort: true }) : []),
         ...glob.sync("./Content/**/*.css", { nosort: true })
     ];
     return result;
@@ -34,7 +34,7 @@ module.exports = (env, argv) => {
                     use: [MiniCssExtractPlugin.loader, "css-loader"]
                 },
                 {
-                    test: /\.tpl\.html$/,
+                    test: /\.html$/,
                     use: [
                         {
                             loader: "ngtemplate-loader",
