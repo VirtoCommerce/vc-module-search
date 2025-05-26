@@ -1,4 +1,4 @@
-const moduleId = "VirtoCommerce.Search";
+const moduleId = "VirtoCommerce.Assets";
 
 const glob = require("glob");
 const path = require("path");
@@ -40,7 +40,7 @@ module.exports = (env, argv) => {
                             loader: "ngtemplate-loader",
                             options: {
                                 relativeTo: path.resolve(__dirname, "./"),
-                                prefix: "Modules/$(${moduleId})/",
+                                prefix: "Modules/$(" + moduleId + ")/",
                             }
                         },
                         "html-loader"
