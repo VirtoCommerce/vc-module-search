@@ -43,7 +43,12 @@ module.exports = (env, argv) => {
                                 prefix: "Modules/$(" + moduleId + ")/",
                             }
                         },
-                        "html-loader"
+                        {
+                            loader: "html-loader",
+                            options: {
+                                sources: false
+                            }
+                        }
                     ]
                 }
             ]
