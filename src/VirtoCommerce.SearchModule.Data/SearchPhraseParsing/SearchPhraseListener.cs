@@ -14,28 +14,46 @@ namespace VirtoCommerce.SearchModule.Data.SearchPhraseParsing
         public IList<string> Keywords { get; } = new List<string>();
         public IList<IFilter> Filters { get; } = new List<IFilter>();
 
+        public Stack<IFilter> Stack { get; } = new Stack<IFilter>();
+
         public override void ExitKeyword([NotNull] AntlrSPP.KeywordContext context)
         {
             base.ExitKeyword(context);
             Keywords.Add(UnEscape(context.GetText()));
         }
 
+        public override void EnterOrExpression([NotNull] AntlrSPP.OrExpressionContext context)
+        {
+            var orExpression = new OrFilter { ChildFilters = [] };
+            AddFilter(orExpression);
+
+            Stack.Push(orExpression);
+
+            base.EnterOrExpression(context);
+        }
+
         public override void ExitOrExpression([NotNull] AntlrSPP.OrExpressionContext context)
         {
             base.ExitOrExpression(context);
 
-            var orExpression = new OrFilter { ChildFilters = [.. Filters] };
-            Filters.Clear();
-            Filters.Add(orExpression);
+            Stack.Pop();
+        }
+
+        public override void EnterAndExpression([NotNull] AntlrSPP.AndExpressionContext context)
+        {
+            var andExpression = new AndFilter { ChildFilters = [] };
+            AddFilter(andExpression);
+
+            Stack.Push(andExpression);
+
+            base.EnterAndExpression(context);
         }
 
         public override void ExitAndExpression([NotNull] AntlrSPP.AndExpressionContext context)
         {
             base.ExitAndExpression(context);
 
-            var andExpression = new AndFilter { ChildFilters = [.. Filters] };
-            Filters.Clear();
-            Filters.Add(andExpression);
+            Stack.Pop();
         }
 
         public override void ExitFilters([NotNull] AntlrSPP.FiltersContext context)
@@ -66,7 +84,27 @@ namespace VirtoCommerce.SearchModule.Data.SearchPhraseParsing
                 filter = new NotFilter { ChildFilter = filter };
             }
 
-            Filters.Add(filter);
+            AddFilter(filter);
+        }
+
+        private void AddFilter(IFilter filter)
+        {
+            if (Stack.Count > 0)
+            {
+                var parentFilter = Stack.Peek();
+                if (parentFilter is OrFilter orFilter)
+                {
+                    orFilter.ChildFilters.Add(filter);
+                }
+                else if (parentFilter is AndFilter andFilter)
+                {
+                    andFilter.ChildFilters.Add(filter);
+                }
+            }
+            else
+            {
+                Filters.Add(filter);
+            }
         }
 
         protected virtual TermFilter GetTermFilter(AntlrSPP.AttributeFilterContext context)
@@ -112,8 +150,8 @@ namespace VirtoCommerce.SearchModule.Data.SearchPhraseParsing
 
         protected virtual RangeFilterValue GetRangeFilterValue(AntlrSPP.RangeContext context)
         {
-            var lower = context.GetChild<AntlrSPP.LowerContext>(0)?.GetText();
-            var upper = context.GetChild<AntlrSPP.UpperContext>(0)?.GetText();
+            var lower = context?.lower?.GetText();
+            var upper = context?.upper?.GetText();
             var rangeStart = context.GetChild<AntlrSPP.RangeStartContext>(0)?.GetText();
             var rangeEnd = context.GetChild<AntlrSPP.RangeEndContext>(0)?.GetText();
 
