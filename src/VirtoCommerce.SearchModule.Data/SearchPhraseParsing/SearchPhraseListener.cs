@@ -150,8 +150,8 @@ namespace VirtoCommerce.SearchModule.Data.SearchPhraseParsing
 
         protected virtual RangeFilterValue GetRangeFilterValue(AntlrSPP.RangeContext context)
         {
-            var lower = context?.lower?.GetText();
-            var upper = context?.upper?.GetText();
+            var lower = context.lower?.GetText();
+            var upper = context.upper?.GetText();
             var rangeStart = context.GetChild<AntlrSPP.RangeStartContext>(0)?.GetText();
             var rangeEnd = context.GetChild<AntlrSPP.RangeEndContext>(0)?.GetText();
 
