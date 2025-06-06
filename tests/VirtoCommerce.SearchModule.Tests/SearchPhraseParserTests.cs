@@ -32,7 +32,7 @@ namespace VirtoCommerce.SearchModule.Tests
         }
 
         /// <summary>
-        /// This test demonstrates that currrent grammar failed and stop parcing next filters if date time value is not wrapped with double quotes, check logs for the details.
+        /// This test demonstrates that currrent grammar doesn't failed and continue parcing next filters if date time value is not wrapped with double quotes, check logs for the details.
         /// </summary>
         [Fact]
         public void TestWrongDateTimeWithoutQuoеtes()
@@ -40,13 +40,16 @@ namespace VirtoCommerce.SearchModule.Tests
             var parser = GetParser();
             var result = parser.Parse("createddate:[2023-12-01T01:12:00Z TO] customerId:\"78b0208a-bb52-4a33-9250-583d63aa1f77\"");
 
-            Assert.Single(result.Filters);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.Equal(2, result.Filters.Count);
             Assert.NotNull(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "createddate"));
-            Assert.Null(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "customerId"));
+            Assert.NotNull(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "customerId"));
+            Assert.Equal("78b0208a-bb52-4a33-9250-583d63aa1f77", ((TermFilter)result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "customerId")).Values[0]);
+
         }
 
         /// <summary>
-        /// This test demonstrates that currrent grammar failed and stop parcing next filters if date time value is not wrapped with double quotes, check logs for the details.
+        /// This test demonstrates that currrent grammar doesn't failed and continue parcing next filters if date time value is not wrapped with double quotes, check logs for the details.
         /// </summary>
         [Fact]
         public void TestWrongDateTimeWithoutQuoеtes2()
@@ -54,10 +57,12 @@ namespace VirtoCommerce.SearchModule.Tests
             var parser = GetParser();
             var result = parser.Parse("customerId:\"78b0208a-bb52-4a33-9250-583d63aa1f77\" createddate:[2023-12-01T01:12:00Z TO] color:Black,White");
 
-            Assert.Equal(2, result.Filters.Count);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.Equal(3, result.Filters.Count);
             Assert.NotNull(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "customerId"));
+            Assert.Equal("78b0208a-bb52-4a33-9250-583d63aa1f77", ((TermFilter)result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "customerId")).Values[0]);
             Assert.NotNull(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "createddate"));
-            Assert.Null(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "color"));
+            Assert.NotNull(result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "color"));
         }
 
         [Fact]
@@ -761,13 +766,6 @@ namespace VirtoCommerce.SearchModule.Tests
         }
 
 
-
-        private static ISearchPhraseParser GetParser()
-        {
-            var logger = new Mock<ILogger<SearchPhraseParser>>();
-
-            return new SearchPhraseParser(logger.Object);
-        }
         [Fact]
         public void TestOrConditionWithMultipleTermsAndKeyword()
         {
@@ -806,6 +804,150 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.NotNull(sizeFilter.Values);
             Assert.Single(sizeFilter.Values);
             Assert.Equal("XL", sizeFilter.Values.First());
+        }
+
+        [Fact]
+        public void Test_And_Or_Parentheses_Complex_Expression()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("gtin:44 AND (code:ZQL-92511859 OR itemLineNOM:99)");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Single(result.Filters);
+
+            var andFilter = result.Filters.First() as AndFilter;
+            Assert.NotNull(andFilter);
+            Assert.NotNull(andFilter.ChildFilters);
+            Assert.Equal(2, andFilter.ChildFilters.Count);
+
+            var gtinFilter = andFilter.ChildFilters.First() as TermFilter;
+            Assert.NotNull(gtinFilter);
+            Assert.Equal("gtin", gtinFilter.FieldName);
+            Assert.NotNull(gtinFilter.Values);
+            Assert.Single(gtinFilter.Values);
+            Assert.Equal("44", gtinFilter.Values.First());
+
+            var orFilter = andFilter.ChildFilters.Last() as OrFilter;
+            Assert.NotNull(orFilter);
+            Assert.NotNull(orFilter.ChildFilters);
+            Assert.Equal(2, orFilter.ChildFilters.Count);
+
+            var codeFilter = orFilter.ChildFilters.First() as TermFilter;
+            Assert.NotNull(codeFilter);
+            Assert.Equal("code", codeFilter.FieldName);
+            Assert.NotNull(codeFilter.Values);
+            Assert.Single(codeFilter.Values);
+            Assert.Equal("ZQL-92511859", codeFilter.Values.First());
+
+            var itemLineNOMFilter = orFilter.ChildFilters.Last() as TermFilter;
+            Assert.NotNull(itemLineNOMFilter);
+            Assert.Equal("itemLineNOM", itemLineNOMFilter.FieldName);
+            Assert.NotNull(itemLineNOMFilter.Values);
+            Assert.Single(itemLineNOMFilter.Values);
+            Assert.Equal("99", itemLineNOMFilter.Values.First());
+        }
+
+        [Fact]
+        public void Test_OrCondition_With_AndGroups_And_Parentheses()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("(gtin:44 AND code:ZQL-92511859) OR (gtin:44 AND itemLineNOM:99)");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Single(result.Filters);
+
+            var orFilter = result.Filters.First() as OrFilter;
+            Assert.NotNull(orFilter);
+            Assert.NotNull(orFilter.ChildFilters);
+            Assert.Equal(2, orFilter.ChildFilters.Count);
+
+            // First AND group: gtin:44 AND code:ZQL-92511859
+            var andFilter1 = orFilter.ChildFilters.First() as AndFilter;
+            Assert.NotNull(andFilter1);
+            Assert.Equal(2, andFilter1.ChildFilters.Count);
+
+            var gtinFilter1 = andFilter1.ChildFilters.First() as TermFilter;
+            Assert.NotNull(gtinFilter1);
+            Assert.Equal("gtin", gtinFilter1.FieldName);
+            Assert.Single(gtinFilter1.Values);
+            Assert.Equal("44", gtinFilter1.Values.First());
+
+            var codeFilter = andFilter1.ChildFilters.Last() as TermFilter;
+            Assert.NotNull(codeFilter);
+            Assert.Equal("code", codeFilter.FieldName);
+            Assert.Single(codeFilter.Values);
+            Assert.Equal("ZQL-92511859", codeFilter.Values.First());
+
+            // Second AND group: gtin:44 AND itemLineNOM:99
+            var andFilter2 = orFilter.ChildFilters.Last() as AndFilter;
+            Assert.NotNull(andFilter2);
+            Assert.Equal(2, andFilter2.ChildFilters.Count);
+
+            var gtinFilter2 = andFilter2.ChildFilters.First() as TermFilter;
+            Assert.NotNull(gtinFilter2);
+            Assert.Equal("gtin", gtinFilter2.FieldName);
+            Assert.Single(gtinFilter2.Values);
+            Assert.Equal("44", gtinFilter2.Values.First());
+
+            var itemLineNOMFilter = andFilter2.ChildFilters.Last() as TermFilter;
+            Assert.NotNull(itemLineNOMFilter);
+            Assert.Equal("itemLineNOM", itemLineNOMFilter.FieldName);
+            Assert.Single(itemLineNOMFilter.Values);
+            Assert.Equal("99", itemLineNOMFilter.Values.First());
+        }
+
+        [Fact]
+        public void Test_And_Or_Parentheses_Complex_With_Keyword_Expression()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("keywordbefore gtin:44 AND (code:ZQL-92511859 OR itemLineNOM:99) keywordafter");
+
+            Assert.NotNull(result);
+            Assert.Equal("keywordbefore keywordafter", result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Single(result.Filters);
+
+            var andFilter = result.Filters.First() as AndFilter;
+            Assert.NotNull(andFilter);
+            Assert.NotNull(andFilter.ChildFilters);
+            Assert.Equal(2, andFilter.ChildFilters.Count);
+
+            var gtinFilter = andFilter.ChildFilters.First() as TermFilter;
+            Assert.NotNull(gtinFilter);
+            Assert.Equal("gtin", gtinFilter.FieldName);
+            Assert.NotNull(gtinFilter.Values);
+            Assert.Single(gtinFilter.Values);
+            Assert.Equal("44", gtinFilter.Values.First());
+
+            var orFilter = andFilter.ChildFilters.Last() as OrFilter;
+            Assert.NotNull(orFilter);
+            Assert.NotNull(orFilter.ChildFilters);
+            Assert.Equal(2, orFilter.ChildFilters.Count);
+
+            var codeFilter = orFilter.ChildFilters.First() as TermFilter;
+            Assert.NotNull(codeFilter);
+            Assert.Equal("code", codeFilter.FieldName);
+            Assert.NotNull(codeFilter.Values);
+            Assert.Single(codeFilter.Values);
+            Assert.Equal("ZQL-92511859", codeFilter.Values.First());
+
+            var itemLineNOMFilter = orFilter.ChildFilters.Last() as TermFilter;
+            Assert.NotNull(itemLineNOMFilter);
+            Assert.Equal("itemLineNOM", itemLineNOMFilter.FieldName);
+            Assert.NotNull(itemLineNOMFilter.Values);
+            Assert.Single(itemLineNOMFilter.Values);
+            Assert.Equal("99", itemLineNOMFilter.Values.First());
+        }
+
+        private static ISearchPhraseParser GetParser()
+        {
+            var logger = new Mock<ILogger<SearchPhraseParser>>();
+
+            return new SearchPhraseParser(logger.Object);
         }
     }
 }

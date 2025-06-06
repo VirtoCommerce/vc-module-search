@@ -4,12 +4,13 @@ options {
   language = CSharp;
 }
 
-searchPhrase : DL* expression DL* EOF;
+searchPhrase : (expression | keyword) (DL+ (expression | keyword))* EOF;
 
 expression
-    : expression DL* OR DL* expression      # OrExpression
-    | expression DL* AND DL* expression     # AndExpression
-    | phrase (DL+ phrase)*                  # PhraseListExpression
+    : '(' DL* expression DL* ')'               # ParenthesizedExpression
+    | expression DL* OR DL* expression         # OrExpression
+    | expression DL* AND DL* expression        # AndExpression
+    | phrase (DL+ phrase)*                     # PhraseListExpression
     ;
 
 phrase
@@ -46,23 +47,16 @@ rangeFilterValue
     ;
 
 range
-    : rangeStart DL* lower? DL* RD DL* upper? DL* rangeEnd
+    : rangeStart DL* lower=string? DL* RD DL* upper=string? DL* rangeEnd
+    | rangeStart DL* lower=string? DL* rangeEnd  // Simplified form for single value
     ;
 
 rangeStart
-    : RangeStart
+    : '[' | '('
     ;
 
 rangeEnd
-    : RangeEnd
-    ;
-
-lower
-    : string
-    ;
-
-upper
-    : string
+    : ']' | ')'
     ;
 
 negation : '!';
@@ -73,9 +67,6 @@ RD : 'TO' | 'to';     // Range delimiter
 
 AND : 'AND';
 OR  : 'OR';
-
-RangeStart : '[' | '(';
-RangeEnd   : ']' | ')';
 
 string
     : SimpleString
