@@ -42,6 +42,18 @@ public interface ISearchPhraseListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitSearchPhrase([NotNull] SearchPhraseParser.SearchPhraseContext context);
 	/// <summary>
+	/// Enter a parse tree produced by the <c>ParenthesizedExpression</c>
+	/// labeled alternative in <see cref="SearchPhraseParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterParenthesizedExpression([NotNull] SearchPhraseParser.ParenthesizedExpressionContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>ParenthesizedExpression</c>
+	/// labeled alternative in <see cref="SearchPhraseParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitParenthesizedExpression([NotNull] SearchPhraseParser.ParenthesizedExpressionContext context);
+	/// <summary>
 	/// Enter a parse tree produced by the <c>AndExpression</c>
 	/// labeled alternative in <see cref="SearchPhraseParser.expression"/>.
 	/// </summary>
@@ -187,26 +199,6 @@ public interface ISearchPhraseListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitRangeEnd([NotNull] SearchPhraseParser.RangeEndContext context);
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="SearchPhraseParser.lower"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterLower([NotNull] SearchPhraseParser.LowerContext context);
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="SearchPhraseParser.lower"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitLower([NotNull] SearchPhraseParser.LowerContext context);
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="SearchPhraseParser.upper"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterUpper([NotNull] SearchPhraseParser.UpperContext context);
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="SearchPhraseParser.upper"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitUpper([NotNull] SearchPhraseParser.UpperContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="SearchPhraseParser.negation"/>.
 	/// </summary>
