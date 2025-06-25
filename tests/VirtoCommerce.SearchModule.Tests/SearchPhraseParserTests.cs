@@ -146,10 +146,10 @@ namespace VirtoCommerce.SearchModule.Tests
         {
             var parser = GetParser();
             var result = parser.Parse("color:red B2B.@# test");
-            var result_quoted = parser.Parse("color:red \"B2B. test\"");
+            var result_quoted = parser.Parse("color:red \"B2B.@ test\"");
             var result_reverse = parser.Parse("B2B.@# test color:red");
 
-            Assert.Equal("B2B. test", result.Keyword);
+            Assert.Equal("B2B.@ test", result.Keyword);
             Assert.Single(result.Filters);
 
             var filter = result.Filters.First() as TermFilter;
@@ -943,11 +943,31 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.Equal("99", itemLineNOMFilter.Values.First());
         }
 
+        [Theory]
+        [InlineData("test+august@gmail.com")]
+        [InlineData("test@gmail.com")]
+        [InlineData("user.name@domain.co.uk")]
+        [InlineData("firstname-lastname@sub.domain.com")]
+        [InlineData("user_123@domain.org")]
+        [InlineData("user.name+tag+sorting@example.com")]
+        [InlineData("x@x.x")]
+        public void TestEmailAsKeyword(string email)
+        {
+            var parser = GetParser();
+            var result = parser.Parse(email);
+
+            Assert.NotNull(result);
+            Assert.Equal(email, result.Keyword);
+            Assert.Empty(result.Filters);
+        }
+
+
         private static ISearchPhraseParser GetParser()
         {
             var logger = new Mock<ILogger<SearchPhraseParser>>();
 
             return new SearchPhraseParser(logger.Object);
         }
+
     }
 }
