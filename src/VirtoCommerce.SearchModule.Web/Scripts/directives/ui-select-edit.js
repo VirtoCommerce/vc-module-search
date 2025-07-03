@@ -14,9 +14,14 @@ angular.module('virtoCommerce.searchModule')
             link: function ($scope, element, attrs, controller) {
                 $scope.context = {
                     modelValue: null,
-                    required: angular.isDefined(attrs.required) && (attrs.required === '' || attrs.required.toLowerCase() === 'true'),
-                    disabled: angular.isDefined(attrs.disabled) && (attrs.disabled === '' || attrs.disabled.toLowerCase() === 'true'),
+                    required: getBooleanAttributeValue('required'),
+                    disabled: getBooleanAttributeValue('disabled'),
                 };
+
+                function getBooleanAttributeValue(name) {
+                    const value = attrs[name];
+                    return angular.isDefined(value) && (value === '' || value === name || value.toLowerCase() === 'true');
+                }
 
                 $scope.$watch('context.modelValue', function (newValue, oldValue) {
                     if (newValue !== oldValue) {
