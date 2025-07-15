@@ -9,5 +9,13 @@ namespace VirtoCommerce.SearchModule.Core.Model
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
         public IList<AggregationResponseValue> Values { get; set; }
+
+        public AggregationStatistics Statistics { get; set; }
+    }
+
+    public class AggregationStatistics
+    {
+        public int? Min { get; set; }
+        public int? Max { get; set; }
     }
 }
