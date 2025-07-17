@@ -12,10 +12,4 @@ namespace VirtoCommerce.SearchModule.Core.Model
 
         public AggregationStatistics Statistics { get; set; }
     }
-
-    public class AggregationStatistics
-    {
-        public double? Min { get; set; }
-        public double? Max { get; set; }
-    }
 }
