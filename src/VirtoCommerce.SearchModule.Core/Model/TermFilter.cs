@@ -7,6 +7,7 @@ namespace VirtoCommerce.SearchModule.Core.Model
     {
         public string FieldName { get; set; }
         public IList<string> Values { get; set; }
+        public bool IsGenerated { get; set; }
 
         public override string ToString()
         {
