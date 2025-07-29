@@ -37,8 +37,6 @@ namespace VirtoCommerce.SearchModule.Core.Model
         /// </summary>
         public IFilter Filter { get; set; }
 
-        public bool PreserveUserFilters { get; set; }
-
         /// <summary>
         /// Gets or sets a list of aggregation (facet) requests
         /// </summary>
