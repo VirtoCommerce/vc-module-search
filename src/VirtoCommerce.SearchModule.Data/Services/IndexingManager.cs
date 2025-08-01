@@ -394,15 +394,15 @@ namespace VirtoCommerce.SearchModule.Data.Services
             cancellationToken.ThrowIfCancellationRequested();
 
             var primaryDocuments = primaryDocumentBuilder != null
-                ? (await primaryDocumentBuilder.GetDocumentsAsync(documentIds))?.Where(x => x != null).ToList()
+                ? (await RunDocumentBuilder(primaryDocumentBuilder, documentIds))?.Where(x => x != null).ToList()
                 : documentIds.Select(x => new IndexDocument(x)).ToList();
 
             if (primaryDocuments?.Count > 0)
             {
                 if (secondaryDocumentBuilders != null)
                 {
-                    var primaryDocumentIds = primaryDocuments.Select(d => d.Id).ToArray();
-                    var secondaryDocuments = await GetSecondaryDocumentsAsync(secondaryDocumentBuilders, primaryDocumentIds, cancellationToken);
+                    var documentAggregationInfos = primaryDocuments.ToDictionary(x => x.Id, x => (IHasIndexDocumentAggregationInfo)x);
+                    var secondaryDocuments = await GetSecondaryDocumentsAsync(secondaryDocumentBuilders, documentAggregationInfos, cancellationToken);
 
                     MergeDocuments(primaryDocuments, secondaryDocuments);
                 }
@@ -423,12 +423,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         protected virtual async Task<IList<IndexDocument>> GetSecondaryDocumentsAsync(
             IList<IIndexDocumentBuilder> secondaryDocumentBuilders,
-            IList<string> documentIds,
+            IDictionary<string, IHasIndexDocumentAggregationInfo> documentAggregationInfos,
             ICancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var tasks = secondaryDocumentBuilders.Select(p => p.GetDocumentsAsync(documentIds));
+            var tasks = secondaryDocumentBuilders.Select(p => RunDocumentBuilder(p, documentAggregationInfos));
             var results = await Task.WhenAll(tasks);
 
             var result = results
@@ -438,6 +438,58 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
             return result;
         }
+
+        protected async Task<IList<IndexDocument>> RunDocumentBuilder(IIndexDocumentBuilder documentBuilder, IList<string> documentIds)
+        {
+            var documents = await documentBuilder.GetDocumentsAsync(documentIds);
+
+            if (documentBuilder is IIndexDocumentAggregator)
+            {
+                RunDocumentAggregator((IIndexDocumentAggregator)documentBuilder, documents);
+            }
+
+            return documents;
+        }
+
+        protected async Task<IList<IndexDocument>> RunDocumentBuilder(IIndexDocumentBuilder documentBuilder, IDictionary<string, IHasIndexDocumentAggregationInfo> documentAggregationInfos)
+        {
+            var documents = await documentBuilder.GetDocumentsAsync(documentAggregationInfos.Keys.ToList());
+
+            if (documentBuilder is IIndexDocumentAggregator)
+            {
+                EnsureAggregationInfo(documents, documentAggregationInfos);
+                RunDocumentAggregator((IIndexDocumentAggregator)documentBuilder, documents);
+            }
+
+            return documents;
+        }
+
+        protected void EnsureAggregationInfo(IList<IndexDocument> documents, IDictionary<string, IHasIndexDocumentAggregationInfo> documentAggregationInfos)
+        {
+            foreach (var document in documents.Where(x => x.AggregationKey.IsNullOrEmpty()))
+            {
+                if (documentAggregationInfos.TryGetValue(document.Id, out var aggregationInfo))
+                {
+                    document.AggregationKey = aggregationInfo.AggregationKey;
+                }
+            }
+        }
+
+        protected void RunDocumentAggregator(IIndexDocumentAggregator documentAggregator, IList<IndexDocument> documents)
+        {
+            var documentGroups = documents.Where(x => !x.AggregationKey.IsNullOrEmpty()).GroupBy(x => x.AggregationKey);
+
+            foreach (var documentGroup in documentGroups)
+            {
+                var aggregationDocument = documentGroup.FirstOrDefault(x => x.Id == x.AggregationKey);
+
+                if (aggregationDocument != null)
+                {
+                    documentAggregator.AggregateDocuments(aggregationDocument, documentGroup.ToList());
+                }
+            }
+        }
+
 
         protected virtual void MergeDocuments(IList<IndexDocument> primaryDocuments, IList<IndexDocument> secondaryDocuments)
         {

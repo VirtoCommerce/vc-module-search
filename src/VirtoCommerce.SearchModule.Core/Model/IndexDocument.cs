@@ -5,7 +5,7 @@ using VirtoCommerce.Platform.Core.Common;
 
 namespace VirtoCommerce.SearchModule.Core.Model
 {
-    public class IndexDocument : Entity
+    public class IndexDocument : Entity, IHasIndexDocumentAggregationInfo
     {
         public IndexDocument(string id)
         {
@@ -13,6 +13,8 @@ namespace VirtoCommerce.SearchModule.Core.Model
         }
 
         public IList<IndexDocumentField> Fields { get; set; } = new List<IndexDocumentField>();
+
+        public string AggregationKey { get; set; }
 
         public virtual void Merge(IndexDocument doc)
         {
