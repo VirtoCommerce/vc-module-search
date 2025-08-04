@@ -394,23 +394,17 @@ namespace VirtoCommerce.SearchModule.Data.Services
             cancellationToken.ThrowIfCancellationRequested();
 
             var primaryDocuments = primaryDocumentBuilder != null
-                ? (await RunPrimaryDocumentBuilder(primaryDocumentBuilder, documentIds))?.Where(x => x != null).ToList()
+                ? (await primaryDocumentBuilder.GetDocumentsAsync(documentIds))?.Where(x => x != null).ToList()
                 : documentIds.Select(x => new IndexDocument(x)).ToList();
 
             if (primaryDocuments?.Count > 0)
             {
                 if (secondaryDocumentBuilders != null)
                 {
-                    var aggregationKeys = primaryDocuments.ToDictionary(x => x.Id, x => (IHasAggregationKey)x);
-                    var secondaryDocuments = await GetSecondaryDocumentsAsync(secondaryDocumentBuilders, aggregationKeys, cancellationToken);
+                    var primaryDocumentIds = primaryDocuments.Select(d => d.Id).ToArray();
+                    var secondaryDocuments = await GetSecondaryDocumentsAsync(secondaryDocumentBuilders, primaryDocumentIds, cancellationToken);
 
                     MergeDocuments(primaryDocuments, secondaryDocuments);
-
-                    //TODO: discuss
-                    if (primaryDocumentBuilder is IIndexDocumentAggregator)
-                    {
-                        RunDocumentAggregator((IIndexDocumentAggregator)primaryDocumentBuilder, primaryDocuments);
-                    }
                 }
 
                 foreach (var document in primaryDocuments)
@@ -422,6 +416,11 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 {
                     await converter.ConvertAsync(documentType, primaryDocuments);
                 }
+
+                if (primaryDocumentBuilder is IIndexDocumentAggregator)
+                {
+                    ((IIndexDocumentAggregator)primaryDocumentBuilder).AggregateDocuments(primaryDocuments);
+                }
             }
 
             return primaryDocuments;
@@ -429,12 +428,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
 
         protected virtual async Task<IList<IndexDocument>> GetSecondaryDocumentsAsync(
             IList<IIndexDocumentBuilder> secondaryDocumentBuilders,
-            IDictionary<string, IHasAggregationKey> aggregationKeys,
+            IList<string> documentIds,
             ICancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var tasks = secondaryDocumentBuilders.Select(p => RunSecondaryDocumentBuilder(p, aggregationKeys));
+            var tasks = secondaryDocumentBuilders.Select(p => p.GetDocumentsAsync(documentIds));
             var results = await Task.WhenAll(tasks);
 
             var result = results
@@ -443,62 +442,6 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 .ToList();
 
             return result;
-        }
-
-        protected async Task<IList<IndexDocument>> RunPrimaryDocumentBuilder(IIndexDocumentBuilder documentBuilder, IList<string> documentIds)
-        {
-            var documents = await documentBuilder.GetDocumentsAsync(documentIds);
-
-            if (documentBuilder is IIndexDocumentAggregationKeyProvider)
-            {
-                ((IIndexDocumentAggregationKeyProvider)documentBuilder).SetAggregationKeys(documents);
-            }
-
-            if (documentBuilder is IIndexDocumentAggregator)
-            {
-                RunDocumentAggregator((IIndexDocumentAggregator)documentBuilder, documents);
-            }
-
-            return documents;
-        }
-
-        protected async Task<IList<IndexDocument>> RunSecondaryDocumentBuilder(IIndexDocumentBuilder documentBuilder, IDictionary<string, IHasAggregationKey> aggregationKeys)
-        {
-            var documents = await documentBuilder.GetDocumentsAsync(aggregationKeys.Keys.ToList());
-
-            if (documentBuilder is IIndexDocumentAggregator)
-            {
-                EnsureAggregationInfo(documents, aggregationKeys);
-                RunDocumentAggregator((IIndexDocumentAggregator)documentBuilder, documents);
-            }
-
-            return documents;
-        }
-
-        protected void EnsureAggregationInfo(IList<IndexDocument> documents, IDictionary<string, IHasAggregationKey> aggregationKeys)
-        {
-            foreach (var document in documents.Where(x => x.AggregationKey.IsNullOrEmpty()))
-            {
-                if (aggregationKeys.TryGetValue(document.Id, out var aggregationInfo))
-                {
-                    document.AggregationKey = aggregationInfo.AggregationKey;
-                }
-            }
-        }
-
-        protected void RunDocumentAggregator(IIndexDocumentAggregator documentAggregator, IList<IndexDocument> documents)
-        {
-            var documentGroups = documents.Where(x => !x.AggregationKey.IsNullOrEmpty()).GroupBy(x => x.AggregationKey);
-
-            foreach (var documentGroup in documentGroups)
-            {
-                var aggregationDocument = documentGroup.FirstOrDefault(x => x.Id == x.AggregationKey);
-
-                if (aggregationDocument != null)
-                {
-                    documentAggregator.AggregateDocuments(aggregationDocument, documentGroup.ToList());
-                }
-            }
         }
 
         protected virtual void MergeDocuments(IList<IndexDocument> primaryDocuments, IList<IndexDocument> secondaryDocuments)
