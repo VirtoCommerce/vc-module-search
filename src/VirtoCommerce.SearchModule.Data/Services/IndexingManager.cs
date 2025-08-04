@@ -394,7 +394,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             cancellationToken.ThrowIfCancellationRequested();
 
             var primaryDocuments = primaryDocumentBuilder != null
-                ? (await RunDocumentBuilder(primaryDocumentBuilder, documentIds))?.Where(x => x != null).ToList()
+                ? (await RunPrimaryDocumentBuilder(primaryDocumentBuilder, documentIds))?.Where(x => x != null).ToList()
                 : documentIds.Select(x => new IndexDocument(x)).ToList();
 
             if (primaryDocuments?.Count > 0)
@@ -428,7 +428,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var tasks = secondaryDocumentBuilders.Select(p => RunDocumentBuilder(p, aggregationKeys));
+            var tasks = secondaryDocumentBuilders.Select(p => RunSecondaryDocumentBuilder(p, aggregationKeys));
             var results = await Task.WhenAll(tasks);
 
             var result = results
@@ -439,9 +439,14 @@ namespace VirtoCommerce.SearchModule.Data.Services
             return result;
         }
 
-        protected async Task<IList<IndexDocument>> RunDocumentBuilder(IIndexDocumentBuilder documentBuilder, IList<string> documentIds)
+        protected async Task<IList<IndexDocument>> RunPrimaryDocumentBuilder(IIndexDocumentBuilder documentBuilder, IList<string> documentIds)
         {
             var documents = await documentBuilder.GetDocumentsAsync(documentIds);
+
+            if (documentBuilder is IIndexDocumentAggregationKeyProvider)
+            {
+                ((IIndexDocumentAggregationKeyProvider)documentBuilder).SetAggregationKeys(documents);
+            }
 
             if (documentBuilder is IIndexDocumentAggregator)
             {
@@ -451,7 +456,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
             return documents;
         }
 
-        protected async Task<IList<IndexDocument>> RunDocumentBuilder(IIndexDocumentBuilder documentBuilder, IDictionary<string, IHasAggregationKey> aggregationKeys)
+        protected async Task<IList<IndexDocument>> RunSecondaryDocumentBuilder(IIndexDocumentBuilder documentBuilder, IDictionary<string, IHasAggregationKey> aggregationKeys)
         {
             var documents = await documentBuilder.GetDocumentsAsync(aggregationKeys.Keys.ToList());
 

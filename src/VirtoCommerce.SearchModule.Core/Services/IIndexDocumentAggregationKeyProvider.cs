@@ -3,8 +3,8 @@ using VirtoCommerce.SearchModule.Core.Model;
 
 namespace VirtoCommerce.SearchModule.Core.Services
 {
-    public interface IIndexDocumentAggregator
+    public interface IIndexDocumentAggregationKeyProvider
     {
-        void AggregateDocuments(IndexDocument aggregationDocument, IList<IndexDocument> documents);
+        void SetAggregationKeys(IList<IndexDocument> documents);
     }
 }
