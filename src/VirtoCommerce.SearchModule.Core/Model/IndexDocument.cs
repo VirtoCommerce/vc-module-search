@@ -5,7 +5,7 @@ using VirtoCommerce.Platform.Core.Common;
 
 namespace VirtoCommerce.SearchModule.Core.Model
 {
-    public class IndexDocument : Entity, IHasIndexDocumentAggregationInfo
+    public class IndexDocument : Entity, IHasAggregationKey
     {
         public IndexDocument(string id)
         {
