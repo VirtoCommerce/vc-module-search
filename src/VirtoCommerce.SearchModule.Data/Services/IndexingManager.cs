@@ -405,6 +405,12 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     var secondaryDocuments = await GetSecondaryDocumentsAsync(secondaryDocumentBuilders, aggregationKeys, cancellationToken);
 
                     MergeDocuments(primaryDocuments, secondaryDocuments);
+
+                    //TODO: discuss
+                    if (primaryDocumentBuilder is IIndexDocumentAggregator)
+                    {
+                        RunDocumentAggregator((IIndexDocumentAggregator)primaryDocumentBuilder, primaryDocuments);
+                    }
                 }
 
                 foreach (var document in primaryDocuments)
