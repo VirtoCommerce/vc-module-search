@@ -1,10 +1,9 @@
-using System.Collections.Generic;
 using VirtoCommerce.SearchModule.Core.Model;
 
 namespace VirtoCommerce.SearchModule.Core.Services
 {
-    public interface IIndexDocumentAggregator : IIndexDocumentBuilder
+    public interface IIndexDocumentAggregator
     {
-        void AggregateDocuments(IList<IndexDocument> documents);
+        void Aggregate(IndexDocumentAggregationGroup aggregationGroup);
     }
 }
