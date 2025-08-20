@@ -416,6 +416,8 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 {
                     await converter.ConvertAsync(documentType, primaryDocuments);
                 }
+
+                AggregateDocuments(primaryDocuments, primaryDocumentBuilder, secondaryDocumentBuilders);
             }
 
             return primaryDocuments;
@@ -460,6 +462,65 @@ namespace VirtoCommerce.SearchModule.Data.Services
                     }
                 }
             }
+        }
+
+        protected void AggregateDocuments(IList<IndexDocument> documents, IIndexDocumentBuilder primaryDocumentBuilder, IList<IIndexDocumentBuilder> secondaryDocumentBuilders)
+        {
+            var aggregationKeyProvider = GetAggregationKeyProvider(primaryDocumentBuilder, secondaryDocumentBuilders);
+
+            if (aggregationKeyProvider == null)
+            {
+                return;
+            }
+
+            var aggregators = GetDocumentAggregators(primaryDocumentBuilder, secondaryDocumentBuilders);
+
+            if (aggregators.IsNullOrEmpty())
+            {
+                return;
+            }
+
+            var aggregationGroups = aggregationKeyProvider.GetGroups(documents);
+
+            foreach (var aggregator in aggregators)
+            {
+                foreach (var aggregationGroup in aggregationGroups)
+                {
+                    aggregator.Aggregate(aggregationGroup);
+                }
+            }
+        }
+
+        protected virtual IIndexDocumentAggregationGroupProvider GetAggregationKeyProvider(IIndexDocumentBuilder primaryDocumentBuilder, IList<IIndexDocumentBuilder> secondaryDocumentBuilders)
+        {
+            if (primaryDocumentBuilder is IIndexDocumentAggregationGroupProvider aggregationKeyProvider)
+            {
+                return aggregationKeyProvider;
+            }
+
+            if (secondaryDocumentBuilders != null)
+            {
+                return secondaryDocumentBuilders.OfType<IIndexDocumentAggregationGroupProvider>().FirstOrDefault();
+            }
+
+            return null;
+        }
+
+        protected virtual IList<IIndexDocumentAggregator> GetDocumentAggregators(IIndexDocumentBuilder primaryDocumentBuilder, IList<IIndexDocumentBuilder> secondaryDocumentBuilders)
+        {
+            var result = new List<IIndexDocumentAggregator>();
+
+            if (primaryDocumentBuilder is IIndexDocumentAggregator primaryDocumentAggregator)
+            {
+                result.Add(primaryDocumentAggregator);
+            }
+
+            if (secondaryDocumentBuilders != null)
+            {
+                result.AddRange(secondaryDocumentBuilders.OfType<IIndexDocumentAggregator>());
+            }
+
+            return result;
         }
 
         /// <summary>
