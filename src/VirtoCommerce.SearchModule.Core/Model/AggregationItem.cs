@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace VirtoCommerce.SearchModule.Core.Model;
 
 public class AggregationItem
@@ -20,7 +22,7 @@ public class AggregationItem
     /// <summary>
     /// Gets or sets the collection of the aggregation item labels
     /// </summary>
-    public AggregationLabel[] Labels { get; set; }
+    public IList<AggregationLabel> Labels { get; set; }
 
     /// <summary>
     /// Gets or sets the request lower bound for range aggregation value

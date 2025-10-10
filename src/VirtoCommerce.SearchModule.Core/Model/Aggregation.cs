@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace VirtoCommerce.SearchModule.Core.Model;
 
 public class Aggregation
@@ -18,12 +20,12 @@ public class Aggregation
     /// <summary>
     /// Gets or sets the collection of the aggregation labels
     /// </summary>
-    public AggregationLabel[] Labels { get; set; }
+    public IList<AggregationLabel> Labels { get; set; }
 
     /// <summary>
     /// Gets or sets the collection of the aggregation items
     /// </summary>
-    public AggregationItem[] Items { get; set; }
+    public IList<AggregationItem> Items { get; set; }
 
     /// <summary>
     /// Statistics for range aggregations, such as "PriceRange" or "Range".
