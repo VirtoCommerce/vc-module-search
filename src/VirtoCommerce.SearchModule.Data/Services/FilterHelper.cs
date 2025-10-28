@@ -119,7 +119,7 @@ public static partial class FilterHelper
         foreach (var childFilter in searchRequest.GetChildFilters())
         {
             var aggregationItems = aggregations
-                .Where(x => x.Field.EqualsIgnoreCase(childFilter.GetFieldName()))
+                .Where(x => x.Items != null && x.Field.EqualsIgnoreCase(childFilter.GetFieldName()))
                 .SelectMany(x => x.Items)
                 .ToArray();
 

@@ -110,7 +110,10 @@ public abstract class IndexedSearchService<TCriteria, TResult, TModel>(
                     };
                 }
 
-                result.Add(aggregation);
+                if (aggregation?.Items?.Count > 0)
+                {
+                    result.Add(aggregation);
+                }
             }
         }
 

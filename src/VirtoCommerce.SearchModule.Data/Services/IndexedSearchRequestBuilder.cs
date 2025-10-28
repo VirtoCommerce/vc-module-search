@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using VirtoCommerce.Platform.Core.Common;
@@ -26,8 +25,9 @@ public abstract class IndexedSearchRequestBuilder<TCriteria>(ISearchPhraseParser
         searchCriteria = searchCriteria.CloneTyped();
 
         var filter = GetFilters(searchCriteria).And();
+
         var aggregations = GetAggregations(searchCriteria);
-        aggregations = ApplyMultiSelectFacetSearch(aggregations, filter);
+        ApplyMultiSelectFacetSearch(aggregations, filter);
 
         var request = new SearchRequest
         {
@@ -124,38 +124,29 @@ public abstract class IndexedSearchRequestBuilder<TCriteria>(ISearchPhraseParser
         return result;
     }
 
-    protected virtual IList<AggregationRequest> ApplyMultiSelectFacetSearch(IList<AggregationRequest> aggregations, IFilter filter)
+    protected virtual void ApplyMultiSelectFacetSearch(IList<AggregationRequest> aggregations, IFilter filter)
     {
         foreach (var aggregation in aggregations)
         {
-            var aggregationFilterFieldName = aggregation.FieldName ?? (aggregation.Filter as INamedFilter)?.FieldName;
-
-            var clonedFilter = filter.Clone() as AndFilter;
-            if (clonedFilter == null)
+            if (filter.Clone() is not AndFilter clonedFilter)
             {
                 clonedFilter = new AndFilter { ChildFilters = new List<IFilter> { null } };
             }
 
             // For multi-select facet mechanism, we should select
             // search request filters which do not have the same
-            // names such as aggregation filter
-            clonedFilter.ChildFilters = clonedFilter.ChildFilters
-                .Where(x =>
-                {
-                    var result = true;
+            // name as aggregation filter
+            var aggregationFilterFieldName = aggregation.FieldName ?? (aggregation.Filter as INamedFilter)?.FieldName;
 
-                    if (x is INamedFilter namedFilter)
-                    {
-                        result = !(aggregationFilterFieldName?.StartsWith(namedFilter.FieldName, true, CultureInfo.InvariantCulture) ?? false);
-                    }
-
-                    return result;
-                })
-                .ToList();
+            if (!string.IsNullOrEmpty(aggregationFilterFieldName))
+            {
+                clonedFilter.ChildFilters = clonedFilter.ChildFilters
+                    .Where(x => x is not INamedFilter namedFilter ||
+                                  !aggregationFilterFieldName.StartsWith(namedFilter.FieldName, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
 
             aggregation.Filter = aggregation.Filter == null ? clonedFilter : aggregation.Filter.And(clonedFilter);
         }
-
-        return aggregations;
     }
 }
