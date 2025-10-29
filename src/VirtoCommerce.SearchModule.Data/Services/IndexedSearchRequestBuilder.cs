@@ -128,10 +128,8 @@ public abstract class IndexedSearchRequestBuilder<TCriteria>(ISearchPhraseParser
     {
         foreach (var aggregation in aggregations)
         {
-            if (filter.Clone() is not AndFilter clonedFilter)
-            {
-                clonedFilter = new AndFilter { ChildFilters = new List<IFilter> { null } };
-            }
+            // The filter is always an AndFilter here.
+            var clonedFilter = (AndFilter)filter.Clone();
 
             // For multi-select facet mechanism, we should select
             // search request filters which do not have the same
