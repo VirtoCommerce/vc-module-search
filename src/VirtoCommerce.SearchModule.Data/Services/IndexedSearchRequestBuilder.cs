@@ -126,9 +126,13 @@ public abstract class IndexedSearchRequestBuilder<TCriteria>(ISearchPhraseParser
 
     protected virtual void ApplyMultiSelectFacetSearch(IList<AggregationRequest> aggregations, IFilter filter)
     {
+        if (filter is not AndFilter)
+        {
+            return;
+        }
+
         foreach (var aggregation in aggregations)
         {
-            // The filter is always an AndFilter here.
             var clonedFilter = (AndFilter)filter.Clone();
 
             // For multi-select facet mechanism, we should select
