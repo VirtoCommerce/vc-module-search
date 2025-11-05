@@ -9,6 +9,11 @@ namespace VirtoCommerce.SearchModule.Data.Services;
 
 public static partial class FilterHelper
 {
+    public static IFilter CreateBoolFilter(string fieldName, bool value)
+    {
+        return CreateTermFilter(fieldName, value.ToString());
+    }
+
     public static IFilter CreateTermFilter(string fieldName, string value)
     {
         return new TermFilter
@@ -24,15 +29,6 @@ public static partial class FilterHelper
         {
             FieldName = fieldName,
             Values = values.ToArray(),
-        };
-    }
-
-    public static IFilter CreateBoolFilter(string fieldName, bool value)
-    {
-        return new TermFilter
-        {
-            FieldName = fieldName,
-            Values = [value.ToString()],
         };
     }
 
