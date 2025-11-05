@@ -27,6 +27,15 @@ public static partial class FilterHelper
         };
     }
 
+    public static IFilter CreateBoolFilter(string fieldName, bool value)
+    {
+        return new TermFilter
+        {
+            FieldName = fieldName,
+            Values = [value.ToString()],
+        };
+    }
+
     public static IFilter CreateDateRangeFilter(string fieldName, DateTime? lower, DateTime? upper, bool includeLower, bool includeUpper)
     {
         return CreateRangeFilter(fieldName, lower?.ToString("O"), upper?.ToString("O"), includeLower, includeUpper);
