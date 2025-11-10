@@ -1,0 +1,120 @@
+{
+  "search": {
+    "commands": {
+      "apply-filter": "Spara och tillämpa",
+      "rebuild-index": "Bygg index",
+      "copy-to-clipboard": "Kopiera till urklipp",
+      "swap-index": "Byt index",
+      "show-backup-indices": "Visa säkerhetskopierade index",
+      "hide-backup-indices": "Dölj säkerhetskopierade index",
+      "value-mapping": "Värdemappning"
+    },
+    "main-menu-title": {
+      "search-index": "Sökindex"
+    },
+    "blades": {
+      "index-progress": {
+        "labels": {
+          "start": "Start",
+          "end": "Slut",
+          "elapsed": "Förfluten tid",
+          "errors": "Fel",
+          "stats": "Indexerat {{ processedCount }} av {{ totalCount }} poster"
+        }
+      },
+      "index-detail": {
+        "title": "Sökindex",
+        "title-new": "Sökindex saknas",
+        "subtitle": "Detaljer för sökindex",
+        "labels": {
+          "no-index": "Ingen data",
+          "build-date": "Senast indexerat",
+          "content": "Indexinnehåll"
+        }
+      },
+      "document-type-list": {
+        "title": "Posttyper",
+        "labels": {
+          "document-type": "Posttyp",
+          "indexed-docs-total": "Antal poster",
+          "provider": "Leverantör",
+          "scope": "Omfattning",
+          "last-indexation-date": "Senast indexerat",
+          "build-index": "Bygg index",
+          "rebuild-index": "Bygg om index",
+          "swap-index": "Byt index",
+          "active": "Aktivt index"
+        }
+      },
+      "value-mapping": {
+        "title": "Värdemappning",
+        "manage": "Hantera",
+        "new-field": "Nytt fält",
+        "new-value": "Nytt värde",
+        "rebuild-index": "Du måste bygga om indexet efter ändringar.",
+        "field-name": {
+          "label": "Fältnamn",
+          "placeholder": "Ange fältnamn"
+        },
+        "values": {
+          "label": "Värden"
+        },
+        "value": {
+          "label": "Värde",
+          "placeholder": "Ange eller välj fältvärde"
+        },
+        "synonyms": {
+          "label": "Synonymer"
+        }
+      }
+    },
+    "dialogs": {
+      "reindex": {
+        "title": "Bygg sökindex",
+        "msg1": "Välj metod för att uppdatera sökindexet. Du har två alternativ:",
+        "msg2": "Bygg: Uppdaterar indexet genom att lägga till all data utan att börja om",
+        "msg3": "Radera och bygg: Tar bort nuvarande sökindex och skapar ett nytt från början. Obs: Sökresultat är otillgängliga tills ombyggnaden är klar",
+        "index": "Bygg",
+        "reindex": "Radera och bygg"
+      },
+      "value-mapping-delete-fields": {
+        "title": "Bekräfta radering",
+        "message": "Är du säker på att du vill radera {{quantity}} valda fält?"
+      },
+      "value-mapping-save-values": {
+        "title": "Spara ändringar",
+        "message": "Värdemappningen har ändrats. Vill du spara ändringarna?"
+      }
+    },
+    "widgets": {
+      "index": {
+        "index-ok": "Indexerat <span am-time-ago='indexDate'></span>",
+        "index-old": "Detta index är inaktuellt – byggt <span am-time-ago='indexDate'>",
+        "no-index": "Sökindex saknas"
+      }
+    }
+  },
+  "permissions": {
+    "search:index:rebuild": "Möjliggör rensning och ombyggnad av sökindex",
+    "search:index:access": "Möjliggör åtkomst till sökindexmenyn",
+    "search:index:manage": "Möjliggör redigering av indexkonfiguration"
+  },
+  "settings": {
+    "VirtoCommerce.Search.IndexingJobs.Enable": {
+      "title": "Regelbunden indexering",
+      "description": "Aktivera eller inaktivera regelbundna sökindexbyggare"
+    },
+    "VirtoCommerce.Search.IndexingJobs.CronExpression": {
+      "title": "Cron-uttryck för indexeringsjobb",
+      "description": "För X minuter, använd '0/x * * * *'. För X timmar, använd '0 */x * * *'. Du kan också ange X minuter som '15 */x * * *', och X dagar som '0 0 */x * *'."
+    },
+    "VirtoCommerce.Search.IndexPartitionSize": {
+      "title": "Maximalt antal objekt per indexeringspartisjon",
+      "description": "Ange maximalt antal objekt i varje indexeringspartisjon. Höga värden kan leda till sämre prestanda"
+    },
+    "VirtoCommerce.Search.PartialDocumentUpdate.Enable": {
+      "title": "Delvis dokumentuppdatering",
+      "description": "Aktivera delvis dokumentuppdatering om det stöds av sökleverantören"
+    }
+  }
+}

@@ -1,0 +1,120 @@
+{
+  "search": {
+    "commands": {
+      "apply-filter": "Lagre og bruk",
+      "rebuild-index": "Bygg indeks",
+      "copy-to-clipboard": "Kopier til utklippstavle",
+      "swap-index": "Bytt indekser",
+      "show-backup-indices": "Vis sikkerhetskopi-indekser",
+      "hide-backup-indices": "Skjul sikkerhetskopi-indekser",
+      "value-mapping": "Verditilordning"
+    },
+    "main-menu-title": {
+      "search-index": "Søkeindeks"
+    },
+    "blades": {
+      "index-progress": {
+        "labels": {
+          "start": "Start",
+          "end": "Slutt",
+          "elapsed": "Brukt tid",
+          "errors": "Feil",
+          "stats": "Indeksert {{ processedCount }} av {{ totalCount }} poster"
+        }
+      },
+      "index-detail": {
+        "title": "Søkeindeks",
+        "title-new": "Søkeindeks mangler",
+        "subtitle": "Detaljer for søkeindeks",
+        "labels": {
+          "no-index": "Ingen data",
+          "build-date": "Sist indeksert",
+          "content": "Indeksinnhold"
+        }
+      },
+      "document-type-list": {
+        "title": "Posttyper",
+        "labels": {
+          "document-type": "Posttype",
+          "indexed-docs-total": "Antall poster",
+          "provider": "Leverandør",
+          "scope": "Omfang",
+          "last-indexation-date": "Sist indeksert",
+          "build-index": "Bygg indeks",
+          "rebuild-index": "Gjenoppbygg indeks",
+          "swap-index": "Bytt indekser",
+          "active": "Aktiv indeks"
+        }
+      },
+      "value-mapping": {
+        "title": "Verditilordning",
+        "manage": "Behandle",
+        "new-field": "Nytt felt",
+        "new-value": "Ny verdi",
+        "rebuild-index": "Du må gjenoppbygge indeksen etter endringer.",
+        "field-name": {
+          "label": "Feltnavn",
+          "placeholder": "Skriv inn feltnavn"
+        },
+        "values": {
+          "label": "Verdier"
+        },
+        "value": {
+          "label": "Verdi",
+          "placeholder": "Skriv inn eller velg feltverdi"
+        },
+        "synonyms": {
+          "label": "Synonymer"
+        }
+      }
+    },
+    "dialogs": {
+      "reindex": {
+        "title": "Bygg søkeindeks",
+        "msg1": "Velg metode for oppdatering av søkeindeksen. Du har to valg:",
+        "msg2": "Bygg: Oppdaterer indeksen ved å legge til all data uten å starte på nytt",
+        "msg3": "Slett og bygg: Fjerner gjeldende søkeindeks og oppretter en ny fra starten. Merk: Søk vil være utilgjengelig til gjenoppbygging er fullført",
+        "index": "Bygg",
+        "reindex": "Slett og bygg"
+      },
+      "value-mapping-delete-fields": {
+        "title": "Bekreft sletting",
+        "message": "Er du sikker på at du vil slette {{quantity}} valgte felt?"
+      },
+      "value-mapping-save-values": {
+        "title": "Lagre endringer",
+        "message": "Verditilordningen er endret. Vil du lagre endringene?"
+      }
+    },
+    "widgets": {
+      "index": {
+        "index-ok": "Indeksert <span am-time-ago='indexDate'></span>",
+        "index-old": "Denne indeksen er utdatert – bygget <span am-time-ago='indexDate'>",
+        "no-index": "Søkeindeks mangler"
+      }
+    }
+  },
+  "permissions": {
+    "search:index:rebuild": "Aktiverer sletting og gjenoppbygging av søkeindeks",
+    "search:index:access": "Aktiverer tilgang til søkeindeks-menyen",
+    "search:index:manage": "Aktiverer redigering av indeksoppsett"
+  },
+  "settings": {
+    "VirtoCommerce.Search.IndexingJobs.Enable": {
+      "title": "Regelmessige indekseringsjobber",
+      "description": "Aktiver eller deaktiver regelmessige søkeindeks-byggere"
+    },
+    "VirtoCommerce.Search.IndexingJobs.CronExpression": {
+      "title": "Cron-uttrykk for indekseringsjobb",
+      "description": "For X minutter, bruk '0/x * * * *'. For X timer, bruk '0 */x * * *'. Du kan også angi X minutter som '15 */x * * *', og X dager som '0 0 */x * *'."
+    },
+    "VirtoCommerce.Search.IndexPartitionSize": {
+      "title": "Maksimalt antall elementer per indekseringspartisjon",
+      "description": "Angi maksimalt antall elementer i hver indekseringspartisjon. Høye verdier kan føre til redusert ytelse"
+    },
+    "VirtoCommerce.Search.PartialDocumentUpdate.Enable": {
+      "title": "Delvis dokumentoppdatering",
+      "description": "Aktiver delvis dokumentoppdatering hvis støttet av søkeleverandøren"
+    }
+  }
+}
