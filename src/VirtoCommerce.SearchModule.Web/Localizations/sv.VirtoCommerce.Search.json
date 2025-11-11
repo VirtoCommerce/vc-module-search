@@ -109,8 +109,8 @@
       "description": "För X minuter, använd '0/x * * * *'. För X timmar, använd '0 */x * * *'. Du kan också ange X minuter som '15 */x * * *', och X dagar som '0 0 */x * *'."
     },
     "VirtoCommerce.Search.IndexPartitionSize": {
-      "title": "Maximalt antal objekt per indexeringspartisjon",
-      "description": "Ange maximalt antal objekt i varje indexeringspartisjon. Höga värden kan leda till sämre prestanda"
+      "title": "Maximalt antal objekt per indexeringspartition",
+      "description": "Ange maximalt antal objekt i varje indexeringspartition. Höga värden kan leda till sämre prestanda"
     },
     "VirtoCommerce.Search.PartialDocumentUpdate.Enable": {
       "title": "Delvis dokumentuppdatering",
