@@ -16,7 +16,7 @@ public static class ConfigurationExtensions
             return false;
         }
 
-        return options.Provider.EqualsInvariant(name) ||
-               options.DocumentScopes.Any(x => x.Provider.EqualsInvariant(name));
+        return options.Provider.EqualsIgnoreCase(name) ||
+               options.DocumentScopes.Any(x => x.Provider.EqualsIgnoreCase(name));
     }
 }
