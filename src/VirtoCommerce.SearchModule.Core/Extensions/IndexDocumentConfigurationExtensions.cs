@@ -37,7 +37,7 @@ public static class IndexDocumentConfigurationExtensions
     public static bool GetConfiguration(this IEnumerable<IndexDocumentConfiguration> configurations, string documentType, out IndexDocumentConfiguration configuration)
     {
         // There should be only one configuration per document type
-        configuration = configurations.FirstOrDefault(x => x.DocumentType.EqualsInvariant(documentType));
+        configuration = configurations.FirstOrDefault(x => x.DocumentType.EqualsIgnoreCase(documentType));
 
         if (configuration != null)
         {

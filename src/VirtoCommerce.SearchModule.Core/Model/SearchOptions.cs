@@ -17,7 +17,7 @@ namespace VirtoCommerce.SearchModule.Core.Model
 
         public string GetScope(string documentType) => string.IsNullOrEmpty(documentType)
             ? Scope
-            : DocumentScopes?.FirstOrDefault(x => x.DocumentType.EqualsInvariant(documentType))?.Scope ?? Scope;
+            : DocumentScopes?.FirstOrDefault(x => x.DocumentType.EqualsIgnoreCase(documentType))?.Scope ?? Scope;
 
         public class DocumentScope
         {
