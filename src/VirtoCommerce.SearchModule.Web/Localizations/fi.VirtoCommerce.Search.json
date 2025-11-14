@@ -1,0 +1,120 @@
+{
+  "search": {
+    "commands": {
+      "apply-filter": "Tallenna ja käytä",
+      "rebuild-index": "Rakenna indeksi",
+      "copy-to-clipboard": "Kopioi leikepöydälle",
+      "swap-index": "Vaihda indeksit",
+      "show-backup-indices": "Näytä varmuuskopioindeksit",
+      "hide-backup-indices": "Piilota varmuuskopioindeksit",
+      "value-mapping": "Arvomääritys"
+    },
+    "main-menu-title": {
+      "search-index": "Hakuindeksi"
+    },
+    "blades": {
+      "index-progress": {
+        "labels": {
+          "start": "Alku",
+          "end": "Loppu",
+          "elapsed": "Käytetty aika",
+          "errors": "Virheet",
+          "stats": "Indeksoitu {{ processedCount }} / {{ totalCount }} tietuetta"
+        }
+      },
+      "index-detail": {
+        "title": "Hakuindeksi",
+        "title-new": "Hakuindeksi puuttuu",
+        "subtitle": "Hakuindeksin tiedot",
+        "labels": {
+          "no-index": "Ei tietoja",
+          "build-date": "Viimeksi indeksoitu",
+          "content": "Indeksin sisältö"
+        }
+      },
+      "document-type-list": {
+        "title": "Tietuetyypit",
+        "labels": {
+          "document-type": "Tietuetyyppi",
+          "indexed-docs-total": "Tietueiden määrä",
+          "provider": "Tarjoaja",
+          "scope": "Laajuus",
+          "last-indexation-date": "Viimeksi indeksoitu",
+          "build-index": "Rakenna indeksi",
+          "rebuild-index": "Rakenna indeksi uudelleen",
+          "swap-index": "Vaihda indeksit",
+          "active": "Aktiivinen indeksi"
+        }
+      },
+      "value-mapping": {
+        "title": "Arvomääritys",
+        "manage": "Hallinnoi",
+        "new-field": "Uusi kenttä",
+        "new-value": "Uusi arvo",
+        "rebuild-index": "Sinun täytyy rakentaa indeksi uudelleen muutosten jälkeen.",
+        "field-name": {
+          "label": "Kentän nimi",
+          "placeholder": "Anna kentän nimi"
+        },
+        "values": {
+          "label": "Arvot"
+        },
+        "value": {
+          "label": "Arvo",
+          "placeholder": "Anna tai valitse kentän arvo"
+        },
+        "synonyms": {
+          "label": "Synonyymit"
+        }
+      }
+    },
+    "dialogs": {
+      "reindex": {
+        "title": "Rakenna hakuindeksi",
+        "msg1": "Valitse haluamasi tapa päivittää hakuindeksi. Sinulla on kaksi vaihtoehtoa:",
+        "msg2": "Rakenna: Päivittää indeksin lisäämällä kaiken datan ilman uudelleenkäynnistystä",
+        "msg3": "Poista ja rakenna: Poistaa nykyisen hakuindeksin ja luo uuden alusta alkaen. Huom: Haku ei ole käytettävissä, kunnes uudelleenrakennus on valmis",
+        "index": "Rakenna",
+        "reindex": "Poista ja rakenna"
+      },
+      "value-mapping-delete-fields": {
+        "title": "Poistovahvistus",
+        "message": "Haluatko varmasti poistaa {{quantity}} valittua kenttää?"
+      },
+      "value-mapping-save-values": {
+        "title": "Tallenna muutokset",
+        "message": "Arvomääritystä on muokattu. Haluatko tallentaa muutokset?"
+      }
+    },
+    "widgets": {
+      "index": {
+        "index-ok": "Indeksoitu <span am-time-ago='indexDate'></span>",
+        "index-old": "Tämä indeksi on vanhentunut – rakennettu <span am-time-ago='indexDate'>",
+        "no-index": "Hakuindeksi puuttuu"
+      }
+    }
+  },
+  "permissions": {
+    "search:index:rebuild": "Mahdollistaa hakemiston tyhjennyksen ja uudelleenrakentamisen",
+    "search:index:access": "Mahdollistaa pääsyn hakuindeksin valikkoon",
+    "search:index:manage": "Mahdollistaa indeksin asetusten muokkaamisen"
+  },
+  "settings": {
+    "VirtoCommerce.Search.IndexingJobs.Enable": {
+      "title": "Säännölliset indeksointitehtävät",
+      "description": "Ota käyttöön tai poista käytöstä säännölliset hakuindeksin rakentajat"
+    },
+    "VirtoCommerce.Search.IndexingJobs.CronExpression": {
+      "title": "Indeksointitehtävän cron-lauseke",
+      "description": "X minuutin välein: '0/x * * * *'. X tunnin välein: '0 */x * * *'. Voit myös määrittää X minuutin '15 */x * * *', ja X päivän '0 0 */x * *'."
+    },
+    "VirtoCommerce.Search.IndexPartitionSize": {
+      "title": "Enimmäismäärä kohteita per indeksointiosio",
+      "description": "Määritä enimmäismäärä kohteita kussakin indeksointiosiossa. Korkeat arvot voivat heikentää suorituskykyä"
+    },
+    "VirtoCommerce.Search.PartialDocumentUpdate.Enable": {
+      "title": "Osittainen dokumentin päivitys",
+      "description": "Ota käyttöön osittainen dokumentin päivitys, jos hakupalveluntarjoaja tukee sitä"
+    }
+  }
+}

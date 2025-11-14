@@ -73,7 +73,7 @@
         "title": "Build search index",
         "msg1": "Select your preferred method for updating the search index. You have two options:",
         "msg2": "Build: Updates the index by adding all data without starting over",
-        "msg3": "Delete and Build: Removes the current search index and creates a new one from the beginning. Note: Search results will be unavailable until the rebuild is complete",
+        "msg3": "Delete and build: Removes the current search index and creates a new one from the beginning. Note: Search results will be unavailable until the rebuild is complete",
         "index": "Build",
         "reindex": "Delete and build"
       },
