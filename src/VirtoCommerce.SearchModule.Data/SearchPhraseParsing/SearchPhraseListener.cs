@@ -159,8 +159,8 @@ namespace VirtoCommerce.SearchModule.Data.SearchPhraseParsing
             {
                 Lower = UnEscape(lower),
                 Upper = UnEscape(upper),
-                IncludeLower = rangeStart.EqualsInvariant("["),
-                IncludeUpper = rangeEnd.EqualsInvariant("]"),
+                IncludeLower = rangeStart.EqualsIgnoreCase("["),
+                IncludeUpper = rangeEnd.EqualsIgnoreCase("]"),
             };
         }
 
