@@ -560,7 +560,7 @@ namespace VirtoCommerce.SearchModule.Data.Services
                 result.IndexedDocumentsCount = searchResponse.TotalCount;
                 if (searchResponse.Documents?.Any() == true)
                 {
-                    var indexationDate = searchResponse.Documents[0].FirstOrDefault(kvp => kvp.Key.EqualsInvariant(KnownDocumentFields.IndexationDate));
+                    var indexationDate = searchResponse.Documents[0].FirstOrDefault(kvp => kvp.Key.EqualsIgnoreCase(KnownDocumentFields.IndexationDate));
                     if (DateTimeOffset.TryParse(indexationDate.Value.ToString(), out var lastIndexationDateTime))
                     {
                         result.LastIndexationDate = lastIndexationDateTime.DateTime;

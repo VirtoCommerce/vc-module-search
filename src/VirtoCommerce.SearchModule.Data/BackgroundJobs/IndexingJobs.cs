@@ -51,9 +51,6 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
         public async Task StartStopRecurringJobs()
         {
-            // Temporary solution for backward compatibility
-            IndexingJobs.JobService = this;
-
             var recurringJobId = "IndexingJobs.IndexChangesJob";
             var scheduleJobs = await _settingsManager.GetValueAsync<bool>(ModuleConstants.Settings.IndexingJobs.Enable);
 
@@ -168,14 +165,6 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                 default:
                     throw new ArgumentException($@"Unknown priority: {priority}", nameof(priority));
             }
-        }
-
-        internal static IIndexingJobService JobService { get; set; }
-
-        [Obsolete($"Use {nameof(IIndexingJobService)}")]
-        public static void EnqueueIndexAndDeleteDocuments(IndexEntry[] indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
-        {
-            JobService.EnqueueIndexAndDeleteDocuments(indexEntries, priority, builders);
         }
 
         public void EnqueueIndexAndDeleteDocuments(IList<IndexEntry> indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
@@ -379,7 +368,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
             if (!string.IsNullOrEmpty(documentType))
             {
-                configs = configs.Where(c => c.DocumentType.EqualsInvariant(documentType));
+                configs = configs.Where(c => c.DocumentType.EqualsIgnoreCase(documentType));
             }
 
             var result = configs.Select(c => GetIndexingOptions(c.DocumentType)).ToList();

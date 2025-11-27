@@ -231,7 +231,7 @@ namespace VirtoCommerce.SearchModule.Tests
 
                     Assert.NotNull(field);
 
-                    if (!fieldName.EqualsInvariant(KnownDocumentFields.IndexationDate))
+                    if (!fieldName.EqualsIgnoreCase(KnownDocumentFields.IndexationDate))
                     {
                         Assert.Equal(document.Id, field.Value);
                     }

@@ -38,7 +38,7 @@ public static class IndexDocumentDynamicPropertyExtensions
         foreach (var property in properties)
         {
             var objectProperty = @object.DynamicProperties?.FirstOrDefault(x => x.Id == property.Id) ??
-                @object.DynamicProperties?.FirstOrDefault(x => x.Name.EqualsInvariant(property.Name) && x.HasValuesOfType(property.ValueType));
+                @object.DynamicProperties?.FirstOrDefault(x => x.Name.EqualsIgnoreCase(property.Name) && x.HasValuesOfType(property.ValueType));
 
             document.AddDynamicProperty(property, objectProperty);
         }
