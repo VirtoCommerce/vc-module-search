@@ -11,7 +11,7 @@ public static partial class FilterHelper
 {
     public static IFilter CreateBoolFilter(string fieldName, bool value)
     {
-        return CreateTermFilter(fieldName, value.ToString());
+        return CreateTermFilter(fieldName, value ? "true" : "false");
     }
 
     public static IFilter CreateTermFilter(string fieldName, string value)
