@@ -18,7 +18,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 {
     public sealed class IndexingJobs : IIndexingJobService
     {
-        private static readonly string _recurringJobId = $"{nameof(IndexingJobs)}.{nameof(IndexChangesJob)}";
+        private const string RecurringJobId = $"{nameof(IndexingJobs)}.{nameof(IndexChangesJob)}";
         private static readonly MethodInfo _recurringJobMethod = typeof(IndexingJobs).GetMethod(nameof(IndexChangesJob));
         private static readonly MethodInfo _manualJobMethod = typeof(IndexingJobs).GetMethod(nameof(IndexAllDocumentsJob));
 
@@ -57,12 +57,12 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             if (scheduleJobs)
             {
                 var cronExpression = await _settingsManager.GetValueAsync<string>(ModuleConstants.Settings.IndexingJobs.CronExpression);
-                RecurringJob.AddOrUpdate<IndexingJobs>(_recurringJobId, x => x.IndexChangesJob(null, null, JobCancellationToken.Null), cronExpression);
+                RecurringJob.AddOrUpdate<IndexingJobs>(RecurringJobId, x => x.IndexChangesJob(null, null, JobCancellationToken.Null), cronExpression);
             }
             else
             {
                 CancelJob(_recurringJobMethod);
-                RecurringJob.RemoveIfExists(_recurringJobId);
+                RecurringJob.RemoveIfExists(RecurringJobId);
             }
         }
 
@@ -88,11 +88,6 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                     // Ignore concurrency exceptions, when somebody else cancelled it as well.
                 }
             }
-        }
-
-        private static string GetRecurringJobId(MethodInfo method)
-        {
-            return $"{method.DeclaringType?.Name}.{method.Name}";
         }
 
 
