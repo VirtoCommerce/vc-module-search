@@ -18,6 +18,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 {
     public sealed class IndexingJobs : IIndexingJobService
     {
+        private static readonly string _recurringJobId = $"{nameof(IndexingJobs)}.{nameof(IndexChangesJob)}";
         private static readonly MethodInfo _recurringJobMethod = typeof(IndexingJobs).GetMethod(nameof(IndexChangesJob));
         private static readonly MethodInfo _manualJobMethod = typeof(IndexingJobs).GetMethod(nameof(IndexAllDocumentsJob));
 
@@ -51,18 +52,17 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
         public async Task StartStopRecurringJobs()
         {
-            var recurringJobId = "IndexingJobs.IndexChangesJob";
             var scheduleJobs = await _settingsManager.GetValueAsync<bool>(ModuleConstants.Settings.IndexingJobs.Enable);
 
             if (scheduleJobs)
             {
                 var cronExpression = await _settingsManager.GetValueAsync<string>(ModuleConstants.Settings.IndexingJobs.CronExpression);
-                RecurringJob.AddOrUpdate<IndexingJobs>(recurringJobId, x => x.IndexChangesJob(null, null, JobCancellationToken.Null), cronExpression);
+                RecurringJob.AddOrUpdate<IndexingJobs>(_recurringJobId, x => x.IndexChangesJob(null, null, JobCancellationToken.Null), cronExpression);
             }
             else
             {
                 CancelJob(_recurringJobMethod);
-                RecurringJob.RemoveIfExists(recurringJobId);
+                RecurringJob.RemoveIfExists(_recurringJobId);
             }
         }
 
@@ -90,42 +90,42 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             }
         }
 
+        private static string GetRecurringJobId(MethodInfo method)
+        {
+            return $"{method.DeclaringType?.Name}.{method.Name}";
+        }
+
+
         // One-time job for manual indexation
         [Queue(JobPriority.Normal)]
-        public Task IndexAllDocumentsJob(string userName, string notificationId, IndexingOptions[] options, PerformContext context, IJobCancellationToken cancellationToken)
+        public async Task IndexAllDocumentsJob(string userName, string notificationId, IndexingOptions[] options, PerformContext context, IJobCancellationToken cancellationToken)
         {
-            return Task.Factory.StartNew(async () =>
+            try
             {
-                try
-                {
-                    return await RunIndexJobAsync(userName, notificationId, false, options, IndexAllDocumentsAsync, context, cancellationToken);
-                }
-                finally
-                {
-                    // Report indexation summary
-                    _progressHandler.Finish();
-                }
-            }).Result;
+                await RunIndexJobAsync(userName, notificationId, false, options, IndexAllDocumentsAsync, context, cancellationToken);
+            }
+            finally
+            {
+                // Report indexation summary
+                _progressHandler.Finish();
+            }
         }
 
         // Recurring job for automatic changes indexation.
         // It should push separate notification for each document type if any changes were indexed for this type
         [Queue(JobPriority.Normal)]
+        [AutomaticRetry(Attempts = 0)]
         [DisableConcurrentExecution(10)]
-        public Task IndexChangesJob(string documentType, PerformContext context, IJobCancellationToken cancellationToken)
+        public async Task IndexChangesJob(string documentType, PerformContext context, IJobCancellationToken cancellationToken)
         {
-            return Task.Factory.StartNew(async () =>
+            var allOptions = await GetAllIndexingOptionsAsync(documentType);
+            foreach (var options in allOptions)
             {
-                var success = true;
-
-                var allOptions = GetAllIndexingOptions(documentType);
-                foreach (var options in allOptions)
+                if (!await RunIndexJobAsync(null, null, true, [options], IndexChangesAsync, context, cancellationToken))
                 {
-                    success = success && await RunIndexJobAsync(null, null, true, new[] { options }, IndexChangesAsync, context, cancellationToken);
+                    break;
                 }
-
-                return success;
-            }).Result;
+            }
         }
 
 
@@ -145,7 +145,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                     BackgroundJob.Enqueue<IndexingJobs>(x => x.IndexDocumentsLowPriorityAsync(documentType, documentIds, buildersTypes));
                     break;
                 default:
-                    throw new ArgumentException($@"Unknown priority: {priority}", nameof(priority));
+                    throw new ArgumentException($"Unknown priority: {priority}", nameof(priority));
             }
         }
 
@@ -163,7 +163,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                     BackgroundJob.Enqueue<IndexingJobs>(x => x.DeleteDocumentsLowPriorityAsync(documentType, documentIds));
                     break;
                 default:
-                    throw new ArgumentException($@"Unknown priority: {priority}", nameof(priority));
+                    throw new ArgumentException($"Unknown priority: {priority}", nameof(priority));
             }
         }
 
@@ -177,17 +177,17 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                 var modifiedEntryIds = groupedEntryByType.Where(x => x.EntryState == EntryState.Modified).Select(x => x.Id).ToArray();
                 var deletedEntryIds = groupedEntryByType.Where(x => x.EntryState == EntryState.Deleted).Select(x => x.Id).ToArray();
 
-                if (addedEntryIds.Any())
+                if (addedEntryIds.Length > 0)
                 {
                     EnqueueIndexDocuments(groupedEntryByType.Key, addedEntryIds, priority, builders: null);
                 }
 
-                if (modifiedEntryIds.Any())
+                if (modifiedEntryIds.Length > 0)
                 {
                     EnqueueIndexDocuments(groupedEntryByType.Key, modifiedEntryIds, priority, builders);
                 }
 
-                if (deletedEntryIds.Any())
+                if (deletedEntryIds.Length > 0)
                 {
                     EnqueueDeleteDocuments(groupedEntryByType.Key, deletedEntryIds, priority);
                 }
@@ -284,7 +284,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         }
 
 
-        private Task<bool> RunIndexJobAsync(
+        private async Task<bool> RunIndexJobAsync(
             string currentUserName,
             string notificationId,
             bool suppressInsignificantNotifications,
@@ -302,12 +302,13 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             // CAUTION: locking mechanism assumes single threaded execution.
             try
             {
-                using (JobStorage.Current.GetConnection().AcquireDistributedLock("IndexationJob", TimeSpan.Zero))
+                using var connection = JobStorage.Current.GetConnection();
+                using (connection.AcquireDistributedLock("IndexationJob", TimeSpan.Zero))
                 {
                     try
                     {
-                        var tasks = allOptions.Select(x => indexationFunc(x, new JobCancellationTokenWrapper(cancellationToken)));
-                        Task.WaitAll(tasks.ToArray());
+                        var tasks = allOptions.Select(x => indexationFunc(x, new JobCancellationTokenWrapper(cancellationToken))).ToArray();
+                        await Task.WhenAll(tasks);
 
                         success = true;
                     }
@@ -335,18 +336,18 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                 _progressHandler.AlreadyInProgress();
             }
 
-            return Task.FromResult(success);
+            return success;
         }
 
         private async Task IndexAllDocumentsAsync(IndexingOptions options, ICancellationToken cancellationToken)
         {
-            var oldIndexationDate = GetLastIndexationDate(options.DocumentType);
+            var oldIndexationDate = await GetLastIndexationDateAsync(options.DocumentType);
             var newIndexationDate = DateTime.UtcNow;
 
             await _indexingManager.IndexAllDocumentsAsync(options, _progressHandler.Progress, cancellationToken);
 
             // Save indexation date to prevent changes from being indexed again
-            SetLastIndexationDate(options.DocumentType, oldIndexationDate, newIndexationDate);
+            await SetLastIndexationDateAsync(options.DocumentType, oldIndexationDate, newIndexationDate);
         }
 
         private async Task IndexChangesAsync(IndexingOptions options, ICancellationToken cancellationToken)
@@ -359,36 +360,38 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             await _indexingManager.IndexChangesAsync(options, _progressHandler.Progress, cancellationToken);
 
             // Save indexation date. It will be used as a start date for the next indexation
-            SetLastIndexationDate(options.DocumentType, oldIndexationDate, newIndexationDate);
+            await SetLastIndexationDateAsync(options.DocumentType, oldIndexationDate, newIndexationDate);
         }
 
-        private IList<IndexingOptions> GetAllIndexingOptions(string documentType)
+        private async Task<IList<IndexingOptions>> GetAllIndexingOptionsAsync(string documentType)
         {
-            var configs = _documentsConfigs.AsQueryable();
+            var configs = _documentsConfigs;
 
             if (!string.IsNullOrEmpty(documentType))
             {
                 configs = configs.Where(c => c.DocumentType.EqualsIgnoreCase(documentType));
             }
 
-            var result = configs.Select(c => GetIndexingOptions(c.DocumentType)).ToList();
+            var tasks = configs.Select(x => GetIndexingOptionsAsync(x.DocumentType)).ToArray();
+            var result = await Task.WhenAll(tasks);
+
             return result;
         }
 
-        private IndexingOptions GetIndexingOptions(string documentType)
+        private async Task<IndexingOptions> GetIndexingOptionsAsync(string documentType)
         {
             return new IndexingOptions
             {
                 DocumentType = documentType,
                 DeleteExistingIndex = false,
-                StartDate = GetLastIndexationDate(documentType),
-                BatchSize = GetBatchSize(),
+                StartDate = await GetLastIndexationDateAsync(documentType),
+                BatchSize = await GetBatchSizeAsync(),
             };
         }
 
-        private DateTime? GetLastIndexationDate(string documentType)
+        private async Task<DateTime?> GetLastIndexationDateAsync(string documentType)
         {
-            var result = _indexingManager.GetIndexStateAsync(documentType).GetAwaiter().GetResult().LastIndexationDate;
+            var result = (await _indexingManager.GetIndexStateAsync(documentType)).LastIndexationDate;
             if (result != null)
             {
                 var settingDescriptor = new SettingDescriptor
@@ -400,17 +403,19 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
                 //need to take the older date from the dates loaded from the index and settings.
                 //Because the actual last indexation date stored in the index may be later than last job run are stored in the settings. e.g after data import or direct database changes
-                result = new DateTime(Math.Min(result.Value.Ticks, _settingsManager.GetValue<DateTime>(settingDescriptor).Ticks), DateTimeKind.Utc);
+                var settingValue = await _settingsManager.GetValueAsync<DateTime>(settingDescriptor);
+                result = new DateTime(Math.Min(result.Value.Ticks, settingValue.Ticks), DateTimeKind.Utc);
             }
+
             return result;
         }
 
-        private void SetLastIndexationDate(string documentType, DateTime? oldValue, DateTime newValue)
+        private async Task SetLastIndexationDateAsync(string documentType, DateTime? oldValue, DateTime newValue)
         {
-            var currentValue = GetLastIndexationDate(documentType);
+            var currentValue = await GetLastIndexationDateAsync(documentType);
             if (currentValue == oldValue)
             {
-                _settingsManager.SetValue(GetLastIndexationDateName(documentType), newValue);
+                await _settingsManager.SetValueAsync(GetLastIndexationDateName(documentType), newValue);
             }
         }
 
@@ -419,9 +424,9 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             return $"VirtoCommerce.Search.IndexingJobs.IndexationDate.{documentType}";
         }
 
-        private int GetBatchSize()
+        private Task<int> GetBatchSizeAsync()
         {
-            return _settingsManager.GetValue<int>(ModuleConstants.Settings.General.IndexPartitionSize);
+            return _settingsManager.GetValueAsync<int>(ModuleConstants.Settings.General.IndexPartitionSize);
         }
     }
 }
