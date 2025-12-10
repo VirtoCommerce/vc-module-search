@@ -71,8 +71,11 @@ angular.module('virtoCommerce.searchModule')
                     if (blade.manageIndexMode) {
                         var documentTypesGroup = _.groupBy(blade.currentEntities, function (x) { return x.documentType; });
                         _.each(documentTypesGroup, function (typedDocs) {
+                            // Allow swap only if:
+                            // 1. All indices have documents (safe swap), OR
+                            // 2. At least one backup (non-active) index has documents (recovery scenario)
                             _.each(typedDocs, function (doc) {
-                                doc.canSwap = typedDocs.some(x => x.indexedDocumentsCount);
+                                doc.canSwap = typedDocs.every(x => x.indexedDocumentsCount) || typedDocs.some(x => !x.isActive && x.indexedDocumentsCount);
                             });
                         });
                     }
