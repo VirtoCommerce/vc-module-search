@@ -116,10 +116,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             var allOptions = await GetAllIndexingOptionsAsync(documentType);
             foreach (var options in allOptions)
             {
-                if (!await RunIndexJobAsync(null, null, true, [options], IndexChangesAsync, context, cancellationToken))
-                {
-                    break;
-                }
+                await RunIndexJobAsync(null, null, true, [options], IndexChangesAsync, context, cancellationToken);
             }
         }
 
