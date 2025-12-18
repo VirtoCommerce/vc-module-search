@@ -18,7 +18,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 {
     public sealed class IndexingJobs : IIndexingJobService
     {
-        private const string RecurringJobId = $"{nameof(IndexingJobs)}.{nameof(IndexChangesJob)}";
+        private const string _recurringJobId = $"{nameof(IndexingJobs)}.{nameof(IndexChangesJob)}";
         private static readonly MethodInfo _recurringJobMethod = typeof(IndexingJobs).GetMethod(nameof(IndexChangesJob));
         private static readonly MethodInfo _manualJobMethod = typeof(IndexingJobs).GetMethod(nameof(IndexAllDocumentsJob));
 
@@ -57,12 +57,12 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             if (scheduleJobs)
             {
                 var cronExpression = await _settingsManager.GetValueAsync<string>(ModuleConstants.Settings.IndexingJobs.CronExpression);
-                RecurringJob.AddOrUpdate<IndexingJobs>(RecurringJobId, x => x.IndexChangesJob(null, null, JobCancellationToken.Null), cronExpression);
+                RecurringJob.AddOrUpdate<IndexingJobs>(_recurringJobId, x => x.IndexChangesJob(null, null, JobCancellationToken.Null), cronExpression);
             }
             else
             {
                 CancelJob(_recurringJobMethod);
-                RecurringJob.RemoveIfExists(RecurringJobId);
+                RecurringJob.RemoveIfExists(_recurringJobId);
             }
         }
 
@@ -394,7 +394,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                 };
 
                 //need to take the older date from the dates loaded from the index and settings.
-                //Because the actual last indexation date stored in the index may be later than last job run are stored in the settings. e.g after data import or direct database changes
+                //Because the actual last indexation date stored in the index may be later than last job run are stored in the settings. e.g. after data import or direct database changes
                 var settingValue = await _settingsManager.GetValueAsync<DateTime>(settingDescriptor);
                 result = new DateTime(Math.Min(result.Value.Ticks, settingValue.Ticks), DateTimeKind.Utc);
             }
