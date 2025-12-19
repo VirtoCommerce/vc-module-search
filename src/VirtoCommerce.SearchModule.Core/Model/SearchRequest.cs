@@ -71,5 +71,10 @@ namespace VirtoCommerce.SearchModule.Core.Model
         /// Gets or sets the collection of boosts options
         /// </summary>
         public IList<SearchBoost> Boosts { get; set; }
+
+        /// <summary>
+        /// Gets or sets vector embedding for semantic search
+        /// </summary>
+        public IList<float> DenseVector { get; set; }
     }
 }
