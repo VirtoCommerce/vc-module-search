@@ -4,10 +4,8 @@ using System.Collections.Generic;
 namespace VirtoCommerce.SearchModule.Core.Model
 {
     [Serializable]
-    public class SearchDocument : Dictionary<string, object>
+    public class SearchDocument() : Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
     {
-        public SearchDocument() : base(StringComparer.OrdinalIgnoreCase) { }
-
         public string Id { get; set; }
     }
 }
