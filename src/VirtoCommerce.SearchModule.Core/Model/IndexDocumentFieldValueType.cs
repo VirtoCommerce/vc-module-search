@@ -17,5 +17,6 @@ namespace VirtoCommerce.SearchModule.Core.Model
         Boolean,
         GeoPoint,
         Complex,
+        DenseVector,
     }
 }

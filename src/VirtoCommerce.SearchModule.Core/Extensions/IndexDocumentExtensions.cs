@@ -241,7 +241,6 @@ public static class IndexDocumentExtensions
         }
     }
 
-
     public static void AddSearchableCollection(this IndexDocument schema, string name)
     {
         schema.AddSearchableCollection(name, SchemaStringValue);
