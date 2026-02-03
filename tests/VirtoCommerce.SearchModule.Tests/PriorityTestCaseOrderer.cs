@@ -1,29 +1,24 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Xunit.Abstractions;
-using Xunit.Sdk;
+using Xunit.v3;
 
 namespace VirtoCommerce.SearchModule.Tests
 {
     public class PriorityTestCaseOrderer : ITestCaseOrderer
     {
-        public const string TypeName = "VirtoCommerce.SearchModule.Tests.PriorityTestCaseOrderer";
-        public const string AssemblyName = "VirtoCommerce.SearchModule.Tests";
-
-        public IEnumerable<TTestCase> OrderTestCases<TTestCase>(IEnumerable<TTestCase> testCases)
-            where TTestCase : ITestCase
+        IReadOnlyCollection<TTestCase> ITestCaseOrderer.OrderTestCases<TTestCase>(IReadOnlyCollection<TTestCase> testCases)
         {
-            return testCases.OrderByDescending(GetPriority);
+            return testCases.OrderByDescending(tc => GetPriority((IXunitTestCase)tc)).ToList();
         }
 
-        private static int GetPriority<TTestCase>(TTestCase testCase)
-            where TTestCase : ITestCase
+        private static int GetPriority(IXunitTestCase testCase)
         {
             // Order the test based on the attribute.
-            var attr = testCase.TestMethod.Method
-                .ToRuntimeMethod()
-                .GetCustomAttribute<PriorityAttribute>();
+            var type = Type.GetType(testCase.TestClassName);
+            var methodInfo = type?.GetMethod(testCase.TestMethodName);
+            var attr = methodInfo?.GetCustomAttribute<PriorityAttribute>();
 
             return attr?.Priority ?? 0;
         }

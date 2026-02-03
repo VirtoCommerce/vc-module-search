@@ -9,7 +9,7 @@ using static VirtoCommerce.SearchModule.Core.Extensions.IndexDocumentExtensions;
 
 namespace VirtoCommerce.SearchModule.Tests
 {
-    [TestCaseOrderer(PriorityTestCaseOrderer.TypeName, PriorityTestCaseOrderer.AssemblyName)]
+    [TestCaseOrderer(typeof(PriorityTestCaseOrderer))]
     public abstract class SearchProviderTests : SearchProviderTestsBase
     {
         public const string DocumentType = "item";
