@@ -386,6 +386,12 @@ public sealed class IndexingJobs : IIndexingJobService
         PerformContext context,
         CancellationToken cancellationToken)
     {
+        // Materialize once. The parameter is typed as IEnumerable so callers could pass a deferred
+        // or one-shot iterator; we read it again from the catch block for cancellation logging,
+        // and we don't want re-enumeration to silently produce empty / different / side-effecting
+        // results. The `as` cast avoids an extra copy when an array is passed (the common case).
+        var optionsArray = allOptions as IndexingOptions[] ?? allOptions.ToArray();
+
         var success = false;
 
         // Reset progress handler to initial state
@@ -400,7 +406,7 @@ public sealed class IndexingJobs : IIndexingJobService
             {
                 try
                 {
-                    var tasks = allOptions.Select(x => indexationFunc(x, cancellationToken)).ToArray();
+                    var tasks = optionsArray.Select(x => indexationFunc(x, cancellationToken)).ToArray();
                     await Task.WhenAll(tasks);
 
                     success = true;
@@ -409,7 +415,7 @@ public sealed class IndexingJobs : IIndexingJobService
                 // AND Hangfire-side deletion; both surface as OperationCanceledException.
                 catch (OperationCanceledException)
                 {
-                    var documentTypes = string.Join(", ", allOptions.Select(o => o?.DocumentType ?? "<null>"));
+                    var documentTypes = string.Join(", ", optionsArray.Select(o => o?.DocumentType ?? "<null>"));
                     _log?.LogWarning("Indexing job {JobId} was cancelled. User: {UserName}, NotificationId: {NotificationId}, DocumentTypes: {DocumentTypes}",
                         context?.BackgroundJob?.Id, currentUserName, notificationId, documentTypes);
                     _progressHandler.Cancel();
