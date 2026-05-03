@@ -15,15 +15,13 @@ public interface IIndexDocumentChangesProvider
     /// Returns total count of the changes in the given time interval. If both startDate and endDate are null, returns total count of all available objects.
     /// </summary>
     [Obsolete("Use the cancellation-aware overload instead.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    Task<long> GetTotalChangesCountAsync(DateTime? startDate, DateTime? endDate)
-        => GetTotalChangesCountAsync(startDate, endDate, CancellationToken.None);
+    Task<long> GetTotalChangesCountAsync(DateTime? startDate, DateTime? endDate);
 
     /// <summary>
     /// Returns IDs of objects changed in the given time interval. If both startDate and endDate are null, returns IDs of all available objects.
     /// </summary>
     [Obsolete("Use the cancellation-aware overload instead.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    Task<IList<IndexDocumentChange>> GetChangesAsync(DateTime? startDate, DateTime? endDate, long skip, long take)
-                => GetChangesAsync(startDate, endDate, skip, take, CancellationToken.None);
+    Task<IList<IndexDocumentChange>> GetChangesAsync(DateTime? startDate, DateTime? endDate, long skip, long take);
 
     /// <summary>
     /// Cancellation-aware overload. Default implementation delegates to the legacy method for backwards compatibility.

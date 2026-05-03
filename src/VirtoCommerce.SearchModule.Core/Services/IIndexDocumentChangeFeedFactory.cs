@@ -17,8 +17,7 @@ public interface IIndexDocumentChangeFeedFactory
     /// <param name="batchSize">Size of the batches to use.</param>
     /// <returns>Created feed, never null.</returns>
     [Obsolete("Use the cancellation-aware overload instead.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    Task<IIndexDocumentChangeFeed> CreateFeed(DateTime? startDate, DateTime? endDate, int batchSize)
-        => CreateFeed(startDate, endDate, batchSize, CancellationToken.None);
+    Task<IIndexDocumentChangeFeed> CreateFeed(DateTime? startDate, DateTime? endDate, int batchSize);
 
     /// <summary>
     /// Cancellation-aware overload. Default implementation delegates to the legacy method for backwards compatibility.

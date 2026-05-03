@@ -66,6 +66,11 @@ namespace VirtoCommerce.SearchModule.Tests
             return Task.FromResult(result);
         }
 
+        public Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds)
+        {
+            return GetDocumentsAsync(documentIds, CancellationToken.None);
+        }
+
 
         protected static IndexDocument CreateDocument(string id, string fieldName)
         {
@@ -90,5 +95,6 @@ namespace VirtoCommerce.SearchModule.Tests
 
             return result;
         }
+
     }
 }

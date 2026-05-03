@@ -18,4 +18,9 @@ public class DummyIndexDocumentBuilder : IIndexSchemaBuilder, IIndexDocumentBuil
     {
         throw new NotImplementedException();
     }
+
+    public Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds)
+    {
+        throw new NotImplementedException();
+    }
 }
