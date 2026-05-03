@@ -130,7 +130,25 @@ public class IndexingManager : IIndexingManager
             return new IndexingResult();
         }
 
-        var partialUpdate = false;
+        var plan = BuildIndexDocumentsPlan(documentType, builderTypes, configuration);
+
+        var documents = await GetDocumentsAsync(documentType, documentIds, plan.PrimaryBuilder, plan.AdditionalBuilders, cancellationToken);
+
+        var result = plan.UsePartialUpdate && _searchProvider.Is<ISupportPartialUpdate>(documentType, out var supportPartialUpdateProvider)
+            ? await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents)
+            : await _searchProvider.IndexAsync(documentType, documents);
+
+        return result;
+    }
+
+    /// <summary>
+    /// Picks the primary/secondary builders and decides whether the search provider should be
+    /// driven via partial-update for the given <paramref name="documentType"/>.
+    /// Extracted from <see cref="IndexDocumentsAsync(string, string[], IEnumerable{string}, CancellationToken)"/>
+    /// to keep its cyclomatic complexity manageable (Sonar S1541).
+    /// </summary>
+    protected virtual IndexDocumentsPlan BuildIndexDocumentsPlan(string documentType, IEnumerable<string> builderTypes, IndexDocumentConfiguration configuration)
+    {
         var builderTypesList = (builderTypes as IList<string> ?? builderTypes?.ToList()) ?? Array.Empty<string>();
         var primaryDocumentBuilder = configuration.DocumentSource.DocumentBuilder;
 
@@ -139,27 +157,35 @@ public class IndexingManager : IIndexingManager
             .Select(s => s.DocumentBuilder)
             .ToList() ?? new List<IIndexDocumentBuilder>();
 
-        if (builderTypesList.Any() && additionalDocumentBuilders.Any() && _searchProvider.Is<ISupportPartialUpdate>(documentType) && PartialDocumentUpdateEnabled)
-        {
-            partialUpdate = true;
-            additionalDocumentBuilders = additionalDocumentBuilders.Where(x => builderTypesList.Contains(x.GetType().FullName)).ToList();
+        var canPartialUpdate =
+            builderTypesList.Any() &&
+            additionalDocumentBuilders.Any() &&
+            _searchProvider.Is<ISupportPartialUpdate>(documentType) &&
+            PartialDocumentUpdateEnabled;
 
-            // In case of changing main object itself, there would be only primary document builder,
-            // but in the other cases, when changed additional dependent objects, primary builder should be set to null.
-            if (!builderTypesList.Contains(primaryDocumentBuilder.GetType().FullName))
-            {
-                primaryDocumentBuilder = null;
-            }
+        if (!canPartialUpdate)
+        {
+            return new IndexDocumentsPlan(false, primaryDocumentBuilder, additionalDocumentBuilders);
         }
 
-        var documents = await GetDocumentsAsync(documentType, documentIds, primaryDocumentBuilder, additionalDocumentBuilders, cancellationToken);
+        additionalDocumentBuilders = additionalDocumentBuilders
+            .Where(x => builderTypesList.Contains(x.GetType().FullName))
+            .ToList();
 
-        var result = partialUpdate && _searchProvider.Is<ISupportPartialUpdate>(documentType, out var supportPartialUpdateProvider)
-            ? await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents)
-            : await _searchProvider.IndexAsync(documentType, documents);
+        // In case of changing main object itself, there would be only primary document builder,
+        // but in the other cases, when changed additional dependent objects, primary builder should be set to null.
+        if (!builderTypesList.Contains(primaryDocumentBuilder.GetType().FullName))
+        {
+            primaryDocumentBuilder = null;
+        }
 
-        return result;
+        return new IndexDocumentsPlan(true, primaryDocumentBuilder, additionalDocumentBuilders);
     }
+
+    protected readonly record struct IndexDocumentsPlan(
+        bool UsePartialUpdate,
+        IIndexDocumentBuilder PrimaryBuilder,
+        IList<IIndexDocumentBuilder> AdditionalBuilders);
 
     public virtual Task<IndexingResult> DeleteDocumentsAsync(string documentType, string[] documentIds)
     {
@@ -488,21 +514,10 @@ public class IndexingManager : IIndexingManager
             var tasks = secondaryDocumentBuilders.Select(p => p.GetDocumentsAsync(idChunk, cancellationToken));
             var chunkResults = await Task.WhenAll(tasks);
 
-            foreach (var chunkResult in chunkResults)
-            {
-                if (chunkResult == null)
-                {
-                    continue;
-                }
-
-                foreach (var document in chunkResult)
-                {
-                    if (document != null)
-                    {
-                        result.Add(document);
-                    }
-                }
-            }
+            var documents = chunkResults
+                .Where(c => c != null)
+                .SelectMany(c => c.Where(d => d != null));
+            result.AddRange(documents);
         }
 
         return result;
@@ -526,17 +541,9 @@ public class IndexingManager : IIndexingManager
             cancellationToken.ThrowIfCancellationRequested();
 
             var chunkResult = await builder.GetDocumentsAsync(idChunk, cancellationToken);
-            if (chunkResult == null)
+            if (chunkResult != null)
             {
-                continue;
-            }
-
-            foreach (var document in chunkResult)
-            {
-                if (document != null)
-                {
-                    result.Add(document);
-                }
+                result.AddRange(chunkResult.Where(d => d != null));
             }
         }
 

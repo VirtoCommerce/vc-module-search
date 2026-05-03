@@ -115,7 +115,11 @@ public sealed class IndexingJobs : IIndexingJobService
     }
 
 
-    // One-time job for manual indexation
+    // One-time job for manual indexation.
+    // The IJobCancellationToken-flavored overload below is a Hangfire compatibility shim for
+    // queue items enqueued before the CancellationToken-based signature was introduced.
+    // ShutdownToken only fires on server shutdown (NOT Hangfire-side deletion), so jobs that
+    // flow through the shim are less responsive to "Delete" until the queue has fully drained.
     [Queue(JobPriority.Normal)]
     public async Task IndexAllDocumentsJob(string userName, string notificationId, IndexingOptions[] options, PerformContext context, CancellationToken cancellationToken)
     {
@@ -130,8 +134,14 @@ public sealed class IndexingJobs : IIndexingJobService
         }
     }
 
+    [Queue(JobPriority.Normal)]
+    [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+    public Task IndexAllDocumentsJob(string userName, string notificationId, IndexingOptions[] options, PerformContext context, IJobCancellationToken cancellationToken)
+        => IndexAllDocumentsJob(userName, notificationId, options, context, cancellationToken?.ShutdownToken ?? CancellationToken.None);
+
     // Recurring job for automatic changes indexation.
-    // It should push separate notification for each document type if any changes were indexed for this type
+    // It should push separate notification for each document type if any changes were indexed for this type.
+    // The IJobCancellationToken-flavored overload below is the Hangfire queue compatibility shim.
     [Queue(JobPriority.Normal)]
     [AutomaticRetry(Attempts = 0)]
     [DisableConcurrentExecution(10)]
@@ -143,6 +153,13 @@ public sealed class IndexingJobs : IIndexingJobService
             await RunIndexJobAsync(null, null, true, [options], IndexChangesAsync, context, cancellationToken);
         }
     }
+
+    [Queue(JobPriority.Normal)]
+    [AutomaticRetry(Attempts = 0)]
+    [DisableConcurrentExecution(10)]
+    [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+    public Task IndexChangesJob(string documentType, PerformContext context, IJobCancellationToken cancellationToken)
+        => IndexChangesJob(documentType, context, cancellationToken?.ShutdownToken ?? CancellationToken.None);
 
 
     private static void EnqueueIndexDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
@@ -242,8 +259,10 @@ public sealed class IndexingJobs : IIndexingJobService
         return result.GroupBy(x => x.Type);
     }
 
-    // Use hard-code methods to easily set queue for Hangfire.
-    // Make sure we wait for async methods to end, so that Hangfire retries if an exception occurs.
+    // Hard-coded one method per Hangfire queue so that [Queue] picks the right one at enqueue time.
+    // Each modern overload is followed by its [Obsolete] no-token shim that exists only to deserialize
+    // in-flight queue items left over from the pre-CancellationToken signature. New code MUST call
+    // the modern overload.
 
     [Queue(JobPriority.High)]
     public Task IndexDocumentsHighPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
@@ -251,65 +270,16 @@ public sealed class IndexingJobs : IIndexingJobService
         return IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, cancellationToken);
     }
 
+    [Queue(JobPriority.High)]
+    [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+    public Task IndexDocumentsHighPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes)
+        => IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, CancellationToken.None);
+
     [Queue(JobPriority.Normal)]
     public Task IndexDocumentsNormalPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
     {
         return IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, cancellationToken);
     }
-
-    [Queue(JobPriority.Low)]
-    public Task IndexDocumentsLowPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
-    {
-        return IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, cancellationToken);
-    }
-
-    [Queue(JobPriority.High)]
-    public Task DeleteDocumentsHighPriorityAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
-    {
-        return DeleteDocumentsCoreAsync(documentType, documentIds, cancellationToken);
-    }
-
-    [Queue(JobPriority.Normal)]
-    public Task DeleteDocumentsNormalPriorityAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
-    {
-        return DeleteDocumentsCoreAsync(documentType, documentIds, cancellationToken);
-    }
-
-    [Queue(JobPriority.Low)]
-    public Task DeleteDocumentsLowPriorityAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
-    {
-        return DeleteDocumentsCoreAsync(documentType, documentIds, cancellationToken);
-    }
-
-    // ----------------------------------------------------------------------
-    // Hangfire compatibility shims for in-flight queue items enqueued before
-    // the cancellation-aware overloads above were introduced. Hangfire identifies
-    // a job method by its parameter list; without these the upgrade would cause
-    // JobLoadException on dequeue. New code must NOT call these directly.
-    //
-    // The IJobCancellationToken-flavored shims of the public IndexAllDocumentsJob /
-    // IndexChangesJob entry points use IJobCancellationToken.ShutdownToken to bridge
-    // to the modern CancellationToken-based path. ShutdownToken only fires on server
-    // shutdown, not on Hangfire-side deletion, so jobs that flow through the shim
-    // remain less responsive to "Delete" until the queue has fully drained.
-    // ----------------------------------------------------------------------
-
-    [Queue(JobPriority.Normal)]
-    [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    public Task IndexAllDocumentsJob(string userName, string notificationId, IndexingOptions[] options, PerformContext context, IJobCancellationToken cancellationToken)
-        => IndexAllDocumentsJob(userName, notificationId, options, context, cancellationToken?.ShutdownToken ?? CancellationToken.None);
-
-    [Queue(JobPriority.Normal)]
-    [AutomaticRetry(Attempts = 0)]
-    [DisableConcurrentExecution(10)]
-    [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    public Task IndexChangesJob(string documentType, PerformContext context, IJobCancellationToken cancellationToken)
-        => IndexChangesJob(documentType, context, cancellationToken?.ShutdownToken ?? CancellationToken.None);
-
-    [Queue(JobPriority.High)]
-    [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    public Task IndexDocumentsHighPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes)
-        => IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, CancellationToken.None);
 
     [Queue(JobPriority.Normal)]
     [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
@@ -317,9 +287,21 @@ public sealed class IndexingJobs : IIndexingJobService
         => IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, CancellationToken.None);
 
     [Queue(JobPriority.Low)]
+    public Task IndexDocumentsLowPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
+    {
+        return IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, cancellationToken);
+    }
+
+    [Queue(JobPriority.Low)]
     [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
     public Task IndexDocumentsLowPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes)
         => IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, CancellationToken.None);
+
+    [Queue(JobPriority.High)]
+    public Task DeleteDocumentsHighPriorityAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
+    {
+        return DeleteDocumentsCoreAsync(documentType, documentIds, cancellationToken);
+    }
 
     [Queue(JobPriority.High)]
     [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
@@ -327,9 +309,21 @@ public sealed class IndexingJobs : IIndexingJobService
         => DeleteDocumentsCoreAsync(documentType, documentIds, CancellationToken.None);
 
     [Queue(JobPriority.Normal)]
+    public Task DeleteDocumentsNormalPriorityAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
+    {
+        return DeleteDocumentsCoreAsync(documentType, documentIds, cancellationToken);
+    }
+
+    [Queue(JobPriority.Normal)]
     [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
     public Task DeleteDocumentsNormalPriorityAsync(string documentType, string[] documentIds)
         => DeleteDocumentsCoreAsync(documentType, documentIds, CancellationToken.None);
+
+    [Queue(JobPriority.Low)]
+    public Task DeleteDocumentsLowPriorityAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
+    {
+        return DeleteDocumentsCoreAsync(documentType, documentIds, cancellationToken);
+    }
 
     [Queue(JobPriority.Low)]
     [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
