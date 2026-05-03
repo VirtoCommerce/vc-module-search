@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
@@ -13,7 +14,7 @@ public class DummyIndexDocumentBuilder : IIndexSchemaBuilder, IIndexDocumentBuil
         throw new NotImplementedException();
     }
 
-    public Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds)
+    public Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
