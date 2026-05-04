@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Settings;
-using VirtoCommerce.SearchModule.Core;
 using VirtoCommerce.SearchModule.Core.Extensions;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
@@ -20,34 +19,6 @@ namespace VirtoCommerce.SearchModule.Data.Services;
 public class IndexingManager : IIndexingManager
 {
     public const int DefaultBatchSize = 50;
-
-    /// <summary>
-    /// Number of sub-chunks each change-feed batch is split into before being passed to a document builder.
-    /// A value of N means the cancellation token is polled at least N times per batch, capping the worst-case
-    /// wait between pressing "Delete" in the Hangfire UI and the indexing job aborting at roughly 1/N of a batch.
-    /// </summary>
-    protected const int BuilderChunksPerBatch = 5;
-
-    /// <summary>
-    /// Sub-chunk size used inside <see cref="GetDocumentsAsync"/> when calling individual document builders.
-    /// Derived from the <c>VirtoCommerce.Search.IndexPartitionSize</c> setting so the operator has a single
-    /// knob: lowering the partition size shrinks both change-feed batches AND per-builder calls, improving
-    /// cancellation responsiveness at the cost of more round-trips. Computed as
-    /// <c>max(1, IndexPartitionSize / <see cref="BuilderChunksPerBatch"/>)</c>.
-    /// </summary>
-    protected virtual int BuilderChunkSize
-    {
-        get
-        {
-            var partitionSize = _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize)
-                                ?? ModuleConstants.Settings.DefaultIndexPartitionSize;
-            if (partitionSize <= 0)
-            {
-                partitionSize = ModuleConstants.Settings.DefaultIndexPartitionSize;
-            }
-            return Math.Max(1, partitionSize / BuilderChunksPerBatch);
-        }
-    }
 
     private readonly ISearchProvider _searchProvider;
     private readonly IEnumerable<IndexDocumentConfiguration> _configurations;
@@ -506,8 +477,10 @@ public class IndexingManager : IIndexingManager
         cancellationToken.ThrowIfCancellationRequested();
 
         var result = new List<IndexDocument>();
+        var chunkSize = _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize) ?? DefaultBatchSize;
 
-        foreach (var idChunk in PaginateIds(documentIds))
+
+        foreach (var idChunk in PaginateIds(documentIds, chunkSize))
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -535,8 +508,10 @@ public class IndexingManager : IIndexingManager
         CancellationToken cancellationToken)
     {
         var result = new List<IndexDocument>();
+        var chunkSize = _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize) ?? DefaultBatchSize;
 
-        foreach (var idChunk in PaginateIds(documentIds))
+
+        foreach (var idChunk in PaginateIds(documentIds, chunkSize))
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -550,10 +525,8 @@ public class IndexingManager : IIndexingManager
         return result;
     }
 
-    protected virtual IEnumerable<IList<string>> PaginateIds(IList<string> documentIds)
+    protected virtual IEnumerable<IList<string>> PaginateIds(IList<string> documentIds, int chunkSize)
     {
-        var chunkSize = Math.Max(1, BuilderChunkSize);
-
         if (documentIds.Count <= chunkSize)
         {
             // Defensive copy: builders should not mutate the list, but we don't trust the contract.
