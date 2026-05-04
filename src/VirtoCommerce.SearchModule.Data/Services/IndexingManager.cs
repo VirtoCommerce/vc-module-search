@@ -479,7 +479,6 @@ public class IndexingManager : IIndexingManager
         var result = new List<IndexDocument>();
         var chunkSize = _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize) ?? DefaultBatchSize;
 
-
         foreach (var idChunk in PaginateIds(documentIds, chunkSize))
         {
             cancellationToken.ThrowIfCancellationRequested();
