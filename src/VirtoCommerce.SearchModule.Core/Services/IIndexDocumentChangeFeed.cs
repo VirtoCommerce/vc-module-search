@@ -23,7 +23,8 @@ public interface IIndexDocumentChangeFeed
     /// </summary>
     /// <returns>Batch of changes or null when at end of feed.</returns>
     [Obsolete("Use the cancellation-aware overload instead.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    Task<IReadOnlyCollection<IndexDocumentChange>> GetNextBatch();
+    Task<IReadOnlyCollection<IndexDocumentChange>> GetNextBatch()
+         => throw new NotImplementedException();
 
     /// <summary>
     /// Cancellation-aware overload. Default implementation delegates to the legacy method for backwards compatibility.

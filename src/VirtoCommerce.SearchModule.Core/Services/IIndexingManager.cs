@@ -53,7 +53,8 @@ public interface IIndexingManager
     /// <param name="builderTypes">Index document builder types to process the changed documents</param>
     /// <returns>Result of indexing operation.</returns>
     [Obsolete("Use the cancellation-aware overload instead.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes = null);
+    Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes = null)
+         => throw new NotImplementedException();
 
     /// <summary>
     /// Cancellation-aware overload of <see cref="IndexDocumentsAsync(string, string[], IEnumerable{string})"/>.
@@ -71,7 +72,8 @@ public interface IIndexingManager
     /// <param name="documentIds">Ids of documents to delete.</param>
     /// <returns>Result of indexing operation.</returns>
     [Obsolete("Use the cancellation-aware overload instead.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    Task<IndexingResult> DeleteDocumentsAsync(string documentType, string[] documentIds);
+    Task<IndexingResult> DeleteDocumentsAsync(string documentType, string[] documentIds)
+         => throw new NotImplementedException();
 
     /// <summary>
     /// Cancellation-aware overload of <see cref="DeleteDocumentsAsync(string, string[])"/>.

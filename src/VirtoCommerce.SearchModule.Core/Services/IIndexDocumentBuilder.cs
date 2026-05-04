@@ -12,7 +12,8 @@ namespace VirtoCommerce.SearchModule.Core.Services;
 public interface IIndexDocumentBuilder
 {
     [Obsolete("Use the cancellation-aware overload instead.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds);
+    Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds)
+        => throw new NotImplementedException();
 
     /// <summary>
     /// Cancellation-aware overload. Implementations should poll the token at their own loop boundaries
