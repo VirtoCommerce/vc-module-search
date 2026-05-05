@@ -477,7 +477,8 @@ public class IndexingManager : IIndexingManager
         cancellationToken.ThrowIfCancellationRequested();
 
         var result = new List<IndexDocument>();
-        var chunkSize = _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize) ?? DefaultBatchSize;
+        var configuredChunkSize = _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize) ?? DefaultBatchSize;
+        var chunkSize = configuredChunkSize > 0 ? configuredChunkSize : DefaultBatchSize;
 
         foreach (var idChunk in PaginateIds(documentIds, chunkSize))
         {
@@ -507,7 +508,9 @@ public class IndexingManager : IIndexingManager
         CancellationToken cancellationToken)
     {
         var result = new List<IndexDocument>();
-        var chunkSize = _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize) ?? DefaultBatchSize;
+
+        var configuredChunkSize = _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize) ?? DefaultBatchSize;
+        var chunkSize = configuredChunkSize > 0 ? configuredChunkSize : DefaultBatchSize;
 
 
         foreach (var idChunk in PaginateIds(documentIds, chunkSize))
@@ -526,6 +529,10 @@ public class IndexingManager : IIndexingManager
 
     protected virtual IEnumerable<IList<string>> PaginateIds(IList<string> documentIds, int chunkSize)
     {
+        // Defense-in-depth: a zero/negative chunk size from a mis-configured setting would make the
+        // `i += chunkSize` loop never advance. Floor to 1 so the iterator always makes progress.
+        chunkSize = Math.Max(1, chunkSize);
+
         if (documentIds.Count <= chunkSize)
         {
             // Defensive copy: builders should not mutate the list, but we don't trust the contract.
