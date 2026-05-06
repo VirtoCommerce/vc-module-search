@@ -292,6 +292,8 @@ public class IndexingManager : IIndexingManager
         BatchIndexingOptions batchOptions,
         CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var result = new IndexingResult();
         var documentType = batchOptions.DocumentType;
 
@@ -304,6 +306,8 @@ public class IndexingManager : IIndexingManager
 
         foreach (var id in documentIds)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var builders = changes
                 .Where(x => x.DocumentId == id)
                 .SelectMany(x => GetDocumentBuilders(documentType, x.Provider))
@@ -311,6 +315,9 @@ public class IndexingManager : IIndexingManager
                 .ToList();
 
             var documents = await GetDocumentsAsync(batchOptions.DocumentType, [id], null, builders, cancellationToken);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
             var indexingResult = await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents);
 
             result.Items.AddRange(indexingResult.Items);
@@ -344,6 +351,13 @@ public class IndexingManager : IIndexingManager
                 }
                 else
                 {
+                    // Re-check after the build: a builder using the legacy default-impl forwarder
+                    // may not observe the token, and even cancellation-aware builders can return
+                    // normally if the cancel signal arrives between completion and this point.
+                    // Without this check we would commit the in-flight batch after the user's
+                    // "Delete" took effect.
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     result = batchOptions.Reindex &&
                              _searchProvider.Is<ISupportIndexSwap>(documentType, out var supportIndexSwapProvider)
                         ? await supportIndexSwapProvider.IndexWithBackupAsync(documentType, documents)
