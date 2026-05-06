@@ -240,7 +240,10 @@ namespace VirtoCommerce.SearchModule.Tests
         }
 
 
-        private static IIndexingManager GetIndexingManager(ISearchProvider searchProvider, IList<DocumentSource> documentSources)
+        private static IIndexingManager GetIndexingManager(
+            ISearchProvider searchProvider,
+            IList<DocumentSource> documentSources,
+            int? indexPartitionSize = null)
         {
             var primaryDocumentSource = documentSources?.FirstOrDefault();
 
@@ -258,6 +261,19 @@ namespace VirtoCommerce.SearchModule.Tests
                 {
                     Value = true
                 });
+
+            if (indexPartitionSize.HasValue)
+            {
+                // Pin VirtoCommerce.Search.IndexPartitionSize so tests that need a specific
+                // sub-chunk size in BuildDocumentsInChunksAsync can override it without depending
+                // on the production default.
+                settingsManager
+                    .Setup(x => x.GetObjectSettingAsync(ModuleConstants.Settings.General.IndexPartitionSize.Name, null, null))
+                    .ReturnsAsync(new ObjectSettingEntry
+                    {
+                        Value = indexPartitionSize.Value
+                    });
+            }
 
             return new IndexingManager(searchProvider, [configuration], new Mock<IOptions<SearchOptions>>().Object, settingsManager.Object, Array.Empty<IIndexDocumentConverter>());
         }
@@ -302,18 +318,25 @@ namespace VirtoCommerce.SearchModule.Tests
         }
 
         /// <summary>
-        /// Production parity: with the default <c>IndexPartitionSize = 50</c> and the
-        /// <c>BuilderChunkSize = max(1, IndexPartitionSize / BuilderChunksPerBatch)</c> derivation,
-        /// a 50-document batch is split into 5 sub-chunks of 10 — exactly the configuration this
-        /// test asserts against. The test is a regression guard for the sub-chunking loop in
-        /// <c>IndexingManager.BuildDocumentsInChunksAsync</c>: the cancellation token must be
-        /// polled between chunks so a token cancelled mid-batch aborts before the remaining work.
+        /// Regression guard for the sub-chunking loop in <c>IndexingManager.BuildDocumentsInChunksAsync</c>:
+        /// the cancellation token must be polled between sub-chunks so a token cancelled mid-batch
+        /// aborts before the remaining sub-chunks run.
         /// </summary>
+        /// <remarks>
+        /// In production, <c>BuildDocumentsInChunksAsync</c> reads its chunk size from the
+        /// <c>VirtoCommerce.Search.IndexPartitionSize</c> setting — the same setting that drives
+        /// the change-feed batch size. With both equal under default settings, a batch produces
+        /// exactly one sub-chunk and the inter-chunk cancellation path never executes. To make the
+        /// test exercise that path, this fixture pins <c>IndexPartitionSize</c> to <c>10</c> via
+        /// the mock <c>ISettingsManager</c> while keeping <c>IndexingOptions.BatchSize = 50</c> —
+        /// forcing a 50-document batch to be split into five 10-document sub-chunks.
+        /// </remarks>
         [Fact]
         public async Task IndexAsync_TokenCancelledDuringFirstChunk_StopsBeforeRemainingChunks()
         {
             const int totalDocuments = 50;
-            const int expectedTotalChunks = 5; // totalDocuments / BuilderChunkSize at default settings
+            const int subChunkSize = 10;
+            const int expectedTotalChunks = totalDocuments / subChunkSize; // 5
 
             var primary = new CountingDocumentSource(Primary)
             {
@@ -329,7 +352,7 @@ namespace VirtoCommerce.SearchModule.Tests
                 }
             };
 
-            var manager = GetIndexingManager(new SearchProvider(), [primary]);
+            var manager = GetIndexingManager(new SearchProvider(), [primary], indexPartitionSize: subChunkSize);
 
             var options = new IndexingOptions
             {
@@ -343,9 +366,9 @@ namespace VirtoCommerce.SearchModule.Tests
 
             // The token is cancelled inside the first builder call. The next iteration of
             // BuildDocumentsInChunksAsync polls the token before invoking the builder, so
-            // the abort happens after exactly 1 chunk and well before the full 5.
+            // the abort happens after exactly 1 sub-chunk and well before the full 5.
             Assert.True(primary.GetDocumentsCallCount < expectedTotalChunks,
-                $"Expected sub-chunking to abort early, but builder ran {primary.GetDocumentsCallCount}/{expectedTotalChunks} chunks.");
+                $"Expected sub-chunking to abort early, but builder ran {primary.GetDocumentsCallCount}/{expectedTotalChunks} sub-chunks.");
             Assert.Equal(1, primary.GetDocumentsCallCount);
         }
 
