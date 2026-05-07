@@ -112,12 +112,6 @@ public class IndexingManager : IIndexingManager
         return result;
     }
 
-    /// <summary>
-    /// Picks the primary/secondary builders and decides whether the search provider should be
-    /// driven via partial-update for the given <paramref name="documentType"/>.
-    /// Extracted from <see cref="IndexDocumentsAsync(string, string[], IEnumerable{string}, CancellationToken)"/>
-    /// to keep its cyclomatic complexity manageable (Sonar S1541).
-    /// </summary>
     protected virtual IndexDocumentsPlan BuildIndexDocumentsPlan(string documentType, IEnumerable<string> builderTypes, IndexDocumentConfiguration configuration)
     {
         var builderTypesList = (builderTypes as IList<string> ?? builderTypes?.ToList()) ?? Array.Empty<string>();
@@ -351,11 +345,6 @@ public class IndexingManager : IIndexingManager
                 }
                 else
                 {
-                    // Re-check after the build: a builder using the legacy default-impl forwarder
-                    // may not observe the token, and even cancellation-aware builders can return
-                    // normally if the cancel signal arrives between completion and this point.
-                    // Without this check we would commit the in-flight batch after the user's
-                    // "Delete" took effect.
                     cancellationToken.ThrowIfCancellationRequested();
 
                     result = batchOptions.Reindex &&
@@ -491,8 +480,8 @@ public class IndexingManager : IIndexingManager
         cancellationToken.ThrowIfCancellationRequested();
 
         var result = new List<IndexDocument>();
-        var configuredChunkSize = _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize) ?? DefaultBatchSize;
-        var chunkSize = configuredChunkSize > 0 ? configuredChunkSize : DefaultBatchSize;
+        var configuredChunkSize = _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize);
+        var chunkSize = configuredChunkSize.HasValue && configuredChunkSize.Value > 0 ? configuredChunkSize.Value : DefaultBatchSize;
 
         foreach (var idChunk in PaginateIds(documentIds, chunkSize))
         {
@@ -543,9 +532,10 @@ public class IndexingManager : IIndexingManager
 
     protected virtual IEnumerable<IList<string>> PaginateIds(IList<string> documentIds, int chunkSize)
     {
-        // Defense-in-depth: a zero/negative chunk size from a mis-configured setting would make the
-        // `i += chunkSize` loop never advance. Floor to 1 so the iterator always makes progress.
-        chunkSize = Math.Max(1, chunkSize);
+        if (chunkSize < 1)
+        {
+            throw new ArgumentException($"{nameof(chunkSize)} should be greater than 0", nameof(chunkSize));
+        }
 
         if (documentIds.Count <= chunkSize)
         {
