@@ -480,10 +480,10 @@ public class IndexingManager : IIndexingManager
         cancellationToken.ThrowIfCancellationRequested();
 
         var result = new List<IndexDocument>();
-        var configuredChunkSize = _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize);
-        var chunkSize = configuredChunkSize.HasValue && configuredChunkSize.Value > 0 ? configuredChunkSize.Value : DefaultBatchSize;
 
-        foreach (var idChunk in PaginateIds(documentIds, chunkSize))
+        var partitionSize = GetPartitionSize();
+
+        foreach (var idChunk in PaginateIds(documentIds, partitionSize))
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -512,11 +512,9 @@ public class IndexingManager : IIndexingManager
     {
         var result = new List<IndexDocument>();
 
-        var configuredChunkSize = _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize) ?? DefaultBatchSize;
-        var chunkSize = configuredChunkSize > 0 ? configuredChunkSize : DefaultBatchSize;
+        var partitionSize = GetPartitionSize();
 
-
-        foreach (var idChunk in PaginateIds(documentIds, chunkSize))
+        foreach (var idChunk in PaginateIds(documentIds, partitionSize))
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -784,7 +782,7 @@ public class IndexingManager : IIndexingManager
             throw new ArgumentException($"{nameof(options.DocumentType)} is empty", nameof(options));
         }
 
-        options.BatchSize ??= _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize) ?? DefaultBatchSize;
+        options.BatchSize ??= GetPartitionSize();
 
         if (options.BatchSize < 1)
         {
@@ -824,5 +822,12 @@ public class IndexingManager : IIndexingManager
         }
 
         progressCallback.Invoke(new IndexingProgress(description, documentType, totalCount, processedCount, errors));
+    }
+
+    private int GetPartitionSize()
+    {
+        var indexPartitionSize = _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize);
+        var partitionSize = indexPartitionSize.HasValue && indexPartitionSize.Value > 0 ? indexPartitionSize.Value : DefaultBatchSize;
+        return partitionSize;
     }
 }
