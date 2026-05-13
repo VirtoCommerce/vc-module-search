@@ -52,7 +52,7 @@ namespace VirtoCommerce.SearchModule.Tests
                 BatchSize = batchSize,
             };
 
-            await manager.IndexAsync(options, p => progress.Add(p), new CancellationTokenWrapper(cancellationTokenSource.Token));
+            await manager.IndexAsync(options, p => progress.Add(p), cancellationTokenSource.Token);
 
             var expectedBatchesCount = GetExpectedBatchesCount(rebuild, documentSources, batchSize);
             var expectedProgressItemsCount = (rebuild ? 2 : 0) + 1 + expectedBatchesCount + 1;
@@ -103,7 +103,7 @@ namespace VirtoCommerce.SearchModule.Tests
                 BatchSize = batchSize,
             };
 
-            await manager.IndexAsync(options, p => progress.Add(p), new CancellationTokenWrapper(cancellationTokenSource.Token));
+            await manager.IndexAsync(options, p => progress.Add(p), cancellationTokenSource.Token);
 
             var expectedBatchesCount = GetBatchesCount(options.DocumentIds.Count, batchSize);
             var expectedProgressItemsCount = 1 + expectedBatchesCount + 1;
@@ -240,7 +240,10 @@ namespace VirtoCommerce.SearchModule.Tests
         }
 
 
-        private static IIndexingManager GetIndexingManager(ISearchProvider searchProvider, IList<DocumentSource> documentSources)
+        private static IIndexingManager GetIndexingManager(
+            ISearchProvider searchProvider,
+            IList<DocumentSource> documentSources,
+            int? indexPartitionSize = null)
         {
             var primaryDocumentSource = documentSources?.FirstOrDefault();
 
@@ -259,6 +262,19 @@ namespace VirtoCommerce.SearchModule.Tests
                     Value = true
                 });
 
+            if (indexPartitionSize.HasValue)
+            {
+                // Pin VirtoCommerce.Search.IndexPartitionSize so tests that need a specific
+                // sub-chunk size in BuildDocumentsInChunksAsync can override it without depending
+                // on the production default.
+                settingsManager
+                    .Setup(x => x.GetObjectSettingAsync(ModuleConstants.Settings.General.IndexPartitionSize.Name, null, null))
+                    .ReturnsAsync(new ObjectSettingEntry
+                    {
+                        Value = indexPartitionSize.Value
+                    });
+            }
+
             return new IndexingManager(searchProvider, [configuration], new Mock<IOptions<SearchOptions>>().Object, settingsManager.Object, Array.Empty<IIndexDocumentConverter>());
         }
 
@@ -269,6 +285,123 @@ namespace VirtoCommerce.SearchModule.Tests
                 ChangesProvider = documentSource,
                 DocumentBuilder = documentSource,
             };
+        }
+
+
+        // ----------------------------------------------------------------------
+        // Cancellation behavior tests for the Hangfire-deletion fix.
+        // These guard:
+        //  - that cancellation is honored before any builder is called,
+        //  - that sub-chunk pagination inside GetDocumentsAsync polls the token between chunks
+        //    so a single large batch does not run to completion after a token is cancelled,
+        //  - that the cancellation-aware IndexDocumentsAsync overload throws when given a
+        //    pre-cancelled token.
+        // ----------------------------------------------------------------------
+
+        [Fact]
+        public async Task IndexAsync_WhenTokenAlreadyCancelled_ThrowsImmediately()
+        {
+            var documentSources = GetDocumentSources([Primary]);
+            var manager = GetIndexingManager(new SearchProvider(), documentSources);
+
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
+
+            var options = new IndexingOptions
+            {
+                DocumentType = DocumentType,
+                BatchSize = 50,
+            };
+
+            await Assert.ThrowsAsync<OperationCanceledException>(() =>
+                manager.IndexAsync(options, _ => { }, cts.Token));
+        }
+
+        /// <summary>
+        /// Regression guard for the sub-chunking loop in <c>IndexingManager.BuildDocumentsInChunksAsync</c>:
+        /// the cancellation token must be polled between sub-chunks so a token cancelled mid-batch
+        /// aborts before the remaining sub-chunks run.
+        /// </summary>
+        /// <remarks>
+        /// In production, <c>BuildDocumentsInChunksAsync</c> reads its chunk size from the
+        /// <c>VirtoCommerce.Search.IndexPartitionSize</c> setting — the same setting that drives
+        /// the change-feed batch size. With both equal under default settings, a batch produces
+        /// exactly one sub-chunk and the inter-chunk cancellation path never executes. To make the
+        /// test exercise that path, this fixture pins <c>IndexPartitionSize</c> to <c>10</c> via
+        /// the mock <c>ISettingsManager</c> while keeping <c>IndexingOptions.BatchSize = 50</c> —
+        /// forcing a 50-document batch to be split into five 10-document sub-chunks.
+        /// </remarks>
+        [Fact]
+        public async Task IndexAsync_TokenCancelledDuringFirstChunk_StopsBeforeRemainingChunks()
+        {
+            const int totalDocuments = 50;
+            const int subChunkSize = 10;
+            const int expectedTotalChunks = totalDocuments / subChunkSize; // 5
+
+            var primary = new CountingDocumentSource(Primary)
+            {
+                DocumentIds = Enumerable.Range(0, totalDocuments).Select(i => "id" + i).ToArray(),
+            };
+
+            using var cts = new CancellationTokenSource();
+            primary.OnGetDocuments = callNumber =>
+            {
+                if (callNumber == 1)
+                {
+                    cts.Cancel();
+                }
+            };
+
+            var manager = GetIndexingManager(new SearchProvider(), [primary], indexPartitionSize: subChunkSize);
+
+            var options = new IndexingOptions
+            {
+                DocumentType = DocumentType,
+                DeleteExistingIndex = true,
+                BatchSize = totalDocuments,
+            };
+
+            await Assert.ThrowsAsync<OperationCanceledException>(() =>
+                manager.IndexAsync(options, _ => { }, cts.Token));
+
+            // The token is cancelled inside the first builder call. The next iteration of
+            // BuildDocumentsInChunksAsync polls the token before invoking the builder, so
+            // the abort happens after exactly 1 sub-chunk and well before the full 5.
+            Assert.True(primary.GetDocumentsCallCount < expectedTotalChunks,
+                $"Expected sub-chunking to abort early, but builder ran {primary.GetDocumentsCallCount}/{expectedTotalChunks} sub-chunks.");
+            Assert.Equal(1, primary.GetDocumentsCallCount);
+        }
+
+        [Fact]
+        public async Task IndexDocumentsAsync_TokenAware_PreCancelledTokenThrows()
+        {
+            var documentSources = GetDocumentSources([Primary]);
+            var manager = GetIndexingManager(new SearchProvider(), documentSources);
+
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
+
+            await Assert.ThrowsAsync<OperationCanceledException>(() =>
+                manager.IndexDocumentsAsync(DocumentType, ["good2", "good3"], builderTypes: null,
+                    cts.Token));
+        }
+
+
+        private sealed class CountingDocumentSource : DocumentSource
+        {
+            private int _getDocumentsCallCount;
+
+            public CountingDocumentSource(string name) : base(name) { }
+
+            public int GetDocumentsCallCount => _getDocumentsCallCount;
+            public Action<int> OnGetDocuments { get; set; }
+
+            public override Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds, CancellationToken cancellationToken)
+            {
+                var n = Interlocked.Increment(ref _getDocumentsCallCount);
+                OnGetDocuments?.Invoke(n);
+                return base.GetDocumentsAsync(documentIds, cancellationToken);
+            }
         }
     }
 }
