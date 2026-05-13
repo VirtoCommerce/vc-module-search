@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
@@ -58,11 +59,16 @@ namespace VirtoCommerce.SearchModule.Tests
             return Task.FromResult(result);
         }
 
-        public virtual Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds)
+        public virtual Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds, CancellationToken cancellationToken)
         {
             var validDocumentIds = DocumentIds?.Intersect(documentIds) ?? documentIds;
             IList<IndexDocument> result = validDocumentIds.Select(id => CreateDocument(id, Name)).ToArray();
             return Task.FromResult(result);
+        }
+
+        public Task<IList<IndexDocument>> GetDocumentsAsync(IList<string> documentIds)
+        {
+            return GetDocumentsAsync(documentIds, CancellationToken.None);
         }
 
 
@@ -89,5 +95,6 @@ namespace VirtoCommerce.SearchModule.Tests
 
             return result;
         }
+
     }
 }

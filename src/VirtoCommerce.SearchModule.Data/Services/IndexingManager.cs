@@ -11,705 +11,823 @@ using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 using GeneralSettings = VirtoCommerce.SearchModule.Core.ModuleConstants.Settings.General;
 
-namespace VirtoCommerce.SearchModule.Data.Services
+namespace VirtoCommerce.SearchModule.Data.Services;
+
+/// <summary>
+/// Implement the functionality of indexing
+/// </summary>
+public class IndexingManager : IIndexingManager
 {
-    /// <summary>
-    /// Implement the functionality of indexing
-    /// </summary>
-    public class IndexingManager : IIndexingManager
+    public const int DefaultBatchSize = 50;
+
+    private readonly ISearchProvider _searchProvider;
+    private readonly IEnumerable<IndexDocumentConfiguration> _configurations;
+    private readonly SearchOptions _searchOptions;
+    private readonly ISettingsManager _settingsManager;
+    private readonly IEnumerable<IIndexDocumentConverter> _documentConverters;
+
+    private bool PartialDocumentUpdateEnabled
     {
-        public const int DefaultBatchSize = 50;
-
-        private readonly ISearchProvider _searchProvider;
-        private readonly IEnumerable<IndexDocumentConfiguration> _configurations;
-        private readonly SearchOptions _searchOptions;
-        private readonly ISettingsManager _settingsManager;
-        private readonly IEnumerable<IIndexDocumentConverter> _documentConverters;
-
-        private bool PartialDocumentUpdateEnabled
+        get
         {
-            get
-            {
-                return _settingsManager.GetValue<bool>(GeneralSettings.EnablePartialDocumentUpdate);
-            }
+            return _settingsManager.GetValue<bool>(GeneralSettings.EnablePartialDocumentUpdate);
+        }
+    }
+
+    public IndexingManager(
+        ISearchProvider searchProvider,
+        IEnumerable<IndexDocumentConfiguration> configurations,
+        IOptions<SearchOptions> searchOptions,
+        ISettingsManager settingsManager,
+        IEnumerable<IIndexDocumentConverter> documentConverters)
+    {
+        _searchProvider = searchProvider ?? throw new ArgumentNullException(nameof(searchProvider));
+        _configurations = configurations ?? throw new ArgumentNullException(nameof(configurations));
+        _searchOptions = searchOptions.Value;
+        _settingsManager = settingsManager;
+        _documentConverters = documentConverters;
+    }
+
+    public virtual async Task<IndexState> GetIndexStateAsync(string documentType)
+    {
+        var result = await GetIndexStateAsync(documentType, getBackupIndexState: false);
+
+        return result;
+    }
+
+    public virtual async Task<IEnumerable<IndexState>> GetIndicesStateAsync(string documentType)
+    {
+        var result = new List<IndexState> { await GetIndexStateAsync(documentType, getBackupIndexState: false) };
+
+        if (_searchProvider.Is<ISupportIndexSwap>(documentType))
+        {
+            result.Add(await GetIndexStateAsync(documentType, getBackupIndexState: true));
         }
 
-        public IndexingManager(
-            ISearchProvider searchProvider,
-            IEnumerable<IndexDocumentConfiguration> configurations,
-            IOptions<SearchOptions> searchOptions,
-            ISettingsManager settingsManager,
-            IEnumerable<IIndexDocumentConverter> documentConverters)
+        return result;
+    }
+
+    public virtual Task IndexAllDocumentsAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, CancellationToken cancellationToken)
+    {
+        return IndexAsync(options, progressCallback, cancellationToken);
+    }
+
+    public virtual Task IndexChangesAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, CancellationToken cancellationToken)
+    {
+        return IndexAsync(options, progressCallback, cancellationToken);
+    }
+
+    public virtual async Task IndexAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, CancellationToken cancellationToken)
+    {
+        ValidateOptions(options);
+
+        if (GetConfiguration(options.DocumentType, out var configuration))
         {
-            _searchProvider = searchProvider ?? throw new ArgumentNullException(nameof(searchProvider));
-            _configurations = configurations ?? throw new ArgumentNullException(nameof(configurations));
-            _searchOptions = searchOptions.Value;
-            _settingsManager = settingsManager;
-            _documentConverters = documentConverters;
+            await ProcessConfigurationAsync(configuration, options, progressCallback, cancellationToken);
+        }
+    }
+
+    public virtual Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes = null)
+    {
+        return IndexDocumentsAsync(documentType, documentIds, builderTypes, CancellationToken.None);
+    }
+
+    public virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
+    {
+        // TODO: Reuse general index API?
+
+        if (!GetConfiguration(documentType, out var configuration))
+        {
+            return new IndexingResult();
         }
 
-        public virtual async Task<IndexState> GetIndexStateAsync(string documentType)
-        {
-            var result = await GetIndexStateAsync(documentType, getBackupIndexState: false);
+        var plan = BuildIndexDocumentsPlan(documentType, builderTypes, configuration);
 
-            return result;
+        var documents = await GetDocumentsAsync(documentType, documentIds, plan.PrimaryBuilder, plan.AdditionalBuilders, cancellationToken);
+
+        var result = plan.UsePartialUpdate && _searchProvider.Is<ISupportPartialUpdate>(documentType, out var supportPartialUpdateProvider)
+            ? await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents)
+            : await _searchProvider.IndexAsync(documentType, documents);
+
+        return result;
+    }
+
+    protected virtual IndexDocumentsPlan BuildIndexDocumentsPlan(string documentType, IEnumerable<string> builderTypes, IndexDocumentConfiguration configuration)
+    {
+        var builderTypesList = (builderTypes as IList<string> ?? builderTypes?.ToList()) ?? Array.Empty<string>();
+        var primaryDocumentBuilder = configuration.DocumentSource.DocumentBuilder;
+
+        var additionalDocumentBuilders = configuration.RelatedSources
+            ?.Where(s => s.DocumentBuilder != null)
+            .Select(s => s.DocumentBuilder)
+            .ToList() ?? new List<IIndexDocumentBuilder>();
+
+        var canPartialUpdate =
+            builderTypesList.Any() &&
+            additionalDocumentBuilders.Any() &&
+            _searchProvider.Is<ISupportPartialUpdate>(documentType) &&
+            PartialDocumentUpdateEnabled;
+
+        if (!canPartialUpdate)
+        {
+            return new IndexDocumentsPlan(false, primaryDocumentBuilder, additionalDocumentBuilders);
         }
 
-        public virtual async Task<IEnumerable<IndexState>> GetIndicesStateAsync(string documentType)
+        additionalDocumentBuilders = additionalDocumentBuilders
+            .Where(x => builderTypesList.Contains(x.GetType().FullName))
+            .ToList();
+
+        // In case of changing main object itself, there would be only primary document builder,
+        // but in the other cases, when changed additional dependent objects, primary builder should be set to null.
+        if (!builderTypesList.Contains(primaryDocumentBuilder.GetType().FullName))
         {
-            var result = new List<IndexState> { await GetIndexStateAsync(documentType, getBackupIndexState: false) };
-
-            if (_searchProvider.Is<ISupportIndexSwap>(documentType))
-            {
-                result.Add(await GetIndexStateAsync(documentType, getBackupIndexState: true));
-            }
-
-            return result;
+            primaryDocumentBuilder = null;
         }
 
-        public virtual Task IndexAllDocumentsAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
+        return new IndexDocumentsPlan(true, primaryDocumentBuilder, additionalDocumentBuilders);
+    }
+
+    protected readonly record struct IndexDocumentsPlan(
+        bool UsePartialUpdate,
+        IIndexDocumentBuilder PrimaryBuilder,
+        IList<IIndexDocumentBuilder> AdditionalBuilders);
+
+    public virtual Task<IndexingResult> DeleteDocumentsAsync(string documentType, string[] documentIds)
+    {
+        return DeleteDocumentsAsync(documentType, documentIds as IList<string>);
+    }
+
+    public virtual Task<IndexingResult> DeleteDocumentsAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return DeleteDocumentsAsync(documentType, documentIds as IList<string>);
+    }
+
+    public virtual async Task<IndexingResult> DeleteDocumentsAsync(string documentType, IList<string> documentIds)
+    {
+        var documents = documentIds.Select(id => new IndexDocument(id)).ToList();
+        return await _searchProvider.RemoveAsync(documentType, documents);
+    }
+
+    protected virtual async Task ProcessConfigurationAsync(
+        IndexDocumentConfiguration configuration,
+        IndexingOptions options,
+        Action<IndexingProgress> progressCallback,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        await PrepareIndexAsync(options, progressCallback, cancellationToken);
+
+        var documentType = options.DocumentType;
+        var processedCount = 0L;
+        long? totalCount = null;
+
+        void Progress(string message = null, IList<string> errors = null)
         {
-            return IndexAsync(options, progressCallback, cancellationToken);
+            ReportProgress(progressCallback, documentType, message, processedCount, totalCount, errors);
         }
 
-        public virtual Task IndexChangesAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
+        Progress("calculating total count");
+
+        var batchOptions = new BatchIndexingOptions
         {
-            return IndexAsync(options, progressCallback, cancellationToken);
-        }
-
-        public virtual async Task IndexAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
-        {
-            ValidateOptions(options);
-
-            if (GetConfiguration(options.DocumentType, out var configuration))
-            {
-                await ProcessConfigurationAsync(configuration, options, progressCallback, cancellationToken);
-            }
-        }
-
-        public virtual async Task<IndexingResult> IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes = null)
-        {
-            // TODO: Reuse general index API?
-
-            if (!GetConfiguration(documentType, out var configuration))
-            {
-                return new IndexingResult();
-            }
-
-            var partialUpdate = false;
-            var builderTypesList = (builderTypes as IList<string> ?? builderTypes?.ToList()) ?? Array.Empty<string>();
-            var primaryDocumentBuilder = configuration.DocumentSource.DocumentBuilder;
-
-            var additionalDocumentBuilders = configuration.RelatedSources
+            DocumentType = documentType,
+            Reindex = options.DeleteExistingIndex,
+            PrimaryDocumentBuilder = configuration.DocumentSource.DocumentBuilder,
+            SecondaryDocumentBuilders = configuration.RelatedSources
                 ?.Where(s => s.DocumentBuilder != null)
                 .Select(s => s.DocumentBuilder)
-                .ToList() ?? new List<IIndexDocumentBuilder>();
+                .ToList(),
+        };
 
-            if (builderTypesList.Any() && additionalDocumentBuilders.Any() && _searchProvider.Is<ISupportPartialUpdate>(documentType) && PartialDocumentUpdateEnabled)
+        var feeds = await GetChangeFeedsAsync(configuration, options, cancellationToken);
+
+        // Try to get total count to indicate progress. Some feeds don't have a total count.
+        totalCount = feeds.Any(x => x.TotalCount == null)
+            ? null
+            : feeds.Sum(x => x.TotalCount ?? 0);
+
+        var changes = await GetNextChangesAsync(feeds, cancellationToken);
+        while (changes.Any())
+        {
+            var indexingResult = await ProcessChangesAsync(changes, batchOptions, cancellationToken);
+
+            processedCount += changes.Count;
+            Progress(errors: GetIndexingErrors(indexingResult));
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            changes = await GetNextChangesAsync(feeds, cancellationToken);
+        }
+
+        // indexation complete, swap indexes back
+        await SwapIndicesAsync(options);
+
+        totalCount ??= processedCount;
+        Progress("indexation finished");
+    }
+
+    protected virtual async Task<IList<IndexDocumentChange>> GetNextChangesAsync(IList<IIndexDocumentChangeFeed> feeds, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var batches = await Task.WhenAll(feeds.Select(f => f.GetNextBatch(cancellationToken)));
+
+        var changes = batches
+            .Where(b => b != null)
+            .SelectMany(b => b)
+            .ToList();
+
+        return changes;
+    }
+
+    protected virtual async Task<IndexingResult> ProcessChangesAsync(
+        IList<IndexDocumentChange> changes,
+        BatchIndexingOptions batchOptions,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var result = new IndexingResult();
+        var documentType = batchOptions.DocumentType;
+
+        // Full changes don't have changes provider specified because we don't set it for manual indexation.
+        var fullChanges = _searchProvider.Is<ISupportPartialUpdate>(documentType) && PartialDocumentUpdateEnabled
+            ? changes
+                .Where(x =>
+                    x.ChangeType is IndexDocumentChangeType.Deleted or IndexDocumentChangeType.Created ||
+                    GetDocumentBuilders(documentType, x.Provider).IsNullOrEmpty())
+                .ToList()
+            : changes;
+
+        var partialChanges = changes.Except(fullChanges).ToList();
+        var partialResult = await ProcessPartialDocumentsAsync(partialChanges, batchOptions, cancellationToken);
+
+        var groups = GetLatestChangesForEachDocumentGroupedByChangeType(fullChanges);
+
+        foreach (var (changeType, documentIds) in groups)
+        {
+            var groupResult = await ProcessDocumentsAsync(changeType, documentIds, batchOptions, cancellationToken);
+
+            if (groupResult?.Items != null)
             {
-                partialUpdate = true;
-                additionalDocumentBuilders = additionalDocumentBuilders.Where(x => builderTypesList.Contains(x.GetType().FullName)).ToList();
-
-                // In case of changing main object itself, there would be only primary document builder,
-                // but in the other cases, when changed additional dependent objects, primary builder should be set to null.
-                if (!builderTypesList.Contains(primaryDocumentBuilder.GetType().FullName))
-                {
-                    primaryDocumentBuilder = null;
-                }
+                result.Items.AddRange(groupResult.Items);
             }
+        }
 
-            var cancellationToken = new CancellationTokenWrapper(CancellationToken.None);
-            var documents = await GetDocumentsAsync(documentType, documentIds, primaryDocumentBuilder, additionalDocumentBuilders, cancellationToken);
+        result.Items.AddRange(partialResult.Items);
 
-            var result = partialUpdate && _searchProvider.Is<ISupportPartialUpdate>(documentType, out var supportPartialUpdateProvider)
-                ? await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents)
-                : await _searchProvider.IndexAsync(documentType, documents);
+        return result;
+    }
 
+    protected virtual async Task<IndexingResult> ProcessPartialDocumentsAsync(
+        IList<IndexDocumentChange> changes,
+        BatchIndexingOptions batchOptions,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var result = new IndexingResult();
+        var documentType = batchOptions.DocumentType;
+
+        if (!PartialDocumentUpdateEnabled || !_searchProvider.Is<ISupportPartialUpdate>(documentType, out var supportPartialUpdateProvider))
+        {
             return result;
         }
 
-        public virtual Task<IndexingResult> DeleteDocumentsAsync(string documentType, string[] documentIds)
-        {
-            return DeleteDocumentsAsync(documentType, documentIds as IList<string>);
-        }
+        var documentIds = changes.Select(x => x.DocumentId).Distinct();
 
-        public virtual async Task<IndexingResult> DeleteDocumentsAsync(string documentType, IList<string> documentIds)
-        {
-            var documents = documentIds.Select(id => new IndexDocument(id)).ToList();
-            return await _searchProvider.RemoveAsync(documentType, documents);
-        }
-
-        protected virtual async Task ProcessConfigurationAsync(
-            IndexDocumentConfiguration configuration,
-            IndexingOptions options,
-            Action<IndexingProgress> progressCallback,
-            ICancellationToken cancellationToken)
+        foreach (var id in documentIds)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            await PrepareIndexAsync(options, progressCallback, cancellationToken);
-
-            var documentType = options.DocumentType;
-            var processedCount = 0L;
-            long? totalCount = null;
-
-            void Progress(string message = null, IList<string> errors = null)
-            {
-                ReportProgress(progressCallback, documentType, message, processedCount, totalCount, errors);
-            }
-
-            Progress("calculating total count");
-
-            var batchOptions = new BatchIndexingOptions
-            {
-                DocumentType = documentType,
-                Reindex = options.DeleteExistingIndex,
-                PrimaryDocumentBuilder = configuration.DocumentSource.DocumentBuilder,
-                SecondaryDocumentBuilders = configuration.RelatedSources
-                    ?.Where(s => s.DocumentBuilder != null)
-                    .Select(s => s.DocumentBuilder)
-                    .ToList(),
-            };
-
-            var feeds = await GetChangeFeedsAsync(configuration, options);
-
-            // Try to get total count to indicate progress. Some feeds don't have a total count.
-            totalCount = feeds.Any(x => x.TotalCount == null)
-                ? null
-                : feeds.Sum(x => x.TotalCount ?? 0);
-
-            var changes = await GetNextChangesAsync(feeds);
-            while (changes.Any())
-            {
-                var indexingResult = await ProcessChangesAsync(changes, batchOptions, cancellationToken);
-
-                processedCount += changes.Count;
-                Progress(errors: GetIndexingErrors(indexingResult));
-
-                cancellationToken.ThrowIfCancellationRequested();
-
-                changes = await GetNextChangesAsync(feeds);
-            }
-
-            // indexation complete, swap indexes back
-            await SwapIndicesAsync(options);
-
-            totalCount ??= processedCount;
-            Progress("indexation finished");
-        }
-
-        protected virtual async Task<IList<IndexDocumentChange>> GetNextChangesAsync(IList<IIndexDocumentChangeFeed> feeds)
-        {
-            var batches = await Task.WhenAll(feeds.Select(f => f.GetNextBatch()));
-
-            var changes = batches
-                .Where(b => b != null)
-                .SelectMany(b => b)
+            var builders = changes
+                .Where(x => x.DocumentId == id)
+                .SelectMany(x => GetDocumentBuilders(documentType, x.Provider))
+                .Distinct()
                 .ToList();
 
-            return changes;
-        }
+            var documents = await GetDocumentsAsync(batchOptions.DocumentType, [id], null, builders, cancellationToken);
 
-        protected virtual async Task<IndexingResult> ProcessChangesAsync(
-            IList<IndexDocumentChange> changes,
-            BatchIndexingOptions batchOptions,
-            ICancellationToken cancellationToken)
-        {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var result = new IndexingResult();
-            var documentType = batchOptions.DocumentType;
+            var indexingResult = await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents);
 
-            // Full changes don't have changes provider specified because we don't set it for manual indexation.
-            var fullChanges = _searchProvider.Is<ISupportPartialUpdate>(documentType) && PartialDocumentUpdateEnabled
-                ? changes
-                    .Where(x =>
-                        x.ChangeType is IndexDocumentChangeType.Deleted or IndexDocumentChangeType.Created ||
-                        GetDocumentBuilders(documentType, x.Provider).IsNullOrEmpty())
-                    .ToList()
-                : changes;
+            result.Items.AddRange(indexingResult.Items);
+        }
 
-            var partialChanges = changes.Except(fullChanges).ToList();
-            var partialResult = await ProcessPartialDocumentsAsync(partialChanges, batchOptions, cancellationToken);
+        return result;
+    }
 
-            var groups = GetLatestChangesForEachDocumentGroupedByChangeType(fullChanges);
+    protected virtual async Task<IndexingResult> ProcessDocumentsAsync(
+        IndexDocumentChangeType changeType,
+        IList<string> documentIds,
+        BatchIndexingOptions batchOptions,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
 
-            foreach (var (changeType, documentIds) in groups)
-            {
-                var groupResult = await ProcessDocumentsAsync(changeType, documentIds, batchOptions, cancellationToken);
+        IndexingResult result;
+        var documentType = batchOptions.DocumentType;
 
-                if (groupResult?.Items != null)
+        switch (changeType)
+        {
+            case IndexDocumentChangeType.Deleted:
+                result = await DeleteDocumentsAsync(documentType, documentIds);
+                break;
+            case IndexDocumentChangeType.Modified or IndexDocumentChangeType.Created:
+                var documents = await GetDocumentsAsync(batchOptions.DocumentType, documentIds, batchOptions.PrimaryDocumentBuilder, batchOptions.SecondaryDocumentBuilders, cancellationToken);
+
+                if (documents.IsNullOrEmpty())
                 {
-                    result.Items.AddRange(groupResult.Items);
-                }
-            }
-
-            result.Items.AddRange(partialResult.Items);
-
-            return result;
-        }
-
-        protected virtual async Task<IndexingResult> ProcessPartialDocumentsAsync(
-            IList<IndexDocumentChange> changes,
-            BatchIndexingOptions batchOptions,
-            ICancellationToken cancellationToken)
-        {
-            var result = new IndexingResult();
-            var documentType = batchOptions.DocumentType;
-
-            if (!PartialDocumentUpdateEnabled || !_searchProvider.Is<ISupportPartialUpdate>(documentType, out var supportPartialUpdateProvider))
-            {
-                return result;
-            }
-
-            var documentIds = changes.Select(x => x.DocumentId).Distinct();
-
-            foreach (var id in documentIds)
-            {
-                var builders = changes
-                    .Where(x => x.DocumentId == id)
-                    .SelectMany(x => GetDocumentBuilders(documentType, x.Provider))
-                    .Distinct()
-                    .ToList();
-
-                var documents = await GetDocumentsAsync(batchOptions.DocumentType, [id], null, builders, cancellationToken);
-                var indexingResult = await supportPartialUpdateProvider.IndexPartialAsync(documentType, documents);
-
-                result.Items.AddRange(indexingResult.Items);
-            }
-
-            return result;
-        }
-
-        protected virtual async Task<IndexingResult> ProcessDocumentsAsync(
-            IndexDocumentChangeType changeType,
-            IList<string> documentIds,
-            BatchIndexingOptions batchOptions,
-            ICancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            IndexingResult result;
-            var documentType = batchOptions.DocumentType;
-
-            switch (changeType)
-            {
-                case IndexDocumentChangeType.Deleted:
-                    result = await DeleteDocumentsAsync(documentType, documentIds);
-                    break;
-                case IndexDocumentChangeType.Modified or IndexDocumentChangeType.Created:
-                    var documents = await GetDocumentsAsync(batchOptions.DocumentType, documentIds, batchOptions.PrimaryDocumentBuilder, batchOptions.SecondaryDocumentBuilders, cancellationToken);
-
-                    if (documents.IsNullOrEmpty())
-                    {
-                        result = new IndexingResult();
-                    }
-                    else
-                    {
-                        result = batchOptions.Reindex &&
-                                 _searchProvider.Is<ISupportIndexSwap>(documentType, out var supportIndexSwapProvider)
-                            ? await supportIndexSwapProvider.IndexWithBackupAsync(documentType, documents)
-                            : await _searchProvider.IndexAsync(documentType, documents);
-                    }
-
-                    break;
-                default:
                     result = new IndexingResult();
-                    break;
-            }
-
-            return result;
-        }
-
-        protected virtual async Task<IList<IIndexDocumentChangeFeed>> GetChangeFeedsAsync(IndexDocumentConfiguration configuration, IndexingOptions options)
-        {
-            // Return in-memory change feed for specific set of document IDs.
-            if (options.DocumentIds != null)
-            {
-                return
-                [
-                    new InMemoryIndexDocumentChangeFeed(options.DocumentIds.ToArray(), IndexDocumentChangeType.Modified, options.BatchSize ?? DefaultBatchSize),
-                ];
-            }
-
-            var factories = new List<IIndexDocumentChangeFeedFactory>
-            {
-                GetChangeFeedFactory(configuration.DocumentSource)
-            };
-
-            // In case of 'full' re-index we don't want to include the related sources,
-            // because that would double the indexation work.
-            // E.g. All products would get indexed for the primary document source
-            // and then all products would get re-indexed for all the prices as well.
-            if (configuration.RelatedSources != null && (options.StartDate != null || options.EndDate != null))
-            {
-                factories.AddRange(configuration.RelatedSources.Select(GetChangeFeedFactory));
-            }
-
-            return await Task.WhenAll(factories.Select(x => x.CreateFeed(options.StartDate, options.EndDate, options.BatchSize ?? DefaultBatchSize)));
-        }
-
-        protected virtual IIndexDocumentChangeFeedFactory GetChangeFeedFactory(IndexDocumentSource documentSource)
-        {
-            documentSource.ChangeFeedFactory ??= new IndexDocumentChangeFeedFactoryAdapter(documentSource.ChangesProvider);
-
-            return documentSource.ChangeFeedFactory;
-        }
-
-        protected virtual IList<string> GetIndexingErrors(IndexingResult indexingResult)
-        {
-            var errors = indexingResult?.Items
-                ?.Where(i => !i.Succeeded)
-                .Select(i => $"{FormatId(i.Id)}, Error: {i.ErrorMessage}")
-                .ToArray();
-
-            return errors ?? [];
-        }
-
-        protected virtual string FormatId(string id)
-        {
-            return id?.Contains(':') == true
-                ? id
-                : $"ID: {id}";
-        }
-
-        protected virtual IDictionary<IndexDocumentChangeType, string[]> GetLatestChangesForEachDocumentGroupedByChangeType(IList<IndexDocumentChange> changes)
-        {
-            var result = changes
-                .GroupBy(c => c.DocumentId)
-                .Select(g => g.OrderByDescending(o => o.ChangeDate).First())
-                .GroupBy(c => c.ChangeType)
-                .ToDictionary(g => g.Key, g => g.Select(c => c.DocumentId).ToArray());
-
-            return result;
-        }
-
-        protected virtual async Task<IList<IndexDocument>> GetDocumentsAsync(
-            string documentType,
-            IList<string> documentIds,
-            IIndexDocumentBuilder primaryDocumentBuilder,
-            IList<IIndexDocumentBuilder> secondaryDocumentBuilders,
-            ICancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var primaryDocuments = primaryDocumentBuilder != null
-                ? (await primaryDocumentBuilder.GetDocumentsAsync(documentIds))?.Where(x => x != null).ToList()
-                : documentIds.Select(x => new IndexDocument(x)).ToList();
-
-            if (primaryDocuments?.Count > 0)
-            {
-                if (secondaryDocumentBuilders != null)
-                {
-                    var primaryDocumentIds = primaryDocuments.Select(d => d.Id).ToArray();
-                    var secondaryDocuments = await GetSecondaryDocumentsAsync(secondaryDocumentBuilders, primaryDocumentIds, cancellationToken);
-
-                    MergeDocuments(primaryDocuments, secondaryDocuments);
-                }
-
-                foreach (var document in primaryDocuments)
-                {
-                    AddSystemFields(document);
-                }
-
-                foreach (var converter in _documentConverters)
-                {
-                    await converter.ConvertAsync(documentType, primaryDocuments);
-                }
-
-                AggregateDocuments(primaryDocuments, primaryDocumentBuilder, secondaryDocumentBuilders);
-            }
-
-            return primaryDocuments;
-        }
-
-        protected virtual async Task<IList<IndexDocument>> GetSecondaryDocumentsAsync(
-            IList<IIndexDocumentBuilder> secondaryDocumentBuilders,
-            IList<string> documentIds,
-            ICancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var tasks = secondaryDocumentBuilders.Select(p => p.GetDocumentsAsync(documentIds));
-            var results = await Task.WhenAll(tasks);
-
-            var result = results
-                .Where(r => r != null)
-                .SelectMany(r => r.Where(d => d != null))
-                .ToList();
-
-            return result;
-        }
-
-        protected virtual void MergeDocuments(IList<IndexDocument> primaryDocuments, IList<IndexDocument> secondaryDocuments)
-        {
-            if (primaryDocuments.IsNullOrEmpty() || secondaryDocuments.IsNullOrEmpty())
-            {
-                return;
-            }
-
-            var secondaryDocumentGroups = secondaryDocuments
-                .GroupBy(d => d.Id)
-                .ToDictionary(g => g.Key, g => g, StringComparer.OrdinalIgnoreCase);
-
-            foreach (var primaryDocument in primaryDocuments)
-            {
-                if (secondaryDocumentGroups.TryGetValue(primaryDocument.Id, out var secondaryDocumentGroup))
-                {
-                    foreach (var secondaryDocument in secondaryDocumentGroup)
-                    {
-                        primaryDocument.Merge(secondaryDocument);
-                    }
-                }
-            }
-        }
-
-        protected void AggregateDocuments(IList<IndexDocument> documents, IIndexDocumentBuilder primaryDocumentBuilder, IList<IIndexDocumentBuilder> secondaryDocumentBuilders)
-        {
-            var aggregationKeyProvider = GetAggregationKeyProvider(primaryDocumentBuilder, secondaryDocumentBuilders);
-
-            if (aggregationKeyProvider == null)
-            {
-                return;
-            }
-
-            var aggregators = GetDocumentAggregators(primaryDocumentBuilder, secondaryDocumentBuilders);
-
-            if (aggregators.IsNullOrEmpty())
-            {
-                return;
-            }
-
-            var aggregationGroups = aggregationKeyProvider.GetGroups(documents);
-
-            foreach (var aggregator in aggregators)
-            {
-                foreach (var aggregationGroup in aggregationGroups)
-                {
-                    aggregator.Aggregate(aggregationGroup);
-                }
-            }
-        }
-
-        protected virtual IIndexDocumentAggregationGroupProvider GetAggregationKeyProvider(IIndexDocumentBuilder primaryDocumentBuilder, IList<IIndexDocumentBuilder> secondaryDocumentBuilders)
-        {
-            if (primaryDocumentBuilder is IIndexDocumentAggregationGroupProvider aggregationKeyProvider)
-            {
-                return aggregationKeyProvider;
-            }
-
-            if (secondaryDocumentBuilders != null)
-            {
-                return secondaryDocumentBuilders.OfType<IIndexDocumentAggregationGroupProvider>().FirstOrDefault();
-            }
-
-            return null;
-        }
-
-        protected virtual IList<IIndexDocumentAggregator> GetDocumentAggregators(IIndexDocumentBuilder primaryDocumentBuilder, IList<IIndexDocumentBuilder> secondaryDocumentBuilders)
-        {
-            var result = new List<IIndexDocumentAggregator>();
-
-            if (primaryDocumentBuilder is IIndexDocumentAggregator primaryDocumentAggregator)
-            {
-                result.Add(primaryDocumentAggregator);
-            }
-
-            if (secondaryDocumentBuilders != null)
-            {
-                result.AddRange(secondaryDocumentBuilders.OfType<IIndexDocumentAggregator>());
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Swap between active and backup indices, if supported
-        /// </summary>
-        protected virtual async Task SwapIndicesAsync(IndexingOptions options)
-        {
-            var documentType = options.DocumentType;
-
-            if (options.DeleteExistingIndex && _searchProvider.Is<ISupportIndexSwap>(documentType, out var swappingSupportedSearchProvider))
-            {
-                await swappingSupportedSearchProvider.SwapIndexAsync(documentType);
-            }
-        }
-
-        private async Task<IndexState> GetIndexStateAsync(string documentType, bool getBackupIndexState)
-        {
-            var result = new IndexState
-            {
-                DocumentType = documentType,
-                Provider = _searchProvider.GetProviderName(documentType, _searchOptions.Provider),
-                Scope = _searchOptions.GetScope(documentType),
-                IsActive = !getBackupIndexState,
-            };
-
-            var searchRequest = new SearchRequest
-            {
-                UseBackupIndex = getBackupIndexState,
-                Sorting = [new SortingField { FieldName = KnownDocumentFields.IndexationDate, IsDescending = true }],
-                Take = 1,
-            };
-
-            try
-            {
-                var searchResponse = await _searchProvider.SearchAsync(documentType, searchRequest);
-
-                result.IndexedDocumentsCount = searchResponse.TotalCount;
-                if (searchResponse.Documents?.Any() == true)
-                {
-                    var indexationDate = searchResponse.Documents[0].FirstOrDefault(kvp => kvp.Key.EqualsIgnoreCase(KnownDocumentFields.IndexationDate));
-                    if (DateTimeOffset.TryParse(indexationDate.Value.ToString(), out var lastIndexationDateTime))
-                    {
-                        result.LastIndexationDate = lastIndexationDateTime.DateTime;
-                    }
-                }
-            }
-            catch
-            {
-                // ignored
-            }
-
-            return result;
-        }
-
-        protected virtual async Task PrepareIndexAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
-        {
-            if (options.DeleteExistingIndex)
-            {
-                await DeleteIndexAsync(options, progressCallback, cancellationToken);
-                await CreateIndexAsync(options, progressCallback, cancellationToken);
-            }
-        }
-
-        protected virtual async Task DeleteIndexAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
-        {
-            var documentType = options.DocumentType;
-            ReportProgress(progressCallback, documentType, "deleting index");
-
-            await _searchProvider.DeleteIndexAsync(documentType);
-            // TODO: Wait until index is deleted
-        }
-
-        protected virtual async Task CreateIndexAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
-        {
-            var documentType = options.DocumentType;
-            ReportProgress(progressCallback, documentType, "creating index");
-
-            var schema = await BuildSchemaAsync(documentType);
-
-            if (_searchProvider.Is<ISupportIndexCreate>(documentType, out var supportIndexCreate))
-            {
-                await supportIndexCreate.CreateIndexAsync(documentType, schema);
-            }
-            else
-            {
-                var documents = new[] { schema };
-
-                if (_searchProvider.Is<ISupportIndexSwap>(documentType, out var supportIndexSwapProvider))
-                {
-                    await supportIndexSwapProvider.IndexWithBackupAsync(documentType, documents);
                 }
                 else
                 {
-                    await _searchProvider.IndexAsync(documentType, documents);
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    result = batchOptions.Reindex &&
+                             _searchProvider.Is<ISupportIndexSwap>(documentType, out var supportIndexSwapProvider)
+                        ? await supportIndexSwapProvider.IndexWithBackupAsync(documentType, documents)
+                        : await _searchProvider.IndexAsync(documentType, documents);
                 }
 
-                await _searchProvider.RemoveAsync(documentType, documents);
+                break;
+            default:
+                result = new IndexingResult();
+                break;
+        }
+
+        return result;
+    }
+
+    protected virtual async Task<IList<IIndexDocumentChangeFeed>> GetChangeFeedsAsync(IndexDocumentConfiguration configuration, IndexingOptions options, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Return in-memory change feed for specific set of document IDs.
+        if (options.DocumentIds != null)
+        {
+            return
+            [
+                new InMemoryIndexDocumentChangeFeed(options.DocumentIds.ToArray(), IndexDocumentChangeType.Modified, options.BatchSize ?? DefaultBatchSize),
+            ];
+        }
+
+        var factories = new List<IIndexDocumentChangeFeedFactory>
+        {
+            GetChangeFeedFactory(configuration.DocumentSource)
+        };
+
+        // In case of 'full' re-index we don't want to include the related sources,
+        // because that would double the indexation work.
+        // E.g. All products would get indexed for the primary document source
+        // and then all products would get re-indexed for all the prices as well.
+        if (configuration.RelatedSources != null && (options.StartDate != null || options.EndDate != null))
+        {
+            factories.AddRange(configuration.RelatedSources.Select(GetChangeFeedFactory));
+        }
+
+        return await Task.WhenAll(factories.Select(x => x.CreateFeed(options.StartDate, options.EndDate, options.BatchSize ?? DefaultBatchSize, cancellationToken)));
+    }
+
+    protected virtual IIndexDocumentChangeFeedFactory GetChangeFeedFactory(IndexDocumentSource documentSource)
+    {
+        documentSource.ChangeFeedFactory ??= new IndexDocumentChangeFeedFactoryAdapter(documentSource.ChangesProvider);
+
+        return documentSource.ChangeFeedFactory;
+    }
+
+    protected virtual IList<string> GetIndexingErrors(IndexingResult indexingResult)
+    {
+        var errors = indexingResult?.Items
+            ?.Where(i => !i.Succeeded)
+            .Select(i => $"{FormatId(i.Id)}, Error: {i.ErrorMessage}")
+            .ToArray();
+
+        return errors ?? [];
+    }
+
+    protected virtual string FormatId(string id)
+    {
+        return id?.Contains(':') == true
+            ? id
+            : $"ID: {id}";
+    }
+
+    protected virtual IDictionary<IndexDocumentChangeType, string[]> GetLatestChangesForEachDocumentGroupedByChangeType(IList<IndexDocumentChange> changes)
+    {
+        var result = changes
+            .GroupBy(c => c.DocumentId)
+            .Select(g => g.OrderByDescending(o => o.ChangeDate).First())
+            .GroupBy(c => c.ChangeType)
+            .ToDictionary(g => g.Key, g => g.Select(c => c.DocumentId).ToArray());
+
+        return result;
+    }
+
+    protected virtual async Task<IList<IndexDocument>> GetDocumentsAsync(
+        string documentType,
+        IList<string> documentIds,
+        IIndexDocumentBuilder primaryDocumentBuilder,
+        IList<IIndexDocumentBuilder> secondaryDocumentBuilders,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        IList<IndexDocument> primaryDocuments;
+        if (primaryDocumentBuilder != null)
+        {
+            primaryDocuments = await BuildDocumentsInChunksAsync(primaryDocumentBuilder, documentIds, cancellationToken);
+        }
+        else
+        {
+            primaryDocuments = documentIds.Select(x => new IndexDocument(x)).ToList();
+        }
+
+        if (primaryDocuments?.Count > 0)
+        {
+            if (secondaryDocumentBuilders != null)
+            {
+                var primaryDocumentIds = primaryDocuments.Select(d => d.Id).ToArray();
+                var secondaryDocuments = await GetSecondaryDocumentsAsync(secondaryDocumentBuilders, primaryDocumentIds, cancellationToken);
+
+                MergeDocuments(primaryDocuments, secondaryDocuments);
+            }
+
+            foreach (var document in primaryDocuments)
+            {
+                AddSystemFields(document);
+            }
+
+            foreach (var converter in _documentConverters)
+            {
+                await converter.ConvertAsync(documentType, primaryDocuments);
+            }
+
+            AggregateDocuments(primaryDocuments, primaryDocumentBuilder, secondaryDocumentBuilders);
+        }
+
+        return primaryDocuments;
+    }
+
+    protected virtual async Task<IList<IndexDocument>> GetSecondaryDocumentsAsync(
+        IList<IIndexDocumentBuilder> secondaryDocumentBuilders,
+        IList<string> documentIds,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var result = new List<IndexDocument>();
+
+        var partitionSize = GetPartitionSize();
+
+        foreach (var idChunk in PaginateIds(documentIds, partitionSize))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var tasks = secondaryDocumentBuilders.Select(p => p.GetDocumentsAsync(idChunk, cancellationToken));
+            var chunkResults = await Task.WhenAll(tasks);
+
+            var documents = chunkResults
+                .Where(c => c != null)
+                .SelectMany(c => c.Where(d => d != null));
+            result.AddRange(documents);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Calls <paramref name="builder"/> in fixed-size sub-chunks sized by the
+    /// <c>VirtoCommerce.Search.IndexPartitionSize</c> setting, polling
+    /// <paramref name="cancellationToken"/> between chunks so the indexing job aborts promptly when
+    /// its Hangfire entry is deleted.
+    /// </summary>
+    protected virtual async Task<IList<IndexDocument>> BuildDocumentsInChunksAsync(
+        IIndexDocumentBuilder builder,
+        IList<string> documentIds,
+        CancellationToken cancellationToken)
+    {
+        var result = new List<IndexDocument>();
+
+        var partitionSize = GetPartitionSize();
+
+        foreach (var idChunk in PaginateIds(documentIds, partitionSize))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var chunkResult = await builder.GetDocumentsAsync(idChunk, cancellationToken);
+            if (chunkResult != null)
+            {
+                result.AddRange(chunkResult.Where(d => d != null));
             }
         }
 
-        protected virtual async Task<IndexDocument> BuildSchemaAsync(string documentType)
+        return result;
+    }
+
+    protected virtual IEnumerable<IList<string>> PaginateIds(IList<string> documentIds, int chunkSize)
+    {
+        if (chunkSize < 1)
         {
-            var temporaryDocumentId = Guid.NewGuid().ToString("N");
-            var schema = new IndexDocument(temporaryDocumentId);
+            throw new ArgumentException($"{nameof(chunkSize)} should be greater than 0", nameof(chunkSize));
+        }
 
-            AddSystemFields(schema);
+        if (documentIds.Count <= chunkSize)
+        {
+            // Defensive copy: builders should not mutate the list, but we don't trust the contract.
+            yield return new List<string>(documentIds);
+            yield break;
+        }
 
-            foreach (var schemaBuilder in GetSchemaBuilders(documentType))
+        for (var i = 0; i < documentIds.Count; i += chunkSize)
+        {
+            var chunk = new List<string>(Math.Min(chunkSize, documentIds.Count - i));
+            for (var j = i; j < documentIds.Count && j < i + chunkSize; j++)
             {
-                await schemaBuilder.BuildSchemaAsync(schema);
+                chunk.Add(documentIds[j]);
             }
+            yield return chunk;
+        }
+    }
 
-            return schema;
+    protected virtual void MergeDocuments(IList<IndexDocument> primaryDocuments, IList<IndexDocument> secondaryDocuments)
+    {
+        if (primaryDocuments.IsNullOrEmpty() || secondaryDocuments.IsNullOrEmpty())
+        {
+            return;
         }
 
-        protected virtual void AddSystemFields(IndexDocument document)
-        {
-            document.AddFilterableDateTime(KnownDocumentFields.IndexationDate, DateTime.UtcNow);
-        }
+        var secondaryDocumentGroups = secondaryDocuments
+            .GroupBy(d => d.Id)
+            .ToDictionary(g => g.Key, g => g, StringComparer.OrdinalIgnoreCase);
 
-        protected virtual IEnumerable<IIndexSchemaBuilder> GetSchemaBuilders(string documentType)
+        foreach (var primaryDocument in primaryDocuments)
         {
-            return _configurations.GetDocumentSources(documentType)
-                .Select(x => x.DocumentBuilder)
-                .OfType<IIndexSchemaBuilder>();
-        }
-
-        protected virtual IEnumerable<IIndexDocumentBuilder> GetDocumentBuilders(string documentType, IIndexDocumentChangesProvider provider)
-        {
-            return _configurations.GetDocumentBuilders(documentType, provider?.GetType());
-        }
-
-        protected virtual bool GetConfiguration(string documentType, out IndexDocumentConfiguration configuration)
-        {
-            return _configurations.GetConfiguration(documentType, out configuration);
-        }
-
-        protected virtual void ValidateOptions(IndexingOptions options)
-        {
-            if (options == null)
+            if (secondaryDocumentGroups.TryGetValue(primaryDocument.Id, out var secondaryDocumentGroup))
             {
-                throw new ArgumentNullException(nameof(options));
-            }
-
-            if (string.IsNullOrEmpty(options.DocumentType))
-            {
-                throw new ArgumentException($"{nameof(options.DocumentType)} is empty", nameof(options));
-            }
-
-            options.BatchSize ??= _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize) ?? DefaultBatchSize;
-
-            if (options.BatchSize < 1)
-            {
-                throw new ArgumentException($"{nameof(options.BatchSize)} {options.BatchSize} is less than 1", nameof(options));
+                foreach (var secondaryDocument in secondaryDocumentGroup)
+                {
+                    primaryDocument.Merge(secondaryDocument);
+                }
             }
         }
+    }
 
-        protected virtual void ReportProgress(Action<IndexingProgress> progressCallback, string documentType, string message)
+    protected void AggregateDocuments(IList<IndexDocument> documents, IIndexDocumentBuilder primaryDocumentBuilder, IList<IIndexDocumentBuilder> secondaryDocumentBuilders)
+    {
+        var aggregationKeyProvider = GetAggregationKeyProvider(primaryDocumentBuilder, secondaryDocumentBuilders);
+
+        if (aggregationKeyProvider == null)
         {
-            ReportProgress(progressCallback, documentType, message, processedCount: 0L, totalCount: null, errors: null);
+            return;
         }
 
-        protected virtual void ReportProgress(
-            Action<IndexingProgress> progressCallback,
-            string documentType,
-            string message,
-            long processedCount,
-            long? totalCount,
-            IList<string> errors)
+        var aggregators = GetDocumentAggregators(primaryDocumentBuilder, secondaryDocumentBuilders);
+
+        if (aggregators.IsNullOrEmpty())
         {
-            if (progressCallback == null)
+            return;
+        }
+
+        var aggregationGroups = aggregationKeyProvider.GetGroups(documents);
+
+        foreach (var aggregator in aggregators)
+        {
+            foreach (var aggregationGroup in aggregationGroups)
             {
-                return;
+                aggregator.Aggregate(aggregationGroup);
             }
+        }
+    }
 
-            string description;
+    protected virtual IIndexDocumentAggregationGroupProvider GetAggregationKeyProvider(IIndexDocumentBuilder primaryDocumentBuilder, IList<IIndexDocumentBuilder> secondaryDocumentBuilders)
+    {
+        if (primaryDocumentBuilder is IIndexDocumentAggregationGroupProvider aggregationKeyProvider)
+        {
+            return aggregationKeyProvider;
+        }
 
-            if (message != null)
+        if (secondaryDocumentBuilders != null)
+        {
+            return secondaryDocumentBuilders.OfType<IIndexDocumentAggregationGroupProvider>().FirstOrDefault();
+        }
+
+        return null;
+    }
+
+    protected virtual IList<IIndexDocumentAggregator> GetDocumentAggregators(IIndexDocumentBuilder primaryDocumentBuilder, IList<IIndexDocumentBuilder> secondaryDocumentBuilders)
+    {
+        var result = new List<IIndexDocumentAggregator>();
+
+        if (primaryDocumentBuilder is IIndexDocumentAggregator primaryDocumentAggregator)
+        {
+            result.Add(primaryDocumentAggregator);
+        }
+
+        if (secondaryDocumentBuilders != null)
+        {
+            result.AddRange(secondaryDocumentBuilders.OfType<IIndexDocumentAggregator>());
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Swap between active and backup indices, if supported
+    /// </summary>
+    protected virtual async Task SwapIndicesAsync(IndexingOptions options)
+    {
+        var documentType = options.DocumentType;
+
+        if (options.DeleteExistingIndex && _searchProvider.Is<ISupportIndexSwap>(documentType, out var swappingSupportedSearchProvider))
+        {
+            await swappingSupportedSearchProvider.SwapIndexAsync(documentType);
+        }
+    }
+
+    private async Task<IndexState> GetIndexStateAsync(string documentType, bool getBackupIndexState)
+    {
+        var result = new IndexState
+        {
+            DocumentType = documentType,
+            Provider = _searchProvider.GetProviderName(documentType, _searchOptions.Provider),
+            Scope = _searchOptions.GetScope(documentType),
+            IsActive = !getBackupIndexState,
+        };
+
+        var searchRequest = new SearchRequest
+        {
+            UseBackupIndex = getBackupIndexState,
+            Sorting = [new SortingField { FieldName = KnownDocumentFields.IndexationDate, IsDescending = true }],
+            Take = 1,
+        };
+
+        try
+        {
+            var searchResponse = await _searchProvider.SearchAsync(documentType, searchRequest);
+
+            result.IndexedDocumentsCount = searchResponse.TotalCount;
+            if (searchResponse.Documents?.Any() == true)
             {
-                description = $"{documentType}: {message}";
+                var indexationDate = searchResponse.Documents[0].FirstOrDefault(kvp => kvp.Key.EqualsIgnoreCase(KnownDocumentFields.IndexationDate));
+                if (DateTimeOffset.TryParse(indexationDate.Value.ToString(), out var lastIndexationDateTime))
+                {
+                    result.LastIndexationDate = lastIndexationDateTime.DateTime;
+                }
+            }
+        }
+        catch
+        {
+            // ignored
+        }
+
+        return result;
+    }
+
+    protected virtual async Task PrepareIndexAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, CancellationToken cancellationToken)
+    {
+        if (options.DeleteExistingIndex)
+        {
+            await DeleteIndexAsync(options, progressCallback, cancellationToken);
+            await CreateIndexAsync(options, progressCallback, cancellationToken);
+        }
+    }
+
+    protected virtual async Task DeleteIndexAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, CancellationToken cancellationToken)
+    {
+        var documentType = options.DocumentType;
+        ReportProgress(progressCallback, documentType, "deleting index");
+
+        await _searchProvider.DeleteIndexAsync(documentType);
+        // TODO: Wait until index is deleted
+    }
+
+    protected virtual async Task CreateIndexAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, CancellationToken cancellationToken)
+    {
+        var documentType = options.DocumentType;
+        ReportProgress(progressCallback, documentType, "creating index");
+
+        var schema = await BuildSchemaAsync(documentType);
+
+        if (_searchProvider.Is<ISupportIndexCreate>(documentType, out var supportIndexCreate))
+        {
+            await supportIndexCreate.CreateIndexAsync(documentType, schema);
+        }
+        else
+        {
+            var documents = new[] { schema };
+
+            if (_searchProvider.Is<ISupportIndexSwap>(documentType, out var supportIndexSwapProvider))
+            {
+                await supportIndexSwapProvider.IndexWithBackupAsync(documentType, documents);
             }
             else
             {
-                description = totalCount != null
-                    ? $"{documentType}: {processedCount} of {totalCount} have been indexed"
-                    : $"{documentType}: {processedCount} have been indexed";
+                await _searchProvider.IndexAsync(documentType, documents);
             }
 
-            progressCallback.Invoke(new IndexingProgress(description, documentType, totalCount, processedCount, errors));
+            await _searchProvider.RemoveAsync(documentType, documents);
         }
+    }
+
+    protected virtual async Task<IndexDocument> BuildSchemaAsync(string documentType)
+    {
+        var temporaryDocumentId = Guid.NewGuid().ToString("N");
+        var schema = new IndexDocument(temporaryDocumentId);
+
+        AddSystemFields(schema);
+
+        foreach (var schemaBuilder in GetSchemaBuilders(documentType))
+        {
+            await schemaBuilder.BuildSchemaAsync(schema);
+        }
+
+        return schema;
+    }
+
+    protected virtual void AddSystemFields(IndexDocument document)
+    {
+        document.AddFilterableDateTime(KnownDocumentFields.IndexationDate, DateTime.UtcNow);
+    }
+
+    protected virtual IEnumerable<IIndexSchemaBuilder> GetSchemaBuilders(string documentType)
+    {
+        return _configurations.GetDocumentSources(documentType)
+            .Select(x => x.DocumentBuilder)
+            .OfType<IIndexSchemaBuilder>();
+    }
+
+    protected virtual IEnumerable<IIndexDocumentBuilder> GetDocumentBuilders(string documentType, IIndexDocumentChangesProvider provider)
+    {
+        return _configurations.GetDocumentBuilders(documentType, provider?.GetType());
+    }
+
+    protected virtual bool GetConfiguration(string documentType, out IndexDocumentConfiguration configuration)
+    {
+        return _configurations.GetConfiguration(documentType, out configuration);
+    }
+
+    protected virtual void ValidateOptions(IndexingOptions options)
+    {
+        if (options == null)
+        {
+            throw new ArgumentNullException(nameof(options));
+        }
+
+        if (string.IsNullOrEmpty(options.DocumentType))
+        {
+            throw new ArgumentException($"{nameof(options.DocumentType)} is empty", nameof(options));
+        }
+
+        options.BatchSize ??= GetPartitionSize();
+
+        if (options.BatchSize < 1)
+        {
+            throw new ArgumentException($"{nameof(options.BatchSize)} {options.BatchSize} is less than 1", nameof(options));
+        }
+    }
+
+    protected virtual void ReportProgress(Action<IndexingProgress> progressCallback, string documentType, string message)
+    {
+        ReportProgress(progressCallback, documentType, message, processedCount: 0L, totalCount: null, errors: null);
+    }
+
+    protected virtual void ReportProgress(
+        Action<IndexingProgress> progressCallback,
+        string documentType,
+        string message,
+        long processedCount,
+        long? totalCount,
+        IList<string> errors)
+    {
+        if (progressCallback == null)
+        {
+            return;
+        }
+
+        string description;
+
+        if (message != null)
+        {
+            description = $"{documentType}: {message}";
+        }
+        else
+        {
+            description = totalCount != null
+                ? $"{documentType}: {processedCount} of {totalCount} have been indexed"
+                : $"{documentType}: {processedCount} have been indexed";
+        }
+
+        progressCallback.Invoke(new IndexingProgress(description, documentType, totalCount, processedCount, errors));
+    }
+
+    private int GetPartitionSize()
+    {
+        var indexPartitionSize = _settingsManager?.GetValue<int>(GeneralSettings.IndexPartitionSize);
+        var partitionSize = indexPartitionSize.HasValue && indexPartitionSize.Value > 0 ? indexPartitionSize.Value : DefaultBatchSize;
+        return partitionSize;
     }
 }
