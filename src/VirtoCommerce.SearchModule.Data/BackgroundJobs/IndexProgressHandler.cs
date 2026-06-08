@@ -31,7 +31,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             _pushNotificationManager = pushNotificationManager;
         }
 
-        public void Start(string currentUserName, string notificationId, bool suppressInsignificantNotifications, PerformContext context)
+        public IndexProgressPushNotification Start(string currentUserName, string notificationId, bool suppressInsignificantNotifications, PerformContext context)
         {
             _notification = GetNotification(currentUserName, notificationId);
 
@@ -47,6 +47,10 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
             _context.WriteLine(ConsoleTextColor.White, _notification.Description);
             _progressBar = _context.WriteProgressBar();
+
+            // Return the notification owned by THIS run so the caller can seal exactly this one,
+            // even if a concurrent indexation reassigns the handler's shared _notification field.
+            return _notification;
         }
 
         public void AlreadyInProgress()
@@ -95,44 +99,68 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 
         public void Exception(Exception ex)
         {
+            Exception(ex, _notification);
+        }
+
+        // Records the error on a specific notification so it is attributed to the run that failed,
+        // independent of any concurrent run reassigning the handler's shared _notification. See VCST-5091.
+        public void Exception(Exception ex, IndexProgressPushNotification notification)
+        {
             var errorMessage = ex.ToString();
 #pragma warning disable CA2254 // Template should be a static expression
             _log.LogError(errorMessage);
 #pragma warning restore CA2254 // Template should be a static expression
             _context.WriteLine(ConsoleTextColor.Red, errorMessage);
-            _notification.Errors.Add(errorMessage);
-            _notification.ErrorCount++;
+
+            notification ??= _notification;
+            notification.Errors.Add(errorMessage);
+            notification.ErrorCount++;
         }
 
         public void Finish()
         {
+            Finish(_notification);
+        }
+
+        // Seals a specific notification (sets Finished + terminal Description) and pushes it to the client.
+        // Taking the notification explicitly lets each indexation run finish the notification it started,
+        // so a concurrent run that reassigns the handler's shared _notification cannot leave an
+        // earlier run's notification stuck without a Finished timestamp (the Admin "Indexation" blade
+        // spins "In progress" until Finished is set). See VCST-5091.
+        public void Finish(IndexProgressPushNotification notification)
+        {
+            if (notification == null)
+            {
+                return;
+            }
+
             var totalCount = _totalCountMap.Values.Sum();
             var processedCount = _processedCountMap.Values.Sum();
 
-            _notification.Finished = DateTime.UtcNow;
-            _notification.TotalCount = totalCount;
-            _notification.ProcessedCount = processedCount;
+            notification.Finished = DateTime.UtcNow;
+            notification.TotalCount = totalCount;
+            notification.ProcessedCount = processedCount;
 
             if (_isCanceled)
             {
-                _notification.Description = "Indexation has been canceled";
+                notification.Description = "Indexation has been canceled";
             }
             else
             {
-                _notification.Description = !_suppressInsignificantNotifications
-                    ? "Indexation completed" + (_notification.ErrorCount > 0 ? " with errors" : " successfully")
-                    : $"{_notification.DocumentType}: Indexation completed. Total: {totalCount}, Processed: {processedCount}, Errors: {_notification.ErrorCount}.";
+                notification.Description = !_suppressInsignificantNotifications
+                    ? "Indexation completed" + (notification.ErrorCount > 0 ? " with errors" : " successfully")
+                    : $"{notification.DocumentType}: Indexation completed. Total: {totalCount}, Processed: {processedCount}, Errors: {notification.ErrorCount}.";
             }
 
-            _log.LogTrace(_notification.Description);
+            _log.LogTrace(notification.Description);
 
             if (!_suppressInsignificantNotifications || _isCanceled || totalCount > 0 || processedCount > 0)
             {
-                _pushNotificationManager.Send(_notification);
+                _pushNotificationManager.Send(notification);
             }
 
-            UpdateHangfireProgressBar(processedCount, totalCount, _notification.DocumentType);
-            _context.WriteLine(ConsoleTextColor.White, _notification.Description);
+            UpdateHangfireProgressBar(processedCount, totalCount, notification.DocumentType);
+            _context.WriteLine(ConsoleTextColor.White, notification.Description);
         }
 
         public static IndexProgressPushNotification CreateNotification(string currentUserName, string notificationId)
