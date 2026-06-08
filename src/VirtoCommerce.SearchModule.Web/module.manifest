@@ -14,7 +14,7 @@
     <owner>Virto Commerce</owner>
   </owners>
   <projectUrl>https://github.com/VirtoCommerce/vc-module-search</projectUrl>
-  <iconUrl>Modules/$(VirtoCommerce.Search)/Content/logoVC.png</iconUrl>
+  <iconUrl>Modules/$(VirtoCommerce.Search)/Content/logo.svg</iconUrl>
   <requireLicenseAcceptance>false</requireLicenseAcceptance>
   <releaseNotes />
   <copyright>Copyright © 2011–2026 Virto Commerce. All rights reserved</copyright>

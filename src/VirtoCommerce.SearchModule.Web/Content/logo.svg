@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Search">
+  <title>Search</title>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="92%" y2="100%">
+      <stop offset="0%" stop-color="#3FD8B4"/>
+      <stop offset="100%" stop-color="#0E9E80"/>
+    </linearGradient>
+    <filter id="lift" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="#064F40" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+
+  <g transform="translate(64,64)" filter="url(#lift)">
+    <!-- Handle -->
+    <line x1="14" y1="14" x2="40" y2="40" stroke="#0C6A55" stroke-width="13" stroke-linecap="round"/>
+    <!-- Lens -->
+    <circle cx="-6" cy="-6" r="29" fill="#ffffff" stroke="#0C6A55" stroke-width="6"/>
+    <!-- Result tiles -->
+    <rect x="-19" y="-19" width="13" height="13" rx="3" fill="#FFC24D"/>
+    <rect x="-2" y="-19" width="13" height="13" rx="3" fill="#5FC8F5"/>
+    <rect x="-19" y="-2" width="13" height="13" rx="3" fill="#E5484D"/>
+    <rect x="-2" y="-2" width="13" height="13" rx="3" fill="#9D86F5"/>
+  </g>
+</svg>
