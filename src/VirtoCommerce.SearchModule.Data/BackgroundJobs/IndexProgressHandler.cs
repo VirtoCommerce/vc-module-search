@@ -147,8 +147,9 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             }
             else
             {
+                var resultSuffix = notification.ErrorCount > 0 ? " with errors" : " successfully";
                 notification.Description = !_suppressInsignificantNotifications
-                    ? "Indexation completed" + (notification.ErrorCount > 0 ? " with errors" : " successfully")
+                    ? "Indexation completed" + resultSuffix
                     : $"{notification.DocumentType}: Indexation completed. Total: {totalCount}, Processed: {processedCount}, Errors: {notification.ErrorCount}.";
             }
 
