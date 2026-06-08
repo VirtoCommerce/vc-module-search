@@ -121,17 +121,11 @@ public sealed class IndexingJobs : IIndexingJobService
     // ShutdownToken only fires on server shutdown (NOT Hangfire-side deletion), so jobs that
     // flow through the shim are less responsive to "Delete" until the queue has fully drained.
     [Queue(JobPriority.Normal)]
-    public async Task IndexAllDocumentsJob(string userName, string notificationId, IndexingOptions[] options, PerformContext context, CancellationToken cancellationToken)
+    public Task IndexAllDocumentsJob(string userName, string notificationId, IndexingOptions[] options, PerformContext context, CancellationToken cancellationToken)
     {
-        try
-        {
-            await RunIndexJobAsync(userName, notificationId, false, options, IndexAllDocumentsAsync, context, cancellationToken);
-        }
-        finally
-        {
-            // Report indexation summary
-            _progressHandler.Finish();
-        }
+        // The notification is sealed inside RunIndexJobAsync's finally (for both manual and recurring
+        // jobs), so each run finishes the notification it actually started. See VCST-5091.
+        return RunIndexJobAsync(userName, notificationId, false, options, IndexAllDocumentsAsync, context, cancellationToken);
     }
 
     [Queue(JobPriority.Normal)]
@@ -388,8 +382,11 @@ public sealed class IndexingJobs : IIndexingJobService
 
         var success = false;
 
-        // Reset progress handler to initial state
-        _progressHandler.Start(currentUserName, notificationId, suppressInsignificantNotifications, context);
+        // Reset progress handler to initial state.
+        // Capture the notification owned by THIS run so it is always sealed (Finished set) below,
+        // even if a concurrent indexation reassigns the shared handler state. Otherwise the
+        // Admin "Indexation" blade keeps spinning "In progress" forever (VCST-5091).
+        var notification = _progressHandler.Start(currentUserName, notificationId, suppressInsignificantNotifications, context);
 
         // Make sure only one indexation job can run in the cluster.
         // CAUTION: locking mechanism assumes single threaded execution.
@@ -416,15 +413,14 @@ public sealed class IndexingJobs : IIndexingJobService
                 }
                 catch (Exception ex)
                 {
-                    _progressHandler.Exception(ex);
+                    _progressHandler.Exception(ex, notification);
                 }
                 finally
                 {
-                    // Report indexation summary only for "Recurring job for automatic changes indexation."
-                    if (notificationId.IsNullOrEmpty())
-                    {
-                        _progressHandler.Finish();
-                    }
+                    // Always seal this run's notification so it reaches a terminal state.
+                    // (Previously deferred to IndexAllDocumentsJob's outer finally for manual jobs,
+                    // which sealed whatever the shared _notification pointed at by then.)
+                    _progressHandler.Finish(notification);
                 }
             }
         }
