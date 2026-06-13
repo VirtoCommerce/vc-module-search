@@ -26,11 +26,6 @@ public sealed class IndexingJobs : IIndexingJobService
     private static readonly MethodInfo _recurringJobMethod = typeof(IndexingJobs).GetMethod(nameof(IndexChangesJob), [typeof(string), typeof(PerformContext), typeof(CancellationToken)]);
     private static readonly MethodInfo _manualJobMethod = typeof(IndexingJobs).GetMethod(nameof(IndexAllDocumentsJob), [typeof(string), typeof(string), typeof(IndexingOptions[]), typeof(PerformContext), typeof(CancellationToken)]);
 
-    // Hangfire's SqlServer monitoring API eagerly reads stateData["ServerName"] when materializing
-    // ProcessingJobs. A job whose Processing state row is still mid-write lacks that key and throws
-    // KeyNotFoundException during enumeration, failing the whole cancel call (VCST-5218, VP-7752).
-    // The write settles within milliseconds, so a short retry recovers the real list and lets the
-    // cancel actually succeed - instead of masking the target job as "not found".
     private static readonly ResiliencePipeline _processingJobsRetryPipeline = new ResiliencePipelineBuilder()
         .AddRetry(new RetryStrategyOptions
         {
@@ -121,7 +116,6 @@ public sealed class IndexingJobs : IIndexingJobService
             {
                 // Ignore concurrency exceptions, when somebody else cancelled it as well.
                 _logger.LogError(ex, "Error cancelling indexing job {JobId}", jobId);
-                throw;
             }
         }
     }
