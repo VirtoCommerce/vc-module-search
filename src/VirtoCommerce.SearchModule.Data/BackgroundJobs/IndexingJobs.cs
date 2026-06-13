@@ -94,9 +94,6 @@ public sealed class IndexingJobs : IIndexingJobService
         var processingJobs = _processingJobsRetryPipeline.Execute(static () =>
             JobStorage.Current.GetMonitoringApi().ProcessingJobs(0, int.MaxValue));
 
-        // Match by name + declaring type (rather than by exact MethodInfo reference) so that
-        // jobs running through the [Obsolete] IJobCancellationToken-flavored shim overloads
-        // are also cancelled. Hangfire treats each overload as a distinct method.
         var (jobId, _) = processingJobs.FirstOrDefault(x =>
             x.Value?.Job?.Method is { } running &&
             running.DeclaringType == method.DeclaringType &&
@@ -236,11 +233,6 @@ public sealed class IndexingJobs : IIndexingJobService
 
         return result.GroupBy(x => x.Type);
     }
-
-    // Hard-coded one method per Hangfire queue so that [Queue] picks the right one at enqueue time.
-    // Each modern overload is followed by its [Obsolete] no-token shim that exists only to deserialize
-    // in-flight queue items left over from the pre-CancellationToken signature. New code MUST call
-    // the modern overload.
 
     [Queue(JobPriority.High)]
     public Task IndexDocumentsHighPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
