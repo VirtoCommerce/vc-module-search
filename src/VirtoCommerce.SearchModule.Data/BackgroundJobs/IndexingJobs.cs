@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using Hangfire;
 using Hangfire.Server;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Polly;
+using Polly.Retry;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Jobs;
 using VirtoCommerce.Platform.Core.Settings;
@@ -23,37 +26,39 @@ public sealed class IndexingJobs : IIndexingJobService
     private static readonly MethodInfo _recurringJobMethod = typeof(IndexingJobs).GetMethod(nameof(IndexChangesJob), [typeof(string), typeof(PerformContext), typeof(CancellationToken)]);
     private static readonly MethodInfo _manualJobMethod = typeof(IndexingJobs).GetMethod(nameof(IndexAllDocumentsJob), [typeof(string), typeof(string), typeof(IndexingOptions[]), typeof(PerformContext), typeof(CancellationToken)]);
 
+    // Hangfire's SqlServer monitoring API eagerly reads stateData["ServerName"] when materializing
+    // ProcessingJobs. A job whose Processing state row is still mid-write lacks that key and throws
+    // KeyNotFoundException during enumeration, failing the whole cancel call (VCST-5218, VP-7752).
+    // The write settles within milliseconds, so a short retry recovers the real list and lets the
+    // cancel actually succeed - instead of masking the target job as "not found".
+    private static readonly ResiliencePipeline _processingJobsRetryPipeline = new ResiliencePipelineBuilder()
+        .AddRetry(new RetryStrategyOptions
+        {
+            ShouldHandle = new Polly.PredicateBuilder().Handle<KeyNotFoundException>(),
+            MaxRetryAttempts = 3,
+            Delay = TimeSpan.FromMilliseconds(50),
+            BackoffType = DelayBackoffType.Linear,
+        })
+        .Build();
+
     private readonly IEnumerable<IndexDocumentConfiguration> _documentsConfigs;
     private readonly IIndexingManager _indexingManager;
     private readonly ISettingsManager _settingsManager;
     private readonly IndexProgressHandler _progressHandler;
-    private readonly ILogger<IndexingJobs> _log;
+    private readonly ILogger<IndexingJobs> _logger;
 
     public IndexingJobs(
         IEnumerable<IndexDocumentConfiguration> documentsConfigs,
         IIndexingManager indexingManager,
         ISettingsManager settingsManager,
         IndexProgressHandler progressHandler,
-        ILogger<IndexingJobs> log)
+        ILogger<IndexingJobs> logger)
     {
         _documentsConfigs = documentsConfigs;
         _indexingManager = indexingManager;
         _settingsManager = settingsManager;
         _progressHandler = progressHandler;
-        _log = log;
-    }
-
-    // Backwards-compatible constructor for callers that wired up IndexingJobs before the
-    // ILogger<IndexingJobs> parameter was introduced. Cancellation logging will be silently
-    // skipped when no logger is supplied; everything else continues to work.
-    [Obsolete("Use the constructor that accepts ILogger<IndexingJobs>.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    public IndexingJobs(
-        IEnumerable<IndexDocumentConfiguration> documentsConfigs,
-        IIndexingManager indexingManager,
-        ISettingsManager settingsManager,
-        IndexProgressHandler progressHandler)
-        : this(documentsConfigs, indexingManager, settingsManager, progressHandler, log: null)
-    {
+        _logger = logger ?? NullLogger<IndexingJobs>.Instance;
     }
 
     // Enqueue a background job with single notification object for all given options
@@ -89,9 +94,10 @@ public sealed class IndexingJobs : IIndexingJobService
         CancelJob(_manualJobMethod);
     }
 
-    private static void CancelJob(MethodInfo method)
+    private void CancelJob(MethodInfo method)
     {
-        var processingJobs = JobStorage.Current.GetMonitoringApi().ProcessingJobs(0, int.MaxValue);
+        var processingJobs = _processingJobsRetryPipeline.Execute(static () =>
+            JobStorage.Current.GetMonitoringApi().ProcessingJobs(0, int.MaxValue));
 
         // Match by name + declaring type (rather than by exact MethodInfo reference) so that
         // jobs running through the [Obsolete] IJobCancellationToken-flavored shim overloads
@@ -105,37 +111,28 @@ public sealed class IndexingJobs : IIndexingJobService
         {
             try
             {
+                _logger.LogInformation("Attempting to cancel indexing job. Method: {MethodName}. JobId: {JobId}", method.Name, jobId);
+
                 BackgroundJob.Delete(jobId);
+
+                _logger.LogInformation("Indexing job cancellation requested. Method: {MethodName}. JobId: {JobId}", method.Name, jobId);
             }
-            catch
+            catch (Exception ex)
             {
                 // Ignore concurrency exceptions, when somebody else cancelled it as well.
+                _logger.LogError(ex, "Error cancelling indexing job {JobId}", jobId);
+                throw;
             }
         }
     }
 
 
-    // One-time job for manual indexation.
-    // The IJobCancellationToken-flavored overload below is a Hangfire compatibility shim for
-    // queue items enqueued before the CancellationToken-based signature was introduced.
-    // ShutdownToken only fires on server shutdown (NOT Hangfire-side deletion), so jobs that
-    // flow through the shim are less responsive to "Delete" until the queue has fully drained.
     [Queue(JobPriority.Normal)]
     public Task IndexAllDocumentsJob(string userName, string notificationId, IndexingOptions[] options, PerformContext context, CancellationToken cancellationToken)
     {
-        // The notification is sealed inside RunIndexJobAsync's finally (for both manual and recurring
-        // jobs), so each run finishes the notification it actually started. See VCST-5091.
         return RunIndexJobAsync(userName, notificationId, false, options, IndexAllDocumentsAsync, context, cancellationToken);
     }
 
-    [Queue(JobPriority.Normal)]
-    [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    public Task IndexAllDocumentsJob(string userName, string notificationId, IndexingOptions[] options, PerformContext context, IJobCancellationToken cancellationToken)
-        => IndexAllDocumentsJob(userName, notificationId, options, context, cancellationToken?.ShutdownToken ?? CancellationToken.None);
-
-    // Recurring job for automatic changes indexation.
-    // It should push separate notification for each document type if any changes were indexed for this type.
-    // The IJobCancellationToken-flavored overload below is the Hangfire queue compatibility shim.
     [Queue(JobPriority.Normal)]
     [AutomaticRetry(Attempts = 0)]
     [DisableConcurrentExecution(10)]
@@ -147,13 +144,6 @@ public sealed class IndexingJobs : IIndexingJobService
             await RunIndexJobAsync(null, null, true, [options], IndexChangesAsync, context, cancellationToken);
         }
     }
-
-    [Queue(JobPriority.Normal)]
-    [AutomaticRetry(Attempts = 0)]
-    [DisableConcurrentExecution(10)]
-    [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    public Task IndexChangesJob(string documentType, PerformContext context, IJobCancellationToken cancellationToken)
-        => IndexChangesJob(documentType, context, cancellationToken?.ShutdownToken ?? CancellationToken.None);
 
 
     private static void EnqueueIndexDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
@@ -264,21 +254,11 @@ public sealed class IndexingJobs : IIndexingJobService
         return IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, cancellationToken);
     }
 
-    [Queue(JobPriority.High)]
-    [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    public Task IndexDocumentsHighPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes)
-        => IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, CancellationToken.None);
-
     [Queue(JobPriority.Normal)]
     public Task IndexDocumentsNormalPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
     {
         return IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, cancellationToken);
     }
-
-    [Queue(JobPriority.Normal)]
-    [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    public Task IndexDocumentsNormalPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes)
-        => IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, CancellationToken.None);
 
     [Queue(JobPriority.Low)]
     public Task IndexDocumentsLowPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
@@ -286,21 +266,11 @@ public sealed class IndexingJobs : IIndexingJobService
         return IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, cancellationToken);
     }
 
-    [Queue(JobPriority.Low)]
-    [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    public Task IndexDocumentsLowPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes)
-        => IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, CancellationToken.None);
-
     [Queue(JobPriority.High)]
     public Task DeleteDocumentsHighPriorityAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
     {
         return DeleteDocumentsCoreAsync(documentType, documentIds, cancellationToken);
     }
-
-    [Queue(JobPriority.High)]
-    [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    public Task DeleteDocumentsHighPriorityAsync(string documentType, string[] documentIds)
-        => DeleteDocumentsCoreAsync(documentType, documentIds, CancellationToken.None);
 
     [Queue(JobPriority.Normal)]
     public Task DeleteDocumentsNormalPriorityAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
@@ -308,21 +278,11 @@ public sealed class IndexingJobs : IIndexingJobService
         return DeleteDocumentsCoreAsync(documentType, documentIds, cancellationToken);
     }
 
-    [Queue(JobPriority.Normal)]
-    [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    public Task DeleteDocumentsNormalPriorityAsync(string documentType, string[] documentIds)
-        => DeleteDocumentsCoreAsync(documentType, documentIds, CancellationToken.None);
-
     [Queue(JobPriority.Low)]
     public Task DeleteDocumentsLowPriorityAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
     {
         return DeleteDocumentsCoreAsync(documentType, documentIds, cancellationToken);
     }
-
-    [Queue(JobPriority.Low)]
-    [Obsolete("Hangfire compatibility shim for legacy queue items. Use the overload with CancellationToken.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    public Task DeleteDocumentsLowPriorityAsync(string documentType, string[] documentIds)
-        => DeleteDocumentsCoreAsync(documentType, documentIds, CancellationToken.None);
 
     private async Task IndexDocumentsCoreAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
     {
@@ -338,7 +298,7 @@ public sealed class IndexingJobs : IIndexingJobService
         }
         catch (OperationCanceledException)
         {
-            _log?.LogWarning("Bulk index job was cancelled. DocumentType: {DocumentType}, DocumentCount: {DocumentCount}",
+            _logger.LogWarning("Bulk index job was cancelled. DocumentType: {DocumentType}, DocumentCount: {DocumentCount}",
                 documentType, documentIds.Length);
             throw;
         }
@@ -358,7 +318,7 @@ public sealed class IndexingJobs : IIndexingJobService
         }
         catch (OperationCanceledException)
         {
-            _log?.LogWarning("Bulk delete job was cancelled. DocumentType: {DocumentType}, DocumentCount: {DocumentCount}",
+            _logger.LogWarning("Bulk delete job was cancelled. DocumentType: {DocumentType}, DocumentCount: {DocumentCount}",
                 documentType, documentIds.Length);
             throw;
         }
@@ -407,7 +367,7 @@ public sealed class IndexingJobs : IIndexingJobService
                 catch (OperationCanceledException)
                 {
                     var documentTypes = string.Join(", ", optionsArray.Select(o => o?.DocumentType ?? "<null>"));
-                    _log?.LogWarning("Indexing job {JobId} was cancelled. User: {UserName}, NotificationId: {NotificationId}, DocumentTypes: {DocumentTypes}",
+                    _logger.LogWarning("Indexing job {JobId} was cancelled. User: {UserName}, NotificationId: {NotificationId}, DocumentTypes: {DocumentTypes}",
                         context?.BackgroundJob?.Id, currentUserName, notificationId, documentTypes);
                     _progressHandler.Cancel();
                 }
