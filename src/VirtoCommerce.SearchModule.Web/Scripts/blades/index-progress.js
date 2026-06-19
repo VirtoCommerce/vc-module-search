@@ -79,6 +79,6 @@ angular.module('virtoCommerce.searchModule')
 
                 var seconds = Math.floor(elapsedMs / (1000));
 
-                return `${hours}:${minutes}:${seconds}`;
+                return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             }
         }]);

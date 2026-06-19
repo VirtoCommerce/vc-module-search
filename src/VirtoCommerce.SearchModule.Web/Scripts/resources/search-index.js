@@ -7,6 +7,7 @@ angular.module('virtoCommerce.searchModule')
         index: { method: 'POST', url: 'api/search/indexes/index' },       
         cancel: { method: 'GET', url: 'api/search/indexes/tasks/:taskId/cancel' },
         swapIndexSupported: { method: 'GET', url: 'api/search/indexes/swapIndexSupported' },
-        swapIndex: { method: 'POST', url: 'api/search/indexes/swapIndex' }
+        swapIndex: { method: 'POST', url: 'api/search/indexes/swapIndex' },
+        indexCategoryProducts: { method: 'POST', url: 'api/catalog/categories/:id/index/products', params: { id: '@id' } }
     });
 }]);

@@ -7,7 +7,8 @@
       "swap-index": "Intercambiar índices",
       "show-backup-indices": "Mostrar índices de respaldo",
       "hide-backup-indices": "Ocultar índices de respaldo",
-      "value-mapping": "Asignación de valores"
+      "value-mapping": "Asignación de valores",
+      "build-products-index": "Construir índice de productos"
     },
     "main-menu-title": {
       "search-index": "Índice de búsqueda"
@@ -84,6 +85,10 @@
       "value-mapping-save-values": {
         "title": "Guardar cambios",
         "message": "Esta asignación de valores se ha modificado. ¿Desea guardar los cambios?"
+      },
+      "build-products-index": {
+        "title": "Construir índice de productos",
+        "message": "Esto reconstruirá el índice de búsqueda para todos los productos de esta categoría y sus subcategorías. ¿Está seguro de que desea continuar?"
       }
     },
     "widgets": {

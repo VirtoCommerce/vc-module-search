@@ -7,7 +7,8 @@
       "swap-index": "Indizes tauschen",
       "show-backup-indices": "Sicherungsindizes anzeigen",
       "hide-backup-indices": "Sicherungsindizes ausblenden",
-      "value-mapping": "Wertezuordnung"
+      "value-mapping": "Wertezuordnung",
+      "build-products-index": "Produktindex erstellen"
     },
     "main-menu-title": {
       "search-index": "Suchindex"
@@ -84,6 +85,10 @@
       "value-mapping-save-values": {
         "title": "Änderungen speichern",
         "message": "Diese Wertzuordnung wurde geändert. Möchten Sie die Änderungen speichern?"
+      },
+      "build-products-index": {
+        "title": "Produktindex erstellen",
+        "message": "Hiermit wird der Suchindex für alle Produkte in dieser Kategorie und ihren Unterkategorien neu erstellt. Sind Sie sicher, dass Sie fortfahren möchten?"
       }
     },
     "widgets": {

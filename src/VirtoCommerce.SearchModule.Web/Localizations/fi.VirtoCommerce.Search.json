@@ -7,7 +7,8 @@
       "swap-index": "Vaihda indeksit",
       "show-backup-indices": "Näytä varmuuskopioindeksit",
       "hide-backup-indices": "Piilota varmuuskopioindeksit",
-      "value-mapping": "Arvomääritys"
+      "value-mapping": "Arvomääritys",
+      "build-products-index": "Rakenna tuoteindeksi"
     },
     "main-menu-title": {
       "search-index": "Hakuindeksi"
@@ -84,6 +85,10 @@
       "value-mapping-save-values": {
         "title": "Tallenna muutokset",
         "message": "Arvomääritystä on muokattu. Haluatko tallentaa muutokset?"
+      },
+      "build-products-index": {
+        "title": "Rakenna tuoteindeksi",
+        "message": "Tämä jälleenrakentaa hakuindeksin kaikille tässä kategoriassa ja sen alakategorioissa oleville tuotteille. Haluatko varmasti jatkaa?"
       }
     },
     "widgets": {

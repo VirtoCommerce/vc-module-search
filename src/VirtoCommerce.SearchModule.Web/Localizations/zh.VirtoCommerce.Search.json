@@ -7,7 +7,8 @@
       "swap-index": "切换索引",
       "show-backup-indices": "显示备份索引",
       "hide-backup-indices": "隐藏备份索引",
-      "value-mapping": "值映射"
+      "value-mapping": "值映射",
+      "build-products-index": "构建产品索引"
     },
     "main-menu-title": {
       "search-index": "搜索索引"
@@ -84,6 +85,10 @@
       "value-mapping-save-values": {
         "title": "保存更改",
         "message": "此值映射已被修改。是否保存更改？"
+      },
+      "build-products-index": {
+        "title": "构建产品索引",
+        "message": "这将为该类别及其子类别中的所有产品重建搜索索引。您确定要继续吗？"
       }
     },
     "widgets": {

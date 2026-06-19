@@ -7,7 +7,8 @@
       "swap-index": "インデックスを交換",
       "show-backup-indices": "バックアップインデックスを表示",
       "hide-backup-indices": "バックアップインデックスを非表示",
-      "value-mapping": "値マッピング"
+      "value-mapping": "値マッピング",
+      "build-products-index": "製品インデックスを構築"
     },
     "main-menu-title": {
       "search-index": "検索インデックス"
@@ -84,6 +85,10 @@
       "value-mapping-save-values": {
         "title": "変更を保存",
         "message": "この値マッピングは変更されました。変更を保存しますか？"
+      },
+      "build-products-index": {
+        "title": "製品インデックスを構築",
+        "message": "このカテゴリとそのサブカテゴリのすべての製品の検索インデックスを再構築します。続行してもよろしいですか？"
       }
     },
     "widgets": {

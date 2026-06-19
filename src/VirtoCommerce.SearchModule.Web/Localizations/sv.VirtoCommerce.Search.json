@@ -7,7 +7,8 @@
       "swap-index": "Byt index",
       "show-backup-indices": "Visa säkerhetskopierade index",
       "hide-backup-indices": "Dölj säkerhetskopierade index",
-      "value-mapping": "Värdemappning"
+      "value-mapping": "Värdemappning",
+      "build-products-index": "Bygg produktindex"
     },
     "main-menu-title": {
       "search-index": "Sökindex"
@@ -84,6 +85,10 @@
       "value-mapping-save-values": {
         "title": "Spara ändringar",
         "message": "Värdemappningen har ändrats. Vill du spara ändringarna?"
+      },
+      "build-products-index": {
+        "title": "Bygg produktindex",
+        "message": "Detta kommer att återskapa sökindexet för alla produkter i den här kategorin och dess underkategorier. Är du säker på att du vill fortsätta?"
       }
     },
     "widgets": {

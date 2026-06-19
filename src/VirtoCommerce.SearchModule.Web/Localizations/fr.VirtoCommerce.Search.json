@@ -7,7 +7,8 @@
       "swap-index": "Échanger les index",
       "show-backup-indices": "Afficher les index de sauvegarde",
       "hide-backup-indices": "Masquer les index de sauvegarde",
-      "value-mapping": "Correspondance des valeurs"
+      "value-mapping": "Correspondance des valeurs",
+      "build-products-index": "Construire l'index des produits"
     },
     "main-menu-title": {
       "search-index": "Index de recherche"
@@ -84,6 +85,10 @@
       "value-mapping-save-values": {
         "title": "Enregistrer les modifications",
         "message": "Cette correspondance de valeurs a été modifiée. Voulez-vous enregistrer les modifications ?"
+      },
+      "build-products-index": {
+        "title": "Construire l'index des produits",
+        "message": "Cela reconstruira l'index de recherche pour tous les produits de cette catégorie et de ses sous-catégories. Êtes-vous sûr de vouloir continuer ?"
       }
     },
     "widgets": {

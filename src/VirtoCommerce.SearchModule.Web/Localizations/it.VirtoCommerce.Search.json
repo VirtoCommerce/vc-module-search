@@ -7,7 +7,8 @@
       "swap-index": "Scambia indici",
       "show-backup-indices": "Mostra indici di backup",
       "hide-backup-indices": "Nascondi indici di backup",
-      "value-mapping": "Mappatura valori"
+      "value-mapping": "Mappatura valori",
+      "build-products-index": "Costruisci indice prodotti"
     },
     "main-menu-title": {
       "search-index": "Indice di ricerca"
@@ -84,6 +85,10 @@
       "value-mapping-save-values": {
         "title": "Salva modifiche",
         "message": "Questa mappatura valori è stata modificata. Salvare le modifiche?"
+      },
+      "build-products-index": {
+        "title": "Costruisci indice prodotti",
+        "message": "Verrà ricostruito l'indice di ricerca per tutti i prodotti di questa categoria e delle sue sottocategorie. Sei sicuro di voler continuare?"
       }
     },
     "widgets": {

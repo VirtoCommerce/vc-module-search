@@ -7,7 +7,8 @@
       "swap-index": "Bytt indekser",
       "show-backup-indices": "Vis sikkerhetskopi-indekser",
       "hide-backup-indices": "Skjul sikkerhetskopi-indekser",
-      "value-mapping": "Verditilordning"
+      "value-mapping": "Verditilordning",
+      "build-products-index": "Bygg produktindeks"
     },
     "main-menu-title": {
       "search-index": "Søkeindeks"
@@ -84,6 +85,10 @@
       "value-mapping-save-values": {
         "title": "Lagre endringer",
         "message": "Verditilordningen er endret. Vil du lagre endringene?"
+      },
+      "build-products-index": {
+        "title": "Bygg produktindeks",
+        "message": "Dette vil gjenoppbygge søkeindeksen for alle produkter i denne kategorien og dens underkategorier. Er du sikker på at du vil fortsette?"
       }
     },
     "widgets": {

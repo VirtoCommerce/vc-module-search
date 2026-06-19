@@ -7,7 +7,8 @@
       "swap-index": "Swap indices",
       "show-backup-indices": "Show backup indices",
       "hide-backup-indices": "Hide backup indices",
-      "value-mapping": "Value mapping"
+      "value-mapping": "Value mapping",
+      "build-products-index": "Build products index"
     },
     "main-menu-title": {
       "search-index": "Search index"
@@ -84,6 +85,10 @@
       "value-mapping-save-values": {
         "title": "Save changes",
         "message": "This value mapping has been modified. Do you want to save changes?"
+      },
+      "build-products-index": {
+        "title": "Build products index",
+        "message": "This will rebuild the search index for all products in this category and its subcategories. Are you sure you want to continue?"
       }
     },
     "widgets": {
