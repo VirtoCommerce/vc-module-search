@@ -3,7 +3,7 @@
   <id>VirtoCommerce.Search</id>
   <version>3.1004.0</version>
   <version-tag />
-  <platformVersion>3.1002.0</platformVersion>
+  <platformVersion>3.1039.0</platformVersion>
   <dependencies></dependencies>
   <title>Search Core</title>
   <description>Defines Core Abstractions for indexed search functionality above different search providers, like: Elasticsearch, Azure Search, etc.</description>
