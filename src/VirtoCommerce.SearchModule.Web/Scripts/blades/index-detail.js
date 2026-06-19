@@ -1,5 +1,7 @@
 angular.module('virtoCommerce.searchModule')
-    .controller('virtoCommerce.searchModule.indexDetailController', ['$scope', 'platformWebApp.bladeNavigationService', 'platformWebApp.dialogService', 'virtoCommerce.searchModule.searchIndexation', function ($scope, bladeNavigationService, dialogService, searchIndexationApi) {
+    .controller('virtoCommerce.searchModule.indexDetailController',
+    ['$scope', 'platformWebApp.bladeNavigationService', 'platformWebApp.dialogService', 'virtoCommerce.searchModule.searchIndexation',
+    function ($scope, bladeNavigationService, dialogService, searchIndexationApi) {
         var blade = $scope.blade;
 
         blade.initialize = function (data) {
@@ -47,7 +49,7 @@ angular.module('virtoCommerce.searchModule')
             blade.toolbarCommands.push({
                 name: "search.commands.build-products-index",
                 icon: 'fa fa-recycle',
-                executeMethod: function (blade) {
+                executeMethod: function () {
                     var dialog = {
                         id: 'confirmBuildProductsIndex',
                         callback: function (confirmed) {
@@ -67,7 +69,9 @@ angular.module('virtoCommerce.searchModule')
                             }
                         }
                     };
-                    dialogService.showDialog(dialog, 'Modules/$(VirtoCommerce.Search)/Scripts/dialogs/build-products-index-dialog.tpl.html', 'platformWebApp.confirmDialogController');
+                    dialogService.showDialog(dialog,
+                        'Modules/$(VirtoCommerce.Search)/Scripts/dialogs/build-products-index-dialog.tpl.html',
+                        'platformWebApp.confirmDialogController');
                 },
                 canExecuteMethod: function () { return true; },
                 permission: 'search:index:rebuild'
