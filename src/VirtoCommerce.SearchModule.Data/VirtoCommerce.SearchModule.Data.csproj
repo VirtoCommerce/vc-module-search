@@ -19,7 +19,7 @@
   <ItemGroup>
     <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
     <PackageReference Include="Polly" Version="8.6.6" />
-    <PackageReference Include="VirtoCommerce.Platform.Hangfire" Version="3.1002.0" />
+    <PackageReference Include="VirtoCommerce.Platform.Hangfire" Version="3.1039.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\VirtoCommerce.SearchModule.Core\VirtoCommerce.SearchModule.Core.csproj" />

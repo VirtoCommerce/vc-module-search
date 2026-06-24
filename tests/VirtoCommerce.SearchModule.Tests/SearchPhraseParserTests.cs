@@ -962,6 +962,36 @@ namespace VirtoCommerce.SearchModule.Tests
         }
 
 
+        /// <summary>
+        /// Reproduces the production search phrase that triggers the ANTLR "Attempting full context" /
+        /// "Ambiguity at 3-13" diagnostic warnings logged by <see cref="ErrorListener"/>.
+        /// The warnings are benign: ANTLR resolves the grammar ambiguity (how to group the two
+        /// space-separated filters) deterministically, so the parse result is still correct.
+        /// </summary>
+        [Fact]
+        public void TestCategorySubtreeAndMultiValueCode_ParsesCorrectly_DespiteAmbiguityWarning()
+        {
+            var parser = GetParser();
+            var result = parser.Parse("category.subtree:043957a5d23d4e1dbafdb80c12014c5f/c810d213bea94c5fa55408cc5103186f code:AGP,ZRH,NCE,PMI");
+
+            Assert.NotNull(result);
+            Assert.Equal(string.Empty, result.Keyword);
+            Assert.NotNull(result.Filters);
+            Assert.Equal(2, result.Filters.Count);
+
+            var categoryFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "category.subtree") as TermFilter;
+            Assert.NotNull(categoryFilter);
+            Assert.NotNull(categoryFilter.Values);
+            Assert.Single(categoryFilter.Values);
+            Assert.Equal("043957a5d23d4e1dbafdb80c12014c5f/c810d213bea94c5fa55408cc5103186f", categoryFilter.Values.First());
+
+            var codeFilter = result.Filters.FirstOrDefault(x => (x as INamedFilter).FieldName == "code") as TermFilter;
+            Assert.NotNull(codeFilter);
+            Assert.NotNull(codeFilter.Values);
+            Assert.Equal(4, codeFilter.Values.Count);
+            Assert.Equal(["AGP", "ZRH", "NCE", "PMI"], codeFilter.Values);
+        }
+
         private static ISearchPhraseParser GetParser()
         {
             var logger = new Mock<ILogger<SearchPhraseParser>>();
