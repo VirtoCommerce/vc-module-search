@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Hangfire.Console;
@@ -42,8 +43,12 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             _suppressInsignificantNotifications = suppressInsignificantNotifications;
             _context = context;
             _isCanceled = false;
-            _totalCountMap = new Dictionary<string, long>();
-            _processedCountMap = new Dictionary<string, long>();
+            // Progress() is invoked concurrently across document-type configurations
+            // (IndexingManager.ProcessConfigurationAsync -> ReportProgress), so these counter maps
+            // must be thread-safe. A plain Dictionary corrupts its internal arrays on concurrent
+            // indexer writes -> IndexOutOfRangeException in Dictionary.TryInsert (VCST-5416).
+            _totalCountMap = new ConcurrentDictionary<string, long>();
+            _processedCountMap = new ConcurrentDictionary<string, long>();
 
             _context.WriteLine(ConsoleTextColor.White, _notification.Description);
             _progressBar = _context.WriteProgressBar();
