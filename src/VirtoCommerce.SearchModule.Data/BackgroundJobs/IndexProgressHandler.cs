@@ -2,11 +2,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using Hangfire.Console;
-using Hangfire.Console.Progress;
-using Hangfire.Server;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.Platform.Core.Jobs;
 using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.SearchModule.Core.Model;
 
@@ -22,9 +21,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
         private IndexProgressPushNotification _notification;
         private bool _suppressInsignificantNotifications;
         private bool _isCanceled;
-        private PerformContext _context;
-        private IProgressBar _progressBar;
-        private const int _maxPercent = 100;
+        private IJobProgress _progress;
 
         public IndexProgressHandler(ILogger<IndexProgressHandler> log, IPushNotificationManager pushNotificationManager)
         {
@@ -32,7 +29,12 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             _pushNotificationManager = pushNotificationManager;
         }
 
-        public IndexProgressPushNotification Start(string currentUserName, string notificationId, bool suppressInsignificantNotifications, PerformContext context)
+        /// <param name="context">
+        /// Job execution context supplied by the engine, or null when the indexation is driven outside a job (tests).
+        /// Replaces Hangfire's PerformContext: the console writes and progress bar it carried are now a single
+        /// <see cref="IJobProgress"/>, which the admin UI renders over SignalR instead of the Hangfire dashboard.
+        /// </param>
+        public IndexProgressPushNotification Start(string currentUserName, string notificationId, bool suppressInsignificantNotifications, IJobExecutionContext context)
         {
             _notification = GetNotification(currentUserName, notificationId);
 
@@ -41,7 +43,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 #pragma warning restore CA2254 // Template should be a static expression
 
             _suppressInsignificantNotifications = suppressInsignificantNotifications;
-            _context = context;
+            _progress = context?.Progress;
             _isCanceled = false;
             // Progress() is invoked concurrently across document-type configurations
             // (IndexingManager.ProcessConfigurationAsync -> ReportProgress), so these counter maps
@@ -50,8 +52,7 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             _totalCountMap = new ConcurrentDictionary<string, long>();
             _processedCountMap = new ConcurrentDictionary<string, long>();
 
-            _context.WriteLine(ConsoleTextColor.White, _notification.Description);
-            _progressBar = _context.WriteProgressBar();
+            ReportProgress(_notification.Description, processedCount: 0, totalCount: 0);
 
             // Return the notification owned by THIS run so the caller can seal exactly this one,
             // even if a concurrent indexation reassigns the handler's shared _notification field.
@@ -99,7 +100,8 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                 _pushNotificationManager.Send(_notification);
             }
 
-            UpdateHangfireProgressBar(processedCount, totalCount, documentType);
+            WarnIfOvershooting(processedCount, totalCount, documentType);
+            ReportProgress(progress.Description, processedCount, totalCount);
         }
 
         public void Exception(Exception ex)
@@ -115,7 +117,6 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
 #pragma warning disable CA2254 // Template should be a static expression
             _log.LogError(errorMessage);
 #pragma warning restore CA2254 // Template should be a static expression
-            _context.WriteLine(ConsoleTextColor.Red, errorMessage);
 
             notification ??= _notification;
             notification.Errors.Add(errorMessage);
@@ -165,8 +166,8 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
                 _pushNotificationManager.Send(notification);
             }
 
-            UpdateHangfireProgressBar(processedCount, totalCount, notification.DocumentType);
-            _context.WriteLine(ConsoleTextColor.White, notification.Description);
+            WarnIfOvershooting(processedCount, totalCount, notification.DocumentType);
+            ReportProgress(notification.Description, processedCount, totalCount);
         }
 
         public static IndexProgressPushNotification CreateNotification(string currentUserName, string notificationId)
@@ -206,19 +207,42 @@ namespace VirtoCommerce.SearchModule.Data.BackgroundJobs
             return result;
         }
 
-        private void UpdateHangfireProgressBar(long processedCount, long totalCount, string documentType)
+        private void WarnIfOvershooting(long processedCount, long totalCount, string documentType)
         {
             if (processedCount > totalCount)
             {
                 _log.LogWarning("Processed count is grater than total count. DocumentType: {DocumentType}, Processed: {Processed}, Total: {Total}",
                     documentType, processedCount, totalCount);
             }
+        }
 
-            var progressBarValue = totalCount != 0
-                ? Math.Min(_maxPercent, processedCount * _maxPercent / totalCount)
-                : 0;
+        /// <summary>
+        /// Reports one progress update to the engine. Replaces the Hangfire.Console progress bar and WriteLine calls:
+        /// message and counters now travel together, and the engine pushes them to the admin UI.
+        /// </summary>
+        /// <remarks>
+        /// Fire-and-forget on purpose. This is called from <see cref="Progress"/>, which the indexing manager invokes
+        /// as a synchronous <c>Action</c> on a hot path; blocking on the report would stall indexing, and a failed
+        /// progress push must never fail the run - exactly the contract the fire-and-forget
+        /// <c>IPushNotificationManager.Send</c> above it already has.
+        /// </remarks>
+        private void ReportProgress(string message, long processedCount, long totalCount)
+        {
+            if (_progress is null)
+            {
+                return;
+            }
 
-            _progressBar.SetValue(progressBarValue);
+            var info = new JobProgressInfo
+            {
+                Message = message,
+                ProcessedCount = processedCount,
+                TotalCount = totalCount,
+            };
+
+            _ = _progress.Report(info).ContinueWith(
+                t => _log.LogDebug(t.Exception, "Failed to report indexing progress"),
+                TaskContinuationOptions.OnlyOnFaulted);
         }
     }
 }

@@ -48,7 +48,7 @@ namespace VirtoCommerce.SearchModule.Core.Model
         [JsonProperty("errorCount")]
         public long ErrorCount { get; set; }
         /// <summary>
-        /// Get Hangfire indexation job id
+        /// Get the engine-assigned indexation job id
         /// </summary>
         [JsonProperty("jobId")]
         public string JobId { get; set; }

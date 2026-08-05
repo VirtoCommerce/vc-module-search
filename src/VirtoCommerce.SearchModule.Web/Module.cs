@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using VirtoCommerce.Platform.Core.Events;
+using VirtoCommerce.Platform.Core.Jobs;
 using VirtoCommerce.Platform.Core.Modularity;
 using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.Platform.Core.Settings;
@@ -13,6 +14,7 @@ using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 using VirtoCommerce.SearchModule.Data.BackgroundJobs;
 using VirtoCommerce.SearchModule.Data.Handlers;
+using VirtoCommerce.SearchModule.Data.Jobs;
 using VirtoCommerce.SearchModule.Data.SearchPhraseParsing;
 using VirtoCommerce.SearchModule.Data.Services;
 
@@ -40,6 +42,22 @@ namespace VirtoCommerce.SearchModule.Web
 
             serviceCollection.AddSingleton<ObjectSettingEntryChangedEventHandler>();
             serviceCollection.AddSingleton<IIndexingJobService, IndexingJobs>();
+            // The job handlers take IndexingJobs by concrete type, so it must resolve as itself too - the singleton
+            // above only registers the interface.
+            serviceCollection.AddSingleton(provider => (IndexingJobs)provider.GetRequiredService<IIndexingJobService>());
+
+            // Not triggerable by name: a caller-supplied payload here would rebuild every index in the deployment.
+            serviceCollection.AddBackgroundJob<IndexAllDocumentsJobHandler, IndexAllDocumentsJobPayload>(triggerable: false);
+            serviceCollection.AddBackgroundJob<IndexDocumentsJobHandler, IndexDocumentsJobPayload>();
+            serviceCollection.AddBackgroundJob<DeleteDocumentsJobHandler, DeleteDocumentsJobPayload>();
+
+            // Periodic "index what changed". Declared once here instead of being added and removed at runtime by
+            // StartStopRecurringJobs: the engine re-evaluates the schedule whenever either setting changes.
+            serviceCollection.AddRecurringJob<IndexChangesJobHandler, IndexChangesJobPayload>(schedule => schedule
+                .WithId($"{nameof(IndexingJobs)}.{nameof(IndexingJobs.IndexChangesJob)}")
+                .FromSettings(
+                    ModuleConstants.Settings.IndexingJobs.Enable,
+                    ModuleConstants.Settings.IndexingJobs.CronExpression));
 
             serviceCollection.AddTransient<IIndexFieldSettingService, IndexFieldSettingService>();
             serviceCollection.AddTransient<IIndexFieldSettingSearchService, IndexFieldSettingService>();
@@ -62,9 +80,8 @@ namespace VirtoCommerce.SearchModule.Web
             // Subscribe for Indexation job configuration changes
             appBuilder.RegisterEventHandler<ObjectSettingChangedEvent, ObjectSettingEntryChangedEventHandler>();
 
-            // Schedule periodic Indexation job
-            var indexingJobService = serviceProvider.GetService<IIndexingJobService>();
-            indexingJobService.StartStopRecurringJobs().GetAwaiter().GetResult();
+            // The recurring schedule itself is declared in Initialize and applied by the engine. Nothing to do here:
+            // the imperative RecurringJob.AddOrUpdate / RemoveIfExists that used to run at this point is gone.
         }
 
         public void Uninstall()

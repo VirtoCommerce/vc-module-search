@@ -37,7 +37,7 @@ public interface IIndexDocumentChangesProvider
 
     /// <summary>
     /// Cancellation-aware overload. Implementations should poll the token at loop boundaries
-    /// so that a Hangfire-deletion of the owning indexing job aborts the call promptly.
+    /// so that a cancellation of the owning indexing job aborts the call promptly.
     /// Default implementation delegates to the legacy method for backwards compatibility.
     /// </summary>
     Task<IList<IndexDocumentChange>> GetChangesAsync(DateTime? startDate, DateTime? endDate, long skip, long take, CancellationToken cancellationToken)

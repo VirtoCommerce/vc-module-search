@@ -503,7 +503,7 @@ public class IndexingManager : IIndexingManager
     /// Calls <paramref name="builder"/> in fixed-size sub-chunks sized by the
     /// <c>VirtoCommerce.Search.IndexPartitionSize</c> setting, polling
     /// <paramref name="cancellationToken"/> between chunks so the indexing job aborts promptly when
-    /// its Hangfire entry is deleted.
+    /// the owning job is cancelled.
     /// </summary>
     protected virtual async Task<IList<IndexDocument>> BuildDocumentsInChunksAsync(
         IIndexDocumentBuilder builder,
