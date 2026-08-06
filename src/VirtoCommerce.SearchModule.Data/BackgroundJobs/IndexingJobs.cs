@@ -337,9 +337,6 @@ public sealed class IndexingJobs : IIndexingJobService
         // Admin "Indexation" blade keeps spinning "In progress" forever (VCST-5091).
         var notification = _progressHandler.Start(currentUserName, notificationId, suppressInsignificantNotifications, context);
 
-        // Publish the engine-assigned id so CancelIndexation can find this run from any instance.
-        await SetCurrentJobIdAsync(context?.JobId);
-
         // Make sure only one indexation job can run in the cluster.
         // CAUTION: locking mechanism assumes single threaded execution.
         try
@@ -350,6 +347,10 @@ public sealed class IndexingJobs : IIndexingJobService
                 IndexationLockKey,
                 async () =>
                 {
+                    // Publish the engine-assigned id ONLY after the lock is held - i.e. only for the run that is
+                    // actually executing - so CancelIndexation targets the live job. A run that loses the lock never
+                    // reaches here, so it can neither overwrite the winner's id nor clear it out from under it.
+                    await SetCurrentJobIdAsync(context?.JobId);
                     try
                     {
                         var tasks = optionsArray.Select(x => indexationFunc(x, cancellationToken)).ToArray();
@@ -376,6 +377,9 @@ public sealed class IndexingJobs : IIndexingJobService
                         // (Previously deferred to IndexAllDocumentsJob's outer finally for manual jobs,
                         // which sealed whatever the shared _notification pointed at by then.)
                         _progressHandler.Finish(notification);
+
+                        // Clear only the id this run set, and only because this run is the lock holder.
+                        await SetCurrentJobIdAsync(null);
                     }
 
                     return true;
@@ -388,10 +392,6 @@ public sealed class IndexingJobs : IIndexingJobService
             // Another indexation holds the lock. IDistributedLockService reports that as PlatformException, where the
             // Hangfire lock threw DistributedLockTimeoutException and the bare catch below swallowed everything.
             _progressHandler.AlreadyInProgress();
-        }
-        finally
-        {
-            await SetCurrentJobIdAsync(null);
         }
 
         return success;
