@@ -119,9 +119,9 @@ public sealed class IndexingJobs : IIndexingJobService
         {
             _logger.LogInformation("Attempting to cancel indexing job. JobId: {JobId}", jobId);
 
-            var deleted = await BackgroundJob.Delete(jobId);
+            var canceled = await BackgroundJob.Cancel(jobId);
 
-            _logger.LogInformation("Indexing job cancellation requested. JobId: {JobId}, Deleted: {Deleted}", jobId, deleted);
+            _logger.LogInformation("Indexing job cancellation requested. JobId: {JobId}, Canceled: {Canceled}", jobId, canceled);
         }
         catch (Exception ex)
         {

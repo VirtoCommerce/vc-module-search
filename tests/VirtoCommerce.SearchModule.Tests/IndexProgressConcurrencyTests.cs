@@ -1,11 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
-using Hangfire;
-using Hangfire.MemoryStorage;
-using Hangfire.Server;
 using Microsoft.Extensions.Logging.Abstractions;
 using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.SearchModule.Core.Model;
@@ -23,12 +19,6 @@ namespace VirtoCommerce.SearchModule.Tests;
 // leaving the "Indexation is already in progress" state stuck.
 public class IndexProgressConcurrencyTests
 {
-    public IndexProgressConcurrencyTests()
-    {
-        // Real in-memory Hangfire storage so a production-shaped PerformContext / progress bar can be built.
-        JobStorage.Current = new MemoryStorage();
-    }
-
     [Fact]
     public void Progress_CalledConcurrentlyAcrossDocumentTypes_DoesNotCorruptCountersMap_VCST5416()
     {
@@ -47,8 +37,9 @@ public class IndexProgressConcurrencyTests
             var pushManager = new CountingPushNotificationManager();
             var handler = new IndexProgressHandler(NullLogger<IndexProgressHandler>.Instance, pushManager);
 
-            // Start() initializes the internal counter maps and the Hangfire progress bar.
-            handler.Start("admin", notificationId: null, suppressInsignificantNotifications: true, context: CreatePerformContext());
+            // Start() initializes the internal counter maps. Context is null: outside a job the handler skips
+            // progress reporting (ReportProgress no-ops on a null IJobProgress) — the counter maps under test still run.
+            handler.Start("admin", notificationId: null, suppressInsignificantNotifications: true, context: null);
 
             var roundIndex = round;
 
@@ -85,16 +76,6 @@ public class IndexProgressConcurrencyTests
         Assert.True(exceptions.IsEmpty,
             "IndexProgressHandler.Progress threw under concurrent multi-document-type load — the counter maps are not thread-safe (VCST-5416). First error: "
             + (exceptions.TryPeek(out var first) ? first.ToString() : "<none>"));
-    }
-
-    private static PerformContext CreatePerformContext()
-    {
-        var storage = JobStorage.Current;
-        var connection = storage.GetConnection();
-        var backgroundJob = new BackgroundJob(Guid.NewGuid().ToString("N"), null, DateTime.UtcNow);
-#pragma warning disable CS0618 // JobCancellationToken is the only public IJobCancellationToken impl available for tests
-        return new PerformContext(storage, connection, backgroundJob, new JobCancellationToken(false));
-#pragma warning restore CS0618
     }
 
     // Minimal thread-safe push-notification sink: Progress() calls Send() on every iteration,
