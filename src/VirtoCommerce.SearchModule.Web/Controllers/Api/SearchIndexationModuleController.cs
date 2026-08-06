@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -92,10 +93,10 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         [HttpPost]
         [Route("index")]
         [Authorize(Permissions.IndexRebuild)]
-        public async Task<ActionResult<IndexProgressPushNotification>> IndexDocuments([FromBody] IndexingOptions[] options)
+        public async Task<ActionResult<IndexProgressPushNotification>> IndexDocuments([FromBody] IndexingOptions[] options, CancellationToken cancellationToken = default)
         {
             var currentUserName = _userNameResolver.GetCurrentUserName();
-            var notification = await _indexingJobService.Enqueue(currentUserName, options);
+            var notification = await _indexingJobService.EnqueueAsync(currentUserName, options, cancellationToken);
             _pushNotifier.Send(notification);
             return Ok(notification);
         }
@@ -106,7 +107,7 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         [Authorize(Permissions.IndexRebuild)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status501NotImplemented)]
-        public async Task<ActionResult> CancelIndexationProcess(string taskId)
+        public async Task<ActionResult> CancelIndexationProcess(string taskId, CancellationToken cancellationToken = default)
         {
             // Cancellation is engine-dependent: Hangfire can recall a job by id, RabbitMQ cannot - a published message
             // is gone. Report that instead of answering 200 to a request that changed nothing, so the Indexation blade
@@ -119,7 +120,8 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
                     detail: "The active background job engine cannot cancel a running job. Wait for the indexation to finish.");
             }
 
-            await _indexingJobService.CancelIndexation();
+            await _indexingJobService.CancelIndexationAsync(cancellationToken);
+
             return Ok();
         }
 

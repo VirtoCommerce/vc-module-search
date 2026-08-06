@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -70,6 +73,21 @@ namespace VirtoCommerce.SearchModule.Web
 
             var settingsRegistrar = serviceProvider.GetRequiredService<ISettingsRegistrar>();
             settingsRegistrar.RegisterSettings(ModuleConstants.Settings.AllSettings, ModuleInfo.Id);
+
+            // The per-document-type "last indexation date" scratch settings have dynamic names, so register one per
+            // known document type here (all IndexDocumentConfiguration are registered by now, in modules' Initialize).
+            // Without this the now-strict settings manager rejects IndexingJobs' get/set of these names.
+            var indexationDateSettings = serviceProvider.GetService<IEnumerable<IndexDocumentConfiguration>>()
+                ?.Select(x => x.DocumentType)
+                .Where(documentType => !string.IsNullOrEmpty(documentType))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Select(ModuleConstants.Settings.IndexingJobs.IndexationDate)
+                .ToArray() ?? [];
+
+            if (indexationDateSettings.Length != 0)
+            {
+                settingsRegistrar.RegisterSettings(indexationDateSettings, ModuleInfo.Id);
+            }
 
             var permissionsRegistrar = serviceProvider.GetRequiredService<IPermissionsRegistrar>();
             permissionsRegistrar.RegisterPermissions(ModuleInfo.Id, "Search", ModuleConstants.Security.Permissions.AllPermissions);

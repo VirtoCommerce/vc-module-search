@@ -39,10 +39,9 @@ public sealed class IndexingJobs : IIndexingJobService
     /// The Hangfire version asked the broker instead - GetMonitoringApi().ProcessingJobs() scanned every running job
     /// and matched by reflected MethodInfo. The engine-agnostic API has no such query, and RabbitMQ could not answer
     /// it anyway: it keeps no job ledger. Recording our own id is both simpler and portable, and settings are already
-    /// this module's cluster-visible scratch space - see GetLastIndexationDateName below for the same pattern.
+    /// this module's cluster-visible scratch space - see the per-type IndexationDate settings for the same pattern.
+    /// The setting itself is registered (hidden) as ModuleConstants.Settings.IndexingJobs.CurrentJobId.
     /// </remarks>
-    private const string _currentJobIdSettingName = "VirtoCommerce.Search.IndexingJobs.CurrentJobId";
-
     private readonly IEnumerable<IndexDocumentConfiguration> _documentsConfigs;
     private readonly IIndexingManager _indexingManager;
     private readonly ISettingsManager _settingsManager;
@@ -66,8 +65,7 @@ public sealed class IndexingJobs : IIndexingJobService
         _logger = logger ?? NullLogger<IndexingJobs>.Instance;
     }
 
-    // Enqueue a background job with single notification object for all given options
-    public async Task<IndexProgressPushNotification> Enqueue(string currentUserName, IndexingOptions[] options)
+    public async Task<IndexProgressPushNotification> EnqueueAsync(string currentUserName, IndexingOptions[] options, CancellationToken cancellationToken = default)
     {
         var notification = IndexProgressHandler.CreateNotification(currentUserName, null);
 
@@ -93,12 +91,12 @@ public sealed class IndexingJobs : IIndexingJobService
         // What is left is the part the scheduler does not cover: stopping a run that is already in flight.
         if (!scheduleJobs)
         {
-            await CancelIndexation();
+            await CancelIndexationAsync();
         }
     }
 
     // Cancel current indexation if there is one
-    public async Task CancelIndexation()
+    public async Task CancelIndexationAsync(CancellationToken cancellationToken = default)
     {
         if (!BackgroundJob.SupportsCancellation)
         {
@@ -119,7 +117,7 @@ public sealed class IndexingJobs : IIndexingJobService
         {
             _logger.LogInformation("Attempting to cancel indexing job. JobId: {JobId}", jobId);
 
-            var canceled = await BackgroundJob.Cancel(jobId);
+            var canceled = await BackgroundJob.Cancel(jobId, cancellationToken);
 
             _logger.LogInformation("Indexing job cancellation requested. JobId: {JobId}, Canceled: {Canceled}", jobId, canceled);
         }
@@ -151,7 +149,7 @@ public sealed class IndexingJobs : IIndexingJobService
     }
 
 
-    private static Task EnqueueIndexDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
+    private static Task EnqueueIndexDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null, CancellationToken cancellationToken = default)
     {
         var payload = AbstractTypeFactory<IndexDocumentsJobPayload>.TryCreateInstance();
         payload.DocumentType = documentType;
@@ -159,16 +157,16 @@ public sealed class IndexingJobs : IIndexingJobService
         payload.BuilderTypes = builders?.Select(x => x.GetType().FullName).ToArray();
 
         // One handler for all priorities: the priority is the target queue, not a separate method.
-        return BackgroundJob.Enqueue<IndexDocumentsJobHandler>(payload, new EnqueueOptions { Queue = ValidatePriority(priority) });
+        return BackgroundJob.Enqueue<IndexDocumentsJobHandler>(payload, new EnqueueOptions { Queue = ValidatePriority(priority) }, cancellationToken);
     }
 
-    private static Task EnqueueDeleteDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal)
+    private static Task EnqueueDeleteDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal, CancellationToken cancellationToken = default)
     {
         var payload = AbstractTypeFactory<DeleteDocumentsJobPayload>.TryCreateInstance();
         payload.DocumentType = documentType;
         payload.DocumentIds = documentIds;
 
-        return BackgroundJob.Enqueue<DeleteDocumentsJobHandler>(payload, new EnqueueOptions { Queue = ValidatePriority(priority) });
+        return BackgroundJob.Enqueue<DeleteDocumentsJobHandler>(payload, new EnqueueOptions { Queue = ValidatePriority(priority) }, cancellationToken);
     }
 
     // Kept as an explicit check because the queue is now a free-form string: an unknown priority used to be rejected
@@ -182,7 +180,7 @@ public sealed class IndexingJobs : IIndexingJobService
         };
     }
 
-    public async Task EnqueueIndexAndDeleteDocuments(IList<IndexEntry> indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
+    public async Task EnqueueIndexAndDeleteDocumentsAsync(IList<IndexEntry> indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null, CancellationToken cancellationToken = default)
     {
         var groupedEntriesByType = GetGroupedByTypeAndDistinctedByChangeTypeIndexEntries(indexEntries);
 
@@ -194,17 +192,17 @@ public sealed class IndexingJobs : IIndexingJobService
 
             if (addedEntryIds.Length > 0)
             {
-                await EnqueueIndexDocuments(groupedEntryByType.Key, addedEntryIds, priority, builders: null);
+                await EnqueueIndexDocuments(groupedEntryByType.Key, addedEntryIds, priority, builders: null, cancellationToken: cancellationToken);
             }
 
             if (modifiedEntryIds.Length > 0)
             {
-                await EnqueueIndexDocuments(groupedEntryByType.Key, modifiedEntryIds, priority, builders);
+                await EnqueueIndexDocuments(groupedEntryByType.Key, modifiedEntryIds, priority, builders, cancellationToken: cancellationToken);
             }
 
             if (deletedEntryIds.Length > 0)
             {
-                await EnqueueDeleteDocuments(groupedEntryByType.Key, deletedEntryIds, priority);
+                await EnqueueDeleteDocuments(groupedEntryByType.Key, deletedEntryIds, priority, cancellationToken: cancellationToken);
             }
         }
     }
@@ -401,17 +399,12 @@ public sealed class IndexingJobs : IIndexingJobService
 
     private Task<string> GetCurrentJobIdAsync()
     {
-        return _settingsManager.GetValueAsync<string>(new SettingDescriptor
-        {
-            Name = _currentJobIdSettingName,
-            ValueType = SettingValueType.ShortText,
-            DefaultValue = string.Empty,
-        });
+        return _settingsManager.GetValueAsync<string>(ModuleConstants.Settings.IndexingJobs.CurrentJobId);
     }
 
     private Task SetCurrentJobIdAsync(string jobId)
     {
-        return _settingsManager.SetValueAsync(_currentJobIdSettingName, jobId ?? string.Empty);
+        return _settingsManager.SetValueAsync(ModuleConstants.Settings.IndexingJobs.CurrentJobId.Name, jobId ?? string.Empty);
     }
 
     private async Task IndexAllDocumentsAsync(IndexingOptions options, CancellationToken cancellationToken)
@@ -469,16 +462,9 @@ public sealed class IndexingJobs : IIndexingJobService
         var result = (await _indexingManager.GetIndexStateAsync(documentType)).LastIndexationDate;
         if (result != null)
         {
-            var settingDescriptor = new SettingDescriptor
-            {
-                Name = GetLastIndexationDateName(documentType),
-                ValueType = SettingValueType.DateTime,
-                DefaultValue = DateTime.MaxValue,
-            };
-
             //need to take the older date from the dates loaded from the index and settings.
             //Because the actual last indexation date stored in the index may be later than last job run are stored in the settings. e.g. after data import or direct database changes
-            var settingValue = await _settingsManager.GetValueAsync<DateTime>(settingDescriptor);
+            var settingValue = await _settingsManager.GetValueAsync<DateTime>(ModuleConstants.Settings.IndexingJobs.IndexationDate(documentType));
             result = new DateTime(Math.Min(result.Value.Ticks, settingValue.Ticks), DateTimeKind.Utc);
         }
 
@@ -490,13 +476,8 @@ public sealed class IndexingJobs : IIndexingJobService
         var currentValue = await GetLastIndexationDateAsync(documentType);
         if (currentValue == oldValue)
         {
-            await _settingsManager.SetValueAsync(GetLastIndexationDateName(documentType), newValue);
+            await _settingsManager.SetValueAsync(ModuleConstants.Settings.IndexingJobs.IndexationDate(documentType).Name, newValue);
         }
-    }
-
-    private static string GetLastIndexationDateName(string documentType)
-    {
-        return $"VirtoCommerce.Search.IndexingJobs.IndexationDate.{documentType}";
     }
 
     private Task<int> GetBatchSizeAsync()

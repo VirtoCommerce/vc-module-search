@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -89,12 +90,37 @@ namespace VirtoCommerce.SearchModule.Core
                     DefaultValue = "0/5 * * * *",
                 };
 
+                // Internal cluster-visible scratch: the engine job id of the currently-running indexation, so
+                // CancelIndexation can find and cancel the run from any instance. Hidden: infrastructure, not a
+                // user-facing setting — but it must be registered, since the platform rejects unregistered settings.
+                public static SettingDescriptor CurrentJobId { get; } = new()
+                {
+                    Name = "VirtoCommerce.Search.IndexingJobs.CurrentJobId",
+                    GroupName = "Search|Job",
+                    ValueType = SettingValueType.ShortText,
+                    DefaultValue = string.Empty,
+                    IsHidden = true,
+                };
+
+                // Per-document-type "last indexation date" scratch. The names are dynamic (one per document type), so
+                // they are registered at startup for the known types (see Module.PostInitialize) rather than listed
+                // statically in AllIndexingJobsSettings.
+                public static SettingDescriptor IndexationDate(string documentType) => new()
+                {
+                    Name = $"VirtoCommerce.Search.IndexingJobs.IndexationDate.{documentType}",
+                    GroupName = "Search|Job",
+                    ValueType = SettingValueType.DateTime,
+                    DefaultValue = DateTime.MaxValue,
+                    IsHidden = true,
+                };
+
                 public static IEnumerable<SettingDescriptor> AllIndexingJobsSettings
                 {
                     get
                     {
                         yield return Enable;
                         yield return CronExpression;
+                        yield return CurrentJobId;
                     }
                 }
             }
