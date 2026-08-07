@@ -81,25 +81,14 @@ public sealed class IndexingJobs : IIndexingJobService
         return notification;
     }
 
-    // Obsolete synchronous members of IIndexingJobService are still called by consumer modules (catalog, pricing,
-    // inventory, order, shipping, customer) that have not migrated to the *Async API. The interface declares them as
-    // default methods that throw NotImplementedException; we MUST override them to delegate to the async
-    // implementations, otherwise every consumer call faults at runtime (a create/save that raises an indexing event
-    // returns HTTP 500). Deprecating a cross-module contract member must keep it working, not make it throw.
     [Obsolete("Use EnqueueAsync method instead", DiagnosticId = "VC0015", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+#pragma warning disable S4462
     public IndexProgressPushNotification Enqueue(string currentUserName, IndexingOptions[] options)
         => EnqueueAsync(currentUserName, options).GetAwaiter().GetResult();
+#pragma warning restore S4462
 
     public Task StartStopRecurringJobs()
     {
-        // Nothing to do here anymore. The recurring IndexChangesJob schedule is declared once in Module.Initialize via
-        // AddRecurringJob(...).FromSettings(Enable, CronExpression); the engine re-evaluates it whenever either setting
-        // changes, so turning Enable off already stops future runs - no imperative RecurringJob.RemoveIfExists needed.
-        //
-        // Deliberately does NOT cancel an in-flight run: CurrentJobId holds whichever run currently owns the indexation
-        // lock, which may be a user-triggered full reindex. Cancelling it here would abort that manual reindex when an
-        // admin merely toggles the schedule off. An in-flight recurring tick is short and is left to finish on its own;
-        // explicit cancellation stays available through CancelIndexationAsync (the Cancel button / API).
         return Task.CompletedTask;
     }
 
@@ -108,8 +97,6 @@ public sealed class IndexingJobs : IIndexingJobService
     {
         if (!BackgroundJob.SupportsCancellation)
         {
-            // RabbitMQ cannot recall a published message. Say so once rather than leaving the caller to believe the
-            // run was stopped; the run will finish on its own.
             _logger.LogWarning("Indexation cancellation was requested, but the active background job engine does not support it.");
             return;
         }
@@ -137,8 +124,10 @@ public sealed class IndexingJobs : IIndexingJobService
     }
 
     [Obsolete("Use CancelIndexationAsync method instead", DiagnosticId = "VC0015", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+#pragma warning disable S4462
     public void CancelIndexation()
         => CancelIndexationAsync().GetAwaiter().GetResult();
+#pragma warning restore S4462
 
 
     public Task IndexAllDocumentsJob(string userName, string notificationId, IndexingOptions[] options, IJobExecutionContext context, CancellationToken cancellationToken)
@@ -220,8 +209,10 @@ public sealed class IndexingJobs : IIndexingJobService
     }
 
     [Obsolete("Use EnqueueIndexAndDeleteDocumentsAsync method instead", DiagnosticId = "VC0015", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+#pragma warning disable S4462
     public void EnqueueIndexAndDeleteDocuments(IList<IndexEntry> indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
         => EnqueueIndexAndDeleteDocumentsAsync(indexEntries, priority, builders).GetAwaiter().GetResult();
+#pragma warning restore S4462
 
     public static IEnumerable<IGrouping<string, IndexEntry>> GetGroupedByTypeAndDistinctedByChangeTypeIndexEntries(IEnumerable<IndexEntry> indexEntries)
     {
