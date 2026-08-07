@@ -3,7 +3,7 @@
   <id>VirtoCommerce.Search</id>
   <version>3.1007.0</version>
   <version-tag />
-  <platformVersion>3.1057.0-alpha.13360-vcst-5686</platformVersion>
+  <platformVersion>3.1059.0-alpha.13367-vcst-5686</platformVersion>
   <dependencies>
   </dependencies>
   <title>Search Core</title>

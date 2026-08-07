@@ -136,9 +136,10 @@ public sealed class IndexingJobs : IIndexingJobService
     }
 
     /// <remarks>
-    /// [AutomaticRetry(Attempts = 0)] moved to the enqueue site as EnqueueOptions.MaxRetryAttempts = 0, and
-    /// [DisableConcurrentExecution(10)] is redundant: <see cref="RunIndexJobAsync"/> takes a distributed lock that
-    /// already serializes every indexation path across the whole worker fleet.
+    /// [AutomaticRetry(Attempts = 0)] moved to the schedule, as AddRecurringJob(...).WithMaxRetryAttempts(0) - see
+    /// Module.Initialize; this job has no enqueue site of its own. [DisableConcurrentExecution(10)] is redundant:
+    /// <see cref="RunIndexJobAsync"/> takes a distributed lock that already serializes every indexation path across
+    /// the whole worker fleet.
     /// </remarks>
     public async Task IndexChangesJob(string documentType, IJobExecutionContext context, CancellationToken cancellationToken)
     {

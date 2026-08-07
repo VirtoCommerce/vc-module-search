@@ -54,6 +54,9 @@ namespace VirtoCommerce.SearchModule.Web
             // StartStopRecurringJobs: the engine re-evaluates the schedule whenever either setting changes.
             serviceCollection.AddRecurringJob<IndexChangesJobHandler, IndexChangesJobPayload>(schedule => schedule
                 .WithId($"{nameof(IndexingJobs)}.{nameof(IndexingJobs.IndexChangesJob)}")
+                // Carries over [AutomaticRetry(Attempts = 0)] from the Hangfire job: the next occurrence picks up
+                // whatever this run missed, so a retry would re-scan the same changes for nothing.
+                .WithMaxRetryAttempts(0)
                 .FromSettings(
                     ModuleConstants.Settings.IndexingJobs.Enable,
                     ModuleConstants.Settings.IndexingJobs.CronExpression));
