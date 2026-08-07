@@ -81,18 +81,17 @@ public sealed class IndexingJobs : IIndexingJobService
         return notification;
     }
 
-    public async Task StartStopRecurringJobs()
+    public Task StartStopRecurringJobs()
     {
-        var scheduleJobs = await _settingsManager.GetValueAsync<bool>(ModuleConstants.Settings.IndexingJobs.Enable);
-
-        // The schedule itself is no longer managed here. It is declared once in Module.Initialize through
-        // AddRecurringJob(...).FromSettings(enabler, cron), and the engine re-evaluates it whenever either setting
-        // changes - which is what RecurringJob.AddOrUpdate / RemoveIfExists used to do by hand.
-        // What is left is the part the scheduler does not cover: stopping a run that is already in flight.
-        if (!scheduleJobs)
-        {
-            await CancelIndexationAsync();
-        }
+        // Nothing to do here anymore. The recurring IndexChangesJob schedule is declared once in Module.Initialize via
+        // AddRecurringJob(...).FromSettings(Enable, CronExpression); the engine re-evaluates it whenever either setting
+        // changes, so turning Enable off already stops future runs - no imperative RecurringJob.RemoveIfExists needed.
+        //
+        // Deliberately does NOT cancel an in-flight run: CurrentJobId holds whichever run currently owns the indexation
+        // lock, which may be a user-triggered full reindex. Cancelling it here would abort that manual reindex when an
+        // admin merely toggles the schedule off. An in-flight recurring tick is short and is left to finish on its own;
+        // explicit cancellation stays available through CancelIndexationAsync (the Cancel button / API).
+        return Task.CompletedTask;
     }
 
     // Cancel current indexation if there is one

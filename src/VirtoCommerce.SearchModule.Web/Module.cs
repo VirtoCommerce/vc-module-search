@@ -4,19 +4,16 @@ using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using VirtoCommerce.Platform.Core.Events;
 using VirtoCommerce.Platform.Core.Jobs;
 using VirtoCommerce.Platform.Core.Modularity;
 using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.Platform.Core.Settings;
-using VirtoCommerce.Platform.Core.Settings.Events;
 using VirtoCommerce.SearchModule.Core;
 using VirtoCommerce.SearchModule.Core.BackgroundJobs;
 using VirtoCommerce.SearchModule.Core.Extensions;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
 using VirtoCommerce.SearchModule.Data.BackgroundJobs;
-using VirtoCommerce.SearchModule.Data.Handlers;
 using VirtoCommerce.SearchModule.Data.Jobs;
 using VirtoCommerce.SearchModule.Data.SearchPhraseParsing;
 using VirtoCommerce.SearchModule.Data.Services;
@@ -43,7 +40,6 @@ namespace VirtoCommerce.SearchModule.Web
 
             serviceCollection.AddOptions<SearchOptions>().Bind(Configuration.GetSection("Search")).ValidateDataAnnotations();
 
-            serviceCollection.AddSingleton<ObjectSettingEntryChangedEventHandler>();
             serviceCollection.AddSingleton<IIndexingJobService, IndexingJobs>();
             // The job handlers take IndexingJobs by concrete type, so it must resolve as itself too - the singleton
             // above only registers the interface.
@@ -94,12 +90,6 @@ namespace VirtoCommerce.SearchModule.Web
 
             // Register fallback provider
             appBuilder.UseSearchProvider<DummySearchProvider>(name: null);
-
-            // Subscribe for Indexation job configuration changes
-            appBuilder.RegisterEventHandler<ObjectSettingChangedEvent, ObjectSettingEntryChangedEventHandler>();
-
-            // The recurring schedule itself is declared in Initialize and applied by the engine. Nothing to do here:
-            // the imperative RecurringJob.AddOrUpdate / RemoveIfExists that used to run at this point is gone.
         }
 
         public void Uninstall()

@@ -31,6 +31,7 @@ public interface IIndexingJobService
         return Task.FromResult(0);
     }
 
+    [Obsolete("Use CancelIndexationAsync method instead", DiagnosticId = "VC0015", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
     Task StartStopRecurringJobs();
 
     [Obsolete("Use CancelIndexationAsync method instead", DiagnosticId = "VC0015", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
