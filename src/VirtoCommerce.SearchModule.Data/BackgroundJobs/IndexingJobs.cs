@@ -1,45 +1,52 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Hangfire;
-using Hangfire.Server;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Polly;
-using Polly.Retry;
 using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.Platform.Core.DistributedLock;
+using VirtoCommerce.Platform.Core.Exceptions;
 using VirtoCommerce.Platform.Core.Jobs;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.SearchModule.Core;
 using VirtoCommerce.SearchModule.Core.BackgroundJobs;
 using VirtoCommerce.SearchModule.Core.Model;
 using VirtoCommerce.SearchModule.Core.Services;
+using VirtoCommerce.SearchModule.Data.Jobs;
 
 namespace VirtoCommerce.SearchModule.Data.BackgroundJobs;
 
 public sealed class IndexingJobs : IIndexingJobService
 {
-    private const string _recurringJobId = $"{nameof(IndexingJobs)}.{nameof(IndexChangesJob)}";
-    private static readonly MethodInfo _recurringJobMethod = typeof(IndexingJobs).GetMethod(nameof(IndexChangesJob), [typeof(string), typeof(PerformContext), typeof(CancellationToken)]);
-    private static readonly MethodInfo _manualJobMethod = typeof(IndexingJobs).GetMethod(nameof(IndexAllDocumentsJob), [typeof(string), typeof(string), typeof(IndexingOptions[]), typeof(PerformContext), typeof(CancellationToken)]);
+    /// <summary>
+    /// Resource key of the distributed lock that keeps two indexation runs from overlapping. Same name the Hangfire
+    /// implementation used, so a mixed-version cluster mid-upgrade still contends on one key.
+    /// </summary>
+    public const string IndexationLockKey = "IndexationJob";
 
-    private static readonly ResiliencePipeline _processingJobsRetryPipeline = new ResiliencePipelineBuilder()
-        .AddRetry(new RetryStrategyOptions
-        {
-            ShouldHandle = new Polly.PredicateBuilder().Handle<KeyNotFoundException>(),
-            MaxRetryAttempts = 3,
-            Delay = TimeSpan.FromMilliseconds(50),
-            BackoffType = DelayBackoffType.Linear,
-        })
-        .Build();
+    /// <summary>
+    /// How long the indexation lock is held. Hangfire's lock lived as long as its connection; this one is a TTL, so a
+    /// run that outlasts it can be joined by a second one. A full reindex of a large catalog runs for hours.
+    /// </summary>
+    private static readonly TimeSpan _indexationLockTimeout = TimeSpan.FromHours(12);
 
+    /// <summary>
+    /// Where the id of the in-flight indexation is parked so <see cref="CancelIndexation"/> can find it.
+    /// </summary>
+    /// <remarks>
+    /// The Hangfire version asked the broker instead - GetMonitoringApi().ProcessingJobs() scanned every running job
+    /// and matched by reflected MethodInfo. The engine-agnostic API has no such query, and RabbitMQ could not answer
+    /// it anyway: it keeps no job ledger. Recording our own id is both simpler and portable, and settings are already
+    /// this module's cluster-visible scratch space - see the per-type IndexationDate settings for the same pattern.
+    /// The setting itself is registered (hidden) as ModuleConstants.Settings.IndexingJobs.CurrentJobId.
+    /// </remarks>
     private readonly IEnumerable<IndexDocumentConfiguration> _documentsConfigs;
     private readonly IIndexingManager _indexingManager;
     private readonly ISettingsManager _settingsManager;
     private readonly IndexProgressHandler _progressHandler;
+    private readonly IDistributedLockService _distributedLockService;
     private readonly ILogger<IndexingJobs> _logger;
 
     public IndexingJobs(
@@ -47,87 +54,94 @@ public sealed class IndexingJobs : IIndexingJobService
         IIndexingManager indexingManager,
         ISettingsManager settingsManager,
         IndexProgressHandler progressHandler,
+        IDistributedLockService distributedLockService,
         ILogger<IndexingJobs> logger)
     {
         _documentsConfigs = documentsConfigs;
         _indexingManager = indexingManager;
         _settingsManager = settingsManager;
         _progressHandler = progressHandler;
+        _distributedLockService = distributedLockService;
         _logger = logger ?? NullLogger<IndexingJobs>.Instance;
     }
 
-    // Enqueue a background job with single notification object for all given options
-    public IndexProgressPushNotification Enqueue(string currentUserName, IndexingOptions[] options)
+    public async Task<IndexProgressPushNotification> EnqueueAsync(string currentUserName, IndexingOptions[] options, CancellationToken cancellationToken = default)
     {
         var notification = IndexProgressHandler.CreateNotification(currentUserName, null);
 
-        // Hangfire substitutes CancellationToken.None with a real token at execution time.
-        notification.JobId = BackgroundJob.Enqueue<IndexingJobs>(j => j.IndexAllDocumentsJob(currentUserName, notification.Id, options, null, CancellationToken.None));
+        var payload = AbstractTypeFactory<IndexAllDocumentsJobPayload>.TryCreateInstance();
+        payload.UserName = currentUserName;
+        payload.NotificationId = notification.Id;
+        payload.Options = options;
+
+        notification.JobId = await BackgroundJob.Enqueue<IndexAllDocumentsJobHandler>(
+            payload,
+            new EnqueueOptions { Queue = JobPriority.Normal });
 
         return notification;
     }
 
-    public async Task StartStopRecurringJobs()
-    {
-        var scheduleJobs = await _settingsManager.GetValueAsync<bool>(ModuleConstants.Settings.IndexingJobs.Enable);
+    [Obsolete("Use EnqueueAsync method instead", DiagnosticId = "VC0015", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+#pragma warning disable S4462
+    public IndexProgressPushNotification Enqueue(string currentUserName, IndexingOptions[] options)
+        => EnqueueAsync(currentUserName, options).GetAwaiter().GetResult();
+#pragma warning restore S4462
 
-        if (scheduleJobs)
-        {
-            var cronExpression = await _settingsManager.GetValueAsync<string>(ModuleConstants.Settings.IndexingJobs.CronExpression);
-            RecurringJob.AddOrUpdate<IndexingJobs>(_recurringJobId, x => x.IndexChangesJob(null, null, CancellationToken.None), cronExpression);
-        }
-        else
-        {
-            CancelJob(_recurringJobMethod);
-            RecurringJob.RemoveIfExists(_recurringJobId);
-        }
+    public Task StartStopRecurringJobs()
+    {
+        return Task.CompletedTask;
     }
 
     // Cancel current indexation if there is one
-    public void CancelIndexation()
+    public async Task CancelIndexationAsync(CancellationToken cancellationToken = default)
     {
-        CancelJob(_manualJobMethod);
-    }
-
-    private void CancelJob(MethodInfo method)
-    {
-        var processingJobs = _processingJobsRetryPipeline.Execute(static () =>
-            JobStorage.Current.GetMonitoringApi().ProcessingJobs(0, int.MaxValue));
-
-        var (jobId, _) = processingJobs.FirstOrDefault(x =>
-            x.Value?.Job?.Method is { } running &&
-            running.DeclaringType == method.DeclaringType &&
-            running.Name == method.Name);
-
-        if (!string.IsNullOrEmpty(jobId))
+        if (!BackgroundJob.SupportsCancellation)
         {
-            try
-            {
-                _logger.LogInformation("Attempting to cancel indexing job. Method: {MethodName}. JobId: {JobId}", method.Name, jobId);
+            _logger.LogWarning("Indexation cancellation was requested, but the active background job engine does not support it.");
+            return;
+        }
 
-                BackgroundJob.Delete(jobId);
+        var jobId = await GetCurrentJobIdAsync();
 
-                _logger.LogInformation("Indexing job cancellation requested. Method: {MethodName}. JobId: {JobId}", method.Name, jobId);
-            }
-            catch (Exception ex)
-            {
-                // Ignore concurrency exceptions, when somebody else cancelled it as well.
-                _logger.LogError(ex, "Error cancelling indexing job {JobId}", jobId);
-            }
+        if (string.IsNullOrEmpty(jobId))
+        {
+            return;
+        }
+
+        try
+        {
+            _logger.LogInformation("Attempting to cancel indexing job. JobId: {JobId}", jobId);
+
+            var canceled = await BackgroundJob.Cancel(jobId, cancellationToken);
+
+            _logger.LogInformation("Indexing job cancellation requested. JobId: {JobId}, Canceled: {Canceled}", jobId, canceled);
+        }
+        catch (Exception ex)
+        {
+            // Ignore concurrency exceptions, when somebody else cancelled it as well.
+            _logger.LogError(ex, "Error cancelling indexing job {JobId}", jobId);
         }
     }
 
+    [Obsolete("Use CancelIndexationAsync method instead", DiagnosticId = "VC0015", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+#pragma warning disable S4462
+    public void CancelIndexation()
+        => CancelIndexationAsync().GetAwaiter().GetResult();
+#pragma warning restore S4462
 
-    [Queue(JobPriority.Normal)]
-    public Task IndexAllDocumentsJob(string userName, string notificationId, IndexingOptions[] options, PerformContext context, CancellationToken cancellationToken)
+
+    public Task IndexAllDocumentsJob(string userName, string notificationId, IndexingOptions[] options, IJobExecutionContext context, CancellationToken cancellationToken)
     {
         return RunIndexJobAsync(userName, notificationId, false, options, IndexAllDocumentsAsync, context, cancellationToken);
     }
 
-    [Queue(JobPriority.Normal)]
-    [AutomaticRetry(Attempts = 0)]
-    [DisableConcurrentExecution(10)]
-    public async Task IndexChangesJob(string documentType, PerformContext context, CancellationToken cancellationToken)
+    /// <remarks>
+    /// [AutomaticRetry(Attempts = 0)] moved to the schedule, as AddRecurringJob(...).WithMaxRetryAttempts(0) - see
+    /// Module.Initialize; this job has no enqueue site of its own. [DisableConcurrentExecution(10)] is redundant:
+    /// <see cref="RunIndexJobAsync"/> takes a distributed lock that already serializes every indexation path across
+    /// the whole worker fleet.
+    /// </remarks>
+    public async Task IndexChangesJob(string documentType, IJobExecutionContext context, CancellationToken cancellationToken)
     {
         var allOptions = await GetAllIndexingOptionsAsync(documentType);
         foreach (var options in allOptions)
@@ -137,45 +151,38 @@ public sealed class IndexingJobs : IIndexingJobService
     }
 
 
-    private static void EnqueueIndexDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
+    private static Task EnqueueIndexDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null, CancellationToken cancellationToken = default)
     {
-        var buildersTypes = builders?.Select(x => x.GetType().FullName);
+        var payload = AbstractTypeFactory<IndexDocumentsJobPayload>.TryCreateInstance();
+        payload.DocumentType = documentType;
+        payload.DocumentIds = documentIds;
+        payload.BuilderTypes = builders?.Select(x => x.GetType().FullName).ToArray();
 
-        switch (priority)
-        {
-            case JobPriority.High:
-                BackgroundJob.Enqueue<IndexingJobs>(x => x.IndexDocumentsHighPriorityAsync(documentType, documentIds, buildersTypes, CancellationToken.None));
-                break;
-            case JobPriority.Normal:
-                BackgroundJob.Enqueue<IndexingJobs>(x => x.IndexDocumentsNormalPriorityAsync(documentType, documentIds, buildersTypes, CancellationToken.None));
-                break;
-            case JobPriority.Low:
-                BackgroundJob.Enqueue<IndexingJobs>(x => x.IndexDocumentsLowPriorityAsync(documentType, documentIds, buildersTypes, CancellationToken.None));
-                break;
-            default:
-                throw new ArgumentException($"Unknown priority: {priority}", nameof(priority));
-        }
+        // One handler for all priorities: the priority is the target queue, not a separate method.
+        return BackgroundJob.Enqueue<IndexDocumentsJobHandler>(payload, new EnqueueOptions { Queue = ValidatePriority(priority) }, cancellationToken);
     }
 
-    private static void EnqueueDeleteDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal)
+    private static Task EnqueueDeleteDocuments(string documentType, string[] documentIds, string priority = JobPriority.Normal, CancellationToken cancellationToken = default)
     {
-        switch (priority)
-        {
-            case JobPriority.High:
-                BackgroundJob.Enqueue<IndexingJobs>(x => x.DeleteDocumentsHighPriorityAsync(documentType, documentIds, CancellationToken.None));
-                break;
-            case JobPriority.Normal:
-                BackgroundJob.Enqueue<IndexingJobs>(x => x.DeleteDocumentsNormalPriorityAsync(documentType, documentIds, CancellationToken.None));
-                break;
-            case JobPriority.Low:
-                BackgroundJob.Enqueue<IndexingJobs>(x => x.DeleteDocumentsLowPriorityAsync(documentType, documentIds, CancellationToken.None));
-                break;
-            default:
-                throw new ArgumentException($"Unknown priority: {priority}", nameof(priority));
-        }
+        var payload = AbstractTypeFactory<DeleteDocumentsJobPayload>.TryCreateInstance();
+        payload.DocumentType = documentType;
+        payload.DocumentIds = documentIds;
+
+        return BackgroundJob.Enqueue<DeleteDocumentsJobHandler>(payload, new EnqueueOptions { Queue = ValidatePriority(priority) }, cancellationToken);
     }
 
-    public void EnqueueIndexAndDeleteDocuments(IList<IndexEntry> indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
+    // Kept as an explicit check because the queue is now a free-form string: an unknown priority used to be rejected
+    // by the switch below, and silently enqueuing onto a queue nobody drains would be a much quieter failure.
+    private static string ValidatePriority(string priority)
+    {
+        return priority switch
+        {
+            JobPriority.High or JobPriority.Normal or JobPriority.Low => priority,
+            _ => throw new ArgumentException($"Unknown priority: {priority}", nameof(priority)),
+        };
+    }
+
+    public async Task EnqueueIndexAndDeleteDocumentsAsync(IList<IndexEntry> indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null, CancellationToken cancellationToken = default)
     {
         var groupedEntriesByType = GetGroupedByTypeAndDistinctedByChangeTypeIndexEntries(indexEntries);
 
@@ -187,20 +194,26 @@ public sealed class IndexingJobs : IIndexingJobService
 
             if (addedEntryIds.Length > 0)
             {
-                EnqueueIndexDocuments(groupedEntryByType.Key, addedEntryIds, priority, builders: null);
+                await EnqueueIndexDocuments(groupedEntryByType.Key, addedEntryIds, priority, builders: null, cancellationToken: cancellationToken);
             }
 
             if (modifiedEntryIds.Length > 0)
             {
-                EnqueueIndexDocuments(groupedEntryByType.Key, modifiedEntryIds, priority, builders);
+                await EnqueueIndexDocuments(groupedEntryByType.Key, modifiedEntryIds, priority, builders, cancellationToken: cancellationToken);
             }
 
             if (deletedEntryIds.Length > 0)
             {
-                EnqueueDeleteDocuments(groupedEntryByType.Key, deletedEntryIds, priority);
+                await EnqueueDeleteDocuments(groupedEntryByType.Key, deletedEntryIds, priority, cancellationToken: cancellationToken);
             }
         }
     }
+
+    [Obsolete("Use EnqueueIndexAndDeleteDocumentsAsync method instead", DiagnosticId = "VC0015", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+#pragma warning disable S4462
+    public void EnqueueIndexAndDeleteDocuments(IList<IndexEntry> indexEntries, string priority = JobPriority.Normal, IList<IIndexDocumentBuilder> builders = null)
+        => EnqueueIndexAndDeleteDocumentsAsync(indexEntries, priority, builders).GetAwaiter().GetResult();
+#pragma warning restore S4462
 
     public static IEnumerable<IGrouping<string, IndexEntry>> GetGroupedByTypeAndDistinctedByChangeTypeIndexEntries(IEnumerable<IndexEntry> indexEntries)
     {
@@ -234,43 +247,7 @@ public sealed class IndexingJobs : IIndexingJobService
         return result.GroupBy(x => x.Type);
     }
 
-    [Queue(JobPriority.High)]
-    public Task IndexDocumentsHighPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
-    {
-        return IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, cancellationToken);
-    }
-
-    [Queue(JobPriority.Normal)]
-    public Task IndexDocumentsNormalPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
-    {
-        return IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, cancellationToken);
-    }
-
-    [Queue(JobPriority.Low)]
-    public Task IndexDocumentsLowPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
-    {
-        return IndexDocumentsCoreAsync(documentType, documentIds, builderTypes, cancellationToken);
-    }
-
-    [Queue(JobPriority.High)]
-    public Task DeleteDocumentsHighPriorityAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
-    {
-        return DeleteDocumentsCoreAsync(documentType, documentIds, cancellationToken);
-    }
-
-    [Queue(JobPriority.Normal)]
-    public Task DeleteDocumentsNormalPriorityAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
-    {
-        return DeleteDocumentsCoreAsync(documentType, documentIds, cancellationToken);
-    }
-
-    [Queue(JobPriority.Low)]
-    public Task DeleteDocumentsLowPriorityAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
-    {
-        return DeleteDocumentsCoreAsync(documentType, documentIds, cancellationToken);
-    }
-
-    private async Task IndexDocumentsCoreAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
+    public async Task IndexDocumentsAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
     {
         if (documentIds.IsNullOrEmpty())
         {
@@ -290,7 +267,7 @@ public sealed class IndexingJobs : IIndexingJobService
         }
     }
 
-    private async Task DeleteDocumentsCoreAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
+    public async Task DeleteDocumentsAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
     {
         if (documentIds.IsNullOrEmpty())
         {
@@ -311,13 +288,47 @@ public sealed class IndexingJobs : IIndexingJobService
     }
 
 
+    #region Legacy Hangfire entry points
+
+    // Kept for indexing jobs enqueued by an earlier version, which reference these methods by name. Hangfire persists
+    // a queued job as type name plus method name plus parameter types plus serialized args, so the signatures are
+    // byte-identical on purpose. The priority they used to carry in a [Queue] attribute is now the queue chosen at
+    // enqueue time, which is why all six collapse onto two methods here. Remove once no such job can still be pending.
+
+    [Obsolete("Enqueued indirectly by legacy Hangfire jobs only; new work uses IndexDocumentsJobHandler.", DiagnosticId = "VC0015", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+    public Task IndexDocumentsHighPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
+        => IndexDocumentsAsync(documentType, documentIds, builderTypes, cancellationToken);
+
+    [Obsolete("Enqueued indirectly by legacy Hangfire jobs only; new work uses IndexDocumentsJobHandler.", DiagnosticId = "VC0015", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+    public Task IndexDocumentsNormalPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
+        => IndexDocumentsAsync(documentType, documentIds, builderTypes, cancellationToken);
+
+    [Obsolete("Enqueued indirectly by legacy Hangfire jobs only; new work uses IndexDocumentsJobHandler.", DiagnosticId = "VC0015", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+    public Task IndexDocumentsLowPriorityAsync(string documentType, string[] documentIds, IEnumerable<string> builderTypes, CancellationToken cancellationToken)
+        => IndexDocumentsAsync(documentType, documentIds, builderTypes, cancellationToken);
+
+    [Obsolete("Enqueued indirectly by legacy Hangfire jobs only; new work uses DeleteDocumentsJobHandler.", DiagnosticId = "VC0015", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+    public Task DeleteDocumentsHighPriorityAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
+        => DeleteDocumentsAsync(documentType, documentIds, cancellationToken);
+
+    [Obsolete("Enqueued indirectly by legacy Hangfire jobs only; new work uses DeleteDocumentsJobHandler.", DiagnosticId = "VC0015", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+    public Task DeleteDocumentsNormalPriorityAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
+        => DeleteDocumentsAsync(documentType, documentIds, cancellationToken);
+
+    [Obsolete("Enqueued indirectly by legacy Hangfire jobs only; new work uses DeleteDocumentsJobHandler.", DiagnosticId = "VC0015", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+    public Task DeleteDocumentsLowPriorityAsync(string documentType, string[] documentIds, CancellationToken cancellationToken)
+        => DeleteDocumentsAsync(documentType, documentIds, cancellationToken);
+
+    #endregion
+
+
     private async Task<bool> RunIndexJobAsync(
         string currentUserName,
         string notificationId,
         bool suppressInsignificantNotifications,
         IEnumerable<IndexingOptions> allOptions,
         Func<IndexingOptions, CancellationToken, Task> indexationFunc,
-        PerformContext context,
+        IJobExecutionContext context,
         CancellationToken cancellationToken)
     {
         // Materialize once. The parameter is typed as IEnumerable so callers could pass a deferred
@@ -338,45 +349,70 @@ public sealed class IndexingJobs : IIndexingJobService
         // CAUTION: locking mechanism assumes single threaded execution.
         try
         {
-            using var connection = JobStorage.Current.GetConnection();
-            using (connection.AcquireDistributedLock("IndexationJob", TimeSpan.Zero))
-            {
-                try
+            // tryLockTimeout stays null: fail immediately when another run holds the lock, matching the TimeSpan.Zero
+            // the Hangfire AcquireDistributedLock was called with.
+            await _distributedLockService.ExecuteAsync(
+                IndexationLockKey,
+                async () =>
                 {
-                    var tasks = optionsArray.Select(x => indexationFunc(x, cancellationToken)).ToArray();
-                    await Task.WhenAll(tasks);
+                    // Publish the engine-assigned id ONLY after the lock is held - i.e. only for the run that is
+                    // actually executing - so CancelIndexation targets the live job. A run that loses the lock never
+                    // reaches here, so it can neither overwrite the winner's id nor clear it out from under it.
+                    await SetCurrentJobIdAsync(context?.JobId);
+                    try
+                    {
+                        var tasks = optionsArray.Select(x => indexationFunc(x, cancellationToken)).ToArray();
+                        await Task.WhenAll(tasks);
 
-                    success = true;
-                }
-                // Hangfire 1.7+ injects a CancellationToken that fires on both server shutdown
-                // AND Hangfire-side deletion; both surface as OperationCanceledException.
-                catch (OperationCanceledException)
-                {
-                    var documentTypes = string.Join(", ", optionsArray.Select(o => o?.DocumentType ?? "<null>"));
-                    _logger.LogWarning("Indexing job {JobId} was cancelled. User: {UserName}, NotificationId: {NotificationId}, DocumentTypes: {DocumentTypes}",
-                        context?.BackgroundJob?.Id, currentUserName, notificationId, documentTypes);
-                    _progressHandler.Cancel();
-                }
-                catch (Exception ex)
-                {
-                    _progressHandler.Exception(ex, notification);
-                }
-                finally
-                {
-                    // Always seal this run's notification so it reaches a terminal state.
-                    // (Previously deferred to IndexAllDocumentsJob's outer finally for manual jobs,
-                    // which sealed whatever the shared _notification pointed at by then.)
-                    _progressHandler.Finish(notification);
-                }
-            }
+                        success = true;
+                    }
+                    // The engine passes a token that fires on shutdown AND on job cancellation;
+                    // both surface as OperationCanceledException, exactly as under Hangfire.
+                    catch (OperationCanceledException)
+                    {
+                        var documentTypes = string.Join(", ", optionsArray.Select(o => o?.DocumentType ?? "<null>"));
+                        _logger.LogWarning("Indexing job {JobId} was cancelled. User: {UserName}, NotificationId: {NotificationId}, DocumentTypes: {DocumentTypes}",
+                            context?.JobId, currentUserName, notificationId, documentTypes);
+                        _progressHandler.Cancel();
+                    }
+                    catch (Exception ex)
+                    {
+                        _progressHandler.Exception(ex, notification);
+                    }
+                    finally
+                    {
+                        // Always seal this run's notification so it reaches a terminal state.
+                        // (Previously deferred to IndexAllDocumentsJob's outer finally for manual jobs,
+                        // which sealed whatever the shared _notification pointed at by then.)
+                        _progressHandler.Finish(notification);
+
+                        // Clear only the id this run set, and only because this run is the lock holder.
+                        await SetCurrentJobIdAsync(null);
+                    }
+
+                    return true;
+                },
+                lockTimeout: _indexationLockTimeout,
+                cancellationToken: cancellationToken);
         }
-        catch
+        catch (PlatformException)
         {
-            // TODO: Check wait in calling method
+            // Another indexation holds the lock. IDistributedLockService reports that as PlatformException, where the
+            // Hangfire lock threw DistributedLockTimeoutException and the bare catch below swallowed everything.
             _progressHandler.AlreadyInProgress();
         }
 
         return success;
+    }
+
+    private Task<string> GetCurrentJobIdAsync()
+    {
+        return _settingsManager.GetValueAsync<string>(ModuleConstants.Settings.IndexingJobs.CurrentJobId);
+    }
+
+    private Task SetCurrentJobIdAsync(string jobId)
+    {
+        return _settingsManager.SetValueAsync(ModuleConstants.Settings.IndexingJobs.CurrentJobId.Name, jobId ?? string.Empty);
     }
 
     private async Task IndexAllDocumentsAsync(IndexingOptions options, CancellationToken cancellationToken)
@@ -434,16 +470,9 @@ public sealed class IndexingJobs : IIndexingJobService
         var result = (await _indexingManager.GetIndexStateAsync(documentType)).LastIndexationDate;
         if (result != null)
         {
-            var settingDescriptor = new SettingDescriptor
-            {
-                Name = GetLastIndexationDateName(documentType),
-                ValueType = SettingValueType.DateTime,
-                DefaultValue = DateTime.MaxValue,
-            };
-
             //need to take the older date from the dates loaded from the index and settings.
             //Because the actual last indexation date stored in the index may be later than last job run are stored in the settings. e.g. after data import or direct database changes
-            var settingValue = await _settingsManager.GetValueAsync<DateTime>(settingDescriptor);
+            var settingValue = await _settingsManager.GetValueAsync<DateTime>(ModuleConstants.Settings.IndexingJobs.IndexationDate(documentType));
             result = new DateTime(Math.Min(result.Value.Ticks, settingValue.Ticks), DateTimeKind.Utc);
         }
 
@@ -455,13 +484,8 @@ public sealed class IndexingJobs : IIndexingJobService
         var currentValue = await GetLastIndexationDateAsync(documentType);
         if (currentValue == oldValue)
         {
-            await _settingsManager.SetValueAsync(GetLastIndexationDateName(documentType), newValue);
+            await _settingsManager.SetValueAsync(ModuleConstants.Settings.IndexingJobs.IndexationDate(documentType).Name, newValue);
         }
-    }
-
-    private static string GetLastIndexationDateName(string documentType)
-    {
-        return $"VirtoCommerce.Search.IndexingJobs.IndexationDate.{documentType}";
     }
 
     private Task<int> GetBatchSizeAsync()

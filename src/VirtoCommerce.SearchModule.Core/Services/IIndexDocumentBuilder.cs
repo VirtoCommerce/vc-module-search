@@ -17,7 +17,7 @@ public interface IIndexDocumentBuilder
 
     /// <summary>
     /// Cancellation-aware overload. Implementations should poll the token at their own loop boundaries
-    /// (e.g. between document fetches or between paginated sub-queries) so that a Hangfire-deletion
+    /// (e.g. between document fetches or between paginated sub-queries) so that a cancellation
     /// of the owning job aborts the call promptly. The default implementation delegates to the
     /// legacy overload to preserve backwards compatibility.
     /// </summary>

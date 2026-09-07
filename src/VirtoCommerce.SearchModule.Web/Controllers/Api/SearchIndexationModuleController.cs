@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using VirtoCommerce.Platform.Core.Jobs;
 using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.SearchModule.Core.BackgroundJobs;
@@ -90,10 +93,10 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         [HttpPost]
         [Route("index")]
         [Authorize(Permissions.IndexRebuild)]
-        public ActionResult<IndexProgressPushNotification> IndexDocuments([FromBody] IndexingOptions[] options)
+        public async Task<ActionResult<IndexProgressPushNotification>> IndexDocuments([FromBody] IndexingOptions[] options, CancellationToken cancellationToken = default)
         {
             var currentUserName = _userNameResolver.GetCurrentUserName();
-            var notification = _indexingJobService.Enqueue(currentUserName, options);
+            var notification = await _indexingJobService.EnqueueAsync(currentUserName, options, cancellationToken);
             _pushNotifier.Send(notification);
             return Ok(notification);
         }
@@ -102,9 +105,23 @@ namespace VirtoCommerce.SearchModule.Web.Controllers.Api
         [HttpGet]
         [Route("tasks/{taskId}/cancel")]
         [Authorize(Permissions.IndexRebuild)]
-        public ActionResult CancelIndexationProcess(string taskId)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+        public async Task<ActionResult> CancelIndexationProcess(string taskId, CancellationToken cancellationToken = default)
         {
-            _indexingJobService.CancelIndexation();
+            // Cancellation is engine-dependent: Hangfire can recall a job by id, RabbitMQ cannot - a published message
+            // is gone. Report that instead of answering 200 to a request that changed nothing, so the Indexation blade
+            // can hide the Cancel button rather than leave the operator waiting for a stop that never comes.
+            if (!BackgroundJob.SupportsCancellation)
+            {
+                return Problem(
+                    statusCode: StatusCodes.Status501NotImplemented,
+                    title: "Cancellation is not supported",
+                    detail: "The active background job engine cannot cancel a running job. Wait for the indexation to finish.");
+            }
+
+            await _indexingJobService.CancelIndexationAsync(cancellationToken);
+
             return Ok();
         }
 

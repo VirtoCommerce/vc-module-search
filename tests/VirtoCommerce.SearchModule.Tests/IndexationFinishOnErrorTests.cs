@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Hangfire;
-using Hangfire.MemoryStorage;
-using Hangfire.Server;
-using Hangfire.Storage;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using VirtoCommerce.Platform.Core.DistributedLock;
 using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.SearchModule.Core.Model;
@@ -24,13 +21,6 @@ namespace VirtoCommerce.SearchModule.Tests;
 // must still be set so the Admin "Indexation" blade leaves the "In progress" state.
 public class IndexationFinishOnErrorTests
 {
-    public IndexationFinishOnErrorTests()
-    {
-        // A real (in-memory) Hangfire storage so RunIndexJobAsync can acquire the
-        // distributed "IndexationJob" lock and build a PerformContext exactly like production.
-        JobStorage.Current = new MemoryStorage();
-    }
-
     [Fact]
     public async Task ManualIndexation_WhenIndexationThrows_SealsNotificationFinished_VCST5091()
     {
@@ -52,13 +42,13 @@ public class IndexationFinishOnErrorTests
             new IndexDocumentConfiguration { DocumentType = "Member" },
         };
 
-        var jobs = new IndexingJobs(documentConfigs, indexingManager, new Mock<ISettingsManager>().Object, handler, NullLogger<IndexingJobs>.Instance);
+        var jobs = new IndexingJobs(documentConfigs, indexingManager, CreateSettingsManager(), handler, new PassThroughLockService(), NullLogger<IndexingJobs>.Instance);
 
         var options = new[] { new IndexingOptions { DocumentType = "Member" } };
-        var context = CreatePerformContext();
 
-        // Act: run the manual job (non-empty notificationId) whose indexation throws.
-        await jobs.IndexAllDocumentsJob("admin", notification.Id, options, context, CancellationToken.None);
+        // Act: run the manual job (non-empty notificationId) whose indexation throws. Context is null (no engine):
+        // RunIndexJobAsync treats a null context as "driven outside a job", exactly as documented.
+        await jobs.IndexAllDocumentsJob("admin", notification.Id, options, context: null, CancellationToken.None);
 
         // Assert: the blade-polled notification must be sealed (terminal state) with the error recorded.
         Assert.True(notification.Finished.HasValue,
@@ -83,19 +73,19 @@ public class IndexationFinishOnErrorTests
 
         var handler = new IndexProgressHandler(NullLogger<IndexProgressHandler>.Instance, pushManager);
         var documentConfigs = new[] { new IndexDocumentConfiguration { DocumentType = "Member" } };
-        var jobs = new IndexingJobs(documentConfigs, new ReentrantThrowingIndexingManager(), new Mock<ISettingsManager>().Object, handler, NullLogger<IndexingJobs>.Instance);
+        var jobs = new IndexingJobs(documentConfigs, new ReentrantThrowingIndexingManager(), CreateSettingsManager(), handler, new PassThroughLockService(), NullLogger<IndexingJobs>.Instance);
 
         IndexingManagerCallback.SecondJob = async () =>
         {
             // A second manual indexation is triggered while the first is mid-flight (same handler instance).
             var secondOptions = new[] { new IndexingOptions { DocumentType = "Member" } };
-            await jobs.IndexAllDocumentsJob("admin", secondNotification.Id, secondOptions, CreatePerformContext(), CancellationToken.None);
+            await jobs.IndexAllDocumentsJob("admin", secondNotification.Id, secondOptions, context: null, CancellationToken.None);
         };
 
         var options = new[] { new IndexingOptions { DocumentType = "Member" } };
 
         // Act
-        await jobs.IndexAllDocumentsJob("admin", firstNotification.Id, options, CreatePerformContext(), CancellationToken.None);
+        await jobs.IndexAllDocumentsJob("admin", firstNotification.Id, options, context: null, CancellationToken.None);
 
         // Assert: BOTH notifications must end sealed.
         Assert.True(secondNotification.Finished.HasValue, "Second job notification was not sealed.");
@@ -103,14 +93,26 @@ public class IndexationFinishOnErrorTests
             "First manual job's notification.Finished was lost because a second job reassigned the shared handler state before the first job sealed it (VCST-5091).");
     }
 
-    private static PerformContext CreatePerformContext()
+    // The job persists its current job id via SetValueAsync/GetValueAsync, which call GetObjectSettingAsync;
+    // return a real entry so those settings calls don't NRE and the job proceeds to the indexation path under test.
+    private static ISettingsManager CreateSettingsManager()
     {
-        var storage = JobStorage.Current;
-        var connection = storage.GetConnection();
-        var backgroundJob = new BackgroundJob(Guid.NewGuid().ToString("N"), null, DateTime.UtcNow);
-#pragma warning disable CS0618 // JobCancellationToken is the only public IJobCancellationToken impl available for tests
-        return new PerformContext(storage, connection, backgroundJob, new JobCancellationToken(false));
-#pragma warning restore CS0618
+        var settings = new Mock<ISettingsManager>();
+        settings
+            .Setup(x => x.GetObjectSettingAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync((string name, string _, string __) => new ObjectSettingEntry { Name = name });
+        return settings.Object;
+    }
+
+    // Runs the guarded delegate immediately (lock always acquired) so the job body executes and the
+    // finish-on-error path is exercised — replaces the real distributed lock in tests.
+    private sealed class PassThroughLockService : IDistributedLockService
+    {
+        public T Execute<T>(string resourceKey, Func<T> resolver, TimeSpan? lockTimeout = null, TimeSpan? tryLockTimeout = null, TimeSpan? retryInterval = null, CancellationToken? cancellationToken = null)
+            => resolver();
+
+        public Task<T> ExecuteAsync<T>(string resourceKey, Func<Task<T>> resolver, TimeSpan? lockTimeout = null, TimeSpan? tryLockTimeout = null, TimeSpan? retryInterval = null, CancellationToken? cancellationToken = null)
+            => resolver();
     }
 
     private sealed class ThrowingIndexingManager : StubIndexingManager
