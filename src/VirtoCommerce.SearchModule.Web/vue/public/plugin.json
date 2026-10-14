@@ -5,7 +5,7 @@
       {
         "id": "search-index",
         "sectionId": "configuration",
-        "title": "Search index",
+        "title": "Search Index",
         "icon": "lucide-search",
         "route": "/search-index",
         "permission": "search:index:access",

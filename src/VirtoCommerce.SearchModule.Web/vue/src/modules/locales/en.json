@@ -1,11 +1,11 @@
 {
   "SEARCH": {
     "MENU": {
-      "TITLE": "Search index"
+      "TITLE": "Search Index"
     },
     "PAGES": {
       "LIST": {
-        "TITLE": "Search index",
+        "TITLE": "Search Index",
         "EMPTY": "No document types",
         "NA": "N/A",
         "ACTIVE": "Active",
