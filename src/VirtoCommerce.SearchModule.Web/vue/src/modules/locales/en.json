@@ -5,7 +5,6 @@
     },
     "PAGES": {
       "LIST": {
-        "TITLE": "Search Index",
         "EMPTY": "No document types",
         "NA": "N/A",
         "ACTIVE": "Active",

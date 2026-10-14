@@ -1,6 +1,6 @@
 <template>
   <VcBlade
-    :title="$t('SEARCH.PAGES.LIST.TITLE')"
+    :title="$t('SEARCH.MENU.TITLE')"
     :toolbar-items="bladeToolbar"
     :loading="loading"
     width="50%"
