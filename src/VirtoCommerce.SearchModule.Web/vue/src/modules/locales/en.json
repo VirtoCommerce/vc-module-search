@@ -1,0 +1,109 @@
+{
+  "SEARCH": {
+    "MENU": {
+      "TITLE": "Search index"
+    },
+    "PAGES": {
+      "LIST": {
+        "TITLE": "Search index",
+        "EMPTY": "No document types",
+        "NA": "N/A",
+        "ACTIVE": "Active",
+        "BACKUP": "Backup",
+        "COLUMNS": {
+          "TYPE": "Document type",
+          "LAST_BUILD": "Last build",
+          "COUNT": "Indexed documents",
+          "PROVIDER": "Provider",
+          "SCOPE": "Scope",
+          "STATE": "Index"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Refresh",
+          "BUILD": "Build index",
+          "SHOW_BACKUP": "Show backup indices",
+          "HIDE_BACKUP": "Hide backup indices"
+        },
+        "ACTIONS": {
+          "BUILD": "Build index",
+          "MAPPING": "Value mapping",
+          "SWAP": "Swap index"
+        }
+      },
+      "PROGRESS": {
+        "TITLE": "Indexing",
+        "TOOLBAR": {
+          "CANCEL": "Cancel"
+        }
+      },
+      "MAPPING": {
+        "TITLE": "Value mapping",
+        "EMPTY": "No field mappings for this document type",
+        "COLUMNS": {
+          "FIELD": "Field",
+          "VALUES": "Mapped values"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Refresh",
+          "ADD": "Add",
+          "DELETE": "Delete"
+        }
+      },
+      "FIELD": {
+        "NEW": "New field mapping",
+        "FIELD_NAME": "Field name",
+        "FIELD_NAME_HINT": "Name of the indexed field, e.g. color",
+        "VALUES": "Values",
+        "VALUE": "Value",
+        "SYNONYMS": "Synonyms",
+        "SYNONYMS_HINT": "Type a synonym and press Enter",
+        "NO_VALUES": "No values yet: add one from the toolbar",
+        "TOOLBAR": {
+          "SAVE": "Save",
+          "RESET": "Reset",
+          "ADD_VALUE": "Add value",
+          "DELETE": "Delete"
+        },
+        "REMOVE_VALUE": "Remove value"
+      },
+      "DOCUMENT": {
+        "TITLE": "Index",
+        "NO_INDEX": "This object isn't indexed yet",
+        "BUILD_DATE": "Build date",
+        "CONTENT": "Index content",
+        "TOOLBAR": {
+          "REBUILD": "Rebuild index",
+          "COPY": "Copy to clipboard"
+        }
+      }
+    },
+    "WIDGET": {
+      "LOADING": "Index…",
+      "OK": "Index up to date",
+      "OLD": "Index outdated",
+      "NONE": "Not indexed"
+    },
+    "BUILD": {
+      "TITLE": "Build index",
+      "MESSAGE": "Build the index of {types}?",
+      "NOTE_INDEX": "Build: add and update documents in the existing index; the search keeps working meanwhile.",
+      "NOTE_REBUILD": "Rebuild: delete the existing index and index everything from scratch; searches return incomplete results until it finishes.",
+      "INDEX": "Build",
+      "REBUILD": "Delete and rebuild",
+      "CANCEL": "Cancel"
+    },
+    "JOB": {
+      "STARTED": "Started",
+      "FINISHED": "Finished",
+      "ELAPSED": "Elapsed",
+      "PROCESSED": "Processed",
+      "ERRORS": "Errors"
+    },
+    "ALERTS": {
+      "DELETE_FIELDS": "Delete {count} field mapping(s)?",
+      "SWAP": "Make the backup index of {type} active?",
+      "COPIED": "Copied to the clipboard",
+      "CLOSE_CONFIRMATION": "You have unsaved changes. Are you sure you want to close?"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  // Search index admin UI for the Admin Shell host (Module Federation remote)
+  "remote": { "name": "search_admin", "exposed": "./Module" },
+  "contributions": {
+    "menu": [
+      {
+        "id": "search-index",
+        "sectionId": "configuration",
+        "title": "Search index",
+        "icon": "lucide-search",
+        "route": "/search-index",
+        "permission": "search:index:access",
+        "priority": 60,
+        "replaces": "legacy.searchIndex"
+      }
+    ]
+  }
+}
