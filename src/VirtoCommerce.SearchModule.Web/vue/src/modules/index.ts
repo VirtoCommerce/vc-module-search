@@ -1,30 +1,25 @@
 import * as blades from "./pages";
 import * as locales from "./locales";
-import { defineAppModule, registerExternalWidget } from "@vc-shell/framework";
-import { defineComponent, h, markRaw } from "vue";
+import { defineAppModule } from "@vc-shell/framework";
+import type { App, Component } from "vue";
 import IndexWidget from "./widgets/IndexWidget.vue";
 
-// The "Index" widget the Catalog, Customer and Orders modules put on their details blades (AngularJS:
-// virtoCommerce.searchModule.indexWidgetController with a documentType), registered here by blade name.
-const targets: [string, string][] = [
-  ["CatalogProductDetails", "Product"],
-  ["CatalogCategoryDetails", "Category"],
-  ["CustomerContactDetails", "Member"],
-  ["CustomerOrganizationDetails", "Member"],
-  ["OrdersDetails", "CustomerOrder"],
-];
-for (const [blade, documentType] of targets) {
-  registerExternalWidget({
-    id: `SearchIndex${blade}`,
-    title: "Index",
-    component: markRaw(defineComponent({ name: `SearchIndexWidget${documentType}`, setup: () => () => h(IndexWidget, { documentType }) })),
-    targetBlades: [blade],
-    // saved entities only (a new one has no index document; AngularJS showed none there either)
-    isVisible: (b) => !!b?.param,
-  });
+/** The part of the Admin Shell's shared widgets this module uses (vc-module-admin-shell, docs/blade-widgets.md) */
+interface SharedWidgets {
+  provide(id: string, component: Component): void;
 }
 
-export default defineAppModule({
+const appModule = defineAppModule({
   blades,
   locales,
 });
+
+export default {
+  install(app: App) {
+    appModule.install(app);
+    // The "Index" widget (AngularJS indexWidgetController): the modules whose entities are indexed (Catalog, Customer,
+    // Orders) depend on Search and place it on their own details blades with a documentType prop, as they did in
+    // AngularJS. Search never registers widgets on their blades.
+    (app.config.globalProperties.$sharedWidgets as SharedWidgets | undefined)?.provide("search.index", IndexWidget);
+  },
+};
