@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "search:index:rebuild": "تتيح مسح فهرس البحث وإعادة بنائه",
+    "search:index:access": "تتيح الوصول إلى قائمة فهرس البحث",
+    "search:index:manage": "تتيح تحرير تكوين الفهرس"
+  },
+  "settings": {
+    "VirtoCommerce.Search.IndexingJobs.Enable": {
+      "title": "مهام الفهرسة المنتظمة",
+      "description": "تفعيل منشئات فهرس البحث المنتظمة أو تعطيلها"
+    },
+    "VirtoCommerce.Search.IndexingJobs.CronExpression": {
+      "title": "تعبير Cron لمهمة الفهرسة",
+      "description": "للتشغيل كل X دقيقة، استخدم '0/x * * * *'. وللتشغيل كل X ساعة، استخدم '0 */x * * *'. يمكنك أيضًا تحديد X دقيقة بالصيغة '15 */x * * *'، وكل X يوم بالصيغة '0 0 */x * *'."
+    },
+    "VirtoCommerce.Search.IndexPartitionSize": {
+      "title": "الحد الأقصى لعدد العناصر في جزء الفهرسة",
+      "description": "أدخل الحد الأقصى لعدد العناصر في كل جزء من أجزاء الفهرسة. قد تؤدي القيم الكبيرة إلى إبطاء الأداء."
+    },
+    "VirtoCommerce.Search.PartialDocumentUpdate.Enable": {
+      "title": "التحديث الجزئي للمستندات",
+      "description": "تفعيل التحديثات الجزئية للمستندات إذا كان مزوّد البحث يدعمها"
+    }
+  }
+}
