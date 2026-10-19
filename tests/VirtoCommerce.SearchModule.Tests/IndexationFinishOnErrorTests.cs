@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using VirtoCommerce.Platform.Core.DistributedLock;
 using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.SearchModule.Core.Model;
@@ -42,7 +41,7 @@ public class IndexationFinishOnErrorTests
             new IndexDocumentConfiguration { DocumentType = "Member" },
         };
 
-        var jobs = new IndexingJobs(documentConfigs, indexingManager, CreateSettingsManager(), handler, new PassThroughLockService(), NullLogger<IndexingJobs>.Instance);
+        var jobs = new IndexingJobs(documentConfigs, indexingManager, CreateSettingsManager(), handler, new AcquiringDistributedLock(), NullLogger<IndexingJobs>.Instance);
 
         var options = new[] { new IndexingOptions { DocumentType = "Member" } };
 
@@ -73,7 +72,7 @@ public class IndexationFinishOnErrorTests
 
         var handler = new IndexProgressHandler(NullLogger<IndexProgressHandler>.Instance, pushManager);
         var documentConfigs = new[] { new IndexDocumentConfiguration { DocumentType = "Member" } };
-        var jobs = new IndexingJobs(documentConfigs, new ReentrantThrowingIndexingManager(), CreateSettingsManager(), handler, new PassThroughLockService(), NullLogger<IndexingJobs>.Instance);
+        var jobs = new IndexingJobs(documentConfigs, new ReentrantThrowingIndexingManager(), CreateSettingsManager(), handler, new AcquiringDistributedLock(), NullLogger<IndexingJobs>.Instance);
 
         IndexingManagerCallback.SecondJob = async () =>
         {
@@ -102,17 +101,6 @@ public class IndexationFinishOnErrorTests
             .Setup(x => x.GetObjectSettingAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync((string name, string _, string __) => new ObjectSettingEntry { Name = name });
         return settings.Object;
-    }
-
-    // Runs the guarded delegate immediately (lock always acquired) so the job body executes and the
-    // finish-on-error path is exercised — replaces the real distributed lock in tests.
-    private sealed class PassThroughLockService : IDistributedLockService
-    {
-        public T Execute<T>(string resourceKey, Func<T> resolver, TimeSpan? lockTimeout = null, TimeSpan? tryLockTimeout = null, TimeSpan? retryInterval = null, CancellationToken? cancellationToken = null)
-            => resolver();
-
-        public Task<T> ExecuteAsync<T>(string resourceKey, Func<Task<T>> resolver, TimeSpan? lockTimeout = null, TimeSpan? tryLockTimeout = null, TimeSpan? retryInterval = null, CancellationToken? cancellationToken = null)
-            => resolver();
     }
 
     private sealed class ThrowingIndexingManager : StubIndexingManager

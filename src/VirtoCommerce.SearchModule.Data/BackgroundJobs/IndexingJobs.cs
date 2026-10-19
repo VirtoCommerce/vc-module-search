@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.DistributedLock;
-using VirtoCommerce.Platform.Core.Exceptions;
 using VirtoCommerce.Platform.Core.Jobs;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.SearchModule.Core;
@@ -27,12 +26,6 @@ public sealed class IndexingJobs : IIndexingJobService
     public const string IndexationLockKey = "IndexationJob";
 
     /// <summary>
-    /// How long the indexation lock is held. Hangfire's lock lived as long as its connection; this one is a TTL, so a
-    /// run that outlasts it can be joined by a second one. A full reindex of a large catalog runs for hours.
-    /// </summary>
-    private static readonly TimeSpan _indexationLockTimeout = TimeSpan.FromHours(12);
-
-    /// <summary>
     /// Where the id of the in-flight indexation is parked so <see cref="CancelIndexation"/> can find it.
     /// </summary>
     /// <remarks>
@@ -46,7 +39,7 @@ public sealed class IndexingJobs : IIndexingJobService
     private readonly IIndexingManager _indexingManager;
     private readonly ISettingsManager _settingsManager;
     private readonly IndexProgressHandler _progressHandler;
-    private readonly IDistributedLockService _distributedLockService;
+    private readonly IDistributedLock _distributedLock;
     private readonly ILogger<IndexingJobs> _logger;
 
     public IndexingJobs(
@@ -54,14 +47,14 @@ public sealed class IndexingJobs : IIndexingJobService
         IIndexingManager indexingManager,
         ISettingsManager settingsManager,
         IndexProgressHandler progressHandler,
-        IDistributedLockService distributedLockService,
+        IDistributedLock distributedLock,
         ILogger<IndexingJobs> logger)
     {
         _documentsConfigs = documentsConfigs;
         _indexingManager = indexingManager;
         _settingsManager = settingsManager;
         _progressHandler = progressHandler;
-        _distributedLockService = distributedLockService;
+        _distributedLock = distributedLock;
         _logger = logger ?? NullLogger<IndexingJobs>.Instance;
     }
 
@@ -345,15 +338,17 @@ public sealed class IndexingJobs : IIndexingJobService
         // Admin "Indexation" blade keeps spinning "In progress" forever (VCST-5091).
         var notification = _progressHandler.Start(currentUserName, notificationId, suppressInsignificantNotifications, context);
 
-        // Make sure only one indexation job can run in the cluster.
+        // Make sure only one indexation job runs in the cluster. TryExecuteAsync acquires the lock, runs the work and
+        // ALWAYS releases the lock afterwards (the handle is disposed in a finally). The Redis lock is lease-based: it is
+        // auto-extended while the holder lives and expires on its own once the holder's process dies, so a crashed run
+        // never keeps it. TimeSpan.Zero: do not wait - skip immediately when another run already holds it.
         // CAUTION: locking mechanism assumes single threaded execution.
+        bool acquired;
         try
         {
-            // tryLockTimeout stays null: fail immediately when another run holds the lock, matching the TimeSpan.Zero
-            // the Hangfire AcquireDistributedLock was called with.
-            await _distributedLockService.ExecuteAsync(
+            acquired = await _distributedLock.TryExecuteAsync(
                 IndexationLockKey,
-                async () =>
+                async lockToken =>
                 {
                     // Publish the engine-assigned id ONLY after the lock is held - i.e. only for the run that is
                     // actually executing - so CancelIndexation targets the live job. A run that loses the lock never
@@ -361,13 +356,15 @@ public sealed class IndexingJobs : IIndexingJobService
                     await SetCurrentJobIdAsync(context?.JobId);
                     try
                     {
-                        var tasks = optionsArray.Select(x => indexationFunc(x, cancellationToken)).ToArray();
+                        // lockToken is cancelled on shutdown, on job cancellation AND when the lock is lost, so a run
+                        // that loses the lock stops instead of writing to an index another holder now owns.
+                        var tasks = optionsArray.Select(x => indexationFunc(x, lockToken)).ToArray();
                         await Task.WhenAll(tasks);
 
                         success = true;
                     }
-                    // The engine passes a token that fires on shutdown AND on job cancellation;
-                    // both surface as OperationCanceledException, exactly as under Hangfire.
+                    // The token fires on shutdown, job cancellation AND lock loss;
+                    // all surface as OperationCanceledException, exactly as under Hangfire.
                     catch (OperationCanceledException)
                     {
                         var documentTypes = string.Join(", ", optionsArray.Select(o => o?.DocumentType ?? "<null>"));
@@ -382,23 +379,38 @@ public sealed class IndexingJobs : IIndexingJobService
                     finally
                     {
                         // Always seal this run's notification so it reaches a terminal state.
-                        // (Previously deferred to IndexAllDocumentsJob's outer finally for manual jobs,
-                        // which sealed whatever the shared _notification pointed at by then.)
                         _progressHandler.Finish(notification);
 
                         // Clear only the id this run set, and only because this run is the lock holder.
                         await SetCurrentJobIdAsync(null);
                     }
-
-                    return true;
                 },
-                lockTimeout: _indexationLockTimeout,
+                timeout: TimeSpan.Zero,
                 cancellationToken: cancellationToken);
         }
-        catch (PlatformException)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            // Another indexation holds the lock. IDistributedLockService reports that as PlatformException, where the
-            // Hangfire lock threw DistributedLockTimeoutException and the bare catch below swallowed everything.
+            // The lock store (Redis) was unreachable, or the lock was lost while the work ran. Make it a VISIBLE
+            // failure: log it, record it on the notification, seal the notification so the Admin blade does not spin,
+            // and rethrow so the background job is marked failed - never a silent success.
+            _logger.LogError(ex, "Indexation could not run under the '{LockKey}' lock. JobId: {JobId}, User: {UserName}",
+                IndexationLockKey, context?.JobId, currentUserName);
+            _progressHandler.Exception(ex, notification);
+            _progressHandler.Finish(notification);
+            throw;
+        }
+
+        if (!acquired)
+        {
+            // Another indexation already holds the lock, so this run indexed nothing. Make it VISIBLE: this path used
+            // to swallow the contention silently, so a stuck lock looked like a successful run that produced zero
+            // documents. Log it and record it on the notification. The lease frees a dead holder on its own; a repeat
+            // here means a live hung holder that must be stopped.
+            var documentTypes = string.Join(", ", optionsArray.Select(o => o?.DocumentType ?? "<null>"));
+            _logger.LogError(
+                "Indexation skipped: the '{LockKey}' lock is held by another run, so nothing was indexed. " +
+                "JobId: {JobId}, User: {UserName}, DocumentTypes: {DocumentTypes}. If this repeats, the lock is stuck behind a hung indexation holder.",
+                IndexationLockKey, context?.JobId, currentUserName, documentTypes);
             _progressHandler.AlreadyInProgress();
         }
 
