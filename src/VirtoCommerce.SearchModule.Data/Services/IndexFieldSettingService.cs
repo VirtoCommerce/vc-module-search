@@ -15,10 +15,14 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
 {
     private static readonly StringComparer _ignoreCase = StringComparer.OrdinalIgnoreCase;
 
+    // The setting holds every field setting as one JSON document - megabytes once a value mapping carries thousands of
+    // synonyms - and FieldValueConverter reads it for every indexed batch. Parse it once per distinct value: a save,
+    // a change made on another instance and a configuration override all arrive as a different string.
+    private static ParsedFieldSettings _parsedFieldSettings;
+
     public async Task<IndexFieldSettingSearchResult> SearchAsync(IndexFieldSettingSearchCriteria criteria, bool clone = true)
     {
-        var fieldSettings = await GetAllFieldSettings();
-        var query = fieldSettings.AsQueryable();
+        IEnumerable<IndexFieldSetting> query = await GetAllFieldSettings();
 
         if (criteria.DocumentType != null)
         {
@@ -36,7 +40,7 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
         }
 
         var result = AbstractTypeFactory<IndexFieldSettingSearchResult>.TryCreateInstance();
-        result.Results = query.ToList();
+        result.Results = ToList(query, clone);
         result.TotalCount = result.Results.Count;
 
         return result;
@@ -51,9 +55,7 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
 
         var fieldSettings = await GetAllFieldSettings();
 
-        return fieldSettings
-            .Where(x => ids.Contains(x.Id, _ignoreCase))
-            .ToList();
+        return ToList(fieldSettings.Where(x => ids.Contains(x.Id, _ignoreCase)), clone);
     }
 
     public async Task SaveChangesAsync(IList<IndexFieldSetting> models)
@@ -63,7 +65,7 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
             return;
         }
 
-        var fieldSettings = await GetAllFieldSettings();
+        var fieldSettings = (await GetAllFieldSettings()).ToList();
 
         foreach (var model in models)
         {
@@ -86,7 +88,7 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
             return;
         }
 
-        var fieldSettings = await GetAllFieldSettings();
+        var fieldSettings = (await GetAllFieldSettings()).ToList();
 
         foreach (var id in ids)
         {
@@ -192,12 +194,47 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
         }
     }
 
+    // The returned list and its items are shared by every caller: copy before changing either
     private async Task<IList<IndexFieldSetting>> GetAllFieldSettings()
     {
         var json = await settingsManager.GetValueAsync<string>(ModuleConstants.Settings.General.IndexSettings);
 
-        return JsonConvert.DeserializeObject<IList<IndexFieldSetting>>(json);
+        var parsed = _parsedFieldSettings;
+        if (parsed is null || !string.Equals(parsed.Json, json, StringComparison.Ordinal))
+        {
+            parsed = new ParsedFieldSettings(json, JsonConvert.DeserializeObject<IList<IndexFieldSetting>>(json));
+            _parsedFieldSettings = parsed;
+        }
+
+        return parsed.FieldSettings;
     }
+
+    private static List<IndexFieldSetting> ToList(IEnumerable<IndexFieldSetting> fieldSettings, bool clone)
+    {
+        return clone
+            ? fieldSettings.Select(CloneSetting).ToList()
+            : fieldSettings.ToList();
+    }
+
+    private static IndexFieldSetting CloneSetting(IndexFieldSetting fieldSetting)
+    {
+        return new IndexFieldSetting
+        {
+            Id = fieldSetting.Id,
+            DocumentType = fieldSetting.DocumentType,
+            FieldName = fieldSetting.FieldName,
+            Values = fieldSetting.Values?
+                .Select(x => new IndexFieldValueSetting
+                {
+                    Id = x.Id,
+                    Value = x.Value,
+                    Synonyms = x.Synonyms?.ToList(),
+                })
+                .ToList(),
+        };
+    }
+
+    private sealed record ParsedFieldSettings(string Json, IList<IndexFieldSetting> FieldSettings);
 
     private Task SaveAllFieldSettings(IList<IndexFieldSetting> fieldSettings)
     {
