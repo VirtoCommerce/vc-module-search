@@ -1,0 +1,108 @@
+{
+  "SEARCH": {
+    "MENU": {
+      "TITLE": "Sökindex"
+    },
+    "PAGES": {
+      "LIST": {
+        "EMPTY": "Inga dokumenttyper",
+        "NA": "Ej tillgängligt",
+        "ACTIVE": "Aktivt",
+        "BACKUP": "Säkerhetskopia",
+        "COLUMNS": {
+          "TYPE": "Dokumenttyp",
+          "LAST_BUILD": "Senast byggt",
+          "COUNT": "Indexerade dokument",
+          "PROVIDER": "Leverantör",
+          "SCOPE": "Omfattning",
+          "STATE": "Index"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Uppdatera",
+          "BUILD": "Bygg index",
+          "SHOW_BACKUP": "Visa säkerhetskopierade index",
+          "HIDE_BACKUP": "Dölj säkerhetskopierade index"
+        },
+        "ACTIONS": {
+          "BUILD": "Bygg index",
+          "MAPPING": "Värdemappning",
+          "SWAP": "Byt index"
+        }
+      },
+      "PROGRESS": {
+        "TITLE": "Indexering",
+        "TOOLBAR": {
+          "CANCEL": "Avbryt"
+        }
+      },
+      "MAPPING": {
+        "TITLE": "Värdemappning",
+        "EMPTY": "Inga fältmappningar för den här dokumenttypen",
+        "COLUMNS": {
+          "FIELD": "Fält",
+          "VALUES": "Mappade värden"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Uppdatera",
+          "ADD": "Lägg till",
+          "DELETE": "Radera"
+        }
+      },
+      "FIELD": {
+        "NEW": "Ny fältmappning",
+        "FIELD_NAME": "Fältnamn",
+        "FIELD_NAME_HINT": "Namnet på det indexerade fältet, t.ex. color",
+        "VALUES": "Värden",
+        "VALUE": "Värde",
+        "SYNONYMS": "Synonymer",
+        "SYNONYMS_HINT": "Skriv en synonym och tryck på Enter",
+        "NO_VALUES": "Inga värden ännu: lägg till ett i verktygsfältet",
+        "TOOLBAR": {
+          "SAVE": "Spara",
+          "RESET": "Återställ",
+          "ADD_VALUE": "Lägg till värde",
+          "DELETE": "Radera"
+        },
+        "REMOVE_VALUE": "Ta bort värde"
+      },
+      "DOCUMENT": {
+        "TITLE": "Index",
+        "NO_INDEX": "Det här objektet är inte indexerat ännu",
+        "BUILD_DATE": "Byggdatum",
+        "CONTENT": "Indexinnehåll",
+        "TOOLBAR": {
+          "REBUILD": "Bygg om index",
+          "COPY": "Kopiera till urklipp"
+        }
+      }
+    },
+    "WIDGET": {
+      "LOADING": "Index…",
+      "OK": "Index uppdaterat",
+      "OLD": "Index inaktuellt",
+      "NONE": "Inte indexerat"
+    },
+    "BUILD": {
+      "TITLE": "Bygg index",
+      "MESSAGE": "Bygga index för {types}?",
+      "NOTE_INDEX": "Bygg: lägger till och uppdaterar dokument i det befintliga indexet; sökningen fungerar som vanligt under tiden.",
+      "NOTE_REBUILD": "Bygg om: raderar det befintliga indexet och indexerar allt från början; sökningar ger ofullständiga resultat tills det är klart.",
+      "INDEX": "Bygg",
+      "REBUILD": "Radera och bygg om",
+      "CANCEL": "Avbryt"
+    },
+    "JOB": {
+      "STARTED": "Startad",
+      "FINISHED": "Slutförd",
+      "ELAPSED": "Förfluten tid",
+      "PROCESSED": "Bearbetade",
+      "ERRORS": "Fel"
+    },
+    "ALERTS": {
+      "DELETE_FIELDS": "Radera {count} fältmappning(ar)?",
+      "SWAP": "Göra det säkerhetskopierade indexet för {type} aktivt?",
+      "COPIED": "Kopierat till urklipp",
+      "CLOSE_CONFIRMATION": "Det finns osparade ändringar. Vill du verkligen stänga?"
+    }
+  }
+}

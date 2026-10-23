@@ -1,0 +1,108 @@
+{
+  "SEARCH": {
+    "MENU": {
+      "TITLE": "搜索索引"
+    },
+    "PAGES": {
+      "LIST": {
+        "EMPTY": "没有文档类型",
+        "NA": "不适用",
+        "ACTIVE": "活动",
+        "BACKUP": "备份",
+        "COLUMNS": {
+          "TYPE": "文档类型",
+          "LAST_BUILD": "上次构建",
+          "COUNT": "已索引文档",
+          "PROVIDER": "提供者",
+          "SCOPE": "范围",
+          "STATE": "索引"
+        },
+        "TOOLBAR": {
+          "REFRESH": "刷新",
+          "BUILD": "构建索引",
+          "SHOW_BACKUP": "显示备份索引",
+          "HIDE_BACKUP": "隐藏备份索引"
+        },
+        "ACTIONS": {
+          "BUILD": "构建索引",
+          "MAPPING": "值映射",
+          "SWAP": "切换索引"
+        }
+      },
+      "PROGRESS": {
+        "TITLE": "正在索引",
+        "TOOLBAR": {
+          "CANCEL": "取消"
+        }
+      },
+      "MAPPING": {
+        "TITLE": "值映射",
+        "EMPTY": "此文档类型没有字段映射",
+        "COLUMNS": {
+          "FIELD": "字段",
+          "VALUES": "映射值"
+        },
+        "TOOLBAR": {
+          "REFRESH": "刷新",
+          "ADD": "添加",
+          "DELETE": "删除"
+        }
+      },
+      "FIELD": {
+        "NEW": "新建字段映射",
+        "FIELD_NAME": "字段名称",
+        "FIELD_NAME_HINT": "已索引字段的名称，例如 color",
+        "VALUES": "值",
+        "VALUE": "值",
+        "SYNONYMS": "同义词",
+        "SYNONYMS_HINT": "输入同义词并按 Enter 键",
+        "NO_VALUES": "暂无值：请通过工具栏添加",
+        "TOOLBAR": {
+          "SAVE": "保存",
+          "RESET": "重置",
+          "ADD_VALUE": "添加值",
+          "DELETE": "删除"
+        },
+        "REMOVE_VALUE": "移除值"
+      },
+      "DOCUMENT": {
+        "TITLE": "索引",
+        "NO_INDEX": "此对象尚未编入索引",
+        "BUILD_DATE": "构建日期",
+        "CONTENT": "索引内容",
+        "TOOLBAR": {
+          "REBUILD": "重建索引",
+          "COPY": "复制到剪贴板"
+        }
+      }
+    },
+    "WIDGET": {
+      "LOADING": "索引…",
+      "OK": "索引为最新",
+      "OLD": "索引已过期",
+      "NONE": "未编入索引"
+    },
+    "BUILD": {
+      "TITLE": "构建索引",
+      "MESSAGE": "是否构建 {types} 的索引？",
+      "NOTE_INDEX": "构建：在现有索引中添加和更新文档；在此期间搜索仍可正常使用。",
+      "NOTE_REBUILD": "重建：删除现有索引并从头开始重新索引所有内容；完成之前，搜索将返回不完整的结果。",
+      "INDEX": "构建",
+      "REBUILD": "删除并重建",
+      "CANCEL": "取消"
+    },
+    "JOB": {
+      "STARTED": "开始时间",
+      "FINISHED": "结束时间",
+      "ELAPSED": "耗时",
+      "PROCESSED": "已处理",
+      "ERRORS": "错误"
+    },
+    "ALERTS": {
+      "DELETE_FIELDS": "是否删除 {count} 个字段映射？",
+      "SWAP": "是否将 {type} 的备份索引设为活动索引？",
+      "COPIED": "已复制到剪贴板",
+      "CLOSE_CONFIRMATION": "您有未保存的更改。确定要关闭吗？"
+    }
+  }
+}

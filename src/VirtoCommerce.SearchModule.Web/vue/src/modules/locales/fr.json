@@ -1,0 +1,108 @@
+{
+  "SEARCH": {
+    "MENU": {
+      "TITLE": "Index de recherche"
+    },
+    "PAGES": {
+      "LIST": {
+        "EMPTY": "Aucun type de document",
+        "NA": "N/D",
+        "ACTIVE": "Actif",
+        "BACKUP": "Sauvegarde",
+        "COLUMNS": {
+          "TYPE": "Type de document",
+          "LAST_BUILD": "Dernière construction",
+          "COUNT": "Documents indexés",
+          "PROVIDER": "Fournisseur",
+          "SCOPE": "Portée",
+          "STATE": "Index"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Actualiser",
+          "BUILD": "Construire l'index",
+          "SHOW_BACKUP": "Afficher les index de sauvegarde",
+          "HIDE_BACKUP": "Masquer les index de sauvegarde"
+        },
+        "ACTIONS": {
+          "BUILD": "Construire l'index",
+          "MAPPING": "Correspondance des valeurs",
+          "SWAP": "Échanger l'index"
+        }
+      },
+      "PROGRESS": {
+        "TITLE": "Indexation",
+        "TOOLBAR": {
+          "CANCEL": "Annuler"
+        }
+      },
+      "MAPPING": {
+        "TITLE": "Correspondance des valeurs",
+        "EMPTY": "Aucune correspondance de champ pour ce type de document",
+        "COLUMNS": {
+          "FIELD": "Champ",
+          "VALUES": "Valeurs associées"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Actualiser",
+          "ADD": "Ajouter",
+          "DELETE": "Supprimer"
+        }
+      },
+      "FIELD": {
+        "NEW": "Nouvelle correspondance de champ",
+        "FIELD_NAME": "Nom du champ",
+        "FIELD_NAME_HINT": "Nom du champ indexé, par ex. color",
+        "VALUES": "Valeurs",
+        "VALUE": "Valeur",
+        "SYNONYMS": "Synonymes",
+        "SYNONYMS_HINT": "Saisissez un synonyme et appuyez sur Entrée",
+        "NO_VALUES": "Aucune valeur pour l'instant : ajoutez-en une depuis la barre d'outils",
+        "TOOLBAR": {
+          "SAVE": "Enregistrer",
+          "RESET": "Réinitialiser",
+          "ADD_VALUE": "Ajouter une valeur",
+          "DELETE": "Supprimer"
+        },
+        "REMOVE_VALUE": "Retirer la valeur"
+      },
+      "DOCUMENT": {
+        "TITLE": "Index",
+        "NO_INDEX": "Cet objet n'est pas encore indexé",
+        "BUILD_DATE": "Date de construction",
+        "CONTENT": "Contenu de l'index",
+        "TOOLBAR": {
+          "REBUILD": "Reconstruire l'index",
+          "COPY": "Copier dans le presse-papiers"
+        }
+      }
+    },
+    "WIDGET": {
+      "LOADING": "Index…",
+      "OK": "Index à jour",
+      "OLD": "Index obsolète",
+      "NONE": "Non indexé"
+    },
+    "BUILD": {
+      "TITLE": "Construire l'index",
+      "MESSAGE": "Construire l'index de {types} ?",
+      "NOTE_INDEX": "Construire : ajoute et met à jour les documents dans l'index existant ; la recherche continue de fonctionner pendant ce temps.",
+      "NOTE_REBUILD": "Reconstruire : supprime l'index existant et réindexe tout depuis le début ; les recherches renvoient des résultats incomplets jusqu'à la fin.",
+      "INDEX": "Construire",
+      "REBUILD": "Supprimer et reconstruire",
+      "CANCEL": "Annuler"
+    },
+    "JOB": {
+      "STARTED": "Démarré",
+      "FINISHED": "Terminé",
+      "ELAPSED": "Temps écoulé",
+      "PROCESSED": "Traités",
+      "ERRORS": "Erreurs"
+    },
+    "ALERTS": {
+      "DELETE_FIELDS": "Supprimer {count} correspondance(s) de champ ?",
+      "SWAP": "Activer l'index de sauvegarde de {type} ?",
+      "COPIED": "Copié dans le presse-papiers",
+      "CLOSE_CONFIRMATION": "Vous avez des modifications non enregistrées. Voulez-vous vraiment fermer ?"
+    }
+  }
+}
