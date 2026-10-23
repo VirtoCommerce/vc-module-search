@@ -199,6 +199,11 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
     {
         var json = await settingsManager.GetValueAsync<string>(ModuleConstants.Settings.General.IndexSettings);
 
+        return ParseFieldSettings(json);
+    }
+
+    private static IList<IndexFieldSetting> ParseFieldSettings(string json)
+    {
         var parsed = _parsedFieldSettings;
         if (parsed is null || !string.Equals(parsed.Json, json, StringComparison.Ordinal))
         {
