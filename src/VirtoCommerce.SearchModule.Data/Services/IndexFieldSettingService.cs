@@ -121,7 +121,7 @@ public class IndexFieldSettingService(ISettingsManager settingsManager) : IIndex
         }
     }
 
-    private static void RemoveExistingSetting(IndexFieldSetting model, IList<IndexFieldSetting> fieldSettings)
+    private static void RemoveExistingSetting(IndexFieldSetting model, List<IndexFieldSetting> fieldSettings)
     {
         IndexFieldSetting existingSetting = null;
 
