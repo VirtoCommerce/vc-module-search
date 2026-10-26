@@ -73,7 +73,7 @@ string
     | QuotedString
     ;
 
-SimpleString : [\p{L}\p{N}_\-./@+]+;
+SimpleString : [\p{L}\p{N}_\-./@+'&]+; // ' and & are legal in names (e.g. O'Neil, Arts & Crafts); keep them in the keyword
 QuotedString : '"' (Esc | ~["\\\r\n\t])* '"';
 Esc          : '\\' (["\\rnt]);
 

@@ -76,6 +76,23 @@ namespace VirtoCommerce.SearchModule.Tests
             Assert.Empty(result.Filters);
         }
 
+        [Theory]
+        [InlineData("O'Neil", "O'Neil")]
+        [InlineData("Arts & Crafts", "Arts & Crafts")]
+        [InlineData("St. Mary's", "St. Mary's")]
+        [InlineData("Toronto'", "Toronto'")]
+        [InlineData("&", "&")]
+        public void Keyword_KeepsApostropheAndAmpersand(string input, string expectedKeyword)
+        {
+            // ' and & are legal in names; they must stay in the keyword instead of being dropped as syntax errors
+            // (a dropped keyword makes the indexed search run unfiltered - VCST-6477).
+            var parser = GetParser();
+            var result = parser.Parse(input);
+
+            result.Keyword.Should().Be(expectedKeyword);
+            result.Filters.Should().BeEmpty();
+        }
+
         [Fact]
         public void TestNegationFilter()
         {
