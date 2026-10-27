@@ -80,7 +80,7 @@ namespace VirtoCommerce.SearchModule.Tests
         [InlineData("O'Neil", "O'Neil")]
         [InlineData("Arts & Crafts", "Arts & Crafts")]
         [InlineData("St. Mary's", "St. Mary's")]
-        [InlineData("Toronto'", "Toronto'")]
+        [InlineData("O'Neil and Mary's", "O'Neil and Mary's")]
         [InlineData("&", "&")]
         public void Keyword_KeepsApostropheAndAmpersand(string input, string expectedKeyword)
         {
@@ -91,6 +91,42 @@ namespace VirtoCommerce.SearchModule.Tests
 
             result.Keyword.Should().Be(expectedKeyword);
             result.Filters.Should().BeEmpty();
+        }
+
+        [Theory]
+        [InlineData("Toronto'", "Toronto")]
+        [InlineData("'tis", "tis")]
+        [InlineData("'", "'")]
+        public void Keyword_TrimsEdgeApostrophes(string input, string expectedKeyword)
+        {
+            // An edge ' is quoting or noise; a lone ' stays, so it can't empty the keyword and unfilter the search.
+            var result = GetParser().Parse(input);
+
+            result.Keyword.Should().Be(expectedKeyword);
+            result.Filters.Should().BeEmpty();
+        }
+
+        [Theory]
+        [InlineData("'status':'Approved'", "status", "Approved")]
+        [InlineData("'roleId':'role-org-maintainer'", "roleId", "role-org-maintainer")]
+        [InlineData("'status:Approved'", "status", "Approved")]
+        public void Filter_TrimsEdgeApostrophes(string input, string expectedField, string expectedValue)
+        {
+            var result = GetParser().Parse(input);
+
+            result.Keyword.Should().BeEmpty();
+            result.Filters.Count.Should().Be(1);
+            var filter = result.Filters.First().As<TermFilter>();
+            filter.FieldName.Should().Be(expectedField);
+            filter.Values.Should().Equal(expectedValue);
+        }
+
+        [Fact]
+        public void QuotedString_KeepsApostrophes()
+        {
+            var result = GetParser().Parse("name:\"'Toronto'\"");
+
+            result.Filters.First().As<TermFilter>().Values.Should().Equal("'Toronto'");
         }
 
         [Fact]
