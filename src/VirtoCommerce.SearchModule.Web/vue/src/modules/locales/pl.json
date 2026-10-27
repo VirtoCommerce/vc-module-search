@@ -1,0 +1,108 @@
+{
+  "SEARCH": {
+    "MENU": {
+      "TITLE": "Indeks wyszukiwania"
+    },
+    "PAGES": {
+      "LIST": {
+        "EMPTY": "Brak typów dokumentów",
+        "NA": "b.d.",
+        "ACTIVE": "Aktywny",
+        "BACKUP": "Zapasowy",
+        "COLUMNS": {
+          "TYPE": "Typ dokumentu",
+          "LAST_BUILD": "Ostatnie budowanie",
+          "COUNT": "Zindeksowane dokumenty",
+          "PROVIDER": "Dostawca",
+          "SCOPE": "Zakres",
+          "STATE": "Indeks"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Odśwież",
+          "BUILD": "Buduj indeks",
+          "SHOW_BACKUP": "Pokaż indeksy zapasowe",
+          "HIDE_BACKUP": "Ukryj indeksy zapasowe"
+        },
+        "ACTIONS": {
+          "BUILD": "Buduj indeks",
+          "MAPPING": "Mapowanie wartości",
+          "SWAP": "Zamień indeks"
+        }
+      },
+      "PROGRESS": {
+        "TITLE": "Indeksowanie",
+        "TOOLBAR": {
+          "CANCEL": "Anuluj"
+        }
+      },
+      "MAPPING": {
+        "TITLE": "Mapowanie wartości",
+        "EMPTY": "Brak mapowań pól dla tego typu dokumentu",
+        "COLUMNS": {
+          "FIELD": "Pole",
+          "VALUES": "Zmapowane wartości"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Odśwież",
+          "ADD": "Dodaj",
+          "DELETE": "Usuń"
+        }
+      },
+      "FIELD": {
+        "NEW": "Nowe mapowanie pola",
+        "FIELD_NAME": "Nazwa pola",
+        "FIELD_NAME_HINT": "Nazwa indeksowanego pola, np. color",
+        "VALUES": "Wartości",
+        "VALUE": "Wartość",
+        "SYNONYMS": "Synonimy",
+        "SYNONYMS_HINT": "Wpisz synonim i naciśnij Enter",
+        "NO_VALUES": "Brak wartości: dodaj wartość za pomocą paska narzędzi",
+        "TOOLBAR": {
+          "SAVE": "Zapisz",
+          "RESET": "Resetuj",
+          "ADD_VALUE": "Dodaj wartość",
+          "DELETE": "Usuń"
+        },
+        "REMOVE_VALUE": "Usuń wartość"
+      },
+      "DOCUMENT": {
+        "TITLE": "Indeks",
+        "NO_INDEX": "Ten obiekt nie jest jeszcze zindeksowany",
+        "BUILD_DATE": "Data budowania",
+        "CONTENT": "Zawartość indeksu",
+        "TOOLBAR": {
+          "REBUILD": "Odbuduj indeks",
+          "COPY": "Kopiuj do schowka"
+        }
+      }
+    },
+    "WIDGET": {
+      "LOADING": "Indeks…",
+      "OK": "Indeks aktualny",
+      "OLD": "Indeks nieaktualny",
+      "NONE": "Niezindeksowany"
+    },
+    "BUILD": {
+      "TITLE": "Buduj indeks",
+      "MESSAGE": "Zbudować indeks dla {types}?",
+      "NOTE_INDEX": "Buduj: dodaje i aktualizuje dokumenty w istniejącym indeksie; w tym czasie wyszukiwanie nadal działa.",
+      "NOTE_REBUILD": "Odbuduj: usuwa istniejący indeks i indeksuje wszystko od nowa; do zakończenia wyszukiwanie zwraca niepełne wyniki.",
+      "INDEX": "Buduj",
+      "REBUILD": "Usuń i odbuduj",
+      "CANCEL": "Anuluj"
+    },
+    "JOB": {
+      "STARTED": "Rozpoczęto",
+      "FINISHED": "Zakończono",
+      "ELAPSED": "Upłynęło",
+      "PROCESSED": "Przetworzono",
+      "ERRORS": "Błędy"
+    },
+    "ALERTS": {
+      "DELETE_FIELDS": "Usunąć mapowania pól ({count})?",
+      "SWAP": "Ustawić indeks zapasowy dla {type} jako aktywny?",
+      "COPIED": "Skopiowano do schowka",
+      "CLOSE_CONFIRMATION": "Istnieją niezapisane zmiany. Czy na pewno zamknąć?"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "search:index:rebuild": "ניקוי ובנייה מחדש של אינדקס החיפוש",
+    "search:index:access": "גישה לתפריט אינדקס החיפוש",
+    "search:index:manage": "עריכת תצורת האינדקס"
+  },
+  "settings": {
+    "VirtoCommerce.Search.IndexingJobs.Enable": {
+      "title": "משימות אינדוקס קבועות",
+      "description": "הפעלה או השבתה של בוני אינדקס החיפוש הקבועים"
+    },
+    "VirtoCommerce.Search.IndexingJobs.CronExpression": {
+      "title": "ביטוי Cron למשימת האינדוקס",
+      "description": "לכל X דקות יש להשתמש ב-'0/x * * * *'. לכל X שעות יש להשתמש ב-'0 */x * * *'. אפשר גם להגדיר X דקות כ-'15 */x * * *' ו-X ימים כ-'0 0 */x * *'."
+    },
+    "VirtoCommerce.Search.IndexPartitionSize": {
+      "title": "מספר הפריטים המרבי במחיצת אינדוקס",
+      "description": "יש להזין את מספר הפריטים המרבי שייכללו בכל מחיצת אינדוקס. ערכים גבוהים עלולים להאט את הביצועים"
+    },
+    "VirtoCommerce.Search.PartialDocumentUpdate.Enable": {
+      "title": "עדכון חלקי של מסמכים",
+      "description": "הפעלת עדכונים חלקיים של מסמכים אם ספק החיפוש תומך בכך"
+    }
+  }
+}

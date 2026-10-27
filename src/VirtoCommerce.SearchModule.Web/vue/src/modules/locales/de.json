@@ -1,0 +1,108 @@
+{
+  "SEARCH": {
+    "MENU": {
+      "TITLE": "Suchindex"
+    },
+    "PAGES": {
+      "LIST": {
+        "EMPTY": "Keine Dokumenttypen",
+        "NA": "k. A.",
+        "ACTIVE": "Aktiv",
+        "BACKUP": "Sicherung",
+        "COLUMNS": {
+          "TYPE": "Dokumenttyp",
+          "LAST_BUILD": "Letzte Erstellung",
+          "COUNT": "Indizierte Dokumente",
+          "PROVIDER": "Anbieter",
+          "SCOPE": "Bereich",
+          "STATE": "Index"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Aktualisieren",
+          "BUILD": "Index erstellen",
+          "SHOW_BACKUP": "Sicherungsindizes anzeigen",
+          "HIDE_BACKUP": "Sicherungsindizes ausblenden"
+        },
+        "ACTIONS": {
+          "BUILD": "Index erstellen",
+          "MAPPING": "Wertezuordnung",
+          "SWAP": "Index tauschen"
+        }
+      },
+      "PROGRESS": {
+        "TITLE": "Indizierung",
+        "TOOLBAR": {
+          "CANCEL": "Abbrechen"
+        }
+      },
+      "MAPPING": {
+        "TITLE": "Wertezuordnung",
+        "EMPTY": "Keine Feldzuordnungen für diesen Dokumenttyp",
+        "COLUMNS": {
+          "FIELD": "Feld",
+          "VALUES": "Zugeordnete Werte"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Aktualisieren",
+          "ADD": "Hinzufügen",
+          "DELETE": "Löschen"
+        }
+      },
+      "FIELD": {
+        "NEW": "Neue Feldzuordnung",
+        "FIELD_NAME": "Feldname",
+        "FIELD_NAME_HINT": "Name des indizierten Feldes, z. B. color",
+        "VALUES": "Werte",
+        "VALUE": "Wert",
+        "SYNONYMS": "Synonyme",
+        "SYNONYMS_HINT": "Synonym eingeben und Eingabetaste drücken",
+        "NO_VALUES": "Noch keine Werte: Fügen Sie einen über die Symbolleiste hinzu",
+        "TOOLBAR": {
+          "SAVE": "Speichern",
+          "RESET": "Zurücksetzen",
+          "ADD_VALUE": "Wert hinzufügen",
+          "DELETE": "Löschen"
+        },
+        "REMOVE_VALUE": "Wert entfernen"
+      },
+      "DOCUMENT": {
+        "TITLE": "Index",
+        "NO_INDEX": "Dieses Objekt ist noch nicht indiziert",
+        "BUILD_DATE": "Erstellungsdatum",
+        "CONTENT": "Indexinhalt",
+        "TOOLBAR": {
+          "REBUILD": "Index neu erstellen",
+          "COPY": "In die Zwischenablage kopieren"
+        }
+      }
+    },
+    "WIDGET": {
+      "LOADING": "Index…",
+      "OK": "Index aktuell",
+      "OLD": "Index veraltet",
+      "NONE": "Nicht indiziert"
+    },
+    "BUILD": {
+      "TITLE": "Index erstellen",
+      "MESSAGE": "Index für {types} erstellen?",
+      "NOTE_INDEX": "Erstellen: Dokumente im vorhandenen Index hinzufügen und aktualisieren; die Suche funktioniert währenddessen weiter.",
+      "NOTE_REBUILD": "Neu erstellen: Vorhandenen Index löschen und alles von Grund auf neu indizieren; bis zum Abschluss liefert die Suche unvollständige Ergebnisse.",
+      "INDEX": "Erstellen",
+      "REBUILD": "Löschen und neu erstellen",
+      "CANCEL": "Abbrechen"
+    },
+    "JOB": {
+      "STARTED": "Gestartet",
+      "FINISHED": "Beendet",
+      "ELAPSED": "Verstrichen",
+      "PROCESSED": "Verarbeitet",
+      "ERRORS": "Fehler"
+    },
+    "ALERTS": {
+      "DELETE_FIELDS": "{count} Feldzuordnung(en) löschen?",
+      "SWAP": "Sicherungsindex von {type} aktivieren?",
+      "COPIED": "In die Zwischenablage kopiert",
+      "CLOSE_CONFIRMATION": "Sie haben ungespeicherte Änderungen. Möchten Sie wirklich schließen?"
+    }
+  }
+}
