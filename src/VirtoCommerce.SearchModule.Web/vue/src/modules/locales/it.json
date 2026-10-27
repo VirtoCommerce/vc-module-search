@@ -1,0 +1,108 @@
+{
+  "SEARCH": {
+    "MENU": {
+      "TITLE": "Indice di ricerca"
+    },
+    "PAGES": {
+      "LIST": {
+        "EMPTY": "Nessun tipo di documento",
+        "NA": "N/D",
+        "ACTIVE": "Attivo",
+        "BACKUP": "Backup",
+        "COLUMNS": {
+          "TYPE": "Tipo di documento",
+          "LAST_BUILD": "Ultima costruzione",
+          "COUNT": "Documenti indicizzati",
+          "PROVIDER": "Provider",
+          "SCOPE": "Ambito",
+          "STATE": "Indice"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Aggiorna",
+          "BUILD": "Costruisci indice",
+          "SHOW_BACKUP": "Mostra indici di backup",
+          "HIDE_BACKUP": "Nascondi indici di backup"
+        },
+        "ACTIONS": {
+          "BUILD": "Costruisci indice",
+          "MAPPING": "Mappatura valori",
+          "SWAP": "Scambia indice"
+        }
+      },
+      "PROGRESS": {
+        "TITLE": "Indicizzazione",
+        "TOOLBAR": {
+          "CANCEL": "Annulla"
+        }
+      },
+      "MAPPING": {
+        "TITLE": "Mappatura valori",
+        "EMPTY": "Nessuna mappatura dei campi per questo tipo di documento",
+        "COLUMNS": {
+          "FIELD": "Campo",
+          "VALUES": "Valori mappati"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Aggiorna",
+          "ADD": "Aggiungi",
+          "DELETE": "Elimina"
+        }
+      },
+      "FIELD": {
+        "NEW": "Nuova mappatura del campo",
+        "FIELD_NAME": "Nome campo",
+        "FIELD_NAME_HINT": "Nome del campo indicizzato, ad es. color",
+        "VALUES": "Valori",
+        "VALUE": "Valore",
+        "SYNONYMS": "Sinonimi",
+        "SYNONYMS_HINT": "Digitare un sinonimo e premere Invio",
+        "NO_VALUES": "Nessun valore: aggiungerne uno dalla barra degli strumenti",
+        "TOOLBAR": {
+          "SAVE": "Salva",
+          "RESET": "Ripristina",
+          "ADD_VALUE": "Aggiungi valore",
+          "DELETE": "Elimina"
+        },
+        "REMOVE_VALUE": "Rimuovi valore"
+      },
+      "DOCUMENT": {
+        "TITLE": "Indice",
+        "NO_INDEX": "Questo oggetto non è ancora indicizzato",
+        "BUILD_DATE": "Data di costruzione",
+        "CONTENT": "Contenuto dell'indice",
+        "TOOLBAR": {
+          "REBUILD": "Ricostruisci indice",
+          "COPY": "Copia negli appunti"
+        }
+      }
+    },
+    "WIDGET": {
+      "LOADING": "Indice…",
+      "OK": "Indice aggiornato",
+      "OLD": "Indice obsoleto",
+      "NONE": "Non indicizzato"
+    },
+    "BUILD": {
+      "TITLE": "Costruisci indice",
+      "MESSAGE": "Costruire l'indice di {types}?",
+      "NOTE_INDEX": "Costruisci: aggiunge e aggiorna i documenti nell'indice esistente; nel frattempo la ricerca continua a funzionare.",
+      "NOTE_REBUILD": "Ricostruisci: elimina l'indice esistente e indicizza tutto da zero; fino al termine le ricerche restituiscono risultati incompleti.",
+      "INDEX": "Costruisci",
+      "REBUILD": "Elimina e ricostruisci",
+      "CANCEL": "Annulla"
+    },
+    "JOB": {
+      "STARTED": "Avviato",
+      "FINISHED": "Completato",
+      "ELAPSED": "Trascorso",
+      "PROCESSED": "Elaborati",
+      "ERRORS": "Errori"
+    },
+    "ALERTS": {
+      "DELETE_FIELDS": "Eliminare {count} mappatura/e dei campi?",
+      "SWAP": "Rendere attivo l'indice di backup di {type}?",
+      "COPIED": "Copiato negli appunti",
+      "CLOSE_CONFIRMATION": "Ci sono modifiche non salvate. Chiudere comunque?"
+    }
+  }
+}
