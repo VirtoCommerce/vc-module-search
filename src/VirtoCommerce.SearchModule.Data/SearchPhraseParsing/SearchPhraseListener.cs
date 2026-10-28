@@ -166,6 +166,14 @@ namespace VirtoCommerce.SearchModule.Data.SearchPhraseParsing
 
         protected virtual string UnEscape(string value)
         {
+            // Edge apostrophes are quoting or noise ('status':'Approved' -> status:Approved), as when the lexer dropped every '.
+            // A token made only of apostrophes stays as is, so it can't empty the keyword and unfilter the search.
+            if (!string.IsNullOrEmpty(value) && value.First() != '"')
+            {
+                var trimmed = value.Trim('\'');
+                return trimmed.Length > 0 ? trimmed : value;
+            }
+
             if (value == null ||
                 value.Length < 2 ||
                 value.First() != '"' ||
