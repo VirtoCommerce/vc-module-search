@@ -1,0 +1,108 @@
+{
+  "SEARCH": {
+    "MENU": {
+      "TITLE": "Søkeindeks"
+    },
+    "PAGES": {
+      "LIST": {
+        "EMPTY": "Ingen dokumenttyper",
+        "NA": "I/T",
+        "ACTIVE": "Aktiv",
+        "BACKUP": "Sikkerhetskopi",
+        "COLUMNS": {
+          "TYPE": "Dokumenttype",
+          "LAST_BUILD": "Sist bygget",
+          "COUNT": "Indekserte dokumenter",
+          "PROVIDER": "Leverandør",
+          "SCOPE": "Omfang",
+          "STATE": "Indeks"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Oppdater",
+          "BUILD": "Bygg indeks",
+          "SHOW_BACKUP": "Vis sikkerhetskopi-indekser",
+          "HIDE_BACKUP": "Skjul sikkerhetskopi-indekser"
+        },
+        "ACTIONS": {
+          "BUILD": "Bygg indeks",
+          "MAPPING": "Verditilordning",
+          "SWAP": "Bytt indeks"
+        }
+      },
+      "PROGRESS": {
+        "TITLE": "Indeksering",
+        "TOOLBAR": {
+          "CANCEL": "Avbryt"
+        }
+      },
+      "MAPPING": {
+        "TITLE": "Verditilordning",
+        "EMPTY": "Ingen felttilordninger for denne dokumenttypen",
+        "COLUMNS": {
+          "FIELD": "Felt",
+          "VALUES": "Tilordnede verdier"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Oppdater",
+          "ADD": "Legg til",
+          "DELETE": "Slett"
+        }
+      },
+      "FIELD": {
+        "NEW": "Ny felttilordning",
+        "FIELD_NAME": "Feltnavn",
+        "FIELD_NAME_HINT": "Navnet på det indekserte feltet, f.eks. color",
+        "VALUES": "Verdier",
+        "VALUE": "Verdi",
+        "SYNONYMS": "Synonymer",
+        "SYNONYMS_HINT": "Skriv inn et synonym og trykk Enter",
+        "NO_VALUES": "Ingen verdier ennå: legg til en fra verktøylinjen",
+        "TOOLBAR": {
+          "SAVE": "Lagre",
+          "RESET": "Tilbakestill",
+          "ADD_VALUE": "Legg til verdi",
+          "DELETE": "Slett"
+        },
+        "REMOVE_VALUE": "Fjern verdi"
+      },
+      "DOCUMENT": {
+        "TITLE": "Indeks",
+        "NO_INDEX": "Dette objektet er ikke indeksert ennå",
+        "BUILD_DATE": "Byggedato",
+        "CONTENT": "Indeksinnhold",
+        "TOOLBAR": {
+          "REBUILD": "Gjenoppbygg indeks",
+          "COPY": "Kopier til utklippstavle"
+        }
+      }
+    },
+    "WIDGET": {
+      "LOADING": "Indeks…",
+      "OK": "Indeksen er oppdatert",
+      "OLD": "Indeksen er utdatert",
+      "NONE": "Ikke indeksert"
+    },
+    "BUILD": {
+      "TITLE": "Bygg indeks",
+      "MESSAGE": "Bygge indeksen for {types}?",
+      "NOTE_INDEX": "Bygg: legger til og oppdaterer dokumenter i den eksisterende indeksen; søket fungerer som vanlig i mellomtiden.",
+      "NOTE_REBUILD": "Gjenoppbygg: sletter den eksisterende indeksen og indekserer alt på nytt fra bunnen av; søk gir ufullstendige resultater til det er ferdig.",
+      "INDEX": "Bygg",
+      "REBUILD": "Slett og gjenoppbygg",
+      "CANCEL": "Avbryt"
+    },
+    "JOB": {
+      "STARTED": "Startet",
+      "FINISHED": "Fullført",
+      "ELAPSED": "Brukt tid",
+      "PROCESSED": "Behandlet",
+      "ERRORS": "Feil"
+    },
+    "ALERTS": {
+      "DELETE_FIELDS": "Slette {count} felttilordning(er)?",
+      "SWAP": "Gjøre sikkerhetskopi-indeksen for {type} aktiv?",
+      "COPIED": "Kopiert til utklippstavlen",
+      "CLOSE_CONFIRMATION": "Du har endringer som ikke er lagret. Er du sikker på at du vil lukke?"
+    }
+  }
+}

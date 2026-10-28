@@ -1,0 +1,108 @@
+{
+  "SEARCH": {
+    "MENU": {
+      "TITLE": "Hakuindeksi"
+    },
+    "PAGES": {
+      "LIST": {
+        "EMPTY": "Ei dokumenttityyppejä",
+        "NA": "Ei saatavilla",
+        "ACTIVE": "Aktiivinen",
+        "BACKUP": "Varmuuskopio",
+        "COLUMNS": {
+          "TYPE": "Dokumenttityyppi",
+          "LAST_BUILD": "Viimeksi rakennettu",
+          "COUNT": "Indeksoidut dokumentit",
+          "PROVIDER": "Tarjoaja",
+          "SCOPE": "Laajuus",
+          "STATE": "Indeksi"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Päivitä",
+          "BUILD": "Rakenna indeksi",
+          "SHOW_BACKUP": "Näytä varmuuskopioindeksit",
+          "HIDE_BACKUP": "Piilota varmuuskopioindeksit"
+        },
+        "ACTIONS": {
+          "BUILD": "Rakenna indeksi",
+          "MAPPING": "Arvomääritys",
+          "SWAP": "Vaihda indeksi"
+        }
+      },
+      "PROGRESS": {
+        "TITLE": "Indeksointi",
+        "TOOLBAR": {
+          "CANCEL": "Peruuta"
+        }
+      },
+      "MAPPING": {
+        "TITLE": "Arvomääritys",
+        "EMPTY": "Tälle dokumenttityypille ei ole kenttämäärityksiä",
+        "COLUMNS": {
+          "FIELD": "Kenttä",
+          "VALUES": "Määritetyt arvot"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Päivitä",
+          "ADD": "Lisää",
+          "DELETE": "Poista"
+        }
+      },
+      "FIELD": {
+        "NEW": "Uusi kenttämääritys",
+        "FIELD_NAME": "Kentän nimi",
+        "FIELD_NAME_HINT": "Indeksoidun kentän nimi, esim. color",
+        "VALUES": "Arvot",
+        "VALUE": "Arvo",
+        "SYNONYMS": "Synonyymit",
+        "SYNONYMS_HINT": "Kirjoita synonyymi ja paina Enter",
+        "NO_VALUES": "Ei vielä arvoja: lisää arvo työkalupalkista",
+        "TOOLBAR": {
+          "SAVE": "Tallenna",
+          "RESET": "Palauta",
+          "ADD_VALUE": "Lisää arvo",
+          "DELETE": "Poista"
+        },
+        "REMOVE_VALUE": "Poista arvo"
+      },
+      "DOCUMENT": {
+        "TITLE": "Indeksi",
+        "NO_INDEX": "Tätä objektia ei ole vielä indeksoitu",
+        "BUILD_DATE": "Rakennuspäivä",
+        "CONTENT": "Indeksin sisältö",
+        "TOOLBAR": {
+          "REBUILD": "Rakenna indeksi uudelleen",
+          "COPY": "Kopioi leikepöydälle"
+        }
+      }
+    },
+    "WIDGET": {
+      "LOADING": "Indeksi…",
+      "OK": "Indeksi on ajan tasalla",
+      "OLD": "Indeksi on vanhentunut",
+      "NONE": "Ei indeksoitu"
+    },
+    "BUILD": {
+      "TITLE": "Rakenna indeksi",
+      "MESSAGE": "Rakennetaanko indeksi: {types}?",
+      "NOTE_INDEX": "Rakenna: lisää ja päivittää dokumentit nykyiseen indeksiin; haku toimii koko ajan.",
+      "NOTE_REBUILD": "Rakenna uudelleen: poistaa nykyisen indeksin ja indeksoi kaiken alusta; haut palauttavat puutteellisia tuloksia, kunnes rakennus on valmis.",
+      "INDEX": "Rakenna",
+      "REBUILD": "Poista ja rakenna uudelleen",
+      "CANCEL": "Peruuta"
+    },
+    "JOB": {
+      "STARTED": "Aloitettu",
+      "FINISHED": "Valmis",
+      "ELAPSED": "Käytetty aika",
+      "PROCESSED": "Käsitelty",
+      "ERRORS": "Virheet"
+    },
+    "ALERTS": {
+      "DELETE_FIELDS": "Poistetaanko kenttämäärityksiä ({count})?",
+      "SWAP": "Aktivoidaanko varmuuskopioindeksi: {type}?",
+      "COPIED": "Kopioitu leikepöydälle",
+      "CLOSE_CONFIRMATION": "Muutoksia ei ole tallennettu. Haluatko varmasti sulkea?"
+    }
+  }
+}

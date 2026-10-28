@@ -1,0 +1,108 @@
+{
+  "SEARCH": {
+    "MENU": {
+      "TITLE": "Índice de búsqueda"
+    },
+    "PAGES": {
+      "LIST": {
+        "EMPTY": "No hay tipos de documento",
+        "NA": "N/D",
+        "ACTIVE": "Activo",
+        "BACKUP": "Respaldo",
+        "COLUMNS": {
+          "TYPE": "Tipo de documento",
+          "LAST_BUILD": "Última construcción",
+          "COUNT": "Documentos indexados",
+          "PROVIDER": "Proveedor",
+          "SCOPE": "Ámbito",
+          "STATE": "Índice"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Actualizar",
+          "BUILD": "Construir índice",
+          "SHOW_BACKUP": "Mostrar índices de respaldo",
+          "HIDE_BACKUP": "Ocultar índices de respaldo"
+        },
+        "ACTIONS": {
+          "BUILD": "Construir índice",
+          "MAPPING": "Asignación de valores",
+          "SWAP": "Intercambiar índice"
+        }
+      },
+      "PROGRESS": {
+        "TITLE": "Indexación",
+        "TOOLBAR": {
+          "CANCEL": "Cancelar"
+        }
+      },
+      "MAPPING": {
+        "TITLE": "Asignación de valores",
+        "EMPTY": "No hay asignaciones de campos para este tipo de documento",
+        "COLUMNS": {
+          "FIELD": "Campo",
+          "VALUES": "Valores asignados"
+        },
+        "TOOLBAR": {
+          "REFRESH": "Actualizar",
+          "ADD": "Agregar",
+          "DELETE": "Eliminar"
+        }
+      },
+      "FIELD": {
+        "NEW": "Nueva asignación de campo",
+        "FIELD_NAME": "Nombre del campo",
+        "FIELD_NAME_HINT": "Nombre del campo indexado, p. ej., color",
+        "VALUES": "Valores",
+        "VALUE": "Valor",
+        "SYNONYMS": "Sinónimos",
+        "SYNONYMS_HINT": "Escriba un sinónimo y pulse Intro",
+        "NO_VALUES": "Aún no hay valores: agregue uno desde la barra de herramientas",
+        "TOOLBAR": {
+          "SAVE": "Guardar",
+          "RESET": "Restablecer",
+          "ADD_VALUE": "Agregar valor",
+          "DELETE": "Eliminar"
+        },
+        "REMOVE_VALUE": "Quitar valor"
+      },
+      "DOCUMENT": {
+        "TITLE": "Índice",
+        "NO_INDEX": "Este objeto aún no está indexado",
+        "BUILD_DATE": "Fecha de construcción",
+        "CONTENT": "Contenido del índice",
+        "TOOLBAR": {
+          "REBUILD": "Reconstruir índice",
+          "COPY": "Copiar al portapapeles"
+        }
+      }
+    },
+    "WIDGET": {
+      "LOADING": "Índice…",
+      "OK": "Índice actualizado",
+      "OLD": "Índice desactualizado",
+      "NONE": "Sin indexar"
+    },
+    "BUILD": {
+      "TITLE": "Construir índice",
+      "MESSAGE": "¿Construir el índice de {types}?",
+      "NOTE_INDEX": "Construir: agrega y actualiza documentos en el índice existente; la búsqueda sigue funcionando mientras tanto.",
+      "NOTE_REBUILD": "Reconstruir: elimina el índice existente e indexa todo desde cero; las búsquedas devuelven resultados incompletos hasta que termine.",
+      "INDEX": "Construir",
+      "REBUILD": "Eliminar y reconstruir",
+      "CANCEL": "Cancelar"
+    },
+    "JOB": {
+      "STARTED": "Inicio",
+      "FINISHED": "Fin",
+      "ELAPSED": "Tiempo transcurrido",
+      "PROCESSED": "Procesados",
+      "ERRORS": "Errores"
+    },
+    "ALERTS": {
+      "DELETE_FIELDS": "¿Eliminar {count} asignación(es) de campo?",
+      "SWAP": "¿Activar el índice de respaldo de {type}?",
+      "COPIED": "Copiado al portapapeles",
+      "CLOSE_CONFIRMATION": "Tiene cambios sin guardar. ¿Está seguro de que desea cerrar?"
+    }
+  }
+}

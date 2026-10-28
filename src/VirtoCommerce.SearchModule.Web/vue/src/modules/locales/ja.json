@@ -1,0 +1,108 @@
+{
+  "SEARCH": {
+    "MENU": {
+      "TITLE": "検索インデックス"
+    },
+    "PAGES": {
+      "LIST": {
+        "EMPTY": "ドキュメントタイプがありません",
+        "NA": "該当なし",
+        "ACTIVE": "アクティブ",
+        "BACKUP": "バックアップ",
+        "COLUMNS": {
+          "TYPE": "ドキュメントタイプ",
+          "LAST_BUILD": "最終構築",
+          "COUNT": "インデックス済みドキュメント",
+          "PROVIDER": "プロバイダー",
+          "SCOPE": "スコープ",
+          "STATE": "インデックス"
+        },
+        "TOOLBAR": {
+          "REFRESH": "更新",
+          "BUILD": "インデックスを構築",
+          "SHOW_BACKUP": "バックアップインデックスを表示",
+          "HIDE_BACKUP": "バックアップインデックスを非表示"
+        },
+        "ACTIONS": {
+          "BUILD": "インデックスを構築",
+          "MAPPING": "値マッピング",
+          "SWAP": "インデックスを交換"
+        }
+      },
+      "PROGRESS": {
+        "TITLE": "インデックス作成中",
+        "TOOLBAR": {
+          "CANCEL": "キャンセル"
+        }
+      },
+      "MAPPING": {
+        "TITLE": "値マッピング",
+        "EMPTY": "このドキュメントタイプのフィールドマッピングはありません",
+        "COLUMNS": {
+          "FIELD": "フィールド",
+          "VALUES": "マッピングされた値"
+        },
+        "TOOLBAR": {
+          "REFRESH": "更新",
+          "ADD": "追加",
+          "DELETE": "削除"
+        }
+      },
+      "FIELD": {
+        "NEW": "新しいフィールドマッピング",
+        "FIELD_NAME": "フィールド名",
+        "FIELD_NAME_HINT": "インデックス化されたフィールドの名前（例: color）",
+        "VALUES": "値",
+        "VALUE": "値",
+        "SYNONYMS": "同義語",
+        "SYNONYMS_HINT": "同義語を入力して Enter キーを押してください",
+        "NO_VALUES": "値はまだありません。ツールバーから追加してください",
+        "TOOLBAR": {
+          "SAVE": "保存",
+          "RESET": "リセット",
+          "ADD_VALUE": "値を追加",
+          "DELETE": "削除"
+        },
+        "REMOVE_VALUE": "値を削除"
+      },
+      "DOCUMENT": {
+        "TITLE": "インデックス",
+        "NO_INDEX": "このオブジェクトはまだインデックス化されていません",
+        "BUILD_DATE": "構築日",
+        "CONTENT": "インデックス内容",
+        "TOOLBAR": {
+          "REBUILD": "インデックスを再構築",
+          "COPY": "クリップボードにコピー"
+        }
+      }
+    },
+    "WIDGET": {
+      "LOADING": "インデックス…",
+      "OK": "インデックスは最新です",
+      "OLD": "インデックスが古くなっています",
+      "NONE": "インデックス未作成"
+    },
+    "BUILD": {
+      "TITLE": "インデックスを構築",
+      "MESSAGE": "{types} のインデックスを構築しますか？",
+      "NOTE_INDEX": "構築：既存のインデックスにドキュメントを追加・更新します。その間も検索は引き続き利用できます。",
+      "NOTE_REBUILD": "再構築：既存のインデックスを削除し、すべてを最初からインデックス化します。完了するまで検索結果は不完全になります。",
+      "INDEX": "構築",
+      "REBUILD": "削除して再構築",
+      "CANCEL": "キャンセル"
+    },
+    "JOB": {
+      "STARTED": "開始",
+      "FINISHED": "終了",
+      "ELAPSED": "経過時間",
+      "PROCESSED": "処理済み",
+      "ERRORS": "エラー"
+    },
+    "ALERTS": {
+      "DELETE_FIELDS": "{count} 件のフィールドマッピングを削除しますか？",
+      "SWAP": "{type} のバックアップインデックスをアクティブにしますか？",
+      "COPIED": "クリップボードにコピーしました",
+      "CLOSE_CONFIRMATION": "保存されていない変更があります。閉じてもよろしいですか？"
+    }
+  }
+}
