@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.SearchModule.Core.Extensions;
 using VirtoCommerce.SearchModule.Core.Model;
 
 namespace VirtoCommerce.SearchModule.Core.Services;
@@ -44,7 +45,7 @@ public interface IIndexingManager
     /// </summary>
     [Obsolete("Use the cancellation-aware overload instead.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
     Task IndexAllDocumentsAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
-        => IndexAllDocumentsAsync(options, progressCallback, ToCancellationToken(cancellationToken));
+        => IndexAllDocumentsAsync(options, progressCallback, cancellationToken.ToCancellationToken());
 
     /// <summary>
     /// Indexing the changes in the specified time interval. If both startDate and endDate are null, indexes all available objects.
@@ -58,7 +59,7 @@ public interface IIndexingManager
     /// </summary>
     [Obsolete("Use the cancellation-aware overload instead.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
     Task IndexChangesAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
-        => IndexChangesAsync(options, progressCallback, ToCancellationToken(cancellationToken));
+        => IndexChangesAsync(options, progressCallback, cancellationToken.ToCancellationToken());
 
     /// <summary>
     /// Indexing the specified documents with given options
@@ -72,7 +73,7 @@ public interface IIndexingManager
     /// </summary>
     [Obsolete("Use the cancellation-aware overload instead.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
     Task IndexAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
-        => IndexAsync(options, progressCallback, ToCancellationToken(cancellationToken));
+        => IndexAsync(options, progressCallback, cancellationToken.ToCancellationToken());
 
     /// <summary>
     /// Indexes a batch of documents immediately. Intended to be used by IndexingJobs.
@@ -112,8 +113,4 @@ public interface IIndexingManager
 #pragma warning disable VC0014 // Type or member is obsolete
         => DeleteDocumentsAsync(documentType, documentIds);
 #pragma warning restore VC0014 // Type or member is obsolete
-
-    [Obsolete("Hangfire compatibility shim for legacy callers.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    private static CancellationToken ToCancellationToken(ICancellationToken cancellationToken)
-        => cancellationToken is CancellationTokenWrapper wrapper ? wrapper.CancellationToken : CancellationToken.None;
 }
