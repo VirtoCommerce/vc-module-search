@@ -74,10 +74,24 @@ public class IndexingManager : IIndexingManager
         return IndexAsync(options, progressCallback, cancellationToken);
     }
 
+    // Legacy overload kept for binary compatibility with modules built against SearchModule 3.1000.0.
+    [Obsolete("Use the cancellation-aware overload instead.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+    public virtual Task IndexAllDocumentsAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
+    {
+        return IndexAllDocumentsAsync(options, progressCallback, cancellationToken.ToCancellationToken());
+    }
+
     [OverloadResolutionPriority(1)]
     public virtual Task IndexChangesAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, CancellationToken cancellationToken)
     {
         return IndexAsync(options, progressCallback, cancellationToken);
+    }
+
+    // Legacy overload kept for binary compatibility with modules built against SearchModule 3.1000.0.
+    [Obsolete("Use the cancellation-aware overload instead.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+    public virtual Task IndexChangesAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
+    {
+        return IndexChangesAsync(options, progressCallback, cancellationToken.ToCancellationToken());
     }
 
     [OverloadResolutionPriority(1)]
@@ -91,20 +105,7 @@ public class IndexingManager : IIndexingManager
         }
     }
 
-    // Legacy overloads kept for binary compatibility with modules built against SearchModule 3.1000.0
-    // that call or override these methods on the IndexingManager class itself.
-    [Obsolete("Use the cancellation-aware overload instead.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    public virtual Task IndexAllDocumentsAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
-    {
-        return IndexAllDocumentsAsync(options, progressCallback, cancellationToken.ToCancellationToken());
-    }
-
-    [Obsolete("Use the cancellation-aware overload instead.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-    public virtual Task IndexChangesAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
-    {
-        return IndexChangesAsync(options, progressCallback, cancellationToken.ToCancellationToken());
-    }
-
+    // Legacy overload kept for binary compatibility with modules built against SearchModule 3.1000.0.
     [Obsolete("Use the cancellation-aware overload instead.", DiagnosticId = "VC0014", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
     public virtual Task IndexAsync(IndexingOptions options, Action<IndexingProgress> progressCallback, ICancellationToken cancellationToken)
     {
