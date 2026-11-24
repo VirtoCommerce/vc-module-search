@@ -3,8 +3,10 @@
   <id>VirtoCommerce.Search</id>
   <version>3.1016.0</version>
   <version-tag />
-  <platformVersion>3.1076.0</platformVersion>
+  <platformVersion>3.1101.0</platformVersion>
   <dependencies>
+    <dependency id="VirtoCommerce.AdminAngularJs" version="3.1098.0" optional="true" />
+    <dependency id="VirtoCommerce.AdminShell" version="3.1101.0" optional="true" />
   </dependencies>
   <title>Search Core</title>
   <description>Defines Core Abstractions for indexed search functionality above different search providers, like: Elasticsearch, Azure Search, etc.</description>

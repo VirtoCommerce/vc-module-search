@@ -17,11 +17,13 @@
           "SCOPE": "Zakres",
           "STATE": "Indeks"
         },
+        "FILTERS": {
+          "NEVER_BUILT": "Nigdy nie budowano",
+          "BACKUPS": "Pokaż indeksy zapasowe"
+        },
         "TOOLBAR": {
           "REFRESH": "Odśwież",
-          "BUILD": "Buduj indeks",
-          "SHOW_BACKUP": "Pokaż indeksy zapasowe",
-          "HIDE_BACKUP": "Ukryj indeksy zapasowe"
+          "BUILD": "Buduj indeks"
         },
         "ACTIONS": {
           "BUILD": "Buduj indeks",

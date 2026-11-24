@@ -17,11 +17,13 @@
           "SCOPE": "Ambito",
           "STATE": "Indice"
         },
+        "FILTERS": {
+          "NEVER_BUILT": "Mai costruito",
+          "BACKUPS": "Mostra indici di backup"
+        },
         "TOOLBAR": {
           "REFRESH": "Aggiorna",
-          "BUILD": "Costruisci indice",
-          "SHOW_BACKUP": "Mostra indici di backup",
-          "HIDE_BACKUP": "Nascondi indici di backup"
+          "BUILD": "Costruisci indice"
         },
         "ACTIONS": {
           "BUILD": "Costruisci indice",

@@ -17,11 +17,13 @@
           "SCOPE": "Scope",
           "STATE": "Index"
         },
+        "FILTERS": {
+          "NEVER_BUILT": "Never built",
+          "BACKUPS": "Show backup indices"
+        },
         "TOOLBAR": {
           "REFRESH": "Refresh",
-          "BUILD": "Build index",
-          "SHOW_BACKUP": "Show backup indices",
-          "HIDE_BACKUP": "Hide backup indices"
+          "BUILD": "Build index"
         },
         "ACTIONS": {
           "BUILD": "Build index",

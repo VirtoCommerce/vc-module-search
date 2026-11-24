@@ -17,11 +17,13 @@
           "SCOPE": "Omfattning",
           "STATE": "Index"
         },
+        "FILTERS": {
+          "NEVER_BUILT": "Aldrig byggt",
+          "BACKUPS": "Visa säkerhetskopierade index"
+        },
         "TOOLBAR": {
           "REFRESH": "Uppdatera",
-          "BUILD": "Bygg index",
-          "SHOW_BACKUP": "Visa säkerhetskopierade index",
-          "HIDE_BACKUP": "Dölj säkerhetskopierade index"
+          "BUILD": "Bygg index"
         },
         "ACTIONS": {
           "BUILD": "Bygg index",

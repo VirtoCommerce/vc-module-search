@@ -17,11 +17,13 @@
           "SCOPE": "スコープ",
           "STATE": "インデックス"
         },
+        "FILTERS": {
+          "NEVER_BUILT": "未構築",
+          "BACKUPS": "バックアップインデックスを表示"
+        },
         "TOOLBAR": {
           "REFRESH": "更新",
-          "BUILD": "インデックスを構築",
-          "SHOW_BACKUP": "バックアップインデックスを表示",
-          "HIDE_BACKUP": "バックアップインデックスを非表示"
+          "BUILD": "インデックスを構築"
         },
         "ACTIONS": {
           "BUILD": "インデックスを構築",
