@@ -17,11 +17,13 @@
           "SCOPE": "Laajuus",
           "STATE": "Indeksi"
         },
+        "FILTERS": {
+          "NEVER_BUILT": "Ei koskaan rakennettu",
+          "BACKUPS": "Näytä varmuuskopioindeksit"
+        },
         "TOOLBAR": {
           "REFRESH": "Päivitä",
-          "BUILD": "Rakenna indeksi",
-          "SHOW_BACKUP": "Näytä varmuuskopioindeksit",
-          "HIDE_BACKUP": "Piilota varmuuskopioindeksit"
+          "BUILD": "Rakenna indeksi"
         },
         "ACTIONS": {
           "BUILD": "Rakenna indeksi",

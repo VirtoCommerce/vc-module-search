@@ -8,14 +8,19 @@
     <VcDataTable
       v-model:selection="selection"
       selection-mode="multiple"
-      :items="items"
+      :items="visibleItems"
       :is-row-selectable="(x: Row) => !!x.isActive"
+      search-bar
+      :searchable="false"
       state-key="SEARCH_INDEXES"
+      :global-filters="globalFilters"
+      :unfiltered-count="items.length"
       :active-item-id="activeItemId"
       :show-all-columns="!activeItemId"
       :row-actions="rowActions"
       :empty-state="{ icon: 'lucide-search', title: $t('SEARCH.PAGES.LIST.EMPTY') }"
       @row-click="(e: { data: Row }) => openMapping(e.data)"
+      @filter="onFilter"
     >
       <VcColumn
         id="documentType"
@@ -71,11 +76,12 @@ import {
   useBlade,
   usePermissions,
   usePopup,
+  type GlobalFilterConfig,
   type IBladeToolbar,
   type TableAction,
 } from "@vc-shell/framework";
 import { VcBlade, VcColumn, VcDataTable, VcStatus } from "@vc-shell/framework/ui";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { SearchIndexationModuleClient, type IndexState } from "../../api_client/virtocommerce.search";
 import { useChoice } from "../composables/useChoice";
@@ -104,8 +110,52 @@ const { getApiClient } = useApiClient(SearchIndexationModuleClient);
 const items = ref<Row[]>([]);
 const selection = ref<Row[]>([]);
 const activeItemId = ref<string>();
-const showBackups = ref(false);
 const swapSupported = ref(false);
+
+// The API lists every document type's index state with no filters and no keyword search, so the search bar
+// narrows the rows it returned: what a platform admin looks for is a type never built or not built for a while.
+type Filters = { neverBuilt?: boolean; builtFrom?: string; builtTo?: string; backups?: boolean };
+const filters = ref<Filters>({});
+// backup indices exist only for providers that swap (not Lucene); a backups value restored from the URL waits for that
+const showBackups = computed(() => swapSupported.value && !!filters.value.backups);
+
+// vc-shell 2.13 types global-filters as GlobalFilterConfig[], which lacks the search bar's toggle field
+const globalFilters = computed(
+  () =>
+    [
+      { id: "neverBuilt", label: t("SEARCH.PAGES.LIST.FILTERS.NEVER_BUILT"), filter: { toggle: true } },
+      { id: "lastBuild", label: t("SEARCH.PAGES.LIST.COLUMNS.LAST_BUILD"), filter: { range: ["builtFrom", "builtTo"] } },
+      swapSupported.value && { id: "backups", label: t("SEARCH.PAGES.LIST.FILTERS.BACKUPS"), filter: { toggle: true } },
+    ].filter(Boolean) as unknown as GlobalFilterConfig[],
+);
+
+// the bar sends days (YYYY-MM-DD, both ends included), compared with the local day of the last build
+const localYmd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+// both set read "built in the range, or never": a range ending a month ago plus Never built lists the stale types
+function matches(row: Row) {
+  const { neverBuilt, builtFrom, builtTo } = filters.value;
+  const ranged = !!(builtFrom || builtTo);
+  if (!neverBuilt && !ranged) return true;
+  if (!row.lastIndexationDate) return !!neverBuilt;
+  if (!ranged) return false;
+  const day = localYmd(new Date(row.lastIndexationDate));
+  return (!builtFrom || day >= builtFrom) && (!builtTo || day <= builtTo);
+}
+
+const visibleItems = computed(() => items.value.filter(matches));
+
+function onFilter(event: { filters: Record<string, unknown> }) {
+  const text = (v: unknown) => (typeof v === "string" && v ? v : undefined);
+  filters.value = {
+    neverBuilt: event.filters.neverBuilt === true,
+    builtFrom: text(event.filters.builtFrom),
+    builtTo: text(event.filters.builtTo),
+    backups: event.filters.backups === true,
+  };
+  // the toolbar builds the selection: keep only the rows still shown
+  selection.value = selection.value.filter(matches);
+}
 
 const { loading, action: load } = useAsync(async () => {
   const client = await getApiClient();
@@ -197,6 +247,8 @@ fetch("/api/search/indexes/swapIndexSupported")
   .then((r: { result?: boolean }) => (swapSupported.value = !!r.result))
   .catch(() => undefined);
 load();
+// backup indices come from another API call
+watch(showBackups, () => load());
 
 const bladeToolbar = ref<IBladeToolbar[]>([
   { id: "refresh", title: t("SEARCH.PAGES.LIST.TOOLBAR.REFRESH"), icon: "lucide-refresh-cw", clickHandler: () => load() },
@@ -207,16 +259,6 @@ const bladeToolbar = ref<IBladeToolbar[]>([
     permissions: "search:index:rebuild",
     disabled: computed(() => !selection.value.length),
     clickHandler: () => build(selection.value),
-  },
-  {
-    id: "backups",
-    title: computed(() => t(showBackups.value ? "SEARCH.PAGES.LIST.TOOLBAR.HIDE_BACKUP" : "SEARCH.PAGES.LIST.TOOLBAR.SHOW_BACKUP")),
-    icon: () => (showBackups.value ? "lucide-eye-off" : "lucide-eye"),
-    isVisible: swapSupported,
-    clickHandler: () => {
-      showBackups.value = !showBackups.value;
-      load();
-    },
   },
 ]);
 

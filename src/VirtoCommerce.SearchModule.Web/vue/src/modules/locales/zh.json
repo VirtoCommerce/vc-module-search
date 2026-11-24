@@ -17,11 +17,13 @@
           "SCOPE": "范围",
           "STATE": "索引"
         },
+        "FILTERS": {
+          "NEVER_BUILT": "从未构建",
+          "BACKUPS": "显示备份索引"
+        },
         "TOOLBAR": {
           "REFRESH": "刷新",
-          "BUILD": "构建索引",
-          "SHOW_BACKUP": "显示备份索引",
-          "HIDE_BACKUP": "隐藏备份索引"
+          "BUILD": "构建索引"
         },
         "ACTIONS": {
           "BUILD": "构建索引",

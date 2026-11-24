@@ -17,11 +17,13 @@
           "SCOPE": "Escopo",
           "STATE": "Índice"
         },
+        "FILTERS": {
+          "NEVER_BUILT": "Nunca construído",
+          "BACKUPS": "Mostrar índices de backup"
+        },
         "TOOLBAR": {
           "REFRESH": "Atualizar",
-          "BUILD": "Construir índice",
-          "SHOW_BACKUP": "Mostrar índices de backup",
-          "HIDE_BACKUP": "Ocultar índices de backup"
+          "BUILD": "Construir índice"
         },
         "ACTIONS": {
           "BUILD": "Construir índice",

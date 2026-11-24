@@ -17,11 +17,13 @@
           "SCOPE": "Portée",
           "STATE": "Index"
         },
+        "FILTERS": {
+          "NEVER_BUILT": "Jamais construit",
+          "BACKUPS": "Afficher les index de sauvegarde"
+        },
         "TOOLBAR": {
           "REFRESH": "Actualiser",
-          "BUILD": "Construire l'index",
-          "SHOW_BACKUP": "Afficher les index de sauvegarde",
-          "HIDE_BACKUP": "Masquer les index de sauvegarde"
+          "BUILD": "Construire l'index"
         },
         "ACTIONS": {
           "BUILD": "Construire l'index",

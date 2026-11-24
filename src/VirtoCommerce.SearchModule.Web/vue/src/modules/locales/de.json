@@ -17,11 +17,13 @@
           "SCOPE": "Bereich",
           "STATE": "Index"
         },
+        "FILTERS": {
+          "NEVER_BUILT": "Nie erstellt",
+          "BACKUPS": "Sicherungsindizes anzeigen"
+        },
         "TOOLBAR": {
           "REFRESH": "Aktualisieren",
-          "BUILD": "Index erstellen",
-          "SHOW_BACKUP": "Sicherungsindizes anzeigen",
-          "HIDE_BACKUP": "Sicherungsindizes ausblenden"
+          "BUILD": "Index erstellen"
         },
         "ACTIONS": {
           "BUILD": "Index erstellen",

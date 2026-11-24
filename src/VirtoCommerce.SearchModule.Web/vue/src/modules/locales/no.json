@@ -17,11 +17,13 @@
           "SCOPE": "Omfang",
           "STATE": "Indeks"
         },
+        "FILTERS": {
+          "NEVER_BUILT": "Aldri bygget",
+          "BACKUPS": "Vis sikkerhetskopi-indekser"
+        },
         "TOOLBAR": {
           "REFRESH": "Oppdater",
-          "BUILD": "Bygg indeks",
-          "SHOW_BACKUP": "Vis sikkerhetskopi-indekser",
-          "HIDE_BACKUP": "Skjul sikkerhetskopi-indekser"
+          "BUILD": "Bygg indeks"
         },
         "ACTIONS": {
           "BUILD": "Bygg indeks",
